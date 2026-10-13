@@ -1,0 +1,219 @@
+{
+  "repository": "https://github.com/Astribot-Dev/astribot_descriptions",
+  "revision": "8c651a1abbe2821824a692aa3a3aa4cbf88e4122",
+  "simulation_revision": "1403f9623efaea2709731c74629f395869849e89",
+  "destination": "vendor/astribot_descriptions",
+  "license": "Apache-2.0 (description repository LICENSE)",
+  "files": [
+    {
+      "path": "urdf/astribot_s1_urdf/astribot_arm_left.urdf",
+      "sha256": "5dd439dca310ae0a3c1ee95d9fb34630ec9de361dbfa5e6e03b7ff002b12dec4",
+      "bytes": 9156,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/astribot_arm_left.urdf"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/astribot_arm_right.urdf",
+      "sha256": "d83b7a11b4d5868256e9b91eb5f1852b46e330fac006ac37ef723db5087306aa",
+      "bytes": 9194,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/astribot_arm_right.urdf"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/astribot_whole_body.urdf",
+      "sha256": "b452e32f6c27b1c528c96f3fd1e8727be0d4599f1cdb38df00339a1267e350c6",
+      "bytes": 25405,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/astribot_whole_body.urdf"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/astribot_whole_body_with_head.urdf",
+      "sha256": "166cbda0d4ba01024e7bf1bc5958b1c29701adefcfc04ce170719c8923387fb6",
+      "bytes": 25294,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/astribot_whole_body_with_head.urdf"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/astribot_whole_body_maniskill.urdf",
+      "sha256": "a5c9d01baa35e648aa76371f3010a5920baa152833a0d6664369f8b09a673a4b",
+      "bytes": 41025,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/astribot_whole_body_maniskill.urdf"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "31f6a32ae3f456827b3c94e31aa24cda489a07fd2b7f7ccd82e84b075ca13e36",
+      "bytes": 10759,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/LICENSE"
+    },
+    {
+      "path": "README.md",
+      "sha256": "f33485708a8d15f3b2f0b339d3e4d2a17626cbe561dd9179135f34b696ce45a3",
+      "bytes": 3946,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/README.md"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_L11_Link.dae",
+      "sha256": "2b08623bfc40d453daf71cd4e81a78a095fca82a0ae7b01d8cecb5b1aa6b5f4d",
+      "bytes": 566023,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_L11_Link.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_L1_Link.dae",
+      "sha256": "4ad7b5fbd379f741fd1fc81d12563a924993135ab192452126d902508ed7a67f",
+      "bytes": 70831,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_L1_Link.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_L2_Link.dae",
+      "sha256": "00ba9b9fb7b0c4e01de840da174cefc5efc60f19cad0c177ee45cb868589baf7",
+      "bytes": 95824,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_L2_Link.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_R11_Link.dae",
+      "sha256": "b7ace554a1c4fcf94ec5c4da7a35d477f656eef65ecaa645d3998fd0a7f8fc51",
+      "bytes": 568313,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_R11_Link.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_R1_Link.dae",
+      "sha256": "39b9583bef0c77a1851758ba872a98f5cfd714665bde952333d270df6c5386cf",
+      "bytes": 71253,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_R1_Link.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_R2_Link.dae",
+      "sha256": "0278063a632d4456ea034d5b79b08a6e217502f5f36f36c7b24b09695fb459c8",
+      "bytes": 95908,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_gripper_R2_Link.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_head_link_2.dae",
+      "sha256": "004fd2aae2917f7f03dbe80c0d73d03d0d89003efeec8ba3e5e30016d23b2a25",
+      "bytes": 25464838,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_head_link_2.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_torso_base.dae",
+      "sha256": "be088dac8eec8a61faa8ab2aaac7ca763c3bc4512d3bb7bcdf1da1253db8e31e",
+      "bytes": 26548376,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_torso_base.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_torso_link_1.dae",
+      "sha256": "3a85b494275fa88b3ed59694c779ed5c8c529a0688c2fcd4ba59b1ffb15055cf",
+      "bytes": 13628516,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_torso_link_1.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_torso_link_2.dae",
+      "sha256": "a4e49c89b01d594cde5494642c9285ec2f04799cdfb2cf907286658a9e808e55",
+      "bytes": 22006475,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_torso_link_2.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/astribot_torso_link_4.dae",
+      "sha256": "08f666010bd8e32f8d82630bb0ad352f4315674f532565bca8120fbac7bfbfe4",
+      "bytes": 18989405,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/astribot_torso_link_4.dae"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_left_base_link.STL",
+      "sha256": "f5ce4a1ca6343fa73aac37e9ab1581224eae72b13e906592e253f5b9ff71b7e7",
+      "bytes": 393484,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_left_base_link.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_left_link_2.STL",
+      "sha256": "29a31a52440708e5257005fcaa766d782b6e9895a7d641cf96818db5939b72b5",
+      "bytes": 1168184,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_left_link_2.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_1.STL",
+      "sha256": "b6c9d2fb9539f3865c15f86dae8bfd88e23daab3a8136775a7f5e840519a9ccf",
+      "bytes": 160984,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_1.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_3.STL",
+      "sha256": "a8d48fa6ed9eae1d1b85be42937c9f162fb9039a630943f8fae9b511c1fb711a",
+      "bytes": 1431884,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_3.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_4.STL",
+      "sha256": "cf0ae423d242e076a628c4181afcd0f42c677d94f5b31582e79997b5620ac043",
+      "bytes": 325584,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_4.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_5.STL",
+      "sha256": "a8301d519a7cac044de0e9b1dda82147382aed2d0b64b5c2d7035461464a21ae",
+      "bytes": 1988484,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_5.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_6.STL",
+      "sha256": "c2a3a57e115c59006eb37ac8dbc28736e2366a048ea2e1545731910ad4c897f7",
+      "bytes": 626484,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_6.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_7.STL",
+      "sha256": "650d570d2e0d2978fc8b870adf2495e8cd24944b6e3a2da3c0fad0a48db2fd8f",
+      "bytes": 216184,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_link_7.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_right_base_link.STL",
+      "sha256": "a2d63475f85bf98fc0e7569ee5aeb554ff9dc0d6abe10e85b5e58d17c822946e",
+      "bytes": 394684,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_right_base_link.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_right_link_2.STL",
+      "sha256": "9074ba1114c0d0fb9f950c678689f5e2536beadf84c8b24a872165c84066583d",
+      "bytes": 1170384,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_arm/astribot_arm_right_link_2.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_gripper/astribot_gripper_base_link.STL",
+      "sha256": "887e309b8db7285917c26d272a84a3c56b30638e1f4e71e2b23930a9d3244db1",
+      "bytes": 1086384,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_gripper/astribot_gripper_base_link.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_head/astribot_head_base_link.STL",
+      "sha256": "82a65945d782623b806f4c59f53bfaef39d14bdd5a84f2e21a25867122493242",
+      "bytes": 148284,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_head/astribot_head_base_link.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_head/astribot_head_link_1.STL",
+      "sha256": "9e9c1792b072579214109d18438caf8594820452319c0bd8dca34e1b23276798",
+      "bytes": 83184,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_head/astribot_head_link_1.STL"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/s1_torso/astribot_torso_link_3.STL",
+      "sha256": "eab30e56b62eb82c185fd601f73d28b3c948975ea427b250a5ce0ff58b2aeaab",
+      "bytes": 2721384,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/s1_torso/astribot_torso_link_3.STL"
+    },
+    {
+      "path": "usd/astribot_s1_usd/astribot_s1.usd",
+      "sha256": "761aa7b13a843d31ce459456334ee9e62c13065298f6baaf3f6d829b472a3e52",
+      "bytes": 73537475,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/usd/astribot_s1_usd/astribot_s1.usd"
+    },
+    {
+      "path": "urdf/astribot_s1_urdf/meshes/dae/logo_texture.png",
+      "sha256": "37dfe2df003fa6efdc017e316be13e233461724eeb524db7f7aede7115595c95",
+      "bytes": 82936,
+      "url": "https://raw.githubusercontent.com/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/urdf/astribot_s1_urdf/meshes/dae/logo_texture.png"
+    },
+    {
+      "path": "usd/astribot_s1_usd/astribot_s1.usda",
+      "sha256": "5c91e790855bca603f97f26cedc8bb40018e13fa060cbda9a063ae6153ea3b8a",
+      "bytes": 308623107,
+      "url": "https://media.githubusercontent.com/media/Astribot-Dev/astribot_descriptions/8c651a1abbe2821824a692aa3a3aa4cbf88e4122/usd/astribot_s1_usd/astribot_s1.usda"
+    }
+  ]
+}

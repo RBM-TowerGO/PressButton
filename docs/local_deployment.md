@@ -9,6 +9,9 @@ Python 3.12、CPU PyTorch 2.10.0 和 LeRobot 0.6.1。
 
 ## 使用
 
+Astribot S1 的独立资产下载、加载验证与关节控制适配见
+[Astribot 资产说明](astribot_asset.md)。该入口使用同一仿真环境。
+
 已验收的视频可直接点击打开 VS Code 视频预览：
 
 - [场景演示：12 个按钮完整按压](../outputs/local_deployment_20261012_v4/episode.mp4)
@@ -109,3 +112,16 @@ VLA-JEPA 源码位于 `src/VLA-JEPA`，固定运行提交为
 原扩展文件及修复记录保存在
 `/home/js/.codex/backups/vscode-video-link-fix-26.1007.21434/`。
 这是本机扩展修复，扩展升级可能覆盖；本文的视频链接与上游扩展文件独立。
+
+图片链接也已补充相同处理：PNG/JPEG/GIF/WebP/SVG 等 VS Code 内置支持的格式
+使用 `imagePreview.previewEditor` 打开。修改前备份、校验和及 16 项链接分流检查
+保存在 `/home/js/.codex/backups/vscode-image-link-fix-26.1007.21434/`。
+需要再次执行 `Developer: Reload Window` 才能加载本次图片修复。
+
+重载后可点击 [Astribot 与按钮面板全景](../outputs/astribot_panel_preview_v2/overview.png)
+或 [面板近景](../outputs/astribot_panel_preview_v2/panel.png)。
+在本文的 Markdown 预览中也可直接点击图片链接。
+
+Astribot 全身传感器入口与实际验收数据见 [传感器接入说明](astribot_sensors.md)。
+启动 `python scripts/preview_astribot_panel.py --sensors --lidar-points` 可在按钮场景中
+启用头部/双腕 RGB-D、底座雷达、IMU、关节及接触读数；`--view head` 可直接切到头部相机。

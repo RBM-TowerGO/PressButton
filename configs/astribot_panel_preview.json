@@ -1,0 +1,16 @@
+{
+  "include_table": false,
+  "table_height": 0.76,
+  "robot_base_x": -0.25,
+  "robot_base_y": 0.0,
+  "button_face_x": 0.46,
+  "button_bottom_z": 0.98,
+  "button_pitch_z": 0.035,
+  "button_column_y": 0.045,
+  "button_travel": 0.004,
+  "lighting_intensity_scale": 1.0,
+  "panel_footer": "24 — 35 / ASTRIBOT",
+  "panel_footer_asset": "astribot_floor_range",
+  "camera_eye": [-1.6, -2.5, 1.85],
+  "camera_target": [0.03, 0.0, 0.93]
+}

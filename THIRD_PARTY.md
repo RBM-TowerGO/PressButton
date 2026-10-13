@@ -7,6 +7,7 @@
 | NVIDIA Isaac Sim | 当前 5090 环境 5.0.0；原采集环境 4.5.0 | 物理仿真与渲染；遵守 NVIDIA 软件许可 |
 | Isaac Lab | 当前 v2.2.0；历史 v2.0.2 | 独立下载到 `vendor/IsaacLab`；适用其上游许可 |
 | AgileX `robot_lab` | `b868140eeb1459acefef24a865587ec39a5278c3` | PiPER URDF/USD/网格；下载时同时保存上游 Apache-2.0 LICENSE |
+| Astribot `astribot_descriptions` | `8c651a1abbe2821824a692aa3a3aa4cbf88e4122` | S1 USD/URDF/网格与纹理；下载时保存该描述仓库的 Apache-2.0 LICENSE，逐文件校验见 `assets/astribot_sources.lock.json` |
 | AgileX `piper_isaac_sim` | `8e1f88fdb7afca49c40e9a0c1c01cc588e86f0d2` | 原厂相机支架与 D435；该提交无根 LICENSE，Piper 包声明不能视为完整授权，不对其几何另行推定许可 |
 | Intel RealSense description | 上述固定源树中 `_d435.urdf.xacro`、D435 网格和包声明 | 保留源文件中的 Intel 许可声明与归属信息 |
 | NVIDIA Isaac 4.5 内容库 | 逐文件 SHA-256 | 桌子、支架及材质；适用 NVIDIA 的资产使用条款 |

@@ -280,7 +280,8 @@ def build_scene(stage, cfg=None):
     light_mat = _material(stage, "WarmLight", (1, 0.86, 0.64), emission=(3, 2.5, 1.7))
     texture = ROOT / "assets/isaac/Environments/Simple_Room/Materials/Textures/DefaultMaterial_Base_Color.png"
     table_mat = _texture_material(stage, "OfficialTableMaterial", texture) if texture.is_file() else _material(stage, "TableSurface", (0.52, 0.52, 0.52))
-    assets = {"table": _table(stage, cfg, table_mat)}
+    assets = {"table": _table(stage, cfg, table_mat) if cfg.get("include_table", True)
+              else {"mode": "omitted", "available": False}}
 
     _cube(stage, "/World/Environment/Floor", (-0.50, 0, -0.04), (3.1, 2.4, 0.08), floor, True)
     for i in range(6):
@@ -309,7 +310,8 @@ def build_scene(stage, cfg=None):
     _cube(stage, f"{panel_path}/Frame", (face_x + 0.033, 0, mid_z), (0.032, 0.20, panel_height), frame, True)
     _cube(stage, f"{panel_path}/Faceplate", (face_x + 0.015, 0, mid_z), (0.004, 0.19, panel_height - 0.010), charcoal)
     _label(stage, f"{panel_path}/Header", (face_x + 0.0128, 0, bottom + 5 * pitch + 0.043), 0.154, 0.023, "FLOOR SELECT", "floor_select")
-    _label(stage, f"{panel_path}/Footer", (face_x + 0.0128, 0, bottom - 0.044), 0.146, 0.015, "24 — 35   /   PIPER", "floor_range")
+    _label(stage, f"{panel_path}/Footer", (face_x + 0.0128, 0, bottom - 0.044), 0.146, 0.015,
+           cfg.get("panel_footer", "24 — 35   /   PIPER"), cfg.get("panel_footer_asset", "floor_range"))
     for i, (y, z) in enumerate([(y, z) for y in [-0.083, 0.083] for z in [mid_z - panel_height / 2 + 0.013, mid_z + panel_height / 2 - 0.013]]):
         screw = UsdGeom.Cylinder.Define(stage, f"{panel_path}/Screw{i}")
         screw.CreateAxisAttr("X")

@@ -1,0 +1,16 @@
+{
+  "description": "Task-oriented simulation mounts; not manufacturer extrinsic calibration. Local coordinates in metres relative to the named rigid link.",
+  "physics_hz": 120,
+  "capture_hz": 10,
+  "cameras": {
+    "head": {"link": "astribot_head_link_2", "eye": [0.1, -0.04, 0], "target": [0.71, 0.30765, 0], "up": [0, -1, 0]},
+    "wrist_left": {"link": "astribot_arm_left_link_7", "eye": [0.1, 0.037588, -0.013681], "target": [0.71, 0.412386, 0.24282], "up": [0, 0.939693, -0.34202]},
+    "wrist_right": {"link": "astribot_arm_right_link_7", "eye": [-0.1, 0.037588, -0.013681], "target": [-0.71, 0.412386, 0.24282], "up": [0, 0.939693, -0.34202]}
+  },
+  "camera_resolution": [640, 480],
+  "camera_focal_length_mm": 18.0,
+  "camera_horizontal_aperture_mm": 24.0,
+  "camera_clip_m": [0.02, 20.0],
+  "lidar": {"link": "astribot_torso_base", "translation": [0.27, 0, 0.20], "min_range": 0.05, "max_range": 20.0, "horizontal_fov": 360.0, "vertical_fov": 30.0, "horizontal_resolution": 1.0, "vertical_resolution": 2.0, "rotation_rate": 0.0},
+  "imus": {"base": "astribot_torso_base", "torso": "astribot_torso_link_4", "head": "astribot_head_link_2", "wrist_left": "astribot_arm_left_link_7", "wrist_right": "astribot_arm_right_link_7"}
+}
