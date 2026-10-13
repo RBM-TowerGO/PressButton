@@ -35,6 +35,9 @@ def main():
     try:
         from isaacsim import SimulationApp
         app = SimulationApp({"headless": args.headless, "width": args.width, "height": args.height,
+                             # Avoid waiting for a UI viewport handle in headless
+                             # mode. World creates the stage below.
+                             "create_new_stage": not args.headless,
                              "active_gpu": args.gpu, "physics_gpu": args.gpu, "multi_gpu": False,
                              "renderer": "RayTracedLighting", "anti_aliasing": 1, "fast_shutdown": True,
                              "extra_args": ["--/app/asyncRendering=false", "--/rtx/ecoMode/enabled=false",
