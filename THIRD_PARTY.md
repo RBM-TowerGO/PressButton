@@ -11,6 +11,9 @@
 | AgileX `piper_isaac_sim` | `8e1f88fdb7afca49c40e9a0c1c01cc588e86f0d2` | 原厂相机支架与 D435；该提交无根 LICENSE，Piper 包声明不能视为完整授权，不对其几何另行推定许可 |
 | Intel RealSense description | 上述固定源树中 `_d435.urdf.xacro`、D435 网格和包声明 | 保留源文件中的 Intel 许可声明与归属信息 |
 | NVIDIA Isaac 4.5 内容库 | 逐文件 SHA-256 | 桌子、支架及材质；适用 NVIDIA 的资产使用条款 |
+| ambientCG / Lennart Demes：Metal010 | 2K JPG，SHA-256 见 `assets/materials/vib820/manifest.json` | CC0-1.0；VIB-820 拉丝钢颜色、粗糙度及 OpenGL 法线的来源，另生成减弱污渍与凹凸的衍生贴图 |
+| Poly Haven / Sergej Majboroda：Large Corridor | 2K HDR，SHA-256 同上 | CC0-1.0；VIB-820 室内环境照明与反射参考，不代表实拍电梯厅的 HDR 扫描 |
+| NVIDIA 内置 OmniSurface / OmniPBR | 当前 Isaac Sim 5.0 安装版本 | 分层玻璃、亚克力与金属着色器；只引用内置 MDL 模块，不随模型包分发 NVIDIA 着色器源码 |
 | ZPRL / ZPRL-PressB | 方法来源 `a34a1cba029702af82c0fed873be9e0e6bd274b3` | `src/pressb/online_rl/learner.py` 的 SAC 适配保留上游 MIT notice；参考仓库独立克隆，不打包其环境或数据 |
 | VLA-JEPA PiPER 适配 | 推理运行版本 `9c9dc71c8e199c7428b25d103ab666395832c001` | 独立模型仓库；PressB 提供冻结推理 addon，不随源码发布模型权重或第三方基础模型 |
 
@@ -27,3 +30,5 @@
 - [AgileX robot_lab](https://github.com/agilexrobotics/robot_lab/tree/b868140eeb1459acefef24a865587ec39a5278c3)
 - [AgileX piper_isaac_sim](https://github.com/agilexrobotics/piper_isaac_sim/tree/8e1f88fdb7afca49c40e9a0c1c01cc588e86f0d2)
 - [NVIDIA Omniverse 软件许可](https://docs.omniverse.nvidia.com/platform/latest/common/NVIDIA_Omniverse_License_Agreement.html)
+- [ambientCG Metal010](https://ambientcg.com/a/Metal010) / [CC0 许可说明](https://docs.ambientcg.com/license/)
+- [Poly Haven Large Corridor](https://polyhaven.com/a/large_corridor) / [CC0 许可说明](https://polyhaven.com/license)

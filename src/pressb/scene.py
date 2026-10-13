@@ -186,7 +186,22 @@ def _label(stage, path, center, width, height, text, name):
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
     font = ImageFont.truetype(font_path, 64) if Path(font_path).exists() else ImageFont.load_default()
     draw.text((512, 80), text, font=font, anchor="mm", fill=(225, 234, 240))
-    im.save(output)
+    # A second scene may use the same labels while RTX is reading them. Never
+    # truncate a live texture, and avoid triggering reload for identical bytes.
+    from io import BytesIO
+    import os
+    import tempfile
+    encoded = BytesIO()
+    im.save(encoded, format="PNG")
+    content = encoded.getvalue()
+    if not output.exists() or output.read_bytes() != content:
+        with tempfile.NamedTemporaryFile(dir=directory, suffix=".png", delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(content)
+        try:
+            os.replace(temporary, output)
+        finally:
+            temporary.unlink(missing_ok=True)
     material = _texture_material(stage, name, output, 0.65)
     mesh = UsdGeom.Mesh.Define(stage, path)
     x, y, z = center

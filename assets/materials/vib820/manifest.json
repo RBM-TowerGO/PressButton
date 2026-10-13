@@ -1,0 +1,42 @@
+{
+  "license": "CC0-1.0",
+  "metal": {
+    "asset": "Metal010",
+    "creator": "ambientCG / Lennart Demes",
+    "url": "https://ambientcg.com/a/Metal010",
+    "download": "https://ambientcg.com/get?file=Metal010_2K-JPG.zip",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "usage": "Derived clean albedo, fine roughness and OpenGL normal; no displacement."
+  },
+  "environment": {
+    "asset": "Large Corridor",
+    "creator": "Sergej Majboroda / Poly Haven",
+    "url": "https://polyhaven.com/a/large_corridor",
+    "download": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/large_corridor_2k.hdr",
+    "license_url": "https://polyhaven.com/license",
+    "usage": "Approximate indoor reflection/illumination environment, not a scan of the real lobby."
+  },
+  "shaders": {
+    "provider": "NVIDIA Isaac Sim 5.0 installed MDL library",
+    "modules": [
+      "OmniSurface.mdl",
+      "OmniPBR.mdl"
+    ],
+    "url": "https://docs.omniverse.nvidia.com/materials-and-rendering/latest/templates/OmniSurface.html",
+    "usage": "Built-in shader references only; NVIDIA MDL source files are not redistributed."
+  },
+  "processing": "scripts/prepare_vib820_materials.py; authoring estimates, not measured BRDF",
+  "sha256": {
+    "large_corridor_2k.hdr": "43090cba1f986ba9cf7bcfbe941d8de409136fee4c7b89b5cb3d2610127c7ea7",
+    "source/Metal010_2K-JPG.zip": "297a4d3a2c8ed679fb6c45f8e979e58a52e69d0d1959efeba9bae9c4e7483a15",
+    "source/Metal010_2K-JPG_Color.jpg": "35e44c71f8cd89f5e27ab63a3cc876038e90f7ee6740c5b676cbe17ab0029b4c",
+    "source/Metal010_2K-JPG_Displacement.jpg": "d59d633f895020f92509a5746ef73293501400286f8533aa25fc1ab5867915ee",
+    "source/Metal010_2K-JPG_Metalness.jpg": "b65d6b9091747bd81ee58adedcb6209d8ee21b2bde9298d7216989ada85ef622",
+    "source/Metal010_2K-JPG_NormalDX.jpg": "614f0db3de9c4abb712ce72b943b12d28576984414826c5a53c7260591688c23",
+    "source/Metal010_2K-JPG_NormalGL.jpg": "507e30ec334c16278514b3c035802af164bb0a6b2f0fd244a2cff95d67c2211d",
+    "source/Metal010_2K-JPG_Roughness.jpg": "968cdac5d2c3cb1d571a05476652a26fb387213bc545990417a5c74ae8e01850",
+    "steel_clean_color.png": "b1e24d0f8ffdc9f88d343cf8a890eaf261c07e4327afa24ed3452c83caaf1945",
+    "steel_clean_normal_gl.png": "785e34faf4a609c58cfeca685998042c6ff176039a3825bd9965f090bb04c203",
+    "steel_clean_roughness.png": "297a420cc2137551d4e540745fe48fb1d063084bf6f2970e6f831713993bbbcb"
+  }
+}
