@@ -65,6 +65,16 @@ def run(app, args, report):
             p = ROOT/rel
             report["source_sha256"][rel] = hashlib.sha256(p.read_bytes()).hexdigest()
     kin = AstribotKinematics()
+    initial_arm_positions = cfg.get("initial_arm_positions", {})
+    if initial_arm_positions:
+        expected = {f"astribot_arm_{side}_joint_{i}" for side in ("left", "right") for i in range(1, 8)}
+        if set(initial_arm_positions) != expected:
+            raise ValueError("initial_arm_positions must specify all 14 named arm joints")
+        for name, value in initial_arm_positions.items():
+            if not np.isfinite(value) or not kin.limits[name][0] <= value <= kin.limits[name][1]:
+                raise ValueError(f"Invalid initial arm position: {name}={value}")
+    if cfg.get("return_to_initial_pose") and not initial_arm_positions:
+        raise ValueError("return_to_initial_pose requires initial_arm_positions")
     tcp_offset = np.array(hand["tcp_in_wrist"])
     # Gripper's broad opening axis is world Y, approach axis is world +X.
     rotation = np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]], dtype=float)
@@ -81,15 +91,30 @@ def run(app, args, report):
 
     # A reproducible bent-elbow work posture, solved before any robot movement.
     home_pose = pose(*cfg.get("home_tip", [cfg["button_face_x"]-.18, -.045, 1.065]))
-    home_arm = kin.solve(home_pose, np.array([.1, -.5, 1., 1.4, .8, .5, -.2]), tcp_offset)
+    report["key_pose_ik"] = {}
+    ik_failed = False
+    def precheck(name, goal, seed):
+        nonlocal ik_failed
+        detail = report["key_pose_ik"][name] = {"status": "unknown"}
+        try:
+            q = kin.solve(goal, seed, tcp_offset, diagnostics=detail)
+            detail["status"] = "pass"
+            return q
+        except ValueError as exc:
+            detail.update(status="fail", error=str(exc))
+            ik_failed = True
+            return np.asarray(seed).copy()
+    home_seed = (np.array([initial_arm_positions[n] for n in RIGHT_ARM]) if initial_arm_positions
+                 else np.array([.1, -.5, 1., 1.4, .8, .5, -.2]))
+    home_arm = precheck("home", home_pose, home_seed)
     planned = {}
     for floor in sorted(set(sequence)):
-        pre = kin.solve(target_for(floor, -cfg["approach_distance"]), home_arm, tcp_offset)
-        touch = kin.solve(target_for(floor, cfg["press_depth"]), pre, tcp_offset)
+        pre = precheck(f"approach_{floor}", target_for(floor, -cfg["approach_distance"]), home_arm)
+        touch = precheck(f"touch_{floor}", target_for(floor, cfg["press_depth"]), pre)
         planned[floor] = pre
     report["reachability"] = {str(f): q.tolist() for f, q in planned.items()}
     report["home_arm_rad"] = home_arm.tolist()
-    print("All requested buttons reachable; initializing physical control", flush=True)
+    print("Key-pose IK:", json.dumps(report["key_pose_ik"]), flush=True)
     robot = world.scene.add(SingleArticulation(prim_path=meta["robot_path"], name="astribot"))
     wrist = world.scene.add(SingleRigidPrim(prim_path=meta["wrist_links"]["right"], name="right_wrist"))
     base_body = world.scene.add(SingleRigidPrim(prim_path=meta["base_link"], name="base_monitor"))
@@ -119,10 +144,27 @@ def run(app, args, report):
     grip_idx = np.array([names.index(n) for n in gripper_targets(hand["closed_angle_rad"])])
     limits = np.array([[robot.dof_properties["lower"][i], robot.dof_properties["upper"][i]] for i in range(len(names))])
     target = np.zeros(len(names), dtype=np.float32)
-    robot.set_joints_default_state(positions=target.copy(), velocities=target.copy())
+    for name, value in initial_arm_positions.items():
+        target[names.index(name)] = value
+    initial_target = target.copy()
+    robot.set_joints_default_state(positions=target.copy(), velocities=np.zeros_like(target))
     robot.set_joint_positions(target.copy())
-    robot.set_joint_velocities(target.copy())
+    robot.set_joint_velocities(np.zeros_like(target))
     control = robot.get_articulation_controller()
+    control.apply_action(ArticulationAction(joint_positions=target.copy()))
+    world.physics_sim_view.update_articulations_kinematic()
+    omni.physx.get_physx_interface().update_transformations(False, True, True)
+    report["initial_joint_positions_rad"] = dict(zip(names, initial_target.tolist()))
+    report["initial_poses"] = dict(requested_root_xyz_m=base.tolist(), requested_yaw_rad=0.,
+        actual_root_xyz_m=list(UsdGeom.XformCache().GetLocalToWorldTransform(world.stage.GetPrimAtPath("/World/Astribot")).ExtractTranslation()),
+        fixed_joint_world_anchor_m=list(UsdPhysics.FixedJoint(world.stage.GetPrimAtPath(meta["articulation_path"])).GetLocalPos0Attr().Get()),
+        base_link_path=meta["base_link"], actual_base_link_xyz_m=base_body.get_world_pose()[0].tolist(),
+        actual_base_link_quat_wxyz=base_body.get_world_pose()[1].tolist(), frame="world; root and base link have distinct fixed transforms")
+    from pressb.astribot_validation import initial_overlap_check
+    report["initial_overlap"] = initial_overlap_check(world.stage, meta)
+    report["motion_started"] = False
+    report["dynamic_monitor"] = dict(threshold_n=.1, coverage_complete=False,
+        allowed="active button with right L11/R11; opposing right L11/R11; authored USD filtered pairs and directly joint-connected bodies")
     forces = np.zeros(len(button_ids))
     unexpected = []
     body_to_floor = {b["body_path"]: f for f, b in scene["buttons"].items()}
@@ -160,7 +202,7 @@ def run(app, args, report):
             if all(p in tip_paths for p in actors):
                 continue
             if len(unexpected) < 500:
-                unexpected.append(dict(step=step_index, phase=phase, floor=active_floor,
+                unexpected.append(dict(step=step_index, phase=phase, floor=active_floor, simulation_time=world.current_time,
                                        actors=actors, force_n=force))
 
     subscription = omni.physx.get_physx_simulation_interface().subscribe_contact_report_events(contacts)
@@ -200,6 +242,10 @@ def run(app, args, report):
 
     def step():
         nonlocal step_index, base_initial, max_fk_error
+        report["motion_started"] = True
+        report["termination_phase"] = phase
+        if phase == "press":
+            report["press_phase_started"] = True
         forces.fill(0.)
         control.apply_action(ArticulationAction(joint_positions=target))
         world.step(render=False)
@@ -233,7 +279,7 @@ def run(app, args, report):
             raise RuntimeError(f"URDF/PhysX TCP mismatch: {max_fk_error:.6f} m")
         if unexpected:
             raise RuntimeError(f"Unexpected physical contact: {unexpected[-1]}")
-        if np.max(np.abs(q[inactive_idx])) > .02:
+        if np.max(np.abs(q[inactive_idx]-initial_target[inactive_idx])) > .02:
             raise RuntimeError("Stationary torso, head or left arm drifted over 0.02 rad")
         if phase not in ("settle", "close_gripper") and np.max(np.abs(q[grip_idx]-target[grip_idx]))>.02:
             raise RuntimeError("Right gripper failed to stay closed")
@@ -260,7 +306,11 @@ def run(app, args, report):
             if (i-1)%4 == 0 or i == count:
                 if i not in path:
                     distance = distance_start+(distance_end-distance_start)*smooth_fraction(i/count)
-                    path[i] = kin.solve(target_for(active_floor, distance), seed, tcp_offset)
+                    try:
+                        path[i] = kin.solve(target_for(active_floor, distance), seed, tcp_offset)
+                    except ValueError:
+                        report["termination_reason"] = "path_ik_failed"
+                        raise
                 seed = path[i]
             target[arm_idx] = seed
             travel = step()
@@ -269,7 +319,14 @@ def run(app, args, report):
         return False
 
     try:
-        hold(.5)
+        if report["initial_overlap"]["status"] != "clear" or ik_failed:
+            report["termination_reason"] = ("initial_collision" if report["initial_overlap"]["status"] == "collision"
+                else "runtime_error" if report["initial_overlap"]["status"] == "unknown" else "target_ik_failed")
+            snapshot("precheck_failed")
+            raise RuntimeError(f"Precheck blocked motion: {report['termination_reason']}")
+        hold(1.5 if initial_arm_positions else .5)
+        if initial_arm_positions:
+            snapshot("initial_ready")
         phase = "close_gripper"
         closed_targets = gripper_targets(hand["closed_angle_rad"])
         for i in range(240):
@@ -341,8 +398,17 @@ def run(app, args, report):
                 print("EPISODE",json.dumps(episodes[-1]),flush=True)
                 report["episodes"] = episodes
                 (args.output/"report.json").write_text(json.dumps(report,indent=2)+"\n")
-        phase="finished"
         active_floor=-1
+        if cfg.get("return_to_initial_pose"):
+            phase = "return_to_ready"
+            move_arm(initial_target[arm_idx], 2.)
+            phase = "ready_hold"
+            hold(1.5)
+            ready_error = float(np.max(np.abs(robot.get_joint_positions()[arm_idx]-initial_target[arm_idx])))
+            report["ready_return"] = dict(passed=ready_error<.025, max_joint_error_rad=ready_error)
+            if ready_error >= .025:
+                raise RuntimeError("Failed to return to initial raised-arm posture")
+        phase="finished"
         snapshot("finished")
         # Verify reset recovery to the same ready posture without driving the
         # robot through a discontinuous target trajectory during an episode.
@@ -362,6 +428,14 @@ def run(app, args, report):
         report["status"]="passed" if all(e["success"] for e in episodes) and not unexpected else "failed"
         if not all([report["reset"]["passed"], report["reset"]["buttons_released"]]):
             report["status"] = "failed"
+        report["dynamic_monitor"]["coverage_complete"] = True
+    except BaseException:
+        report["termination_phase"] = phase
+        try:
+            snapshot("failure")
+        except Exception as exc:
+            report["failure_snapshot_error"] = str(exc)
+        raise
     finally:
         for writer in writers.values():
             writer.stdin.close()
@@ -375,6 +449,8 @@ def run(app, args, report):
             np.savez_compressed(args.output/"trajectory.npz", **{key:np.asarray([r[key] for r in records]) for key in records[0]})
             report["base_drift_m"]=float(np.max(np.linalg.norm(np.array([r["base"] for r in records])-base_initial,axis=1)))
             report["inactive_joint_max_abs_rad"] = float(np.max(np.abs(np.array([r["q"] for r in records])[:,inactive_idx])))
+            report["inactive_joint_max_error_rad"] = float(np.max(np.abs(
+                np.array([r["q"] for r in records])[:,inactive_idx]-initial_target[inactive_idx])))
         scene_path=args.output/"scene.usda"
         omni.physx.get_physx_interface().update_transformations(False, True, True)
         world.stage.GetRootLayer().Export(str(scene_path))
@@ -397,18 +473,21 @@ def main():
     parser.add_argument("--output",type=Path)
     parser.add_argument("--headless",action="store_true")
     parser.add_argument("--video",action="store_true")
+    parser.add_argument("--gpu",type=int,default=0,
+                        help="RTX/physics device index; include it in CUDA_VISIBLE_DEVICES")
     parser.add_argument("--floors", "--buttons", dest="floors", type=int, nargs="+",
                         help="Button IDs; VIB-820 down call is 0, legacy floors are 24..35")
     parser.add_argument("--repeats",type=int,default=1)
     args=parser.parse_args()
     args.output=(args.output or ROOT/"outputs"/("astribot_press_"+datetime.now().strftime("%Y%m%d_%H%M%S"))).resolve()
     args.output.mkdir(parents=True,exist_ok=False)
-    report={"status":"running","scope":"Fixed base, stationary torso/left arm; original closed right gripper; known button positions"}
+    report={"status":"running","scope":"Fixed base, stationary torso/left arm; original closed right gripper; known button positions",
+            "gpu":args.gpu}
     app=None
     try:
         from isaacsim import SimulationApp
         app=SimulationApp(dict(headless=args.headless,create_new_stage=not args.headless,
-            active_gpu=0,physics_gpu=0,multi_gpu=False,renderer="RayTracedLighting",width=960,height=600,
+            active_gpu=args.gpu,physics_gpu=args.gpu,multi_gpu=False,renderer="RayTracedLighting",width=960,height=600,
             extra_args=["--/app/asyncRendering=false","--/rtx/ecoMode/enabled=false",
                         "--/validate/p2p/enabled=false","--/validate/iommu/enabled=false"]))
         run(app,args,report)

@@ -33,8 +33,23 @@ def audit(directory):
     inactive = [i for i,n in enumerate(names) if "arm_right" not in n and "gripper_right" not in n]
     right = [i for i,n in enumerate(names) if "arm_right" in n]
     grip = [i for i,n in enumerate(names) if "gripper_right" in n]
-    checks["stationary_torso_head_left_arm"] = bool(np.max(np.abs(trace["q"][:,inactive]))<.02)
-    active = np.isin(trace["phase"],["approach","press","retract","return_home"])
+    initial = np.array([config.get("initial_arm_positions", {}).get(n, 0.) for n in names])
+    checks["stationary_torso_head_left_arm"] = bool(
+        np.max(np.abs(trace["q"][:,inactive]-initial[inactive]))<.02 and
+        np.max(np.abs(trace["target"][:,inactive]-initial[inactive]))<1e-5)
+    if config.get("initial_arm_positions"):
+        arms = [i for i,n in enumerate(names) if "arm_left" in n or "arm_right" in n]
+        checks["initial_arm_posture"] = bool(
+            np.max(np.abs(trace["q"][0,arms]-initial[arms]))<.02 and
+            np.max(np.abs(trace["target"][0,arms]-initial[arms]))<1e-5)
+    if config.get("return_to_initial_pose"):
+        ready = trace["phase"]=="ready_hold"
+        checks["returned_to_initial_arm_posture"] = bool(ready.any() and
+            np.max(np.abs(trace["q"][ready][-1,right]-initial[right]))<.025)
+        reset_ready = trace["phase"]=="reset_check"
+        checks["reset_preserves_initial_arm_posture"] = bool(reset_ready.any() and
+            np.max(np.abs(trace["q"][reset_ready][-1,right]-initial[right]))<.025)
+    active = np.isin(trace["phase"],["approach","press","retract","return_home","return_to_ready","ready_hold"])
     signs = {"L1": -1, "L2": -1, "L11": 1, "R1": 1, "R2": 1, "R11": -1}
     closed = np.array([signs[names[i].rsplit("_",1)[-1]]*report["hand"]["closed_angle_rad"] for i in grip])
     checks["gripper_held_closed"] = bool(active.any() and

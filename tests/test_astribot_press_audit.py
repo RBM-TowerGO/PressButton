@@ -35,6 +35,24 @@ def test_audit_accepts_measured_press(recording):
     assert module.audit(path)["status"] == "passed"
 
 
+@pytest.mark.parametrize("fault", [None, "left_drift", "changed_hold_target", "wrong_initial_right"])
+def test_raised_arm_initial_pose_and_left_hold_are_checked(recording, fault):
+    path, trace = recording
+    report = json.loads((path/"report.json").read_text())
+    report["config"]["initial_arm_positions"] = {"astribot_arm_left_joint_1": -.4}
+    trace["q"][:, 7] = -.4
+    trace["target"][:, 7] = -.4
+    if fault == "left_drift":
+        trace["q"][2, 7] += .03
+    elif fault == "changed_hold_target":
+        trace["target"][2, 7] = 0.
+    elif fault == "wrong_initial_right":
+        trace["q"][0, 0] = .1
+    (path/"report.json").write_text(json.dumps(report))
+    np.savez(path/"trajectory.npz", **trace)
+    assert (module.audit(path)["status"] == "passed") == (fault is None)
+
+
 @pytest.mark.parametrize("fault",["no_force","wrong_button","moving_base","open_gripper","failed_return"])
 def test_audit_rejects_false_success_report(recording,fault):
     path,trace = recording
