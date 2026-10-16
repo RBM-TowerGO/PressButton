@@ -1,0 +1,81 @@
+{
+  "updated_utc": "2026-10-15T03:04:09.681968+00:00",
+  "status": "resident_preflight_running_detached",
+  "formal_attempts": 0,
+  "formal_accepted": 0,
+  "target": 400,
+  "frozen_candidates": 512,
+  "tests": {
+    "passed": 88,
+    "skipped": 1,
+    "nvenc_hardware_passed": 1,
+    "junit": "/data/shared/js/PressB/vib820_gpu_collection_400_20261015/preflight_resident_v2/unit_fault_checks.xml"
+  },
+  "implemented": [
+    "resident_collector",
+    "ordered_candidate_dispatch_and_resume",
+    "GPU_RGB_packing_and_bounded_NVENC",
+    "32_joint_raw_contract",
+    "shared_hashed_assets",
+    "official_LeRobot_export",
+    "evidence_gate",
+    "stratified_replay_and_release_verifier"
+  ],
+  "verified": [
+    "CPU_and_GPU_ten_historical_physical_cases",
+    "single_environment_seven_video_episode_and_twenty_resets",
+    "real_pilot_official_LeRobot_writer_and_reader",
+    "NVENC_backpressure_and_corrupt_video_rejection",
+    "frozen_512_candidates_PCG64_exact_recheck"
+  ],
+  "blocking": [
+    "resident_full_video_concurrency_sweep_not_finished",
+    "selected_dual_GPU_quality_and_twofold_throughput_not_established"
+  ],
+  "pending": [
+    "400_accepted_formal_episodes",
+    "complete_LeRobot_export",
+    "twenty_final_stratified_replays",
+    "final_release"
+  ],
+  "decision_document": "architecture_decision.md",
+  "alternative_architecture_authorized": true,
+  "data_root": "/data/shared/js/PressB/vib820_gpu_collection_400_20261015",
+  "estimated_raw_plus_training_gib": "36–37, excluding failures and preflight",
+  "latest_diagnostic": {
+    "name": "sol61_matched_current_single_and_settle12",
+    "single_elapsed_s": 237.64615229400806,
+    "settle12_elapsed_s": 763.022252697032,
+    "reset_rounds_passed": 20,
+    "ready_physics_ticks": 180,
+    "settle12_matched_image_max_relative_difference": 0.028700546077996575,
+    "settle12_matched_image_status": "passed",
+    "original_isolated_matched_image_status": "failed",
+    "complete_dynamic_video_verified": false,
+    "production_eligible": false,
+    "report": "outputs/vib820_gpu_collection_400_preflight/sol61_matched_current_single/comparison.json"
+  },
+  "authorization": "用户明确选择允许按架构提案预检并完成采集",
+  "resident_pipeline": "/data/shared/js/PressB/vib820_gpu_collection_400_20261015/preflight_resident_v2/pipeline_state.json",
+  "selected_backend": "cpu",
+  "gpu_resident_backend_historical_acceptance": false,
+  "resident_single_gpu_sweep": {
+    "processes_per_gpu": 1,
+    "accepted_per_minute": 0.1757817338024907,
+    "measurement_wall_s": 682.6647877693176,
+    "full_video_accepted": 3,
+    "formal_data": false
+  },
+  "pipeline_pid": 2426825,
+  "resident_two_process_warmup": {
+    "accepted": 2,
+    "elapsed_s": [
+      308.19,
+      307.76
+    ],
+    "measurement_complete": false,
+    "production_eligible": false
+  },
+  "preflight_accepted": 7,
+  "current_stage": "two_resident_processes_second_measurement_round"
+}

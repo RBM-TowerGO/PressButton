@@ -29,12 +29,47 @@ def audit(directory):
     quat_similarity = np.min(np.abs(trace["base_quat"]@trace["base_quat"][0]))
     checks["fixed_base_translation"] = bool(base_drift<.00001)
     checks["fixed_base_rotation"] = bool(quat_similarity>1.-1e-6)
+    if "robot_base_yaw_rad" in config:
+        yaw = float(config["robot_base_yaw_rad"])
+        expected_quat = np.array([np.cos(yaw/2), 0., 0., np.sin(yaw/2)])
+        pose = report["initial_poses"]
+        checks["requested_base_yaw"] = bool(
+            abs(pose["requested_yaw_rad"]-yaw)<1e-7 and
+            abs(pose["actual_root_yaw_rad"]-yaw)<1e-6 and
+            abs(np.dot(pose["fixed_joint_world_quat_wxyz"], expected_quat))>1.-1e-6 and
+            np.min(np.abs(trace["base_quat"] @ expected_quat))>1.-1e-6)
     names = report["joint_names"]
     inactive = [i for i,n in enumerate(names) if "arm_right" not in n and "gripper_right" not in n]
     right = [i for i,n in enumerate(names) if "arm_right" in n]
     grip = [i for i,n in enumerate(names) if "gripper_right" in n]
-    checks["stationary_torso_head_left_arm"] = bool(np.max(np.abs(trace["q"][:,inactive]))<.02)
-    active = np.isin(trace["phase"],["approach","press","retract","return_home"])
+    if "startup" in report:
+        startup = report["startup"]
+        index = startup.get("completed_step", -1)
+        valid_index = isinstance(index, int) and 0 <= index < len(trace["q"])
+        checks["startup_work_pose"] = bool(valid_index and
+            trace["phase"][index] == "move_to_work_pose" and
+            np.max(np.abs(trace["q"][index,right]-np.array(report["home_arm_rad"]))) < .025 and
+            startup.get("status") == "pass" and
+            not any(e.get("step", -1) <= index for e in report.get("unexpected_contacts", [])))
+    initial = np.array([config.get("initial_arm_positions", {}).get(n, 0.) for n in names])
+    if "astribot_head_joint_2" in names:
+        initial[names.index("astribot_head_joint_2")] = np.radians(config.get("head_pitch_deg", 0.))
+    checks["stationary_torso_head_left_arm"] = bool(
+        np.max(np.abs(trace["q"][:,inactive]-initial[inactive]))<.02 and
+        np.max(np.abs(trace["target"][:,inactive]-initial[inactive]))<1e-5)
+    if config.get("initial_arm_positions"):
+        arms = [i for i,n in enumerate(names) if "arm_left" in n or "arm_right" in n]
+        checks["initial_arm_posture"] = bool(
+            np.max(np.abs(trace["q"][0,arms]-initial[arms]))<.02 and
+            np.max(np.abs(trace["target"][0,arms]-initial[arms]))<1e-5)
+    if config.get("return_to_initial_pose"):
+        ready = trace["phase"]=="ready_hold"
+        checks["returned_to_initial_arm_posture"] = bool(ready.any() and
+            np.max(np.abs(trace["q"][ready][-1,right]-initial[right]))<.025)
+        reset_ready = trace["phase"]=="reset_check"
+        checks["reset_preserves_initial_arm_posture"] = bool(reset_ready.any() and
+            np.max(np.abs(trace["q"][reset_ready][-1,right]-initial[right]))<.025)
+    active = np.isin(trace["phase"],["approach","press","retract","return_home","return_to_ready","ready_hold"])
     signs = {"L1": -1, "L2": -1, "L11": 1, "R1": 1, "R2": 1, "R11": -1}
     closed = np.array([signs[names[i].rsplit("_",1)[-1]]*report["hand"]["closed_angle_rad"] for i in grip])
     checks["gripper_held_closed"] = bool(active.any() and

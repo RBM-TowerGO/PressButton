@@ -9,19 +9,68 @@ import json
 from pathlib import Path
 
 import numpy as np
-from pxr import Gf, UsdGeom, UsdPhysics
-import omni.kit.commands
-from isaacsim.core.utils.extensions import enable_extension
+from pxr import Gf, Usd, UsdGeom, UsdPhysics
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = ROOT / "configs/astribot_sensors.json"
 
 
+def resolve_camera_mount(stage, robot_path, link):
+    """Resolve URDF links, including fixed links nested by the USD importer."""
+    root = stage.GetPrimAtPath(robot_path)
+    if not root.IsValid():
+        raise ValueError(f"Robot does not exist: {robot_path}")
+    matches = []
+    iterator = iter(Usd.PrimRange(root))
+    for prim in iterator:
+        if prim.GetName() in ("visuals", "collisions"):
+            iterator.PruneChildren()
+            continue
+        if prim.GetName() == link:
+            matches.append(str(prim.GetPath()))
+    if len(matches) != 1:
+        raise ValueError(f"Camera mount {link!r} must resolve uniquely under {robot_path}: {matches}")
+    return matches[0]
+
+
+def create_robot_cameras(stage, robot_path, cfg):
+    """Create the configured link-mounted cameras without other sensors."""
+    from isaacsim.sensors.camera import Camera
+
+    cameras, paths = {}, {}
+    for name, mount in cfg["cameras"].items():
+        link_path = resolve_camera_mount(stage, robot_path, mount["link"])
+        path = link_path + "/RGBD"
+        prim = UsdGeom.Camera.Define(stage, path)
+        transform = Gf.Matrix4d().SetLookAt(
+            *[Gf.Vec3d(*mount[k]) for k in ("eye", "target", "up")]).GetInverse()
+        prim.AddTransformOp().Set(transform)
+        width, height = mount.get("resolution", cfg["camera_resolution"])
+        horizontal_aperture = cfg["camera_horizontal_aperture_mm"]
+        vertical_aperture = horizontal_aperture * height / width
+        focal_length = cfg["camera_focal_length_mm"]
+        if "vertical_fov_rad" in mount:
+            fov = float(mount["vertical_fov_rad"])
+            if not 0 < fov < np.pi:
+                raise ValueError(f"Invalid vertical camera FOV: {name}: {fov}")
+            focal_length = vertical_aperture / (2 * np.tan(fov / 2))
+        prim.CreateFocalLengthAttr(float(focal_length))
+        prim.CreateHorizontalApertureAttr(horizontal_aperture)
+        prim.CreateVerticalApertureAttr(vertical_aperture)
+        prim.CreateClippingRangeAttr(Gf.Vec2f(*mount.get("clip_m", cfg["camera_clip_m"])))
+        cameras[name] = Camera(prim_path=path, name=name + "_rgbd",
+                               resolution=(width, height), frequency=-1)
+        paths[name + "_camera"] = path
+    return cameras, paths
+
+
 class AstribotSensors:
     def __init__(self, world, robot, adapter, config=DEFAULT_CONFIG):
+        import omni.kit.commands
+        from isaacsim.core.utils.extensions import enable_extension
+
         enable_extension("isaacsim.sensors.physx")
         enable_extension("isaacsim.sensors.physics")
-        from isaacsim.sensors.camera import Camera
         from isaacsim.sensors.physics import IMUSensor, ContactSensor
         from isaacsim.sensors.physx import _range_sensor
 
@@ -32,18 +81,7 @@ class AstribotSensors:
         self.cameras, self.imus, self.contacts = {}, {}, {}
         self.paths = {}
         robot_path = adapter["robot_path"]
-        for name, mount in cfg["cameras"].items():
-            path = robot_path + "/" + mount["link"] + "/RGBD"
-            prim = UsdGeom.Camera.Define(world.stage, path)
-            transform = Gf.Matrix4d().SetLookAt(*[Gf.Vec3d(*mount[k]) for k in ("eye", "target", "up")]).GetInverse()
-            prim.AddTransformOp().Set(transform)
-            width, height = cfg["camera_resolution"]
-            prim.CreateFocalLengthAttr(cfg["camera_focal_length_mm"])
-            prim.CreateHorizontalApertureAttr(cfg["camera_horizontal_aperture_mm"])
-            prim.CreateVerticalApertureAttr(cfg["camera_horizontal_aperture_mm"] * height / width)
-            prim.CreateClippingRangeAttr(Gf.Vec2f(*cfg["camera_clip_m"]))
-            self.cameras[name] = Camera(prim_path=path, name=name + "_rgbd", resolution=(width, height), frequency=-1)
-            self.paths[name + "_camera"] = path
+        self.cameras, self.paths = create_robot_cameras(world.stage, robot_path, cfg)
         mount = cfg["lidar"]
         ok, lidar = omni.kit.commands.execute("RangeSensorCreateLidar", path="/Lidar",
             parent=robot_path + "/" + mount["link"], draw_points=False, draw_lines=False,

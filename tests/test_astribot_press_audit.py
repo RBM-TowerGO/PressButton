@@ -35,6 +35,60 @@ def test_audit_accepts_measured_press(recording):
     assert module.audit(path)["status"] == "passed"
 
 
+@pytest.mark.parametrize('fault',[None,'root','anchor','physics'])
+def test_requested_base_yaw_requires_actual_rotation(recording,fault):
+    path,trace=recording
+    report=json.loads((path/'report.json').read_text())
+    yaw=np.radians(10.)
+    quat=[np.cos(yaw/2),0,0,np.sin(yaw/2)]
+    report['config']['robot_base_yaw_rad']=yaw
+    report['initial_poses']=dict(requested_yaw_rad=yaw,actual_root_yaw_rad=yaw,fixed_joint_world_quat_wxyz=quat)
+    trace['base_quat'][:]=quat
+    if fault=='root':report['initial_poses']['actual_root_yaw_rad']=0.
+    if fault=='anchor':report['initial_poses']['fixed_joint_world_quat_wxyz']=[1,0,0,0]
+    if fault=='physics':trace['base_quat'][:]=[1,0,0,0]
+    (path/'report.json').write_text(json.dumps(report))
+    np.savez(path/'trajectory.npz',**trace)
+    assert (module.audit(path)['status']=='passed')==(fault is None)
+
+
+@pytest.mark.parametrize("fault", [None, "head_drift", "wrong_target", "wrong_angle"])
+def test_requested_head_pitch_is_held_during_press(recording, fault):
+    path, trace = recording
+    report = json.loads((path / "report.json").read_text())
+    report["joint_names"].append("astribot_head_joint_2")
+    report["config"]["head_pitch_deg"] = 30.
+    for key in ("q", "target"):
+        trace[key] = np.column_stack([trace[key], np.full(5, np.radians(30.))])
+    if fault == "head_drift":
+        trace["q"][2, -1] += .03
+    elif fault == "wrong_target":
+        trace["target"][2, -1] = 0.
+    elif fault == "wrong_angle":
+        report["config"]["head_pitch_deg"] = 0.
+    (path / "report.json").write_text(json.dumps(report))
+    np.savez(path / "trajectory.npz", **trace)
+    assert (module.audit(path)["status"] == "passed") == (fault is None)
+
+
+@pytest.mark.parametrize("fault", [None, "left_drift", "changed_hold_target", "wrong_initial_right"])
+def test_raised_arm_initial_pose_and_left_hold_are_checked(recording, fault):
+    path, trace = recording
+    report = json.loads((path/"report.json").read_text())
+    report["config"]["initial_arm_positions"] = {"astribot_arm_left_joint_1": -.4}
+    trace["q"][:, 7] = -.4
+    trace["target"][:, 7] = -.4
+    if fault == "left_drift":
+        trace["q"][2, 7] += .03
+    elif fault == "changed_hold_target":
+        trace["target"][2, 7] = 0.
+    elif fault == "wrong_initial_right":
+        trace["q"][0, 0] = .1
+    (path/"report.json").write_text(json.dumps(report))
+    np.savez(path/"trajectory.npz", **trace)
+    assert (module.audit(path)["status"] == "passed") == (fault is None)
+
+
 @pytest.mark.parametrize("fault",["no_force","wrong_button","moving_base","open_gripper","failed_return"])
 def test_audit_rejects_false_success_report(recording,fault):
     path,trace = recording

@@ -1,0 +1,139 @@
+{
+  "spec_version": "v1.3",
+  "effective_date": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "kind": "experiment specification metadata; not a direct input to the existing runner",
+  "base_runtime_config": "config_v1_2.json",
+  "sampling": {
+    "frame": "world",
+    "position_target": "/World/Astribot root and world fixed-joint anchor",
+    "x_bounds_m": [
+      -0.3,
+      -0.14
+    ],
+    "y_bounds_m": [
+      0.0,
+      0.4
+    ],
+    "nominal_xy_m": [
+      -0.12,
+      0.28
+    ],
+    "delta_bounds_xy_m": [
+      [
+        -0.18,
+        -0.02
+      ],
+      [
+        -0.28,
+        0.12
+      ]
+    ],
+    "yaw_bounds_deg": [
+      0.0,
+      10.0
+    ],
+    "yaw_bounds_rad": [
+      0.0,
+      0.17453292519943295
+    ],
+    "yaw_reference_deg": 0.0,
+    "yaw_convention": "counterclockwise about world +Z; root yaw relative to +X; fixed during each episode",
+    "yaw_is_absolute_root_orientation": true,
+    "yaw_runtime_key": "robot_base_yaw_rad",
+    "fixed_during_episode": true,
+    "distribution": "independent uniform X, Y and yaw",
+    "rng": "numpy.Generator(PCG64)",
+    "sampling_order": "PCG64: draw all Nx2 XY offsets, then N independent uniform yaw angles in degrees",
+    "validated_batch_count": 50,
+    "validated_batch_seed": 20261014,
+    "future_batch_count_and_seed": "declare before each batch; not fixed by the specification"
+  },
+  "execution": {
+    "workers": 4,
+    "gpus": [
+      0,
+      1
+    ],
+    "cpu_threads": 8,
+    "launch_interval_s": 5.0,
+    "timeout_s": 600.0,
+    "headless": true,
+    "all_cameras": true,
+    "batch_video": false,
+    "physics_hz": 120,
+    "capture_hz": 30,
+    "head_pitch_deg": 30.0,
+    "runtime_status": "independent process per episode; CPU physics and IK; GPU rendering; persistent workers not implemented",
+    "current_normal_batch_count_limits": [
+      20,
+      50
+    ]
+  },
+  "cameras": {
+    "head": [
+      1280,
+      720
+    ],
+    "wrist_left": [
+      640,
+      480
+    ],
+    "wrist_right": [
+      640,
+      480
+    ],
+    "overview": [
+      960,
+      600
+    ],
+    "panel": [
+      640,
+      480
+    ],
+    "front": [
+      640,
+      480
+    ],
+    "lobby": [
+      640,
+      480
+    ]
+  },
+  "recording_reference": {
+    "config": "config_sample024_yaw9p5889.json",
+    "sample_id": "sample_024",
+    "x_m": -0.2460769662790993,
+    "y_m": 0.1019737412256509,
+    "yaw_deg": 9.588858185150498,
+    "yaw_rad": 0.1673571468376842,
+    "video": true,
+    "all_cameras": true,
+    "duration_s": 33.2,
+    "fps": 30,
+    "frames_per_camera": 996,
+    "kind": "separate re-recording; original batch stored snapshots only",
+    "watch": "../../outputs/vib820_sample024_yaw9p5889_recording_20261014/WATCH.md"
+  },
+  "validation": {
+    "report": "../../outputs/vib820_yaw_20261014/validated_n50_w8/report.md",
+    "planned": 50,
+    "first_attempt_outcomes": {
+      "success": 45,
+      "initial_collision": 1,
+      "runtime_error": 4
+    },
+    "initialization_retries": [
+      "sample_005",
+      "sample_006",
+      "sample_007",
+      "sample_008"
+    ],
+    "recovered_outcomes": {
+      "success": 49,
+      "initial_collision": 1
+    },
+    "largest_successful_yaw_in_50_deg": 9.588858185150498,
+    "not_a_proven_safe_yaw_limit": true
+  }
+}

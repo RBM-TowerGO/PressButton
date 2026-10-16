@@ -104,7 +104,8 @@ def run(app, args, report):
     for name, cam in initial["cameras"].items():
         depth = cam["depth_m"]
         finite = np.isfinite(depth) & (depth > .02) & (depth < 20.)
-        check(name + "_rgbd", cam["rgb"].shape == (480, 640, 3) and depth.shape == (480, 640)
+        width, height = rig.config["cameras"][name].get("resolution", rig.config["camera_resolution"])
+        check(name + "_rgbd", cam["rgb"].shape == (height, width, 3) and depth.shape == (height, width)
               and np.std(cam["rgb"]) > 5 and np.mean(finite) > .5,
               dict(rgb_shape=list(cam["rgb"].shape), depth_valid_fraction=float(np.mean(finite)),
                    depth_median_m=float(np.median(depth[finite])), rgb_std=float(np.std(cam["rgb"]))))
@@ -112,7 +113,7 @@ def run(app, args, report):
         transform = initial["world_from_sensor"][name + "_camera"]
         hit = omni.physx.get_physx_scene_query_interface().raycast_closest(
             transform[:3, 3].tolist(), (-transform[:3, 2]).tolist(), 20.)
-        measured = float(np.median(depth[238:242, 318:322]))
+        measured = float(np.median(depth[height//2-2:height//2+2, width//2-2:width//2+2]))
         expected = float(hit.get("distance", -1))
         check(name + "_depth_scale", hit.get("hit", False) and abs(measured - expected) < .025,
               dict(central_depth_m=measured, physics_ray_m=expected, collider=hit.get("collision", "")))
@@ -213,7 +214,9 @@ def run(app, args, report):
     draw = ImageDraw.Draw(sheet)
     for row, name in enumerate(rig.cameras):
         for col, suffix in enumerate(("rgb", "depth")):
-            sheet.paste(Image.open(args.output / f"initial_{name}_{suffix}.png").convert("RGB"), (col*640, row*510+30))
+            from PIL import ImageOps
+            tile = ImageOps.contain(Image.open(args.output / f"initial_{name}_{suffix}.png").convert("RGB"), (640, 480))
+            sheet.paste(tile, (col*640+(640-tile.width)//2, row*510+30+(480-tile.height)//2))
             draw.text((col*640+12, row*510+8), name + " / " + suffix, fill="white")
     sheet.save(args.output / "camera_overview.png")
     (args.output / "calibration.json").write_text(json.dumps(rig.calibration(), indent=2) + "\n")

@@ -1,0 +1,181 @@
+{
+  "updated_utc": "2026-10-16T02:31:06.507522+00:00",
+  "status": "running",
+  "formal_attempts": 0,
+  "formal_accepted": 0,
+  "target": 400,
+  "frozen_candidates": 512,
+  "tests": {
+    "passed": 64,
+    "nvenc_hardware_passed": 1,
+    "junit": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/preflight_resident_v2/unit_fault_checks.xml"
+  },
+  "implemented": [
+    "resident_collector",
+    "ordered_candidate_dispatch_and_resume",
+    "GPU_RGB_packing_and_bounded_NVENC",
+    "32_joint_raw_contract",
+    "shared_hashed_assets",
+    "official_LeRobot_export",
+    "evidence_gate",
+    "stratified_replay_and_release_verifier"
+  ],
+  "verified": [
+    "CPU_and_GPU_ten_historical_physical_cases",
+    "single_environment_seven_video_episode_and_twenty_resets",
+    "real_pilot_official_LeRobot_writer_and_reader",
+    "NVENC_backpressure_and_corrupt_video_rejection",
+    "frozen_512_candidates_PCG64_exact_recheck"
+  ],
+  "blocking": [
+    "local_v2_capture_revalidation_and_production_gate_pending"
+  ],
+  "pending": [
+    "400_accepted_formal_episodes",
+    "complete_LeRobot_export",
+    "twenty_final_stratified_replays",
+    "final_release"
+  ],
+  "decision_document": "architecture_decision.md",
+  "alternative_architecture_authorized": true,
+  "data_root": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000",
+  "estimated_raw_plus_training_gib": "36–37, excluding failures and preflight",
+  "latest_diagnostic": {
+    "name": "sol61_matched_current_single_and_settle12",
+    "single_elapsed_s": 237.64615229400806,
+    "settle12_elapsed_s": 763.022252697032,
+    "reset_rounds_passed": 20,
+    "ready_physics_ticks": 180,
+    "settle12_matched_image_max_relative_difference": 0.028700546077996575,
+    "settle12_matched_image_status": "passed",
+    "original_isolated_matched_image_status": "failed",
+    "complete_dynamic_video_verified": false,
+    "production_eligible": false,
+    "report": "outputs/vib820_gpu_collection_400_preflight/sol61_matched_current_single/comparison.json"
+  },
+  "authorization": "用户明确选择允许按架构提案预检并完成采集",
+  "resident_pipeline": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/preflight_resident_v2/pipeline_state.json",
+  "selected_backend": null,
+  "gpu_resident_backend_historical_acceptance": false,
+  "resident_single_gpu_sweep": {
+    "processes_per_gpu": 1,
+    "accepted_per_minute": 0.1757817338024907,
+    "measurement_wall_s": 682.6647877693176,
+    "full_video_accepted": 3,
+    "formal_data": false
+  },
+  "pipeline_pid": 8964,
+  "resident_two_process_warmup": {
+    "accepted": 2,
+    "elapsed_s": [
+      308.19,
+      307.76
+    ],
+    "measurement_complete": false,
+    "production_eligible": false
+  },
+  "preflight_accepted": 2,
+  "current_stage": "resident_cpu_gpu_historical_comparison",
+  "execution_state": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/execution_state.json",
+  "migration_note": "Historical results retained in pre_migration_implementation_status.json; no old production gate reused on Pro6000.",
+  "supervisor_pid": 4064,
+  "pro6000_pilots": {
+    "gpu0_accepted": true,
+    "gpu1_accepted": true,
+    "resets_per_gpu": 20,
+    "audited_episode_elapsed_s": [
+      142.72635377000006,
+      139.97359522399984
+    ],
+    "official_reader_episodes": 1,
+    "formal_data": false
+  },
+  "precision_fix": {
+    "description": "Accept only exact requested float64 or exact IEEE float32 representation; no quality parameter changes",
+    "tests_passed_on_physical_gpu1": 64,
+    "gpu0_minimal_cuda_allocation": "failed",
+    "old_v1_evidence_preserved": true
+  },
+  "last_recheck": {
+    "checked_utc": "2026-10-16T02:14:35.208315+00:00",
+    "status": "waiting_for_dual_gpu_recovery",
+    "supervisor_pid": 23289,
+    "gpu0_minimal_cuda": "failed_out_of_memory",
+    "gpu1_minimal_cuda": "passed",
+    "kernel_evidence": "PAT write-combining/uncached-minus mapping conflict",
+    "formal_attempts": 0,
+    "formal_accepted": 0,
+    "reboot_authorization": "pending",
+    "capture_parameters_changed": false,
+    "source_changed": false,
+    "evidence_directory": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/recovery_20261016T021435Z"
+  },
+  "post_reboot_recovery": {
+    "verified_utc": "2026-10-16T02:18:42.376444+00:00",
+    "reboot_confirmed": true,
+    "uptime": "2026-10-16 10:17:16",
+    "gpu0": "CUDA allocation and matrix computation passed",
+    "gpu1": "CUDA allocation and matrix computation passed",
+    "supervisor_pid": 4064,
+    "launch": {
+      "pid": 4064,
+      "started_unix_s": 1792117091.879447,
+      "log": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/supervisor_resumed_20261016T021809Z.log",
+      "exit_code": null
+    },
+    "formal_attempts": 0,
+    "formal_accepted": 0
+  },
+  "pro6000_v2_progress": {
+    "pilots": {
+      "gpu0": {
+        "status": "accepted",
+        "reset_rounds": 20,
+        "wave_with_audit_s": 144.48182459100002,
+        "frames_per_camera": {
+          "head": 997,
+          "overview": 997,
+          "wrist_left": 997,
+          "wrist_right": 997,
+          "panel": 997,
+          "front": 997,
+          "lobby": 997
+        },
+        "lamp": "passed"
+      },
+      "gpu1": {
+        "status": "accepted",
+        "reset_rounds": 20,
+        "wave_with_audit_s": 135.07082263400002,
+        "frames_per_camera": {
+          "head": 997,
+          "overview": 997,
+          "wrist_left": 997,
+          "wrist_right": 997,
+          "panel": 997,
+          "front": 997,
+          "lobby": 997
+        },
+        "lamp": "passed"
+      }
+    },
+    "official_reader": {
+      "status": "passed",
+      "official_reader": "LeRobotDataset/0.6.1/pyav",
+      "episodes": 1,
+      "checks": [
+        {
+          "candidate_id": 24,
+          "frames": 645,
+          "sampled": [
+            0,
+            322,
+            644
+          ]
+        }
+      ]
+    },
+    "production_gate": "pending",
+    "formal_accepted": 0
+  }
+}

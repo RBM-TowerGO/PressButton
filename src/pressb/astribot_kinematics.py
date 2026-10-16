@@ -57,7 +57,7 @@ class AstribotKinematics:
         wrist = self.fk("astribot_arm_right_link_7", dict(zip(RIGHT_ARM, q)))
         return wrist @ tcp_in_wrist
 
-    def solve(self, target, seed, tcp_in_wrist):
+    def solve(self, target, seed, tcp_in_wrist, *, diagnostics=None):
         """Bounded pose IK, retaining the nearby redundant-arm posture."""
         seed = np.clip(np.asarray(seed), self.lower + 1e-5, self.upper - 1e-5)
 
@@ -72,6 +72,11 @@ class AstribotKinematics:
         actual = self.tcp(result.x, tcp_in_wrist)
         error = np.linalg.norm(actual[:3, 3] - target[:3, 3])
         rotation_error = Rotation.from_matrix(target[:3, :3] @ actual[:3, :3].T).magnitude()
+        if diagnostics is not None:
+            diagnostics.update(position_error_m=float(error), rotation_error_rad=float(rotation_error),
+                               within_joint_limits=bool(np.all(result.x >= self.lower) and np.all(result.x <= self.upper)),
+                               q_rad=result.x.tolist(), nfev=int(result.nfev),
+                               target_in_robot_root=target.tolist())
         if error > .0005 or rotation_error > .01:
             raise ValueError(f"Unreachable pose: position={error:.6f} m, rotation={rotation_error:.5f} rad")
         return result.x

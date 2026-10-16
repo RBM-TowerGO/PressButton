@@ -58,6 +58,13 @@ python scripts/audit_astribot_press.py outputs/astribot_press_acceptance
 确定，当前为约 0.102 m。右臂在这个站位求解所有按钮的接近点和按压点；
 不可达时启动失败，不通过移动底盘完成任务。
 
+配置可选 `head_pitch_deg`（默认 0），在整个按压与重置过程中保持
+`astribot_head_joint_2` 的指定角度；正值为低头，启动时验证 URDF 限位。
+例如在 VIB-820 预备姿态配置的副本中设置为 30，配合 `--video --all-cameras`
+录制头部、双腕及场景观察相机。独立物理审计按此角度检查头部保持误差。
+本次 30°完整按压录像及三路同步合成见
+[`outputs/vib820_press_head30_20261014/WATCH.md`](../outputs/vib820_press_head30_20261014/WATCH.md)。
+
 不带 `--headless` 时打开仿真窗口。程序完成任务后关闭；这与保持窗口的静态
 `preview_astribot_panel.py` 不同。每个输出目录保留配置和控制器源码 SHA-256。
 

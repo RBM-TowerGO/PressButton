@@ -1,0 +1,353 @@
+{
+  "recording": "outputs/vib820_spec_v1_1_all_cameras_20261014/run",
+  "resolution": [
+    1280,
+    720
+  ],
+  "fov_deg": [
+    81.12183131668701,
+    51.417500375126494
+  ],
+  "focal_length_mm": 14.019984245300293,
+  "head_target_max_abs_rad": 0.0,
+  "head_actual_max_abs_rad": 9.132366358244326e-06,
+  "samples": [
+    {
+      "phase": "settle",
+      "time_s": 0.7583333333333333,
+      "camera_xyz_m": [
+        -0.15835030850003565,
+        0.2522958973486958,
+        1.673454363440882
+      ],
+      "camera_forward": [
+        0.9999987659851403,
+        -3.9536561619748864e-05,
+        -0.0015704983463829209
+      ],
+      "lower_view_height_at_panel_m": 1.374549011698616,
+      "points": {
+        "button": {
+          "world_xyz_m": [
+            0.46,
+            0.0,
+            1.2
+          ],
+          "pixel_uv": [
+            944.6852157150488,
+            930.6491224683314
+          ],
+          "angle_below_axis_deg": 37.349889798155914,
+          "inside_image": false
+        },
+        "left_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.2748480587384282,
+            0.6070675596122654,
+            1.2040946713910494
+          ],
+          "pixel_uv": [
+            28.627998456396085,
+            1167.6272298119966
+          ],
+          "angle_below_axis_deg": 47.20529101732789,
+          "inside_image": false
+        },
+        "right_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.2748389111573286,
+            -0.0471049015697336,
+            1.2040126744637687
+          ],
+          "pixel_uv": [
+            1155.8778635746232,
+            1167.7371396634665
+          ],
+          "angle_below_axis_deg": 47.20917787321231,
+          "inside_image": false
+        }
+      }
+    },
+    {
+      "phase": "close_gripper",
+      "time_s": 2.7583333333333333,
+      "camera_xyz_m": [
+        -0.15834840328178193,
+        0.2522959105054856,
+        1.6734542417220333
+      ],
+      "camera_forward": [
+        0.9999987628822372,
+        -3.9318485720215546e-05,
+        -0.0015724783149347003
+      ],
+      "lower_view_height_at_panel_m": 1.3745483005536694,
+      "points": {
+        "button": {
+          "world_xyz_m": [
+            0.46,
+            0.0,
+            1.2
+          ],
+          "pixel_uv": [
+            944.6858991146054,
+            930.6484433193209
+          ],
+          "angle_below_axis_deg": 37.349856911752944,
+          "inside_image": false
+        },
+        "left_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.2748488416884075,
+            0.6070676197351031,
+            1.2040930502183544
+          ],
+          "pixel_uv": [
+            28.627919170026075,
+            1167.62854940821
+          ],
+          "angle_below_axis_deg": 47.20533768695378,
+          "inside_image": false
+        },
+        "right_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.29184489196501817,
+            -0.04268489127114039,
+            1.200185886623023
+          ],
+          "pixel_uv": [
+            1129.0879338313848,
+            1143.5668876528962
+          ],
+          "angle_below_axis_deg": 46.340550995390196,
+          "inside_image": false
+        }
+      }
+    },
+    {
+      "phase": "move_to_work_pose",
+      "time_s": 5.808333333333334,
+      "camera_xyz_m": [
+        -0.15851469802625812,
+        0.252294557963633,
+        1.6734656750656614
+      ],
+      "camera_forward": [
+        0.9999990373015114,
+        -6.173898518101318e-05,
+        -0.0013862122304847603
+      ],
+      "lower_view_height_at_panel_m": 1.3746214640443872,
+      "points": {
+        "button": {
+          "world_xyz_m": [
+            0.46,
+            0.0,
+            1.2
+          ],
+          "pixel_uv": [
+            944.6261892327148,
+            930.7238504911238
+          ],
+          "angle_below_axis_deg": 37.3535081739594,
+          "inside_image": false
+        },
+        "left_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.27477413657750127,
+            0.6070614778457217,
+            1.2041593587667383
+          ],
+          "pixel_uv": [
+            28.614127665051797,
+            1167.6800135822155
+          ],
+          "angle_below_axis_deg": 47.20715773554306,
+          "inside_image": false
+        },
+        "right_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.23388952055257614,
+            -0.008848995769013157,
+            1.1937663261925273
+          ],
+          "pixel_uv": [
+            1136.7053630572682,
+            1271.4562182180694
+          ],
+          "angle_below_axis_deg": 50.635530204748925,
+          "inside_image": false
+        }
+      }
+    },
+    {
+      "phase": "press",
+      "time_s": 14.458333333333334,
+      "camera_xyz_m": [
+        -0.15824248948226316,
+        0.25229542781633024,
+        1.6734470834180868
+      ],
+      "camera_forward": [
+        0.9999985727140348,
+        -4.732985052438854e-05,
+        -0.0016888841814697631
+      ],
+      "lower_view_height_at_panel_m": 1.3745035515516995,
+      "points": {
+        "button": {
+          "world_xyz_m": [
+            0.46,
+            0.0,
+            1.2
+          ],
+          "pixel_uv": [
+            944.703400109833,
+            930.5980483146334
+          ],
+          "angle_below_axis_deg": 37.34741655624592,
+          "inside_image": false
+        },
+        "left_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.27485779866592513,
+            0.6071150282923647,
+            1.2039808287556164
+          ],
+          "pixel_uv": [
+            28.475889059867768,
+            1167.8067309115922
+          ],
+          "angle_below_axis_deg": 47.21163860607448,
+          "inside_image": false
+        },
+        "right_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.338312242339903,
+            -0.00040020344032443145,
+            1.197783459878187
+          ],
+          "pixel_uv": [
+            1019.8608816276841,
+            1073.8388871552079
+          ],
+          "angle_below_axis_deg": 43.6715581584714,
+          "inside_image": false
+        }
+      }
+    },
+    {
+      "phase": "return_to_ready",
+      "time_s": 24.53333333333333,
+      "camera_xyz_m": [
+        -0.15849303529973052,
+        0.2522949920741215,
+        1.6734643053548992
+      ],
+      "camera_forward": [
+        0.9999990065231764,
+        -5.454097138930557e-05,
+        -0.0014085375189157392
+      ],
+      "lower_view_height_at_panel_m": 1.3746135294243151,
+      "points": {
+        "button": {
+          "world_xyz_m": [
+            0.46,
+            0.0,
+            1.2
+          ],
+          "pixel_uv": [
+            944.63845757169,
+            930.7174575399733
+          ],
+          "angle_below_axis_deg": 37.35319863706375,
+          "inside_image": false
+        },
+        "left_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.274784589947179,
+            0.6070614707423339,
+            1.2041517246975348
+          ],
+          "pixel_uv": [
+            28.62283052708176,
+            1167.6707587457922
+          ],
+          "angle_below_axis_deg": 47.20683044421298,
+          "inside_image": false
+        },
+        "right_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.24682418328564493,
+            -0.01385575640222697,
+            1.1932941993155575
+          ],
+          "pixel_uv": [
+            1130.1213396566611,
+            1243.2629711634663
+          ],
+          "angle_below_axis_deg": 49.75018162979731,
+          "inside_image": false
+        }
+      }
+    },
+    {
+      "phase": "ready_hold",
+      "time_s": 26.625,
+      "camera_xyz_m": [
+        -0.15834862574216332,
+        0.25229590005796054,
+        1.673454250542228
+      ],
+      "camera_forward": [
+        0.9999987631000727,
+        -3.949173354600759e-05,
+        -0.0015723354373017022
+      ],
+      "lower_view_height_at_panel_m": 1.374548310828416,
+      "points": {
+        "button": {
+          "world_xyz_m": [
+            0.46,
+            0.0,
+            1.2
+          ],
+          "pixel_uv": [
+            944.6856591718051,
+            930.6483772590097
+          ],
+          "angle_below_axis_deg": 37.349853712915845,
+          "inside_image": false
+        },
+        "left_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.27484873145881583,
+            0.6070677419497571,
+            1.2040929297423102
+          ],
+          "pixel_uv": [
+            28.62753847570559,
+            1167.6289085281971
+          ],
+          "angle_below_axis_deg": 47.205350387791,
+          "inside_image": false
+        },
+        "right_finger_link_midpoint": {
+          "world_xyz_m": [
+            0.2918072816369475,
+            -0.042725442727585716,
+            1.2002018477186907
+          ],
+          "pixel_uv": [
+            1129.1956312542648,
+            1143.605678517412
+          ],
+          "angle_below_axis_deg": 46.341967634117424,
+          "inside_image": false
+        }
+      }
+    }
+  ],
+  "scope": "Six representative recorded poses. Finger link midpoints are reference points, not full mesh visibility or occlusion tests. No simulation rerun or camera changes."
+}

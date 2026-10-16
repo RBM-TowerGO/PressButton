@@ -1,0 +1,139 @@
+{
+  "scene_type": "vib820",
+  "robot_base_x": -0.22,
+  "robot_base_y": 0.28,
+  "button_face_x": 0.46,
+  "panel_center_y": 0.0,
+  "panel_width": 0.095,
+  "panel_height": 0.4,
+  "panel_depth": 0.02,
+  "display_width": 0.089,
+  "display_height": 0.189,
+  "display_bottom_z": 1.28,
+  "display_top_margin": 0.008,
+  "button_below_display": 0.08,
+  "button_cap_diameter": 0.03,
+  "button_outer_diameter": 0.037,
+  "button_travel": 0.002,
+  "panel_to_jamb_gap": 0.2,
+  "jamb_strip_width": 0.015,
+  "door_width": 1.3,
+  "door_height": 2.15,
+  "button_stiffness": 300.0,
+  "button_damping": 3.0,
+  "press_threshold": 0.001,
+  "release_threshold": 0.0003,
+  "contact_threshold_n": 0.02,
+  "button_light_mode": "latched",
+  "approach_distance": 0.065,
+  "press_depth": 0.0018,
+  "physics_hz": 120,
+  "capture_hz": 30,
+  "joint_speed": 0.4,
+  "press_speed_m_s": 0.012,
+  "home_tip": [
+    0.28,
+    0.0,
+    1.2
+  ],
+  "camera_eye": [
+    -1.6,
+    -2.5,
+    1.85
+  ],
+  "camera_target": [
+    0.1,
+    0.25,
+    1.05
+  ],
+  "sequence": [
+    0
+  ],
+  "task_labels": {
+    "0": "Press the down hall-call button."
+  },
+  "provenance": {
+    "measured": [
+      "panel_width",
+      "panel_height",
+      "display_width",
+      "display_height",
+      "display_bottom_z",
+      "button_below_display",
+      "button_cap_diameter",
+      "button_outer_diameter",
+      "button_travel",
+      "panel_to_jamb_gap",
+      "jamb_strip_width",
+      "door_width",
+      "jamb_recess_depth"
+    ],
+    "interpreted": {
+      "panel_depth": "User item 2 interpreted as 20 mm protrusion; cap is flush with faceplate.",
+      "jamb_recess_depth": "User 35 cm frame depth modeled as inward distance from panel mounting wall surface to closed door front; user 130 cm modeled as clear width between frame inner faces."
+    },
+    "provisional": {
+      "display_top_margin": "8 mm estimated from photographs; determines panel top and bottom elevations.",
+      "door_height": "Unmeasured local environment approximation.",
+      "robot_base": "Simulation placement, not surveyed robot pose. Moved 100 mm back from the previous nominal base to provide gripper closure clearance at the raised-arm initial posture.",
+      "button_physics": "Mass, spring, damping, trigger and contact thresholds are simulation assumptions. Measured 2 mm depression used as travel limit.",
+      "display": "Static up arrow and 1, independently from down call; no elevator dispatch simulation.",
+      "surroundings": "Wall, floor, signs and lighting approximated from reference video, not survey-grade reconstruction.",
+      "signage": "Positions and sizes estimated from latest user reference photo: warning left-aligned above panel; separate red, white/yellow and blue blocks on right. Simplified text."
+    },
+    "reference_video": "../DJI_20261013165415_0002_D.MP4",
+    "measurement_record": "../panel_reference_vib820/measurements.csv"
+  },
+  "signage": {
+    "warning": {
+      "right_offset": 0.0375,
+      "center_z": 1.5315,
+      "width": 0.17,
+      "height": 0.085
+    },
+    "fire": {
+      "right_offset": 0.1375,
+      "center_z": 1.4165,
+      "width": 0.1,
+      "height": 0.105
+    },
+    "stairs": {
+      "right_offset": 0.13,
+      "center_z": 1.255,
+      "width": 0.095,
+      "height": 0.095
+    },
+    "access": {
+      "right_offset": 0.12,
+      "center_z": 1.129,
+      "width": 0.09,
+      "height": 0.09
+    }
+  },
+  "jamb_recess_depth": 0.35,
+  "initial_arm_positions": {
+    "astribot_arm_left_joint_1": -0.4,
+    "astribot_arm_left_joint_2": -0.7,
+    "astribot_arm_left_joint_3": -1.0,
+    "astribot_arm_left_joint_4": 1.4,
+    "astribot_arm_left_joint_5": -0.9,
+    "astribot_arm_left_joint_6": 0.0,
+    "astribot_arm_left_joint_7": 0.0,
+    "astribot_arm_right_joint_1": 0.4,
+    "astribot_arm_right_joint_2": -0.7,
+    "astribot_arm_right_joint_3": 1.0,
+    "astribot_arm_right_joint_4": 1.4,
+    "astribot_arm_right_joint_5": 0.9,
+    "astribot_arm_right_joint_6": 0.0,
+    "astribot_arm_right_joint_7": 0.0
+  },
+  "return_to_initial_pose": true,
+  "initial_pose_provenance": {
+    "name": "activearena_astribot_arm_home_candidate",
+    "definition": "homestate in ActiveArena config.yml:101; explicit joint order config.yml:36",
+    "source_repo_revision": "1bf2c77b8d3ab978fc5b4599a69d017f593edbe8",
+    "source_dataset_revision": "819632dfd545b569657e195cc47aae3af7fce5f1",
+    "source_archive_sha256": "49be39c500e763d6d0194d4449751967bff16df5a2c044f1f53f7e9b7adffcb7"
+  },
+  "head_pitch_deg": 30.0
+}

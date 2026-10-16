@@ -1,11 +1,37 @@
 {
-  "description": "Task-oriented simulation mounts; not manufacturer extrinsic calibration. Local coordinates in metres relative to the named rigid link.",
+  "description": "Head monocular RGB view and wrist extrinsics follow Astribot's official ManiSkill example, converted from SAPIEN +X-forward/+Z-up to USD -Z-forward/+Y-up. Other sensors remain task-oriented simulation mounts. Local coordinates are metres relative to the named link; this is not per-device hardware calibration.",
   "physics_hz": 120,
   "capture_hz": 10,
   "cameras": {
-    "head": {"link": "astribot_head_link_2", "eye": [0.1, -0.04, 0], "target": [0.71, 0.30765, 0], "up": [0, -1, 0]},
-    "wrist_left": {"link": "astribot_arm_left_link_7", "eye": [0.1, 0.037588, -0.013681], "target": [0.71, 0.412386, 0.24282], "up": [0, 0.939693, -0.34202]},
-    "wrist_right": {"link": "astribot_arm_right_link_7", "eye": [-0.1, 0.037588, -0.013681], "target": [-0.71, 0.412386, 0.24282], "up": [0, 0.939693, -0.34202]}
+    "head": {
+      "link": "astribot_head_link_2",
+      "eye": [0.0603, -0.2139, -0.0277],
+      "target": [1.0603, -0.2139, -0.0277],
+      "up": [0, -1, 0],
+      "resolution": [1280, 720],
+      "vertical_fov_rad": 0.8974046681441843,
+      "clip_m": [0.028338245138894207, 141.6912288615168]
+    },
+    "wrist_left": {"link": "astribot_gripper_left_base", "eye": [0, 0.04, 0.03], "target": [0, 0.04, 1.03], "up": [0, 1, 0]},
+    "wrist_right": {"link": "astribot_gripper_right_base", "eye": [0, 0.04, 0.03], "target": [0, 0.04, 1.03], "up": [0, 1, 0]}
+  },
+  "head_camera_provenance": {
+    "url": "https://github.com/Astribot-Dev/astribot_simulation/blob/1403f9623efaea2709731c74629f395869849e89/src/astribot_envs/astribot_maniskill_env.py#L138-L147",
+    "revision": "1403f9623efaea2709731c74629f395869849e89",
+    "source_camera": "head_rgbd",
+    "selected_view": "Single RGB viewpoint of the head RGB-D camera; not a left/right stereo pair.",
+    "source_position_m": [0.0603, -0.2139, -0.0277],
+    "source_quaternion_wxyz": [0.7071, 0.7071, 0, 0],
+    "scope": "Official simulated head camera pose, resolution, vertical FOV and clipping planes. RGB-only press videos; optional ideal depth in the full sensor interface is not a stereo reconstruction or physical Femto Bolt model."
+  },
+  "wrist_camera_provenance": {
+    "url": "https://github.com/Astribot-Dev/astribot_simulation/blob/1403f9623efaea2709731c74629f395869849e89/src/astribot_envs/astribot_maniskill_env.py#L116-L137",
+    "revision": "1403f9623efaea2709731c74629f395869849e89",
+    "source_position_m": [0, 0.04, 0.03],
+    "source_quaternion_wxyz": [0.5, -0.5, -0.5, -0.5],
+    "source_camera_axes": "+X forward, +Y left, +Z up (SAPIEN)",
+    "usd_camera_axes": "+X right, +Y up, -Z forward",
+    "scope": "Official simulated wrist extrinsics only. Existing 640x480 image size and optical intrinsics are retained; official ManiSkill example uses 640x360 and vertical FOV 57 degrees. No claim of physical camera calibration."
   },
   "camera_resolution": [640, 480],
   "camera_focal_length_mm": 18.0,

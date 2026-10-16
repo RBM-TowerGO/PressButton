@@ -450,7 +450,7 @@ def split_tiled_rgb(buffer, num_cameras: int, resolution=(640, 480)) -> list[np.
             for i in range(num_cameras)]
 
 
-def build_tiled_rgb(camera_paths, resolution=(640, 480)):
+def build_tiled_rgb(camera_paths, resolution=(640, 480), *, device="cpu"):
     """Return (render_product, CPU_RGB_annotator, split_fn) for existing cameras.
 
     No Core Camera wrappers or additional render products are created. Caller
@@ -477,6 +477,6 @@ def build_tiled_rgb(camera_paths, resolution=(640, 480)):
     authored = [str(path) for path in stage.GetPrimAtPath(render_product.path).GetRelationship("camera").GetTargets()]
     if authored != paths:
         raise RuntimeError("Tiled render product changed the requested camera order")
-    annotator = rep.AnnotatorRegistry.get_annotator("rgb", device="cpu", do_array_copy=True)
+    annotator = rep.AnnotatorRegistry.get_annotator("rgb", device=device, do_array_copy=device == "cpu")
     annotator.attach([render_product.path])
     return render_product, annotator, partial(split_tiled_rgb, num_cameras=len(paths), resolution=resolution)
