@@ -1,6 +1,8 @@
 # VIB-820 采集与验收操作
 
-所有命令从 `/home/js/robot/VLA/PressB` 执行。预检与生产输出严格分开；没有通过生产 gate 时不能启动正式采集。当前进度见 [progress.md](progress.md)。
+所有命令从 `/home/js/robot/VLA/PressButton/PressB` 执行。预检与生产输出严格分开；没有通过生产 gate 时不能启动正式采集。当前进度见 [progress.md](progress.md)。
+
+> **状态（2026-10-19）**：本文保留为复现手册，正式采集已经结束。400/400 条于 2026-10-17 完成，官方导出、全量视频解码、22 条回放与发布验收均通过。正式采集实际走的是「用户显式授权 + 每卡 2 个常驻单环境进程」路径（`--production-authorization`），**没有**走下文的多环境 `--preflight-report` gate，也没有完成两倍吞吐门槛；相关段落已标注为历史要求。下游训练与闭环见 [配对对照](../../astribot_paired_val_20261019.md)。
 
 ## 环境与配置
 
@@ -45,6 +47,8 @@ python scripts/collect_astribot_dataset.py \
   --render-layout VERIFIED_LAYOUT --preflight-report VERIFIED_GATE_JSON
 ```
 
+已授权路径把 `--preflight-report` 换成 `--production-authorization outputs/vib820_gpu_collection_400_pro6000/production_authorization.json`；两者互斥，授权文件必须匹配源码、配置和八项证据哈希（2026-10-16 起的正式采集用的就是这条路径）。
+
 恢复使用同一命令附加 `--resume`。仅验证过的原子提交可跳过；中断 attempt 从初始状态重跑，物理失败不重试。`selection.json` 按候选 ID 顺序选前 400 条，`summary.json` 的 `collected` 只表示原始采集完成，尚不表示最终发布。需要平稳停止时在每个活动 `workers/gpu*/` 目录建立 `STOP` 文件，当前整轮关闭视频并审计后退出。磁盘低于 20 GiB 同样停止新轮次；不删除历史产物。
 
 ## 导出、回放与最终检查
@@ -85,7 +89,7 @@ python scripts/collect_astribot_dataset.py \
 
 ## 自动执行与数据盘
 
-完整流水线为 `scripts/run_astribot_collection_pipeline.py`。当前自动推进已停止：v1 在派发前被替代，v2 因多环境相机可见邻居场景而停止。正式 attempt 为零。修复并验证隔离后，使用新的输出目录启动，避免复用配置不匹配的证据：
+完整流水线为 `scripts/run_astribot_collection_pipeline.py`。以下自动推进段落是 2026-10-15 的历史状态：v1 在派发前被替代，v2 因多环境相机可见邻居场景而停止，当时正式 attempt 为零。后续正式采集没有复用这条多环境流水线，而是改走常驻单环境进程路径（见文末两节），于 2026-10-17 完成 400/400。若要在新机器上复现，仍应使用新的输出目录，避免复用配置不匹配的证据：
 
 ```bash
 python scripts/run_astribot_collection_pipeline.py \
@@ -95,11 +99,11 @@ python scripts/run_astribot_collection_pipeline.py \
   --execute-production
 ```
 
-启动前须等待诊断关闭；可传入 `--wait-runs` 等待有运行配置记录的旧 worker，防止污染最终测量。状态在输出目录 `pipeline_state.json`。没有通过两倍吞吐、图像隔离等 gate 时不会执行正式数据。
+启动前须等待诊断关闭；可传入 `--wait-runs` 等待有运行配置记录的旧 worker，防止污染最终测量。状态在输出目录 `pipeline_state.json`。按原设计，没有通过两倍吞吐、图像隔离等 gate 时不会执行正式数据；实际执行改为用户显式授权路径，这一门槛条件没有被满足（见 [plan.md](plan.md) 第 6.3 节）。
 
 数据根目录为 `/data/shared/js/PressB/vib820_gpu_collection_400_20261015`，包含 `raw`、`lerobot`、`replays`、`release`（后几项会随执行产生）。原项目 `outputs/vib820_gpu_collection_400` 是 `raw` 的软链接。保留 20 GiB 磁盘下限，同时主机可用 RAM 低于 32 GiB 或已用显存超过 80% 时停止派发并排空当前轮。
 
-当前没有可以填入上述命令的已验证多环境生产配置。`isolated` 是实验路径；重复切换环境的图像检查仍失败，不能根据单张稳定截图或数值复位 passed 启动生产。待确认的多常驻单环境进程提案见 [architecture_decision.md](architecture_decision.md)，该架构尚未执行，也尚未通过吞吐门槛。
+当时没有可以填入上述命令的已验证多环境生产配置。`isolated` 是实验路径；重复切换环境的图像检查失败，不能根据单张稳定截图或数值复位 passed 启动生产。该阻塞通过改用「每卡多个常驻单环境进程」解决（见下两节），多环境路径至今仍未通过验收，也没有用于任何正式数据。
 
 ## 已授权的常驻单环境进程流水线（2026-10-15）
 
@@ -114,6 +118,14 @@ env -u PYTHONPATH -u PYTHONHOME PYTHONNOUSERSITE=1 CUDA_VISIBLE_DEVICES=0,1 \
   --render-layout homogeneous --execute-production
 ```
 
-每卡实测 1/2/4 常驻进程，每进程一环境。GPU 编号和 worker slot 独立；成功候选仍按 ID 顺序选择。源代码、门槛文件及每卡进程数冻结。全部独立录像进程的真实重叠区间计算吞吐，不把单进程吞吐乘以并发数。资源超限停止新派发并保留当前轮证据；未通过原至少两倍吞吐门槛不启动生产。正式入口增加 `--processes-per-gpu VERIFIED_COUNT --envs-per-gpu 1`，必须匹配真实 gate。
+每卡实测 1/2/4 常驻进程，每进程一环境。GPU 编号和 worker slot 独立；成功候选仍按 ID 顺序选择。源代码、门槛文件及每卡进程数冻结。全部独立录像进程的真实重叠区间计算吞吐，不把单进程吞吐乘以并发数。资源超限停止新派发并保留当前轮证据；按原设计未通过至少两倍吞吐门槛不启动生产，实际由用户显式授权改用 p2（每卡 2 个常驻进程）启动。正式入口增加 `--processes-per-gpu VERIFIED_COUNT --envs-per-gpu 1`，必须匹配真实 gate 或授权文件。
 
 当前源冻结后的回归为 86 passed、1 skipped（NVENC 硬件检查另行 1 passed）。流水线状态及各 worker 的日志、资源、事件、复位审计均在上述新预检目录。旧失败证据不可替代新 gate。
+
+## 实际生产运行记录（2026-10-16 → 2026-10-17）
+
+- 授权：`outputs/vib820_gpu_collection_400_pro6000/production_authorization.json`（`status=user_authorized`，policy `practical_collection_with_per_episode_audit`，绑定源码哈希、配置与八项证据）。源码覆盖前一份冻结保存在 `raw/source_versions/before_pre_motion_recovery`。
+- 配置：双卡、`processes_per_gpu=2`、`envs_per_gpu=1`、`backend=cpu`、`render_layout=individual`、30 Hz 采样、七路原生相机。
+- 结果：400/400 条通过逐条审计；日志 3,266 行（2,738 排队 + 528 执行）；`physical_failure` 30、`infrastructure_error` 22；147/378 经全量审计移出并由 515/516 替换。
+- 导出与发布：LeRobot v3.0 400 episodes / 245,983 帧 / 13 GiB；官方读取、全帧解码、22 条回放通过；`release_report.json` `status=passed`。
+- 未完成：每卡 1/2/4/8 sweep、双卡重叠吞吐测量、≥2 倍加速结论。此类结论不得用本轮数据补记。

@@ -1,13 +1,17 @@
 {
-  "updated_utc": "2026-10-16T07:21:20.605228+00:00",
-  "status": "running",
-  "formal_attempts": 284,
-  "formal_accepted": 77,
+  "updated_utc": "2026-10-19T08:30:00+00:00",
+  "status": "complete",
+  "formal_attempts": 528,
+  "journal_rows": 3266,
+  "formal_accepted": 400,
   "target": 400,
+  "completed_utc": "2026-10-17T13:50:15+08:00",
+  "completion_note": "正式采集、官方导出、全量审计、分层回放与发布验收均已通过；后续微调与闭环评估见 training/closedloop/paired_validation 三段。",
   "frozen_candidates": 512,
   "tests": {
     "passed": 64,
     "nvenc_hardware_passed": 1,
+    "scope": "采集器相关回归，最后一次运行于 2026-10-16 preflight_resident_v2；不是全仓测试总数",
     "junit": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/preflight_resident_v2/unit_fault_checks.xml"
   },
   "implemented": [
@@ -25,14 +29,18 @@
     "single_environment_seven_video_episode_and_twenty_resets",
     "real_pilot_official_LeRobot_writer_and_reader",
     "NVENC_backpressure_and_corrupt_video_rejection",
-    "frozen_512_candidates_PCG64_exact_recheck"
+    "frozen_512_candidates_PCG64_exact_recheck",
+    "400_formal_episodes_atomic_commit_and_full_seven_camera_decode",
+    "official_LeRobot_readback_of_all_400_episodes",
+    "twenty_two_stratified_replays_passed",
+    "release_report_status_passed"
   ],
   "blocking": [],
-  "pending": [
-    "400_accepted_formal_episodes",
-    "complete_LeRobot_export",
-    "twenty_final_stratified_replays",
-    "final_release"
+  "pending": [],
+  "open_questions": [
+    "离线 action MAE 改善未转化为闭环成功率（见 paired_validation）",
+    "闭环失败集中在近区未有效接触与移动但未进入按钮 20 mm 近区，原因未归因",
+    "尚未做多种子稳定性与独立测试集泛化评估"
   ],
   "decision_document": "architecture_decision.md",
   "alternative_architecture_authorized": true,
@@ -73,10 +81,11 @@
     "production_eligible": false
   },
   "preflight_accepted": 2,
-  "current_stage": "production_collection",
+  "current_stage": "release_validated",
   "execution_state": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/execution_state.json",
   "migration_note": "Historical results retained in pre_migration_implementation_status.json; no old production gate reused on Pro6000.",
-  "supervisor_pid": 124653,
+  "supervisor_pid": null,
+  "supervisor_pid_note": "124653 是正式采集最后一任 supervisor，任务完成后已退出；下列 PID 与预检数据均为历史记录。",
   "pro6000_pilots": {
     "gpu0_accepted": true,
     "gpu1_accepted": true,
@@ -179,5 +188,141 @@
   "production_policy": "practical_collection_with_per_episode_audit",
   "processes_per_gpu": 2,
   "production_authorization": "outputs/vib820_gpu_collection_400_pro6000/production_authorization.json",
-  "formal_audited_successes": 250
+  "formal_audited_successes": 400,
+  "collection": {
+    "started_utc": "2026-10-16T03:17:58+00:00",
+    "finished_utc": "2026-10-17T05:50:15+00:00",
+    "attempts_in_journal": 3266,
+    "queued_rows": 2738,
+    "executed_attempts": 528,
+    "success_rows": 476,
+    "accepted": 400,
+    "failure_ledger": {
+      "physical_failure": {
+        "total": 30,
+        "initial_collision": 20
+      },
+      "infrastructure_error": {
+        "total": 22,
+        "interrupted_process": 11,
+        "blank_camera_before_motion": 11
+      }
+    },
+    "replacement": {
+      "removed_candidate_ids": [
+        147,
+        378
+      ],
+      "replacement_candidate_ids": [
+        515,
+        516
+      ],
+      "rejected_supplemental_candidate_ids": [
+        513,
+        514
+      ],
+      "evidence": "outputs/vib820_gpu_collection_400_pro6000/replacement_20261017T131619"
+    },
+    "journal_note": "476 个候选各成功一次（无重复成功行），按候选 ID 顺序取前 400 条；全量审计发现候选 147/378 不合格，移出后由单独采集的 515/516 替换，正式集仍为 400 条。未进入正式集的成功候选（例如 432 之后）保留在日志中，不删除。"
+  },
+  "dataset": {
+    "path": "outputs/vib820_gpu_collection_400_pro6000/lerobot",
+    "codebase_version": "v3.0",
+    "robot_type": "astribot",
+    "episodes": 400,
+    "frames": 245983,
+    "fps": 30,
+    "tasks": 1,
+    "size_gib": 13,
+    "raw_size_gib": 32
+  },
+  "release": {
+    "status": "passed",
+    "report": "outputs/vib820_gpu_collection_400_pro6000/release/release_report.json",
+    "raw_commit_checks": 400,
+    "all_numeric_rows_match": true,
+    "official_reader": "passed",
+    "video_audit": "passed",
+    "replays_passed": 22,
+    "replay_scope": "20 stratified episodes from revised selection plus both replacement episodes"
+  },
+  "training": {
+    "host": "hpc2login.hpc.hkust-gz.edu.cn (训练不在本仓库执行)",
+    "run": "astribot_head_right_joint8_ft_20261018",
+    "framework": "VLA_JEPA / starVLA",
+    "backbones": [
+      "Qwen3-VL-2B-Instruct",
+      "vjepa2-vitl-fpc64-256"
+    ],
+    "action_head": "DiT-B flow matching, horizon 7, action_dim 8",
+    "init": "VLA-JEPA pretrain checkpoint + 400 条 Astribot 数据微调",
+    "split": {
+      "train": 320,
+      "validation": 40,
+      "test": 40,
+      "seed": 42
+    },
+    "best_step": 8000,
+    "best_model_sha256": "db98b7c5488c666c3e10fa721dc29b25e069c41237bf8cb42b638611863eaaa8",
+    "deployment": "models/astribot_head_right_joint8_ft_20261018",
+    "inference_env": ".venv-astribot-inference",
+    "continuation": {
+      "run": "astribot_head_right_joint8_conservative_20261018",
+      "parent": "step_008000",
+      "max_steps": 17213,
+      "best_step": 17000,
+      "model_sha256": "a753d82f8370daa37b58e01c5c2c5dc83a6a833d497b2b4b52d5b210f2beefb6",
+      "lr_scale": "约为首轮的 1/3（qwen 3e-6 / action 3e-5 / vj 1e-4）",
+      "purpose": "isolated paired validation only"
+    }
+  },
+  "closedloop": {
+    "protocol": "docs/astribot_closedloop_20261018.md",
+    "split": "test",
+    "episodes": 40,
+    "successes": 17,
+    "success_rate": 0.425,
+    "failure_modes": {
+      "movement_without_contact": 16,
+      "stagnation_near_initial_pose": 7
+    },
+    "unexpected_contacts": 0,
+    "videos_fully_decoded": 160,
+    "result": "outputs/astribot_closedloop_20261018/test40",
+    "note": "同步仿真闭环，不代表真机实时能力；test 划分与配对评估的 validation 划分不同场景集，成功率不可直接横向比较。"
+  },
+  "paired_validation": {
+    "protocol": "docs/astribot_paired_val_20261019.md",
+    "split": "validation",
+    "episodes": 40,
+    "trials_per_model": 40,
+    "results": {
+      "step_8000": {
+        "successes": 23,
+        "success_rate": 0.575
+      },
+      "step_17000": {
+        "successes": 19,
+        "success_rate": 0.475
+      }
+    },
+    "paired_outcomes": {
+      "both_failed": 14,
+      "both_success": 16,
+      "new_regressed": 7,
+      "new_improved": 3
+    },
+    "exact_mcnemar_p": 0.34375,
+    "paired_initial_conditions_verified": true,
+    "videos_fully_decoded": 320,
+    "result": "outputs/astribot_paired_val_20261019",
+    "conclusion": "离线 selection_score 与 arm MAE 改善（0.002696 → 0.002620 rad）未转化为闭环成功率提升，p=0.34 不显著；瓶颈更可能在接近与接触阶段，而非单步动作误差。"
+  },
+  "documents": {
+    "plan": "plan.md",
+    "progress": "progress.md",
+    "runbook": "runbook.md",
+    "paired_validation": "../../astribot_paired_val_20261019.md",
+    "closedloop": "../../astribot_closedloop_20261018.md"
+  }
 }

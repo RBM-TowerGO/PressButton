@@ -1,15 +1,17 @@
 # Pro6000 本机采集执行记录
 
+状态（2026-10-19）：本机已完成全部采集与发布验收（400/400，2026-10-17），并完成了两轮闭环评估。下文按时间顺序保留；早期段落中的「正式仍 0/400」是当时状态。
+
 数据根目录：`outputs/vib820_gpu_collection_400_pro6000`，旧目录、失效链接和历史证据保留。
 入口：`scripts/run_pro6000_collection.py`。独立后台会话 PID 12765；真实存活状态以进程和日志共同核实。
 
 已验证：官方 Astribot 锁定资产补齐及哈希校验；冻结 512 候选、PCG64 RNG 状态与配置逐项一致；60 项采集/故障/CUDA 像素测试及 1 项 NVENC 硬件检查通过。manifest SHA256 为 `44bd9612f8501d793e6ce346642215048160ae6deede9643159cf080593b9d27`。
 
-当前执行双卡分别单环境七路录像、20 次复位和新官方 LeRobot 导出样例；尚未取得本机生产 gate，正式数据 0/400。
+当时执行双卡分别单环境七路录像、20 次复位和新官方 LeRobot 导出样例；尚未取得本机生产 gate，当时正式数据 0/400。
 
-后续自动进入每卡 1/2/4 常驻单环境进程标定、双卡真实吞吐测试、完整历史录像和 gate 验证；通过后采集、导出、20 条回放和最终发布。保持全部既有质量、资源和至少两倍吞吐门槛。遇问题先定位修复和重验，不改 gate 绕过验收。
+原计划的后续为：每卡 1/2/4 常驻单环境进程标定、双卡真实吞吐测试、完整历史录像和 gate 验证；通过后采集、导出、20 条回放和最终发布，保持既有质量、资源和至少两倍吞吐门槛。实际执行由用户在 2026-10-16 授权跳过剩余性能对比、按 p2 直接采集；逐条质量与资源门槛继续执行，吞吐门槛未满足也未记为通过。
 
-实时状态：`execution_state.json`、`preflight_resident_v1/pipeline_state.json`；主日志 `supervisor.log`、`resident_pipeline.log`。仅 `release/release_report.json` 的 `status=complete` 且完整验收通过表示完成。
+实时状态：`execution_state.json`、`preflight_resident_v1/pipeline_state.json`；主日志 `supervisor.log`、`resident_pipeline.log`。完成以 `release/release_report.json` 的 `status=passed`（本轮实际取值）且全部验收通过为准。
 
 ## 本机基础链路通过
 双卡分别完成七路完整录像、20次复位和全量审计；官方LeRobot新样例写入及首/中/末帧读取通过。单条含审计分别142.73/139.97秒；此为预检样例，不是并发性能标定。流水线已进入CPU/GPU历史物理对照，正式仍0/400。
@@ -31,3 +33,18 @@ GPU0/GPU1 均通过20次复位、997帧×7路视频全量解码、物理/同步�
 用户明确要求停止进一步性能对比，按已知大致最高效率方式开始采集。取消未完成 p4、双卡吞吐标定、最低两倍加速门槛、额外历史录像及亮度对比，不将这些检查记为通过。采用已完整测量的 p2：两张卡各2个常驻单环境进程，CPU物理、GPU渲染、NVENC。已有双卡七路录像/20次复位、CPU历史物理、p2全录像和官方读写证据保留。物理/同步/七路全帧解码/首次亮灯、候选顺序、原子提交及资源限制继续逐条执行。
 
 明确授权记录 `outputs/vib820_gpu_collection_400_pro6000/production_authorization.json`；新增独立授权入口，不伪造旧 production gate。18项相关回归通过。新后台主管 PID35969，四个正式worker PID35975/35976/35977/35978（GPU0两个、GPU1两个）；正式候选512个已入队，启动时accepted=0。实时以raw/summary.json和execution_state.json为准。后续自动导出、分层回放和最终数据验收。
+
+
+## 2026-10-17 正式采集与发布完成
+
+正式集达到 400/400，`raw/summary.json` 状态 `collected`，`execution_state.json` 进入 `replacement_validated`。attempt 日志 3,266 行（2,738 排队 + 528 执行），476 个候选成功一次；`physical_failure` 30、`infrastructure_error` 22。按候选 ID 顺序取前 400 条后，全量审计移出 147/378 并由单独采集的 515/516 替换，替换证据在 `replacement_20261017T131619/`。
+
+导出与验收在 13:49:44 完成：LeRobot v3.0 共 400 episodes、245,983 帧、30 Hz、13 GiB（原始 32 GiB）；官方读取、全量视频解码、22 条回放（20 分层 + 2 替换）均通过，`release/release_report.json` 为 `status=passed`、`raw_commit_checks=400`。
+
+性能口径：本轮未做每卡 1/2/4/8 sweep 与双卡重叠吞吐测量，未达到「相对旧四进程七路基线 ≥2 倍」门槛，**不声明加速比**。采集启动依据是用户 2026-10-16 的显式授权文件，而不是性能 gate；这一缺口同时记录在 [plan.md](plan.md) 第 6.3 节。
+
+## 2026-10-18 至 10-19 训练与闭环（本机只做推理与仿真）
+
+HPC 微调到 step 8000，导出的权重部署在 Pro6000：策略服务占 GPU 1（`127.0.0.1:8794`，校验 1617 个张量与 SHA256），仿真占 GPU 0，使用 `.venv-astribot-inference`，Isaac 环境 `.conda/envs/pressb` 未改动。test 划分 40 场景闭环 17/40（42.5%）。
+
+随后的 8,000／17,000 步配对对照在 validation 划分 40 场景完成：23/40 对 19/40，McNemar p=0.3438（不显著），320 段视频全帧解码，初始条件一致性门槛通过。并发方式从 8 个实例回退到 4 个实例（每卡 2 个），已完成的串行场景保留并与并发结果分源保存。证据在 `outputs/astribot_paired_val_20261019/`，说明见 [配对对照文档](../../astribot_paired_val_20261019.md)。

@@ -155,3 +155,27 @@
 - 正式启动器首次遗漏FFmpeg PATH，首批4条在录像前退出；已补齐两个conda环境bin路径并保留失败attempt。主管PID更新为42073。首批候选1–4的第二次attempt全部accepted，正式4/400；候选5–8开始录制。
 
 - 正式过程中候选61/73等在prepare_wave阶段反复触发front空白图像检查，原worker会退出整条队列。新增仅限单环境、无运动且无视频writer的空白图像恢复：保存失败report，按原基础设施重试规则处理并继续worker下一候选；运动后/已有writer的异常仍中止，不改图像阈值。19项相关回归通过。旧worker均已结束或失败，提交数据经续采恢复保留。新主管PID124653。旧production_freeze和完整源码快照保存在raw/source_versions/before_pre_motion_recovery，新freeze明确记录只改变collector的异常恢复，runtime/物理/渲染/编码源码未变。
+
+## 2026-10-17 正式采集完成 400/400，导出与发布验收通过
+
+正式集达到 400 条 accepted（最终候选编号 516，含两次替换），`raw/summary.json` 状态转为 `collected`，`execution_state.json` 进入 `replacement_validated`。attempt 日志共 3,266 行：2,738 条排队记录，528 次实际执行，其中 476 个候选各成功一次，`physical_failure` 30 条（20 条为 `initial_collision`），`infrastructure_error` 22 条（`interrupted_process` 11、`blank_camera_before_motion` 11）。按候选 ID 顺序取前 400 条后，全量审计判定 147/378 不合格，移出并由单独采集的 515/516 替换；替换、被拒的补充候选 513/514 和旧数据保留在 `replacement_20261017T131619/`，未覆盖历史目录。
+
+导出使用 LeRobot 0.6.1 独立环境，得到 400 episodes、245,983 帧、30 Hz、`robot_type=astribot` 的 v3.0 数据集（13 GiB；原始采集 32 GiB）。官方读取器检查全部 400 条首/中/末帧、32 维字段和末帧 action padding 通过；全部训练视频逐帧解码通过；22 条回放（20 条分层 + 2 条替换）全部通过。`release/release_report.json` 于 13:49:44 生成且 `status=passed`，`raw_commit_checks=400`、`all_numeric_rows_match=true`。
+
+资源与性能说明：本轮**没有**完成每卡 1/2/4/8 sweep、双卡重叠吞吐测量及「相对旧四进程七路基线 ≥2 倍」门槛，因此不声明加速比；已有 0.1758 accepted/min 等单卡单环境数字仅为历史诊断。正式采集依据是 2026-10-16 的用户显式授权文件，不是被跳过的性能 gate。
+
+## 2026-10-18 VLA 微调与首个闭环评估
+
+HPC 上用 400 条数据按 320/40/40 冻结划分（seed=42）微调 VLA-JEPA：Qwen3-VL-2B + V-JEPA2 ViT-L 编码，DiT-B flow-matching 动作头，horizon 7、action_dim 8（右臂 7 关节 + 右夹爪）。best = step 8000，权重 SHA256 `db98b7c5…eaaa8`；推理部署到 Pro6000，`models/astribot_head_right_joint8_ft_20261018` 保存配置重定位、源码指纹与推理环境记录，服务启动校验 1617 个张量，使用 `.venv-astribot-inference`，策略在 GPU 1、仿真在 GPU 0。
+
+test 划分 40 个场景闭环评估：17/40（42.5%），23 次超时（16 次有明显移动但未接触按钮、7 次停滞在初始姿态附近），零非预期接触，160 段视频逐帧解码通过。13:09:59 完成。该结果是同步仿真闭环，不衡量真机实时能力。
+
+## 2026-10-19 8,000／17,000 步配对对照
+
+为检验「离线误差下降能否转化为闭环成功率」，从 step 8000 以约 1/3 学习率保守续训得到 step 17000（SHA256 `a753d82f…eefb6`），在同一批 40 个 **validation** 场景上做配对对照，逐场景共享随机种子、初始状态与两路输入图像；初始条件一致性门槛全部通过（`paired_initial_conditions_verified=true`）。
+
+结果：step 8000 为 23/40（57.5%），step 17000 为 19/40（47.5%）。配对变化为均成功 16、均失败 14、退步 7、改善 3，精确 McNemar 双侧 p=0.3438 —— 差异不显著。离线指标上 17000 更好（arm MAE 0.002696 → 0.002620 rad，`selection_score` 0.003190 → 0.003053），但 flow loss 变差（0.004782 → 0.006078），闭环成功率反而下降。
+
+失败分类：8000 为「移动但未进入近区」4、「初始姿态附近停滞」6、「超时仍在接近」2、「近区未有效接触」5；17000 为「移动但未进入近区」9、「初始姿态附近停滞」4、「近区未有效接触」4、「超时仍在接近」1、「接近后偏离」2、「unexpected_contact」1。320 段正式视频逐帧解码通过。
+
+执行方式：最初尝试 8 个独立仿真实例并发，后 4 个在初始化阶段阻塞、未产生正式试验，已留档并停止；经用户同意改为 4 个实例并发（每卡 2 个），已完成场景保留串行记录，剩余场景按工作守恒队列补齐，合并来源单独保存。12:26:33 全部完成。证据在 `outputs/astribot_paired_val_20261019/`，解读与限制见 [配对对照文档](../../astribot_paired_val_20261019.md)。

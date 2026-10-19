@@ -4,6 +4,8 @@
 
 **Progress update: 2026-10-09.** The three-node framework for parallel Isaac simulation, frozen VLA-JEPA inference, and SAC training is complete, along with 1M online training for each of two methods and several 400k runs that train action residuals from scratch over a fixed noise policy. The latest XYZ-only residual achieved **119/120 (99.17%)** in a single evaluation under fixed conditions. Additional action smoothing remains experimental and is disabled by default.
 
+**Main line changed on 2026-10-19:** the active work is now the Astribot S1 humanoid pressing the VIB-820 hall-call button. The 400-episode expert dataset is collected, exported to LeRobot v3 and released; the VLA-JEPA fine-tune and two closed-loop evaluations are complete. See the [VIB-820 collection plan](docs/plan/vib820_gpu_collection_400/plan.md), the [closed-loop evaluation](docs/astribot_closedloop_20261018.md) and the [8k/17k paired comparison](docs/astribot_paired_val_20261019.md). Everything below describes the earlier PiPER line and is kept as history.
+
 [Current results](#current-results) · [Demo videos](#demo-videos) · [Three-node framework](#online-reinforcement-learning-three-independent-nodes) · [Running the system](docs/online_rl_fast.md) · [Project handover](docs/HANDOVER.md)
 
 The current RTX 5090 environment uses **Isaac Sim 5.0 / Isaac Lab 2.2 / Python 3.11**. The project includes trajectory planning, physical contact feedback, dual-camera recording, LeRobot export, action replay, closed-loop VLA evaluation, and online residual reinforcement learning. Historical scripts and documentation for Isaac Sim 4.5 / Isaac Lab 2.0.2 are retained.

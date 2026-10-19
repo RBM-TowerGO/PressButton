@@ -4,6 +4,8 @@
 
 **进展更新：2026-10-09。** 已完成 Isaac 并行仿真、冻结 VLA-JEPA 推理与 SAC 训练的三节点框架，两种方法各 1M 在线训练，以及固定噪声策略后从头训练动作残差的多轮 400k 实验。最新 XYZ-only 残差的单次固定条件评估为 **119/120（99.17%）**；额外动作平滑仍为实验选项，未默认启用。
 
+**2026-10-19 主线变更：** 当前工作已转到 Astribot S1 人形按 VIB-820 电梯厅呼叫按钮。400 条专家数据已采集、导出为 LeRobot v3 并完成发布验收，VLA-JEPA 微调与两轮闭环评估已完成。见 [VIB-820 采集计划](docs/plan/vib820_gpu_collection_400/plan.md)、[闭环评估](docs/astribot_closedloop_20261018.md)、[8k／17k 配对对照](docs/astribot_paired_val_20261019.md)。下文内容描述上一代 PiPER 主线，保留为历史记录。
+
 [当前结果](#当前结果) · [演示视频](#演示视频) · [三节点框架](#在线强化学习独立三节点) · [运行说明](docs/online_rl_fast.md) · [工作交接](docs/HANDOVER.md)
 
 当前 RTX 5090 环境使用 **Isaac Sim 5.0 / Isaac Lab 2.2 / Python 3.11**。项目包含轨迹规划、真实接触反馈、双相机采集、LeRobot 导出、动作回放、VLA 闭环评估和在线残差强化学习；保留原 Isaac Sim 4.5 / Isaac Lab 2.0.2 环境的历史脚本与说明。
