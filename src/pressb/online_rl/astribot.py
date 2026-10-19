@@ -153,6 +153,22 @@ def chunk_flags(*, success, failure_reason, timed_out, success_value=1.0) -> dic
     return dict(reward=0.0, terminated=False, truncated=False, reason="running")
 
 
+def episode_outcome(*, success, failure_reason, timed_out):
+    """Resolve an episode verdict; a safety failure outranks a press.
+
+    Closed-loop evaluation counts an unexpected contact as a failed trial even
+    when the button was already depressed in the same chunk, so RL must not
+    report such an episode as a success.
+    """
+    if failure_reason:
+        return dict(status="failed", reason=str(failure_reason))
+    if success:
+        return dict(status="success", reason="physical_press_and_light")
+    if timed_out:
+        return dict(status="timeout", reason="timeout")
+    raise ValueError("episode must be a success, a failure or a timeout")
+
+
 def summarize_episode(rows) -> dict:
     """Compact, JSON-safe episode summary for logs and status files.
 

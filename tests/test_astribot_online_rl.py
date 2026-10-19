@@ -8,9 +8,10 @@ torch = pytest.importorskip("torch")
 
 from pressb.online_rl.astribot import (ARM, BASE_DIM, DEFAULT_GAMMA, DEFAULT_SCALE, FIXED, GRIP,
                                         HORIZON, OBS_DIM, SIGNS, ChunkJournal, chunk_flags,
-                                        compose_joint8, expand_joint8, load_replay, observation,
-                                        save_replay, success_reward, summarize_episode,
-                                        transition_discount, validate_scale, within_limits)
+                                        compose_joint8, episode_outcome, expand_joint8,
+                                        load_replay, observation, save_replay, success_reward,
+                                        summarize_episode, transition_discount, validate_scale,
+                                        within_limits)
 from pressb.online_rl.learner import LearnerConfig, ReplayBuffer, SACLearner
 
 
@@ -322,3 +323,21 @@ def test_cli_requires_exactly_eight_scales():
                      "--scale", *["0.02"] * 7)
     assert result.returncode == 2
     assert "expected 8 arguments" in result.stderr
+
+
+def test_episode_outcome_prefers_failure_over_a_press():
+    # An unexpected contact in the same chunk invalidates the press, matching
+    # the closed-loop evaluator's verdict.
+    assert episode_outcome(success=True, failure_reason="unexpected_contact",
+                           timed_out=False) == dict(status="failed",
+                                                    reason="unexpected_contact")
+    assert episode_outcome(success=False, failure_reason="base_drift_over_1mm",
+                           timed_out=True) == dict(status="failed",
+                                                   reason="base_drift_over_1mm")
+    assert episode_outcome(success=True, failure_reason=None,
+                           timed_out=False) == dict(status="success",
+                                                    reason="physical_press_and_light")
+    assert episode_outcome(success=False, failure_reason=None,
+                           timed_out=True) == dict(status="timeout", reason="timeout")
+    with pytest.raises(ValueError, match="must be a success"):
+        episode_outcome(success=False, failure_reason=None, timed_out=False)

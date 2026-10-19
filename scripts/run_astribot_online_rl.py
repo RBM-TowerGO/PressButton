@@ -43,9 +43,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from astribot_closedloop_control import FIXED, interpolate_target, physical_hit, validate_prediction
 from pressb.online_rl.astribot import (BASE_DIM, DEFAULT_GAMMA, DEFAULT_SCALE, HORIZON, OBS_DIM,
-                                        ChunkJournal, compose_joint8, expand_joint8, load_replay,
-                                        observation, save_replay, summarize_episode, validate_scale,
-                                        within_limits)
+                                        ChunkJournal, compose_joint8, episode_outcome,
+                                        expand_joint8, load_replay, observation, save_replay,
+                                        summarize_episode, validate_scale, within_limits)
 from pressb.online_rl.learner import LearnerConfig, ReplayBuffer, SACLearner
 
 
@@ -306,9 +306,11 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
     finally:
         recorder.close()
         summary = summarize_episode(recorder.records)
+        outcome = episode_outcome(success=success, failure_reason=failure,
+                                 timed_out=not success)
         episode = dict(kind="train" if train else "eval", candidate_id=candidate,
-                       status="success" if success else ("failed" if failure else "timeout"),
-                       reason=reason, control_steps=control_index,
+                       status=outcome["status"], reason=outcome["reason"],
+                       control_steps=control_index,
                        physics_steps=recorder.physics_step,
                        wall_seconds=time.perf_counter() - started,
                        transitions=journal.transitions,

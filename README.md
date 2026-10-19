@@ -1,245 +1,283 @@
-# PressB — PiPER Elevator Button Pressing and Online Residual RL for VLA
+# PressB — Elevator Button Pressing with VLA-JEPA and Online Residual RL
 
 **English** | [简体中文](README.zh-CN.md)
 
-**Progress update: 2026-10-09.** The three-node framework for parallel Isaac simulation, frozen VLA-JEPA inference, and SAC training is complete, along with 1M online training for each of two methods and several 400k runs that train action residuals from scratch over a fixed noise policy. The latest XYZ-only residual achieved **119/120 (99.17%)** in a single evaluation under fixed conditions. Additional action smoothing remains experimental and is disabled by default.
+**Status: 2026-10-19.** One Isaac Sim codebase, two task lines. The active line is an **Astribot S1 humanoid pressing the VIB-820 hall-call button**: 400 expert episodes were collected and exported to LeRobot v3, VLA-JEPA was fine-tuned to **step 8000**, the frozen test split scored **17/40 (42.5%)**, and a paired validation comparison against a conservatively continued **step 17,000** scored **23/40 vs 19/40** (McNemar p = 0.3438, not significant). Between those two checkpoints offline action error improved while closed-loop success did not. Online residual SAC is now wired to this task and passes 20 CPU contract tests plus a GPU/Isaac smoke run; no formal long run has been executed yet. The earlier **PiPER 12-button line** is complete (best 119/120 = 99.17%) and is kept below as history.
 
-**Main line changed on 2026-10-19:** the active work is now the Astribot S1 humanoid pressing the VIB-820 hall-call button. The 400-episode expert dataset is collected, exported to LeRobot v3 and released; the VLA-JEPA fine-tune and two closed-loop evaluations are complete. See the [VIB-820 collection plan](docs/plan/vib820_gpu_collection_400/plan.md), the [closed-loop evaluation](docs/astribot_closedloop_20261018.md) and the [8k/17k paired comparison](docs/astribot_paired_val_20261019.md). Online residual RL is now wired into the S1 task (20 CPU contract checks and the GPU/Isaac smoke run pass): see [online residual RL](docs/astribot_online_rl.md). Everything below describes the earlier PiPER line and is kept as history.
+[Current results](#current-results) · [Quick start](#quick-start) · [Reproducing the active line](#reproducing-the-active-line) · [Online residual RL](#online-residual-rl) · [Legacy PiPER line](#legacy-piper-line) · [Project handover](docs/HANDOVER.md)
 
-[Current results](#current-results) · [Demo videos](#demo-videos) · [Three-node framework](#online-reinforcement-learning-three-independent-nodes) · [Running the system](docs/online_rl_fast.md) · [Project handover](docs/HANDOVER.md)
+The validated environment is **Isaac Sim 5.0 / Isaac Lab 2.2 / Python 3.11** on RTX 5090 and RTX PRO 6000 Blackwell. The repository contains scene construction, scripted expert collection, per-episode physical audit, LeRobot export, a frozen VLA inference service, synchronous closed-loop evaluation, and residual reinforcement learning. Historical Isaac Sim 4.5 / Isaac Lab 2.0.2 entry points are retained but are not the current line.
 
-The current RTX 5090 environment uses **Isaac Sim 5.0 / Isaac Lab 2.2 / Python 3.11**. The project includes trajectory planning, physical contact feedback, dual-camera recording, LeRobot export, action replay, closed-loop VLA evaluation, and online residual reinforcement learning. Historical scripts and documentation for Isaac Sim 4.5 / Isaac Lab 2.0.2 are retained.
+## Two task lines
 
-- A black PiPER sits at the edge of a table, holding a pressing rod with a fixed total gripper opening of 8 mm. Its initial pose folds the upper arm and forearm above the tabletop.
-- The wall-mounted panel has 2 columns × 6 rows: floors 24–29 run from bottom to top on the left, and 30–35 on the right. Contact force depresses each button; its orange edge light turns on when pressed and off when released.
-- One D435 is mounted at the wrist and another on the table. The wrist mount reuses AgileX's official bracket mesh; both RGB streams default to 640×480.
-- Data collection supports panel offsets of ±25 mm left/right and ±10 mm forward/backward, with stratified 10×10 coverage and 100 episodes per floor, totaling 1,200 episodes.
-- Training data retains only the prefix from the folded initial pose to the first successful button light. Retraction and return motions prepare the next collection run and remain in the raw diagnostic records.
+| | Astribot S1 / VIB-820 (active) | PiPER / 12-button wall panel (legacy) |
+|---|---|---|
+| Robot | Astribot S1 humanoid; fixed base, torso, head and left arm; right arm and original closed gripper act | AgileX PiPER arm holding an 8 mm-gripped pressing rod |
+| Task | One downward hall-call button; instruction `Press the down hall-call button.` | 12 floor buttons; `Press 24 floor.` … `Press 35 floor.` |
+| State / action | 32 joints recorded; 7 right-arm joints + right gripper learned (8-D), expanded to 32 | 8-D TCP pose + gripper width, in `base_link` |
+| Cameras | 7 views recorded; head 1280×720 + right wrist 640×480 feed the policy | 2 D435 views, 640×480 |
+| Expert data | 400 episodes, 245,983 frames, 30 Hz | 1,200 episodes, 306,830 frames, 30 Hz |
+| Policy | VLA-JEPA DiT-B, 7-step horizon, step 8000 | VLA-JEPA step 10600 + residual SAC |
+| Status | 40-scene closed loop evaluated; online RL wired | Complete; best 119/120 (99.17%) |
 
-The repository includes code, configuration, asset source manifests, result summaries, and selected demos. **Full datasets, model weights, downloaded assets, Conda environments, and raw run recordings are not stored in Git**; only the compressed demos in [docs/media](docs/media/README.md) are distributed with the repository. See [scene_details.md](docs/scene_details.md) for scene details and historical validation records.
+Everything below the legacy heading refers to the PiPER line; do not mix its numbers with the S1 results.
 
 ## Current results
 
-The base VLA-JEPA was fine-tuned on 1,200 expert episodes with varied panel positions, using the fixed **step 10600** checkpoint. VLA remains frozen throughout the online stage. Action-output residuals and flow initial noise are first learned independently; the trained noise policy is then held fixed while a new action residual is trained from random initialization. The noise method directly selects the flow's initial noise without backpropagating into VLA.
+The active task is button `0` in the VIB-820 lobby scene: a single downward hall-call button on a 400 × 95 mm brushed-steel panel, 1,200 mm above the floor, with 2 mm simulated travel. The S1 keeps a fixed base, torso, head and left arm, and presses with its original closed right gripper. The policy input is the head RGB, the right-wrist RGB, the 32 measured joint angles and a fixed instruction; scene coordinates, button geometry and episode indices are never given to the model.
 
-The table reports a fixed-condition evaluation under the same fast simulation setup: **12 buttons × 5 panel positions (center and four corners) × 2 repeats = 120 trials**, with seed=20260930. Success requires actual button contact, and evaluation does not update parameters. The 400k budget applies to the newly trained action residual; the preceding 1M noise-policy training is separate. Repeated runs are not guaranteed to be bitwise identical, and a single result does not establish generalization across seeds.
+| Stage | Result |
+|---|---|
+| Expert collection | **400/400** accepted episodes (2026-10-16 → 10-17) from 528 recorded attempts; 30 `physical_failure` and 22 `infrastructure_error` attempts kept as evidence; 7 camera views, 30 Hz sampling, 120 Hz physics |
+| LeRobot v3 export | 400 episodes / 245,983 frames / 13 GiB / `robot_type=astribot`; official reader and full video decode pass; `release_report.json` reports `status=passed` |
+| Fine-tune | VLA-JEPA on a frozen 320/40/40 train/val/test split; best **step 8000**, 10,268,108,194 bytes, SHA-256 `db98b7c5…`; contracts, normalization statistics, split and training source are stored with the weights |
+| Closed loop, test split | **17/40 = 42.5%**; 23 timeouts (16 moved without contact, 7 stalled near the start pose); 0 unexpected contact |
+| Paired, validation split | **23/40 = 57.5%** (step 8000) vs **19/40 = 47.5%** (step 17,000); exact McNemar **p = 0.3438** |
+| Online residual SAC | End-to-end wiring verified by 20 CPU contract tests and a GPU/Isaac smoke run; ~2.1–2.4 transitions/s in a single environment, 20k transitions ≈ 2.5 h; no formal run yet |
 
-| Method | Online training | Successful trials | Success rate |
+The test and validation splits contain **different scenarios**, so 42.5% and 57.5% must not be compared with each other.
+
+### Paired comparison: offline error improved, closed loop did not
+
+Step 17,000 was produced by conservative continuation of step 8000 (about one third of the original learning rate, selected by offline score). Both checkpoints were run once on each of the 40 validation scenarios, with matched seeds and verified paired initial conditions.
+
+| Checkpoint | Success | Paired outcome |
+|---|---:|---|
+| step 8000 | 23/40 (57.5%) | both succeed 16, both fail 14 |
+| step 17,000 | 19/40 (47.5%) | improved 3, regressed 7 |
+
+| Offline metric (same 120 validation anchors) | step 8000 | step 17,000 | Direction |
+|---|---:|---:|---|
+| arm MAE (rad) | 0.002696 | 0.002620 | better |
+| gripper MAE (rad) | 0.003259 | 0.001995 | better |
+| selection score (rad) | 0.003190 | 0.003053 | better |
+| flow loss | 0.004782 | 0.006078 | worse |
+
+The metric used to select checkpoints disagrees with the closed-loop objective: better offline MAE came with a lower success rate. Failures concentrate in the approach and contact phases rather than in per-step action error, so the useful direction is contact-phase behaviour, termination policy and approach trajectories — not further compression of offline MAE.
+
+| Failure class (mutually exclusive, in order) | step 8000 | step 17,000 |
+|---|---:|---:|
+| Moved but never entered the button neighbourhood (≤ 20 mm) | 4 | 9 |
+| Stalled near the initial pose | 6 | 4 |
+| Inside 20 mm but no valid contact | 5 | 4 |
+| Still approaching at timeout | 2 | 1 |
+| Approached, then left | 0 | 2 |
+| `unexpected_contact` | 0 | 1 |
+| **Success** | **23** | **19** |
+
+For context, the scripted IK expert (no learning) completes 25/30 = 83.3% over a 40 cm × 40 cm base-shift grid, with all 30 key poses solvable and 5 unexpected contacts. That is a different protocol and only indicates how much room remains for the learned policy.
+
+## Quick start
+
+Requirements: Linux x86_64, Conda, an Isaac-Sim-compatible NVIDIA RTX GPU and driver (Blackwell validated with driver 580.178.04), Vulkan, GPU rendering even when headless, and system `git`, `ffmpeg`/`ffprobe` (with `libx264`) and DejaVu fonts.
+
+```bash
+git clone https://github.com/RBM-TowerGO/PressButton.git
+cd PressButton
+
+sudo apt-get install ffmpeg fonts-dejavu-core          # if not already installed
+bash scripts/setup_env_5090.sh                        # Python 3.11 / Isaac Sim 5.0 / Isaac Lab 2.2
+bash scripts/setup_dataset_env.sh                     # Python 3.12 / LeRobot 0.6.1 / CPU PyTorch
+
+# Inference overlay used by the policy server; leaves the Isaac environment untouched
+.conda/envs/pressb/bin/python -m venv --system-site-packages .venv-astribot-inference
+```
+
+Keep three environments separate and never install `requirements-dataset.txt` into the Isaac environment:
+
+| Environment | Purpose |
+|---|---|
+| `.conda/envs/pressb` | Simulation, collection, evaluation, online RL |
+| `.conda/envs/lerobot` | LeRobot conversion, official reader, data audits |
+| `.venv-astribot-inference` | VLA-JEPA policy server only |
+
+Fetch the pinned assets and build the active scene:
+
+```bash
+source scripts/activate_local.sh                      # Conda + CUDA_VISIBLE_DEVICES=0
+python scripts/fetch_astribot_assets.py               # S1 USD/URDF/meshes, ~502 MB, SHA-256 pinned
+PYTHONPATH=.cache/usd-inspect python scripts/prepare_astribot_asset.py
+python scripts/build_vib820.py --output outputs/vib820_model
+```
+
+`scripts/activate_local.sh` and the `scripts/*_astribot_*.sh` wrappers encode this workspace's absolute paths and Conda location; on a fresh clone call the underlying `scripts/*.py` entry points directly. `activate_local.sh` exposes GPU 0 by default; export `CUDA_VISIBLE_DEVICES=0,1` and pass `--gpu 1` to use the second card.
+
+Verify the scripted expert before collecting or evaluating anything. Output directories must not already exist:
+
+```bash
+python scripts/run_astribot_press.py --headless --video \
+  --config configs/astribot_vib820.json --buttons 0 --repeats 3 \
+  --output outputs/vib820_press
+python scripts/audit_astribot_press.py outputs/vib820_press
+```
+
+Run the test suite (CPU only; 959 passed, 14 skipped, 969 collected as of 2026-10-19):
+
+```bash
+.conda/envs/pressb/bin/python -m pytest -q
+```
+
+## Reproducing the active line
+
+### 1. Expert collection
+
+The 400 episodes were produced on two GPUs with two resident single-environment worker processes per GPU (CPU physics, GPU rendering, NVENC), under an explicit user authorization file rather than the original multi-environment throughput gate. No speedup ratio is claimed for that configuration. Candidates were frozen first (`seed=20261014`, base X ∈ [-0.30, -0.14] m, Y ∈ [0, 0.40] m, yaw ∈ [0°, 10°]); the first 400 successful candidates in ID order form the set; after a full audit 147/378 entries were moved out and replaced by the separately collected candidates 515/516.
+
+Entry points are `scripts/run_astribot_resident_pipeline.py` and `scripts/collect_astribot_dataset.py`. The exact production commands, authorization file, resume rules and replacement evidence are in the [collection runbook](docs/plan/vib820_gpu_collection_400/runbook.md); the frozen parameters and acceptance gates are in the [collection plan](docs/plan/vib820_gpu_collection_400/plan.md) and the [experiment specification](docs/vib820_experiment_spec/README.md). Always use a new output directory; existing committed evidence is immutable.
+
+### 2. LeRobot v3 export
+
+```bash
+.conda/envs/lerobot/bin/python scripts/export_astribot_lerobot.py \
+  --selection outputs/vib820_gpu_collection_400/selection.json \
+  --output outputs/vib820_lerobot_400 --gpu 1
+```
+
+`observation.state` is 32 measured joint angles in radians and `action` is the 32-dimensional absolute joint target at the next 30 Hz sample; the final frame repeats the previous target rather than a retraction. Seven `observation.images.<camera>` features keep native resolution, intrinsics and extrinsics. The official reader checks first/middle/last frames and field shapes, and the finalizer re-decodes every training video and runs stratified action replays:
+
+```bash
+.conda/envs/pressb/bin/python scripts/finalize_astribot_collection.py \
+  --raw outputs/vib820_gpu_collection_400 \
+  --export outputs/vib820_lerobot_400 \
+  --replay-runs outputs/vib820_gpu_collection_400_replays/gpu0 \
+                outputs/vib820_gpu_collection_400_replays/gpu1 \
+  --output outputs/vib820_gpu_collection_400_release --gpu 0
+```
+
+Fine-tuning itself is **not** reproduced on this machine: it ran on a separate HPC cluster with VLA-JEPA and the `astribot_lerobot` adapter. This repository keeps the resulting weights, the action/training contracts, the frozen split, normalization statistics, `config.yaml` and a training-source snapshot under `models/astribot_head_right_joint8_ft_20261018/`; the policy server loads that snapshot and the relocated config.
+
+### 3. Policy server and closed-loop evaluation
+
+The server validates the checkpoint SHA-256 and every data/action/training contract, loads all 1617 tensors, and listens only on `127.0.0.1:8794`:
+
+```bash
+bash scripts/start_astribot_policy_server.sh            # GPU 1
+
+# Interface smoke (2 s per scenario), then the frozen test split
+bash scripts/run_astribot_closedloop.sh smoke outputs/astribot_closedloop/NEW_smoke
+bash scripts/run_astribot_closedloop.sh test  outputs/astribot_closedloop/NEW_test40
+```
+
+Each run writes `protocol.json`, `summary.json` and one directory per scenario with `report.json`, `trajectory.npz`, `policy_requests.json`, camera timing/calibration and four videos. Only `complete=true` means all scheduled scenarios ran. The wrappers hard-code this workspace; on a fresh clone use `scripts/astribot_policy_server.py` and `scripts/eval_astribot_closedloop.py` with the same arguments.
+
+### 4. Paired checkpoint comparison
+
+```bash
+.conda/envs/pressb/bin/python scripts/run_astribot_pair.py
+```
+
+`run_astribot_pair.py` pins `outputs/astribot_paired_val_20261019/`, verifies both weight and source hashes, starts two policy services, schedules four simulation instances (two per GPU) and merges the earlier serial scenarios with the parallel dispatch without double counting. It refuses to overwrite an existing `status.json`. Re-summarize results without re-running the simulation with `scripts/astribot_pair_analysis.py`.
+
+### 5. Online residual RL
+
+```bash
+# Smoke: 6 s per episode, 8 transitions, batch 4
+.conda/envs/pressb/bin/python scripts/run_astribot_online_rl.py \
+  --model-run models/astribot_head_right_joint8_ft_20261018 --checkpoint-step 8000 \
+  --output outputs/astribot_online_rl/NEW_smoke --smoke
+```
+
+The formal recipe (20,000 transitions), resume and evaluation commands are in [online residual RL](docs/astribot_online_rl.md).
+
+## Online residual RL
+
+The frozen VLA is never updated. A small SAC actor corrects its 8-D joint targets, so the recipe matches what a real deployment could compute from joint state alone.
+
+| Item | Value |
+|---|---|
+| Base policy | `models/astribot_head_right_joint8_ft_20261018`, step 8000, SHA-256 checked by the service |
+| Base action | 7 steps × 8 absolute joint targets (right arm 7 joints + right gripper) |
+| Residual | 7 × 8, normalised to [-1, 1], scaled by 0.02 rad per right-arm joint and 0.05 for the gripper |
+| Observation | 64-D: 32 measured joint angles + 32 joint velocities; no scene coordinates, button geometry or task id |
+| Reward | Sparse physical success (travel ≥ 1 mm, right tip force > 0.02 N, light latched, no unexpected contact), discounted per executed chunk step |
+| Safety termination | Non-finite or out-of-limit joints, unexpected contact, base drift > 1 mm, inactive-joint drift > 0.02 rad, residual pushing a target out of tolerance |
+| Data split | Training can only load the frozen `train` split (320 scenarios); `--eval-only` evaluation uses `val` (default) or `test` |
+| Timing | 30 Hz decisions over 120 Hz physics, 4 interpolated physics steps per target; physics pauses during inference |
+| Episode budget | 20 s simulation time for training, 40 s for evaluation |
+
+Only the action-residual method is wired to the S1 task: `AstribotPolicy.predict` exposes `action8`/`action32` and has no interface for flow initial noise. The smoke run confirmed real cameras, the frozen RPC, physical success detection, sparse reward and per-chunk discounting, replay writes, SAC updates, atomic checkpoint save and `--resume --eval-only` over validation scenarios, with 0 unexpected contacts across 8 episodes. The actor received only 8 updates, so residuals stay near zero and the smoke success rate is essentially the frozen policy — it is not an RL result.
+
+## What the numbers mean
+
+- Both closed-loop experiments are **synchronous simulation**: physics pauses while the model runs. They measure policy capability, not real-time control latency, and say nothing about the real robot.
+- Each scenario was run **once per checkpoint**. There is no cross-seed stability estimate and no independent generalisation test set.
+- The 400-episode dataset is **success-filtered**, so it cannot serve as a denominator for a success rate. Failed attempts are kept as evidence but are not training data.
+- The collection batch ran under an explicit authorization rather than the planned ≥ 2× throughput gate; no acceleration claim is made, and the single-GPU diagnostic numbers are not production throughput.
+- Failure classification is descriptive. Distance-to-button thresholds are geometric proxies, not collision-surface distances, and do not prove a cause.
+- Scene coordinates are used only to initialise the physics world and to score outcomes, never as policy input or control target.
+
+## Legacy PiPER line
+
+A black PiPER arm sits at the table edge holding a pressing rod with a fixed 8 mm gripper opening. A 2 × 6 panel holds floors 24–29 on the left and 30–35 on the right; contact force depresses a button and its orange edge light latches on. A wrist D435 and a tabletop D435 record 640×480 RGB. Collection covers panel offsets of ±25 mm left/right and ±10 mm front/back with a stratified 10 × 10 grid per floor, 100 episodes each, 1,200 in total; training keeps only the prefix up to the first successful light, while retraction and homing stay in the raw diagnostic records.
+
+The base VLA-JEPA was fine-tuned on those 1,200 episodes (step 10600) and frozen for the online stage. Two methods were learned separately — action-output residuals and flow initial noise — then the trained noise policy was frozen while a new action residual was trained from scratch. The table is one fixed-condition protocol: 12 buttons × 5 panel positions (centre and four corners) × 2 repeats = 120 trials, seed 20260930, parameters frozen.
+
+| Method | Online training | Success | Rate |
 |---|---|---:|---:|
-| Base VLA-JEPA | No RL | 25/120 | 20.83% |
+| Base VLA-JEPA | no RL | 25/120 | 20.83% |
 | Independent action residual | 1M | 81/120 | 67.50% |
 | Independent initial-noise policy | 1M | 81/120 | 67.50% |
-| Combination of the two independently trained policies | Two 1M checkpoints; no joint retraining | 96/120 | 80.00% |
-| Fixed noise, retrained 9D residual, γ=0.99 | 400k | 114/120 | 95.00% |
-| Fixed noise, retrained 9D residual, γ=0.995 | 400k | 118/120 | 98.33% |
-| Previous configuration with residual scale halved | 400k | 87/120 | 72.50% |
+| Both independently trained policies | two 1M checkpoints, no joint retraining | 96/120 | 80.00% |
+| Fixed noise, retrained 9-D residual, γ=0.99 | 400k | 114/120 | 95.00% |
+| Fixed noise, retrained 9-D residual, γ=0.995 | 400k | 118/120 | 98.33% |
+| Previous setting, residual scale halved | 400k | 87/120 | 72.50% |
 | **Fixed noise, retrained XYZ residual, γ=0.995** | **400k** | **119/120** | **99.17%** |
 
-The latest XYZ actor outputs only **7×3=21 residual dimensions**, with position scale **[0.02, 0.02, 0.02] m**; rotation and gripper commands retain the frozen model's outputs. The 400k run took approximately **7 hours 25 minutes** and completed 398k SAC updates. Button 24 succeeded in 9/10 trials, and buttons 25–35 each succeeded in 10/10. The full 9D comparison uses scales of 0.03 m per XYZ component and 0.1 per rotation6D component; the half-scale setting uses 0.015 m per XYZ component and 0.05 per rotation6D component. The discount γ applies to each 30 Hz control step, giving `γ**7` for a 7-step chunk.
+The latest XYZ actor emits only 7 × 3 = 21 residual dimensions with position scale 0.02 m; rotation and gripper keep the frozen model's outputs. That run took about 7 h 25 min for 400k transitions and 398k updates, and 119/120 is a single fixed-condition result, not a claim about all seeds. Smoothing experiments (1,320 evaluations) were rejected: XYZ exponential smoothing with α=0.8 cut measured joint jerk by ~14% and end-effector jerk by ~30% and passed screening at 119/120, but independent-seed checks landed at 117/120 and no candidate met every predefined threshold, so the default remains **no extra post-processing**. Details and reproduction: [residual training over frozen noise](docs/residual_on_frozen_noise.md), [result JSON](docs/results/online_rl_20261009.json), [result CSV](docs/results/online_rl_20261009.csv), [smoothing summary](docs/results/smoothing_20261009.csv).
 
-**Smoothing experiments (1,320 evaluations completed):** XYZ exponential smoothing with α=0.8 reduced median measured joint jerk by about 14% and end-effector position jerk by about 30% on tasks that succeeded in both conditions, while increasing task duration by about 0.7%–2.7%. It achieved 119/120 during screening (concurrent baseline: 117) and 117/120 in an independent-seed check (baseline: 116). Position-plus-orientation smoothing and the lighter α=0.9 setting also failed to meet all predefined success-rate thresholds. The default therefore remains **no additional postprocessing**; the best screening result for a smoothing candidate is not treated as a stable finding.
+Demo videos cover all 12 buttons at 1× simulation time with the global view above the wrist view; a labelled freeze-frame marks each task's end. Click a preview to play or download. These demos are not the 120-trial evaluation, which includes panel offsets.
 
-Downloadable [results and per-button statistics](docs/results/online_rl_20261009.json) and the [CSV results table](docs/results/online_rl_20261009.csv) retain source log references and SHA-256 hashes. The [smoothing summary](docs/results/smoothing_20261009.csv) includes every candidate. See [residual training over frozen noise](docs/residual_on_frozen_noise.md) for reproduction instructions, freeze checks, and experiment configurations.
-
-## Demo videos
-
-Click a preview to play or download the MP4. All three videos cover all 12 buttons in the center layout at **1× simulation time**, with the global view above the wrist view. A clearly labeled terminal freeze-frame appears when each task ends. These demo samples differ from the 120-trial evaluation above, which includes panel offsets.
-
-| Base VLA → fixed noise + 9D residual | 9D residual → XYZ-only residual | XYZ smoothing experiment (not adopted) |
+| Base VLA → fixed noise + 9-D residual | 9-D residual → XYZ residual | XYZ smoothing experiment (not adopted) |
 |---|---|---|
-| [![Before and after reinforcement learning](docs/media/before-vs-residual.jpg)](https://github.com/pgq18/PressB/raw/refs/heads/main/docs/media/before-vs-residual.mp4) | [![9D and XYZ residuals](docs/media/pose9-vs-xyz.jpg)](https://github.com/pgq18/PressB/raw/refs/heads/main/docs/media/pose9-vs-xyz.mp4) | [![XYZ smoothing experiment](docs/media/xyz-smoothing-experimental.jpg)](https://github.com/pgq18/PressB/raw/refs/heads/main/docs/media/xyz-smoothing-experimental.mp4) |
-| Left: 4/12; right: 12/12. Right uses γ=0.995 and 400k training. | Left: 12/12; right: 11/12. The XYZ demo includes one 24→25 wrong press. | Both sides: 12/12. The full concurrent evaluations scored 116/120 and 117/120. |
+| [![Before and after reinforcement learning](docs/media/before-vs-residual.jpg)](docs/media/before-vs-residual.mp4) | [![9-D and XYZ residuals](docs/media/pose9-vs-xyz.jpg)](docs/media/pose9-vs-xyz.mp4) | [![XYZ smoothing experiment](docs/media/xyz-smoothing-experimental.jpg)](docs/media/xyz-smoothing-experimental.mp4) |
+| Left: 4/12; right: 12/12 (γ=0.995, 400k) | Left: 12/12; right: 11/12, including one 24→25 wrong press | Both sides 12/12; full concurrent evaluations were 116/120 and 117/120 |
 
-See the [media notes](docs/media/README.md) for original video sources, compression settings, actual frame counts, and audit records. Video smoothness reflects replayed measured trajectories; playback acceleration and frame interpolation are not used to create differences.
+See the [media notes](docs/media/README.md) for sources, compression settings, frame counts and audit records.
 
-## Repository roles and reproduction scope
+The PiPER line introduced the three-service architecture — an Isaac simulation node, a frozen VLA-JEPA inference node and a SAC learner node speaking HTTP — with 64 parallel environments, batched inference and independent episode resets. A 1M-transition run measured about 19.81 h for the action residual and 15.16 h for the initial-noise policy; the latest XYZ 400k run took about 7.43 h. One transition is a ≤ 7-step action chunk in one environment, not an episode. The S1 runner is a single-process variant because multi-environment camera isolation has not passed acceptance; see [online RL](docs/online_rl.md), [high-throughput runner](docs/online_rl_fast.md) and the [protocol](docs/online_rl_protocol.md). Video smoothness comes from replayed measured trajectories; no acceleration or frame interpolation is used to create differences.
 
-| Repository | Role | Local location |
-|---|---|---|
-| [PressB](https://github.com/pgq18/PressB) | Isaac scene, three-node services, SAC integration, experiments, evaluation, and video audits | This repository; RL code is in `src/pressb/online_rl/` |
-| [VLA-JEPA](https://github.com/pgq18/VLA-JEPA/tree/base) | Vision/state/language encoders, flow-matching model, and PiPER fine-tuning and inference | Separate repository at `src/VLA-JEPA/` |
-| [ZPRL-PressB](https://github.com/pgq18/ZPRL-PressB) | Reference implementation for residual SAC, initial-noise methods, and sampling schedules | Optional separate repository at `src/ZPRL/`; PressB does not need to import it |
+## Repository layout
 
-These two subdirectories are independent Git repositories, excluded from the PressB package and not implicit submodules. Their versions and roles are recorded in the [repository lock file](repos.lock.json). Trained RL checkpoints are strictly tied to their inference source. To reproduce existing weights, keep the VLA-JEPA runtime checkout at `9c9dc71c8e199c7428b25d103ab666395832c001`; a documentation-only update must not move it to the latest HEAD:
-
-```bash
-git clone --branch base https://github.com/pgq18/VLA-JEPA.git src/VLA-JEPA
-git -C src/VLA-JEPA checkout --detach 9c9dc71c8e199c7428b25d103ab666395832c001
-
-# Optional: inspect the original RL methods. The training code is already in PressB.
-git clone https://github.com/pgq18/ZPRL-PressB.git src/ZPRL
-```
-
-A clean clone includes source code, selected media, and statistical summaries. It **does not include** VLA/RL weights, scene snapshots, collection metadata, or model caches. The three general-purpose nodes accept explicit paths. In contrast, `run_residual_on_noise_experiment.py` and the smoothing and video experiment supervisors are reproduction entry points for this workspace: they depend on the existing `outputs/` assets and identity manifests documented here and cannot run directly in an empty directory. See the [high-throughput run guide](docs/online_rl_fast.md) and [5090 environment guide](docs/rtx5090_setup.md) for deployment.
-
-## Installation
-
-**RTX 5090 workstation:** Use the validated Python 3.11 / Isaac Sim 5.0 / Isaac Lab 2.2 configuration, installed through `scripts/setup_env_5090.sh`. See the [RTX 5090 run guide](docs/rtx5090_setup.md) for steps and measured results. The legacy `scripts/setup_env.sh` targets the original Python 3.10 configuration.
-
-Requirements: Linux x86_64, Conda, an Isaac Sim-compatible NVIDIA RTX GPU and driver, Vulkan, and system installations of `git`, `ffmpeg`, `ffprobe` (FFmpeg must include `libx264`), and DejaVu fonts. Headless runs still require GPU rendering. VRAM requirements increase with the number of parallel environments; start by validating one environment on one GPU.
-
-```bash
-git clone https://github.com/pgq18/PressB.git
-cd PressB
-
-# Ubuntu / Debian system dependencies; install as needed on your machine
-sudo apt-get install ffmpeg fonts-dejavu-core
-
-# Current 5090 Isaac environment: Python 3.11, default path .conda/envs/pressb
-# Set CONDA_BIN=/path/to/conda to select Conda explicitly
-bash scripts/setup_env_5090.sh
-
-# Download pinned assets and verify SHA-256; conflicting files are not overwritten
-.conda/envs/pressb/bin/python scripts/fetch_assets.py
-
-# Extract the official bracket and D435 meshes unchanged using isolated OpenUSD 24.11
-PYTHONPATH=.cache/usd-inspect .conda/envs/pressb/bin/python scripts/prepare_wrist_asset.py
-
-# LeRobot conversion environment: separate Python 3.12 / CPU PyTorch
-bash scripts/setup_dataset_env.sh
-```
-
-Keep the two Python environments separate: simulation uses `.conda/envs/pressb/bin/python`, while LeRobot conversion and the official reader use `.conda/envs/lerobot/bin/python`. Do not install `requirements-dataset.txt` into the Isaac environment. The setup script sets `OMNI_KIT_ACCEPT_EULA=YES`; NVIDIA software and assets remain subject to their licenses. Sources are listed in [THIRD_PARTY.md](THIRD_PARTY.md).
-
-## Generate and validate the scene first
-
-```bash
-# Press all 12 buttons in sequence, returning to the folded initial pose after each
-bash scripts/run.sh --headless --gpu 0 --video --output outputs/edge_feedback
-
-.conda/envs/pressb/bin/python scripts/audit_episode.py outputs/edge_feedback
-.conda/envs/pressb/bin/python scripts/check_results.py outputs/edge_feedback
-.conda/envs/pressb/bin/python scripts/audit_global_camera.py outputs/edge_feedback
-
-# With a display / remote desktop
-# bash scripts/run.sh --gpu 0 --hold --output outputs/gui
-```
-
-The generated `outputs/edge_feedback/scene.usda`, along with `wrist_camera/intrinsics.json` and `global_camera/intrinsics.json` in the same output directory, supplies the inputs for subsequent collection; these files do not exist in a clean clone. `--gpu` selects an Isaac/Vulkan device index; choose a device with available VRAM. The demo defaults to 10 Hz images and 120 Hz physics; batch collection sets the sampling rate independently through `--fps`.
-
-## Collect 12 × 100 position-stratified episodes
-
-```bash
-# --gpus 0 selects one GPU; multiple devices such as 0,1 are also supported
-.conda/envs/pressb/bin/python scripts/collect_parallel.py \
-  --config configs/dataset_panel_stratified_1200.json \
-  --snapshot outputs/edge_feedback/scene.usda \
-  --output datasets/piper_elevator_raw_panel_stratified_30hz \
-  --gpus 0 --num-envs 3 --fps 30 \
-  --episodes-per-task 100 --seed 20260930
-
-.conda/envs/pressb/bin/python scripts/audit_raw_dataset.py \
-  datasets/piper_elevator_raw_panel_stratified_30hz --episodes-per-task 100
-
-.conda/envs/pressb/bin/python scripts/audit_panel_coverage.py \
-  datasets/piper_elevator_raw_panel_stratified_30hz \
-  --report outputs/panel_stratified_1200/coverage.json
-```
-
-The 10×10 grid for each floor requires `--episodes-per-task 100`, and the collection seed must match `grid_seed` in the configuration. For a small preflight run, use `collect_dataset.sh --max-episodes 2`, retaining these configuration parameters and using a separate output directory. After every panel repositioning, check that the global camera captures the entire panel, all buttons remain reachable, and the recorded presses, collisions, and return motions are correct. Parallel scenes retain only one active Dome environment light.
-
-The sampling rate must divide the 120 Hz physics rate evenly, for example 10, 20, 30, or 60 Hz. Use a separate data directory when changing the rate. The first-light export example below targets 30 Hz data. Collection metadata and code fingerprints prevent mixing different sources; do not rewrite metadata to bypass resume checks.
-
-## Export first-light prefixes to LeRobot v3
-
-```bash
-PYTHONPATH=src .conda/envs/pressb/bin/python -m pressb.press_prefix \
-  --raw datasets/piper_elevator_raw_panel_stratified_30hz \
-  --output outputs/panel_stratified_1200/cut_plan.json \
-  --episodes-per-floor 100
-
-.conda/envs/lerobot/bin/python scripts/export_press_dataset.py \
-  --raw datasets/piper_elevator_raw_panel_stratified_30hz \
-  --cut-plan outputs/panel_stratified_1200/cut_plan.json \
-  --output datasets/piper_elevator_lerobot_panel_stratified_press_30hz \
-  --parts datasets/piper_elevator_parts_panel_stratified_press_30hz \
-  --episodes-per-task 100 --part-size 25 --workers 4
-
-.conda/envs/lerobot/bin/python scripts/confirm_press_dataset_reader.py \
-  datasets/piper_elevator_lerobot_panel_stratified_press_30hz \
-  --expected-episodes 1200 \
-  --report outputs/panel_stratified_1200/readback.json
-```
-
-The exporter checks numerical values, video decoding, and first-light endpoints for both shards and the final dataset. The official reader check provides additional validation. If an output path already exists, follow the script's recovery/consistency checks or use a new directory; do not overwrite validated batches.
-
-Data conventions:
-
-| Field | Meaning |
+| Directory | Contents |
 |---|---|
-| task | `Press 24 floor.` … `Press 35 floor.` |
-| state | Actual gripper TCP pose and measured gripper opening |
-| action | Absolute TCP target pose at the next sampling time and fixed gripper opening |
-| pose | `[x, y, z, qw, qx, qy, qz, gripper_width]`, in the `base_link` frame, with positions and width in meters |
-| cameras | Synchronized RGB: `observation.images.global`, `observation.images.wrist` |
-| metadata | Panel XY offsets, random seed, source, and collection fingerprints |
+| `src/pressb/` | PiPER scene, kinematics, planning and cameras; VIB-820 scene, materials and S1 press control; dataset semantics |
+| `src/pressb/astribot_collection/` | Resident/pipeline collectors, per-episode audit, NVENC and render controls |
+| `src/pressb/online_rl/` | SAC learner, three-node protocol, batched simulation/inference, residual-on-noise and S1 residual runner |
+| `scripts/` | Setup, asset preparation, collection, export, replay, evaluation, online RL and audit entry points |
+| `configs/` | VIB-820 / Astribot sensor configs, PiPER panel layouts, stratified collection and online RL configs |
+| `tests/` | CPU unit tests and optional USD scene integration tests (65 test files, 969 tests collected) |
+| `assets/*.json` | Pinned asset sources, SHA-256 checksums and installation alignment metadata |
+| `docs/` | Current workflow guides, experiment records and the project handover |
+| `docs/results/`, `docs/media/` | Small result summaries and selected compressed PiPER demos shipped with the repository |
+| `models/` | Local VLA weights, contracts, splits and source snapshots (ignored by Git) |
+| `datasets/`, `outputs/`, `logs/`, `.conda/`, `.cache/`, `vendor/` | Local data, evidence, environments, caches and downloads (ignored by Git) |
+| `src/VLA-JEPA/`, `src/ZPRL/` | Separately cloned dependency/reference repositories (ignored by Git) |
 
-The gripper TCP is at local Z=0.1358 m in `link6`; the pressing-rod tip is at Z=0.24 m, a different point. The VLA-JEPA training adapter converts rotation to a 6D representation by flattening the first two rows of the rotation matrix, leaves XYZ unchanged, and excludes the fixed gripper opening from learning. Training and inference service code is in [pgq18/VLA-JEPA](https://github.com/pgq18/VLA-JEPA/tree/base).
-
-## Replay and policy evaluation
-
-- [Recorded action replay](docs/replay.md): execute LeRobot actions through IK and check actual contact.
-- [Closed-loop policy evaluation](docs/policy_eval.md): provide current dual-camera images, measured TCP state, and task text, then execute the model's absolute targets.
-- [Action smoothing](docs/policy_smoothing.md): a 3-point causal mean filter is applied by default after 120 Hz joint interpolation.
-
-Evaluation must explicitly specify the configuration, scene snapshot, checkpoint step, and SHA-256 matching the training data. `--panel-layouts center_corners` covers the training configuration's center and four boundary corners. Success depends on actual button travel, contact force, and the absence of wrong presses or abnormal collisions; proximity to a button or successful IK is insufficient. Simulation pauses during remote inference, so this test does not measure real-time deployment latency.
-
-A previous fixed 60-trial evaluation of step 10600 on the old collection machine and controller yielded **5/60 successes, 27 wrong presses, and 28 timeouts**. This is a diagnostic result from the old environment and must not be mixed with the current fast simulation baseline of 25/120. Current RL results appear at the start of this README. Full raw recordings and reports remain in local `outputs/`; selected demos are linked above.
-
-## Online reinforcement learning: three independent nodes
-
-The [online RL run guide](docs/online_rl.md) provides three HTTP nodes for simulation, frozen VLA-JEPA inference, and SAC training, deployable across three machines. The [high-throughput version](docs/online_rl_fast.md) adds independent episode resets, batched inference, and overlapping sampling and gradient updates. It supports colocating simulation and inference on local GPU 1 with training on GPU 0, and retains a cross-node configuration for H200 inference.
-
-```mermaid
-flowchart LR
-  S["Isaac simulation node<br/>64 environments · 120 Hz physics / 30 Hz control"]
-  L["SAC training node<br/>actor / critics / replay"]
-  I["Frozen VLA-JEPA inference node<br/>batch 64 · encoder + flow"]
-  L -->|"Action chunk / independent reset"| S
-  S -->|"Dual cameras, measured state, reward, termination"| L
-  L -->|"encode / decode with specified initial noise"| I
-  I -->|"Frozen features / 7-step base actions"| L
-```
-
-Current training uses **64 environments and batch-64 inference**, resetting episodes independently without waiting for the entire group to finish. One transition is an action chunk of up to 7 steps in one environment, **not an episode**. Measured training times for the two 1M experiments were approximately **19.81 h (action residual) / 15.16 h (initial noise)**, including sampling, gradient updates, and saving. Earlier extrapolations from short windows were not the final runtimes. The latest XYZ 400k run took approximately 7.43 h. Videos show simulation time and do not represent deployment latency on a physical robot.
-
-Two methods from ZPRL are supported: action-output residuals and initial flow noise selection. Current configurations are `configs/online_rl_fast_action_residual.json` and `configs/online_rl_fast_initial_noise.json`; entry points are `scripts/serve_rl_fast_simulation.py`, `scripts/serve_rl_inference.py`, and `scripts/run_fast_online_rl.py`. Model weights remain frozen, while the training node independently saves replay, actor/critics, optimizer, and resume state. Evaluation uses fixed center/corner conditions. The original `serve_rl_simulation.py` / `run_online_rl.py` are retained to reproduce the old scheduling behavior. See the [protocol](docs/online_rl_protocol.md) for exact communication and transition semantics.
-
-## Checks and directory layout
+## Tests
 
 ```bash
-.conda/envs/pressb/bin/python scripts/fetch_assets.py --check-only
 .conda/envs/pressb/bin/python -m pytest -q
 
-# Explicitly select a snapshot for USD scene integration tests
+# USD integration tests need an explicit PiPER scene snapshot
 PRESSB_TEST_SNAPSHOT=outputs/edge_feedback/scene.usda \
   PYTHONPATH=.cache/usd-inspect:src \
   .conda/envs/pressb/bin/python -m pytest -q tests/test_dataset_scene.py
 
-# Run data/video audit tests in the separate LeRobot environment
+# Data/video audits run in the separate LeRobot environment
 .conda/envs/lerobot/bin/python -m pip install pytest
-.conda/envs/lerobot/bin/python -m pytest -q \
-  tests/test_press_dataset_audit.py tests/test_press_export.py \
-  tests/test_dataset_provenance.py tests/test_export_fps.py \
-  tests/test_camera_timing.py tests/test_collection_timing.py \
-  tests/test_feedback_panel_offsets.py tests/test_replay_audit.py \
-  tests/test_panel_metadata.py tests/test_panel_coverage_audit.py
+.conda/envs/lerobot/bin/python -m pytest -q tests/test_press_dataset_audit.py tests/test_export_fps.py
 ```
 
-A clone without a scene snapshot skips USD integration tests that require one; explicitly selecting a nonexistent snapshot raises an error. Kinematics tests that depend on assets must run after asset download. If the Isaac environment lacks PyAV, the relevant video tests are explicitly skipped. The LeRobot environment commands above run these additional checks without installing dataset dependencies into the Isaac environment.
+A clone without a snapshot skips the USD integration tests; naming a missing snapshot is an error. Kinematics tests that depend on downloaded assets must run after the asset step. When the Isaac environment lacks PyAV, the relevant video tests are skipped explicitly rather than silently passing.
 
-| Directory | Contents |
-|---|---|
-| `src/pressb/` | Scene, robot kinematics, planning, cameras, data semantics, and policy control |
-| `src/pressb/online_rl/` | Three-node protocol, batched simulation/inference, SAC, frozen-policy composition, and smoothing evaluation |
-| `scripts/` | Entry points for setup, asset preparation, collection, conversion, replay, evaluation, and audits |
-| `configs/` | Configurations for fixed scenes, randomized positions, and 1,200-episode stratified collection |
-| `tests/` | CPU unit tests and optional USD scene integration tests |
-| `assets/*.json` | Pinned asset sources, checksums, and installation alignment metadata |
-| `docs/` | Current workflow guides and historical experiment records with their scope identified |
-| `docs/results/`, `docs/media/` | Small result summaries and selected compressed videos distributed with the repository |
-| `src/VLA-JEPA/`, `src/ZPRL/` | Separately cloned and published dependency/reference repositories (ignored here) |
-| `vendor/`, `assets/generated/`, `assets/isaac/` | Locally downloaded or generated dependencies and assets (ignored) |
-| `datasets/`, `outputs/`, `logs/`, `.conda/`, `.cache/` | Local data, results, environments, and caches (ignored) |
+## Documentation map
 
-Further reading: [30 Hz data](docs/dataset_30hz.md) · [First-light trimming](docs/dataset_press_only.md) · [Position randomization](docs/dataset_panel_randomization.md) · [Stratified coverage records](docs/dataset_panel_stratified.md).
+Active line: [VIB-820 scene](docs/vib820.md) · [S1 asset](docs/astribot_asset.md) · [S1 press control](docs/astribot_press.md) · [sensors](docs/astribot_sensors.md) · [initial pose](docs/astribot_initial_pose.md) · [camera mounts](docs/astribot_wrist_camera_audit.md) · [camera inventory](docs/astribot_camera_inventory.md) · [closed-loop evaluation](docs/astribot_closedloop_20261018.md) · [paired comparison](docs/astribot_paired_val_20261019.md) · [online residual RL](docs/astribot_online_rl.md) · [collection plan](docs/plan/vib820_gpu_collection_400/plan.md) · [collection runbook](docs/plan/vib820_gpu_collection_400/runbook.md) · [experiment specification](docs/vib820_experiment_spec/README.md).
+
+Legacy PiPER line: [scene details](docs/scene_details.md) · [dataset](docs/dataset.md) · [30 Hz data](docs/dataset_30hz.md) · [first-light trimming](docs/dataset_press_only.md) · [panel randomization](docs/dataset_panel_randomization.md) · [stratified coverage](docs/dataset_panel_stratified.md) · [replay](docs/replay.md) · [policy evaluation](docs/policy_eval.md) · [smoothing](docs/policy_smoothing.md) · [online RL](docs/online_rl.md) · [high-throughput RL](docs/online_rl_fast.md) · [residual on frozen noise](docs/residual_on_frozen_noise.md).
+
+Setup and operations: [RTX 5090 guide](docs/rtx5090_setup.md) · [PRO 6000 setup](docs/PRO6000_ENV.md) · [local deployment](docs/local_deployment.md) · [project handover](docs/HANDOVER.md).
+
+## Data, weights, and licenses
+
+Git holds source, configuration, asset manifests, result summaries and the selected PiPER demos only. Datasets, VLA/RL weights, scene snapshots, raw recordings and Conda environments are local and ignored: the 400-episode export lives on the local data disk (documented root `/data/shared/js/PressB/vib820_gpu_collection_400_20261015`), with the raw collection under `outputs/vib820_gpu_collection_400_pro6000/raw` and the fine-tuned weights under `models/`. The S1 description and PiPER assets are downloaded at pinned commits and verified by SHA-256 (`assets/sources.lock.json`, `assets/astribot_sources.lock.json`); VIB-820 materials are CC0 ambientCG/Poly Haven derivatives documented in `assets/materials/vib820/`. NVIDIA software and assets remain subject to their own licenses — see [THIRD_PARTY.md](THIRD_PARTY.md). This repository does not yet declare a license for its own code; public visibility is not a grant.

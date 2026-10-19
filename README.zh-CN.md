@@ -1,30 +1,218 @@
-# PressB — PiPER 电梯按键与 VLA 在线残差强化学习
+# PressB — 基于 VLA-JEPA 与在线残差强化学习的电梯按键仿真
 
 [English](README.md) | **简体中文**
 
-**进展更新：2026-10-09。** 已完成 Isaac 并行仿真、冻结 VLA-JEPA 推理与 SAC 训练的三节点框架，两种方法各 1M 在线训练，以及固定噪声策略后从头训练动作残差的多轮 400k 实验。最新 XYZ-only 残差的单次固定条件评估为 **119/120（99.17%）**；额外动作平滑仍为实验选项，未默认启用。
+**状态：2026-10-19。** 同一套 Isaac Sim 代码里并存两条任务主线。当前主线是 **Astribot S1 人形按 VIB-820 电梯厅呼叫按钮**：400 条专家数据已采集并导出为 LeRobot v3，VLA-JEPA 微调到 **step 8000**，冻结的 test 划分闭环为 **17/40（42.5%）**；在 validation 划分与保守续训的 **step 17,000** 做逐场景配对，结果为 **23/40 对 19/40**（McNemar p = 0.3438，不显著）。这两个权重之间，离线动作误差改善了，闭环成功率没有。在线残差 SAC 已接到该任务上，20 项 CPU 契约测试与本机 GPU/Isaac 冒烟均通过，但尚未执行正式长跑。上一代 **PiPER 12 按键主线**已完成（最佳 119/120 = 99.17%），保留在下文作为历史记录。
 
-**2026-10-19 主线变更：** 当前工作已转到 Astribot S1 人形按 VIB-820 电梯厅呼叫按钮。400 条专家数据已采集、导出为 LeRobot v3 并完成发布验收，VLA-JEPA 微调与两轮闭环评估已完成。见 [VIB-820 采集计划](docs/plan/vib820_gpu_collection_400/plan.md)、[闭环评估](docs/astribot_closedloop_20261018.md)、[8k／17k 配对对照](docs/astribot_paired_val_20261019.md)。在线残差 RL 已接入 S1 任务（CPU 契约 20 项通过，GPU/Isaac 冒烟已通过），见 [在线残差 RL](docs/astribot_online_rl.md)。下文内容描述上一代 PiPER 主线，保留为历史记录。
+[当前结果](#当前结果) · [快速开始](#快速开始) · [复现当前主线](#复现当前主线) · [在线残差强化学习](#在线残差强化学习) · [上一代 PiPER 主线](#上一代-piper-主线) · [工作交接](docs/HANDOVER.md)
 
-[当前结果](#当前结果) · [演示视频](#演示视频) · [三节点框架](#在线强化学习独立三节点) · [运行说明](docs/online_rl_fast.md) · [工作交接](docs/HANDOVER.md)
+已验收环境为 **Isaac Sim 5.0 / Isaac Lab 2.2 / Python 3.11**，在 RTX 5090 与 RTX PRO 6000 Blackwell 上均实际运行过。仓库包含场景构建、脚本专家采集、逐条物理审计、LeRobot 导出、冻结 VLA 推理服务、同步闭环评估与残差强化学习。Isaac Sim 4.5 / Isaac Lab 2.0.2 的历史入口仍保留，但不再是主线。
 
-当前 RTX 5090 环境使用 **Isaac Sim 5.0 / Isaac Lab 2.2 / Python 3.11**。项目包含轨迹规划、真实接触反馈、双相机采集、LeRobot 导出、动作回放、VLA 闭环评估和在线残差强化学习；保留原 Isaac Sim 4.5 / Isaac Lab 2.0.2 环境的历史脚本与说明。
+## 两条任务主线
 
-- 黑色 PiPER 放在桌沿，夹爪保持 8 mm 总开度夹持按压杆；初始姿态为大臂、小臂在桌面上方折叠。
-- 墙上面板为 2 列 × 6 行：左列从下到上 24–29，右列 30–35。按钮受接触力推动，边缘橙灯在按下时亮、回弹后灭。
-- 腕部与桌面各一台 D435；腕部复用 AgileX 官方支架网格，双路 RGB 默认 640×480。
-- 采集支持面板左右 ±25 mm、前后 ±10 mm 变化；10×10 分层覆盖，每层 100 条，共 1,200 条 episode。
-- 训练数据只保留折叠初始姿态到首次成功亮灯的前缀。撤回、归位用于下一次采集，保留在原始诊断记录中。
+| | Astribot S1 / VIB-820（当前） | PiPER / 12 按键墙面面板（历史） |
+|---|---|---|
+| 机器人 | Astribot S1 人形；底盘、躯干、头部、左臂固定，右臂与原装闭合夹爪动作 | AgileX PiPER 机械臂，夹 8 mm 持杆 |
+| 任务 | 单个向下外呼按钮；指令 `Press the down hall-call button.` | 12 个楼层按钮；`Press 24 floor.` … `Press 35 floor.` |
+| 状态／动作 | 记录 32 关节；学习右臂 7 关节 + 右夹爪（8 维），展开为 32 维 | `base_link` 下 8 维 TCP 位姿 + 夹爪开度 |
+| 相机 | 录制 7 路；送模型的为头部 1280×720 + 右腕 640×480 | 双 D435，640×480 |
+| 专家数据 | 400 条、245,983 帧、30 Hz | 1,200 条、306,830 帧、30 Hz |
+| 策略 | VLA-JEPA DiT-B，7 步预测，step 8000 | VLA-JEPA step 10600 + 残差 SAC |
+| 状态 | 40 场景闭环已评估；在线 RL 已接入 | 已完成；最佳 119/120（99.17%） |
 
-仓库包含代码、配置、资产来源清单、结果摘要和精选演示。**完整数据集、模型权重、下载素材、Conda 环境和原始运行录像不存入 Git**；仅 [docs/media](docs/media/README.md) 中的压缩演示随仓库发布。详细场景与历史验证记录见 [scene_details.md](docs/scene_details.md)。
+「上一代 PiPER 主线」一节及其后的内容属于历史记录，其中的数字不能与 S1 结果混用。
 
 ## 当前结果
 
-原始 VLA-JEPA 以 1,200 条带面板位置变化的专家 episode 微调，使用固定的 **step 10600** checkpoint。在线阶段始终冻结 VLA；先分别学习动作输出残差和 flow 初始噪声，再固定已训练的噪声策略，从随机初始化重新训练动作残差。噪声方法直接选择 flow 的初始噪声，不反向更新 VLA。
+当前任务是 VIB-820 场景里的 `0` 号按钮：400 × 95 mm 拉丝金属面板上唯一的向下外呼按钮，中心离地 1,200 mm，仿真行程 2 mm。S1 的底盘、躯干、头部与左臂保持固定，用原装闭合右夹爪按压。模型输入只有头部 RGB、右腕 RGB、实测 32 维关节角与固定指令文本；场景坐标、按钮几何和回合编号都不会进入策略。
 
-下表为同一 fast 仿真约定下的 **12 按键 × 5 个面板位置（中心、四角）× 2 次，共 120 次**固定条件评估，seed=20260930。记录的是真实按钮接触任务成功率，评估不更新参数。表中的 400k 是新增动作残差的训练预算，之前的 1M 噪声训练另计；多次运行不保证逐位相同，也不能把单次结果解释为多种子泛化保证。
+| 阶段 | 结果 |
+|---|---|
+| 专家采集 | **400/400** 条验收通过（2026-10-16 → 10-17），来自 528 次实际执行；30 条 `physical_failure`、22 条 `infrastructure_error` 作为证据保留；7 路相机、30 Hz 采样、120 Hz 物理 |
+| LeRobot v3 导出 | 400 条 / 245,983 帧 / 13 GiB / `robot_type=astribot`；官方读取与全量视频解码通过；`release_report.json` 为 `status=passed` |
+| 微调 | 冻结 320/40/40 训练／验证／测试划分；best 为 **step 8000**，10,268,108,194 字节，SHA-256 `db98b7c5…`；契约、归一化统计、划分与训练源码随权重保存 |
+| test 划分闭环 | **17/40 = 42.5%**；23 次超时（16 次移动但未接触、7 次在初始姿态附近停滞）；0 次非预期接触 |
+| validation 划分配对 | step 8000 **23/40 = 57.5%**，step 17,000 **19/40 = 47.5%**；精确 McNemar **p = 0.3438** |
+| 在线残差 SAC | 20 项 CPU 契约测试 + GPU/Isaac 冒烟通过；单环境约 2.1–2.4 transition/s，20,000 条约 2.5 小时；尚未正式长跑 |
 
-| 方法 | 在线训练 | 成功次数 | 成功率 |
+test 与 validation 是**两批不同场景**，42.5% 与 57.5% 不能互相比较。
+
+### 配对对照：离线误差改善，闭环没有改善
+
+step 17,000 由 step 8000 保守续训得到（学习率约为首轮 1/3，按离线 selection score 选取），两个权重在 validation 的 40 个场景上各跑一次，逐场景、逐请求随机种子相同，配对初始条件已核验。
+
+| 权重 | 成功 | 配对结果 |
+|---|---:|---|
+| step 8000 | 23/40（57.5%） | 均成功 16、均失败 14 |
+| step 17,000 | 19/40（47.5%） | 改善 3、退步 7 |
+
+| 离线指标（同一组 120 个验证锚点） | step 8000 | step 17,000 | 方向 |
+|---|---:|---:|---|
+| arm MAE（rad） | 0.002696 | 0.002620 | 改善 |
+| gripper MAE（rad） | 0.003259 | 0.001995 | 改善 |
+| selection score（rad） | 0.003190 | 0.003053 | 改善 |
+| flow loss | 0.004782 | 0.006078 | 变差 |
+
+用于选 checkpoint 的离线指标与闭环目标存在错位：离线 MAE 更好，成功率反而更低。失败集中在「接近」与「接触」两个阶段，而不是单步动作误差本身，因此更值得改进的是接触阶段的行为质量、终止/超时策略与接近轨迹，而不是继续压低离线 MAE。
+
+| 失败分类（按顺序互斥） | step 8000 | step 17,000 |
+|---|---:|---:|
+| 移动但未进入按钮近区（≤ 20 mm） | 4 | 9 |
+| 初始姿态附近停滞 | 6 | 4 |
+| 进入 20 mm 内但未有效接触 | 5 | 4 |
+| 超时时仍在接近 | 2 | 1 |
+| 接近后偏离 | 0 | 2 |
+| 非预期接触 `unexpected_contact` | 0 | 1 |
+| **成功** | **23** | **19** |
+
+作为参照，脚本 IK 专家（不含学习）在 40 cm × 40 cm 底盘位移网格上完成 25/30 = 83.3%，30 个关键位姿全部可解，出现 5 次非预期接触。这是另一套协议，只用于说明学习策略还剩多少差距。
+
+## 快速开始
+
+需求：Linux x86_64、Conda、支持 Isaac Sim 的 NVIDIA RTX GPU 与驱动（Blackwell 上已验证驱动 580.178.04）、Vulkan、无窗口运行时仍需 GPU 渲染，以及系统 `git`、`ffmpeg`／`ffprobe`（含 `libx264`）与 DejaVu 字体。
+
+```bash
+git clone https://github.com/RBM-TowerGO/PressButton.git
+cd PressButton
+
+sudo apt-get install ffmpeg fonts-dejavu-core          # 若尚未安装
+bash scripts/setup_env_5090.sh                        # Python 3.11 / Isaac Sim 5.0 / Isaac Lab 2.2
+bash scripts/setup_dataset_env.sh                     # Python 3.12 / LeRobot 0.6.1 / CPU PyTorch
+
+# 策略服务使用的推理依赖覆盖环境，不修改 Isaac 环境
+.conda/envs/pressb/bin/python -m venv --system-site-packages .venv-astribot-inference
+```
+
+三个环境必须分开，且不要把 `requirements-dataset.txt` 装进 Isaac 环境：
+
+| 环境 | 用途 |
+|---|---|
+| `.conda/envs/pressb` | 仿真、采集、闭环评估、在线 RL |
+| `.conda/envs/lerobot` | LeRobot 转换、官方读取、数据审计 |
+| `.venv-astribot-inference` | 仅供 VLA-JEPA 策略服务 |
+
+下载固定版本资产并构建当前场景：
+
+```bash
+source scripts/activate_local.sh                      # Conda + CUDA_VISIBLE_DEVICES=0
+python scripts/fetch_astribot_assets.py               # S1 USD/URDF/网格，约 502 MB，按 SHA-256 校验
+PYTHONPATH=.cache/usd-inspect python scripts/prepare_astribot_asset.py
+python scripts/build_vib820.py --output outputs/vib820_model
+```
+
+`scripts/activate_local.sh` 与 `scripts/*_astribot_*.sh` 中写死了本工作区的绝对路径和 Conda 位置；在全新克隆中直接调用底层的 `scripts/*.py` 入口。`activate_local.sh` 默认只暴露 GPU 0；使用第二张卡时 `export CUDA_VISIBLE_DEVICES=0,1` 并传 `--gpu 1`。
+
+在采集或评估之前，先验证脚本专家。输出目录必须不存在：
+
+```bash
+python scripts/run_astribot_press.py --headless --video \
+  --config configs/astribot_vib820.json --buttons 0 --repeats 3 \
+  --output outputs/vib820_press
+python scripts/audit_astribot_press.py outputs/vib820_press
+```
+
+运行测试（仅 CPU；截至 2026-10-19 为 959 passed、14 skipped，共收集 969 项）：
+
+```bash
+.conda/envs/pressb/bin/python -m pytest -q
+```
+
+## 复现当前主线
+
+### 1. 专家数据采集
+
+400 条数据在两张卡上以「每卡 2 个常驻单环境进程」采集（CPU 物理、GPU 渲染、NVENC 编码），依据的是用户显式授权文件，而不是原计划的多环境吞吐 gate；该配置不声明任何加速比。候选位置先冻结（`seed=20261014`，底盘 X ∈ [-0.30, -0.14] m、Y ∈ [0, 0.40] m、yaw ∈ [0°, 10°]），按候选 ID 顺序取前 400 条成功；全量审计后移出 147/378 条，由单独采集的 515/516 号替换。
+
+入口为 `scripts/run_astribot_resident_pipeline.py` 与 `scripts/collect_astribot_dataset.py`。完整的生产命令、授权文件、续采规则与替换证据见[采集操作手册](docs/plan/vib820_gpu_collection_400/runbook.md)，冻结参数与验收门槛见[采集计划](docs/plan/vib820_gpu_collection_400/plan.md)与[实验规格](docs/vib820_experiment_spec/README.md)。始终使用新的输出目录，已提交的证据不可改写。
+
+### 2. 导出为 LeRobot v3
+
+```bash
+.conda/envs/lerobot/bin/python scripts/export_astribot_lerobot.py \
+  --selection outputs/vib820_gpu_collection_400/selection.json \
+  --output outputs/vib820_lerobot_400 --gpu 1
+```
+
+`observation.state` 为 32 维实测关节角（rad），`action` 为下一个 30 Hz 采样时刻的 32 维绝对关节目标；末帧重复前一帧目标，而不是撤回动作。七路 `observation.images.<camera>` 保留原分辨率、内参与外参。官方读取器检查首／中／末帧与字段形状，最终检查还会重新解码全部训练视频并执行分层动作回放：
+
+```bash
+.conda/envs/pressb/bin/python scripts/finalize_astribot_collection.py \
+  --raw outputs/vib820_gpu_collection_400 \
+  --export outputs/vib820_lerobot_400 \
+  --replay-runs outputs/vib820_gpu_collection_400_replays/gpu0 \
+                outputs/vib820_gpu_collection_400_replays/gpu1 \
+  --output outputs/vib820_gpu_collection_400_release --gpu 0
+```
+
+微调本身**不在本机复现**：它在独立的 HPC 集群上用 VLA-JEPA 与 `astribot_lerobot` 适配器完成。本仓库保存了产出的权重、动作／训练契约、冻结划分、归一化统计、`config.yaml` 以及训练源码快照，位于 `models/astribot_head_right_joint8_ft_20261018/`；策略服务加载的就是这份快照与重定位后的配置。
+
+### 3. 策略服务与闭环评估
+
+服务启动时校验 checkpoint SHA-256 与全部数据／动作／训练契约，严格加载 1617 个张量，只监听 `127.0.0.1:8794`：
+
+```bash
+bash scripts/start_astribot_policy_server.sh            # GPU 1
+
+# 接口冒烟（每场景 2 秒），随后跑冻结的 test 划分
+bash scripts/run_astribot_closedloop.sh smoke outputs/astribot_closedloop/NEW_smoke
+bash scripts/run_astribot_closedloop.sh test  outputs/astribot_closedloop/NEW_test40
+```
+
+每次运行写出 `protocol.json`、`summary.json`，以及每场景一个目录，含 `report.json`、`trajectory.npz`、`policy_requests.json`、相机时间与标定、四路视频。只有 `complete=true` 才表示全部预定场景完成。包装脚本写死本工作区路径，全新克隆请直接用 `scripts/astribot_policy_server.py` 与 `scripts/eval_astribot_closedloop.py`。
+
+### 4. 配对权重对照
+
+```bash
+.conda/envs/pressb/bin/python scripts/run_astribot_pair.py
+```
+
+`run_astribot_pair.py` 固定写入 `outputs/astribot_paired_val_20261019/`，校验两个权重与源码哈希，起两个策略服务，调度 4 个仿真实例（每卡 2 个），并把先前的串行场景与并发分派合并、不重复计数；目录中已有 `status.json` 时直接拒绝。只重新汇总而不重跑仿真时使用 `scripts/astribot_pair_analysis.py`。
+
+### 5. 在线残差强化学习
+
+```bash
+# 冒烟：每回合 6 秒、8 条 transition、batch 4
+.conda/envs/pressb/bin/python scripts/run_astribot_online_rl.py \
+  --model-run models/astribot_head_right_joint8_ft_20261018 --checkpoint-step 8000 \
+  --output outputs/astribot_online_rl/NEW_smoke --smoke
+```
+
+正式配方（20,000 条 transition）、续跑与评估命令见[在线残差强化学习](docs/astribot_online_rl.md)。
+
+## 在线残差强化学习
+
+冻结的 VLA 始终不更新，由一个小型 SAC actor 修正它的 8 维关节目标，因此这套配方与真机只能拿到关节状态的部署条件一致。
+
+| 项目 | 取值 |
+|---|---|
+| 基座策略 | `models/astribot_head_right_joint8_ft_20261018`，step 8000，服务端校验 SHA-256 |
+| 基座动作 | 7 步 × 8 维绝对关节目标（右臂 7 关节 + 右夹爪） |
+| 残差 | 7 × 8，归一化到 [-1, 1]，按每关节 `0.02 rad`、夹爪 `0.05` 缩放 |
+| 观测 | 64 维：32 个实测关节角 + 32 个关节速度；不含场景坐标、按钮几何与任务编号 |
+| 奖励 | 稀疏物理成功（行程 ≥ 1 mm、右指尖力 > 0.02 N、灯锁存、无异常接触），按实际执行的 chunk 步数折扣 |
+| 安全终止 | 关节非有限或越界、异常接触、底盘漂移 > 1 mm、非活动关节漂移 > 0.02 rad、残差使目标越界 |
+| 数据划分 | 训练主循环只能加载冻结的 `train`（320 场景）；`--eval-only` 评估使用 `val`（默认）或 `test` |
+| 时序 | 30 Hz 决策、120 Hz 物理，每个目标间线性插值 4 个物理时刻；推理期间物理暂停 |
+| 回合预算 | 训练 20 秒仿真时间，评估 40 秒 |
+
+S1 任务只接入了动作残差这一种方法：`AstribotPolicy.predict` 只暴露 `action8`／`action32`，没有接收 flow 初始噪声的接口。冒烟已验证真实相机、冻结 RPC、物理成功判定、稀疏奖励与按步折扣、replay 写入、SAC 更新、原子保存以及 `--resume --eval-only` 在验证场景上的评估，8 个回合中 0 次非预期接触。冒烟里 actor 只更新了 8 次，残差接近 0，所以其成功率基本等同于冻结策略，不能当作 RL 效果。
+
+## 这些数字的边界
+
+- 两轮闭环都是**同步仿真**：模型计算时物理暂停。它们衡量策略能力，不代表真机实时控制延迟，也不构成真机结论。
+- 每个场景、每个权重只跑**一次**，没有跨种子稳定性估计，也没有独立泛化测试集。
+- 400 条训练数据是**成功筛选后**的集合，不能作为成功率的分母；失败尝试保留为证据，但不进入训练集。
+- 正式采集走的是用户显式授权，而不是原计划的「≥ 2 倍吞吐」门槛；不声明加速比，单卡单环境的诊断数字不能当作生产吞吐。
+- 失败分类是描述性诊断。到按钮的距离阈值只是几何代理，不是精确碰撞表面距离，也不能用来证明失败原因。
+- 场景坐标只用于初始化物理世界和评分，从不作为策略输入或控制目标。
+
+## 上一代 PiPER 主线
+
+黑色 PiPER 放在桌沿，夹爪以固定 8 mm 开度夹住按压杆。2 × 6 面板左列自下而上为 24–29 层，右列为 30–35 层；接触力推动按钮，边缘橙灯在按下后锁存。腕部与桌面各一台 D435，记录 640×480 RGB。采集覆盖面板左右 ±25 mm、前后 ±10 mm 偏移，每层 10 × 10 分层格、各 100 条，共 1,200 条；训练只保留到首次成功亮灯的前缀，撤回与归位留在原始诊断记录中。
+
+原始 VLA-JEPA 在这 1,200 条上微调（step 10600），在线阶段完全冻结。两种方法分别学习：动作输出残差与 flow 初始噪声；随后冻结已训练的噪声策略，从头训练新的动作残差。下表是同一固定条件协议：12 按键 × 5 个面板位置（中心与四角）× 2 次 = 120 次评估，seed 20260930，全程不更新参数。
+
+| 方法 | 在线训练 | 成功 | 成功率 |
 |---|---|---:|---:|
 | 原始 VLA-JEPA | 无 RL | 25/120 | 20.83% |
 | 独立动作残差 | 1M | 81/120 | 67.50% |
@@ -32,214 +220,64 @@
 | 叠加两份独立训练的策略 | 两份 1M 权重，无联合重训 | 96/120 | 80.00% |
 | 固定噪声，重训 9D 残差，γ=0.99 | 400k | 114/120 | 95.00% |
 | 固定噪声，重训 9D 残差，γ=0.995 | 400k | 118/120 | 98.33% |
-| 上一设置的残差 scale 减半 | 400k | 87/120 | 72.50% |
+| 上一设置，残差 scale 减半 | 400k | 87/120 | 72.50% |
 | **固定噪声，重训 XYZ 残差，γ=0.995** | **400k** | **119/120** | **99.17%** |
 
-最新 XYZ actor 只输出 **7×3=21 维**残差，位置 scale 为 **[0.02, 0.02, 0.02] m**，旋转和夹爪沿用冻结模型输出。400k 训练约 **7 小时 25 分钟**，完成 398k 次 SAC 更新；24 键为 9/10，25–35 键均为 10/10。对照的完整 9D scale 是 XYZ 各 0.03 m、rotation6D 各 0.1；半 scale 为 XYZ 各 0.015 m、rotation6D 各 0.05。折扣 γ 以每个 30 Hz 控制步计算，7 步 chunk 为 `γ**7`。
+最新 XYZ actor 只输出 7 × 3 = 21 维残差，位置 scale 为 0.02 m，旋转与夹爪沿用冻结模型输出。该轮 400k 训练约 7 小时 25 分钟，完成 398k 次更新；119/120 是单次固定条件结果，不代表所有随机种子下都有 99.17% 成功率。平滑实验（1,320 次评估）未通过预设门槛：XYZ 指数平滑 α=0.8 使实际关节 jerk 中位数下降约 14%、末端位置 jerk 下降约 30%，筛选为 119/120，但独立种子复核为 117/120，没有候选满足全部条件，因此默认仍是**不做额外后处理**。细节与复现见[固定噪声后的残差训练](docs/residual_on_frozen_noise.md)、[结果 JSON](docs/results/online_rl_20261009.json)、[结果 CSV](docs/results/online_rl_20261009.csv)、[平滑汇总](docs/results/smoothing_20261009.csv)。
 
-**平滑实验（已完成 1,320 次评估）：** XYZ 指数平滑 α=0.8 可使共同成功任务中的实际关节 jerk 中位数下降约 14%、末端位置 jerk 下降约 30%，任务时长增加约 0.7%–2.7%。筛选为 119/120（同期基线 117），独立种子复核为 117/120（基线 116）。位置＋姿态平滑和更轻的 α=0.9 也未通过全部预设成功率门槛，因此默认保持 **无新增后处理**，不将平滑候选的最佳筛选成绩当作稳定结论。
+演示视频覆盖全部 12 个按键，保持 1× 仿真时间，上为全局视角、下为腕部视角；任务结束后显示带标记的终止停帧。点击预览图播放或下载。这些演示不是包含面板偏移的 120 次评估。
 
-可下载的 [结果与逐按键统计](docs/results/online_rl_20261009.json)、[结果表 CSV](docs/results/online_rl_20261009.csv) 保留原日志来源与 SHA-256；[平滑汇总](docs/results/smoothing_20261009.csv) 包含所有候选。复现、冻结检查和各实验配置见 [固定噪声后的残差训练](docs/residual_on_frozen_noise.md)。
-
-## 演示视频
-
-点击预览图播放或下载 MP4。三段都覆盖全部 12 个按键的中心布局，保持 **1× 仿真时间**，上下分别为全局与腕部视角；任务结束后显示明确标记的终止停帧。演示样本与上表包含面板偏移的 120 次评估不同。
-
-| 原始 VLA → 固定噪声＋9D 残差 | 9D 残差 → XYZ-only 残差 | XYZ 平滑实验（未采用） |
+| 原始 VLA → 固定噪声＋9D 残差 | 9D 残差 → XYZ 残差 | XYZ 平滑实验（未采用） |
 |---|---|---|
-| [![强化学习前后](docs/media/before-vs-residual.jpg)](https://github.com/pgq18/PressB/raw/refs/heads/main/docs/media/before-vs-residual.mp4) | [![9D 与 XYZ 残差](docs/media/pose9-vs-xyz.jpg)](https://github.com/pgq18/PressB/raw/refs/heads/main/docs/media/pose9-vs-xyz.mp4) | [![XYZ 平滑实验](docs/media/xyz-smoothing-experimental.jpg)](https://github.com/pgq18/PressB/raw/refs/heads/main/docs/media/xyz-smoothing-experimental.mp4) |
-| 左 4/12，右 12/12；右侧 γ=0.995、400k | 左 12/12，右 11/12；XYZ 演示有一次 24→25 | 左、右均 12/12；完整同期评估为 116/120 与 117/120 |
+| [![强化学习前后](docs/media/before-vs-residual.jpg)](docs/media/before-vs-residual.mp4) | [![9D 与 XYZ 残差](docs/media/pose9-vs-xyz.jpg)](docs/media/pose9-vs-xyz.mp4) | [![XYZ 平滑实验](docs/media/xyz-smoothing-experimental.jpg)](docs/media/xyz-smoothing-experimental.mp4) |
+| 左 4/12；右 12/12（γ=0.995、400k） | 左 12/12；右 11/12，其中一次 24→25 误按 | 左右均 12/12；完整同期评估为 116/120 与 117/120 |
 
-原视频来源、压缩参数、实际帧数和审核记录见 [媒体说明](docs/media/README.md)。视频平滑度依据实测轨迹回放，未通过播放加速或插帧制造差异。
+原视频来源、压缩参数、实际帧数与审核记录见[媒体说明](docs/media/README.md)。
 
-## 仓库分工与复现范围
+PiPER 主线建立了三服务架构：Isaac 仿真节点、冻结 VLA-JEPA 推理节点与 SAC 训练节点通过 HTTP 通信，采用 64 个并行环境、批量推理与独立 episode 重置。1M transition 的实测训练用时约 19.81 h（动作残差）与 15.16 h（初始噪声）；最新 XYZ 400k 约 7.43 h。一个 transition 是一个环境内最多 7 步的动作 chunk，不是一条 episode。S1 的 runner 是单进程版本，因为多环境相机隔离尚未通过验收；见[在线 RL](docs/online_rl.md)、[高吞吐版本](docs/online_rl_fast.md)与[协议](docs/online_rl_protocol.md)。视频平滑度来自实测轨迹回放，未用播放加速或插帧制造差异。
 
-| 仓库 | 职责 | 本地位置 |
-|---|---|---|
-| [PressB](https://github.com/pgq18/PressB) | Isaac 场景、三节点服务、SAC 适配、实验、评估与视频审计 | 本仓库；RL 实现在 `src/pressb/online_rl/` |
-| [VLA-JEPA](https://github.com/pgq18/VLA-JEPA/tree/base) | 视觉／状态／语言编码与 flow-matching 模型、PiPER 微调和推理 | 独立仓库 `src/VLA-JEPA/` |
-| [ZPRL-PressB](https://github.com/pgq18/ZPRL-PressB) | 残差 SAC、初始噪声方法及采样调度的参考实现 | 可选独立仓库 `src/ZPRL/`，运行 PressB 不需要导入它 |
+## 目录结构
 
-两个子目录是独立 Git 仓库，不打包进 PressB，也不是隐式 submodule。版本和用途记录在 [仓库版本清单](repos.lock.json)。已训练 RL checkpoint 严格绑定推理来源；复现现有权重时，VLA-JEPA 的运行 checkout 保持 `9c9dc71c8e199c7428b25d103ab666395832c001`，不能因只更新文档就改为最新 HEAD：
-
-```bash
-git clone --branch base https://github.com/pgq18/VLA-JEPA.git src/VLA-JEPA
-git -C src/VLA-JEPA checkout --detach 9c9dc71c8e199c7428b25d103ab666395832c001
-
-# 可选：阅读原始 RL 方法。实际训练代码已在 PressB 内。
-git clone https://github.com/pgq18/ZPRL-PressB.git src/ZPRL
-```
-
-干净克隆包含源码、精选媒体和统计摘要，**不包含** VLA／RL 权重、场景快照、采集元数据和模型缓存。通用三个节点可显式配置路径；`run_residual_on_noise_experiment.py`、平滑和视频实验 supervisor 则是本工作区的复现入口，依赖文档记录的既有 `outputs/` 资产及身份清单，不能在空目录直接启动。部署方式见 [高吞吐运行说明](docs/online_rl_fast.md) 和 [5090 环境](docs/rtx5090_setup.md)。
-
-## 安装
-
-**RTX 5090 工作站**：使用已验收的 Python 3.11 / Isaac Sim 5.0 / Isaac Lab 2.2 配置，安装入口为 scripts/setup_env_5090.sh；步骤和实测结果见 [RTX 5090 运行说明](docs/rtx5090_setup.md)。下面的 setup_env.sh 属于原 Python 3.10 配置。
-
-需要 Linux x86_64、Conda、支持 Isaac Sim 的 NVIDIA RTX GPU/驱动与 Vulkan，以及系统 `git`、`ffmpeg`、`ffprobe`（FFmpeg 需包含 `libx264`）和 DejaVu 字体。无窗口运行仍需要 GPU 渲染。显存需求随并行环境数增加；先从一张卡、一个环境验证。
-
-```bash
-git clone https://github.com/pgq18/PressB.git
-cd PressB
-
-# Ubuntu / Debian 系统依赖，按机器已有安装情况执行
-sudo apt-get install ffmpeg fonts-dejavu-core
-
-# 当前 5090 Isaac 环境：Python 3.11，默认 .conda/envs/pressb
-# 可用 CONDA_BIN=/path/to/conda 显式指定 Conda
-bash scripts/setup_env_5090.sh
-
-# 下载固定版本资产并核对 SHA-256；已有冲突文件不会被覆盖
-.conda/envs/pressb/bin/python scripts/fetch_assets.py
-
-# 使用隔离的 OpenUSD 24.11 原样提取官方支架与 D435 网格
-PYTHONPATH=.cache/usd-inspect .conda/envs/pressb/bin/python scripts/prepare_wrist_asset.py
-
-# LeRobot 转换环境：独立 Python 3.12 / CPU PyTorch
-bash scripts/setup_dataset_env.sh
-```
-
-两个 Python 环境分开使用：仿真使用 `.conda/envs/pressb/bin/python`，LeRobot 转换与官方读取使用 `.conda/envs/lerobot/bin/python`。不要将 `requirements-dataset.txt` 安装到 Isaac 环境。安装脚本设置 `OMNI_KIT_ACCEPT_EULA=YES`；使用 NVIDIA 软件和素材需遵守其许可，来源见 [THIRD_PARTY.md](THIRD_PARTY.md)。
-
-## 先生成场景并验证
-
-```bash
-# 12 个按钮依次按压；每次按完回到折叠初始位姿
-bash scripts/run.sh --headless --gpu 0 --video --output outputs/edge_feedback
-
-.conda/envs/pressb/bin/python scripts/audit_episode.py outputs/edge_feedback
-.conda/envs/pressb/bin/python scripts/check_results.py outputs/edge_feedback
-.conda/envs/pressb/bin/python scripts/audit_global_camera.py outputs/edge_feedback
-
-# 需要显示器 / 远程桌面时
-# bash scripts/run.sh --gpu 0 --hold --output outputs/gui
-```
-
-生成的 `outputs/edge_feedback/scene.usda` 和同目录 `wrist_camera/intrinsics.json`、`global_camera/intrinsics.json` 是后续采集的输入，干净克隆中尚不存在。`--gpu` 是 Isaac/Vulkan 设备编号，请选择有可用显存的设备。演示默认 10 Hz 图像、120 Hz 物理；批量采集通过 `--fps` 独立指定采样频率。
-
-## 采集 12 × 100 条位置分层数据
-
-```bash
-# --gpus 0 表示一张卡；也可指定 0,1 等多个设备
-.conda/envs/pressb/bin/python scripts/collect_parallel.py \
-  --config configs/dataset_panel_stratified_1200.json \
-  --snapshot outputs/edge_feedback/scene.usda \
-  --output datasets/piper_elevator_raw_panel_stratified_30hz \
-  --gpus 0 --num-envs 3 --fps 30 \
-  --episodes-per-task 100 --seed 20260930
-
-.conda/envs/pressb/bin/python scripts/audit_raw_dataset.py \
-  datasets/piper_elevator_raw_panel_stratified_30hz --episodes-per-task 100
-
-.conda/envs/pressb/bin/python scripts/audit_panel_coverage.py \
-  datasets/piper_elevator_raw_panel_stratified_30hz \
-  --report outputs/panel_stratified_1200/coverage.json
-```
-
-每层的 10×10 网格要求 `--episodes-per-task 100`，且采集 seed 必须与配置里的 `grid_seed` 一致。少量预检可用 `collect_dataset.sh --max-episodes 2`，仍保留这些配置参数并使用独立输出目录。每次换位后检查全局相机的完整面板投影、全部按钮可达性，以及实际按压、碰撞和归位记录。并行场景只保留一个有效 Dome 环境光。
-
-采样频率须整除 120 Hz 物理频率，例如 10、20、30、60 Hz；更改频率须使用独立数据目录。下面的首次亮灯导出示例针对 30 Hz 数据。采集元信息与代码指纹阻止混用不同来源，不能通过改写元数据绕过续采检查。
-
-## 导出首次亮灯前缀为 LeRobot v3
-
-```bash
-PYTHONPATH=src .conda/envs/pressb/bin/python -m pressb.press_prefix \
-  --raw datasets/piper_elevator_raw_panel_stratified_30hz \
-  --output outputs/panel_stratified_1200/cut_plan.json \
-  --episodes-per-floor 100
-
-.conda/envs/lerobot/bin/python scripts/export_press_dataset.py \
-  --raw datasets/piper_elevator_raw_panel_stratified_30hz \
-  --cut-plan outputs/panel_stratified_1200/cut_plan.json \
-  --output datasets/piper_elevator_lerobot_panel_stratified_press_30hz \
-  --parts datasets/piper_elevator_parts_panel_stratified_press_30hz \
-  --episodes-per-task 100 --part-size 25 --workers 4
-
-.conda/envs/lerobot/bin/python scripts/confirm_press_dataset_reader.py \
-  datasets/piper_elevator_lerobot_panel_stratified_press_30hz \
-  --expected-episodes 1200 \
-  --report outputs/panel_stratified_1200/readback.json
-```
-
-导出器对分片与最终数据执行数值、视频解码和首次亮灯终点检查；官方读取检查是额外验证。输出路径已存在时，遵循脚本的恢复/一致性检查或换用新目录，不要覆盖已验证的批次。
-
-数据约定：
-
-| 字段 | 含义 |
+| 目录 | 内容 |
 |---|---|
-| task | `Press 24 floor.` … `Press 35 floor.` |
-| state | 实际夹爪 TCP 位姿与实测夹爪开度 |
-| action | 下一采样时刻的绝对 TCP 目标位姿与固定夹爪开度 |
-| pose | `[x, y, z, qw, qx, qy, qz, gripper_width]`，基座 `base_link` 坐标系，米 |
-| cameras | `observation.images.global`、`observation.images.wrist`，同步 RGB |
-| metadata | 面板 XY 偏移、随机 seed、来源与采集指纹 |
+| `src/pressb/` | PiPER 场景、运动学、规划与相机；VIB-820 场景、材质与 S1 按键控制；数据语义 |
+| `src/pressb/astribot_collection/` | 常驻/流水线采集、逐条审计、NVENC 与渲染控制 |
+| `src/pressb/online_rl/` | SAC learner、三节点协议、批量仿真／推理、固定噪声残差与 S1 残差 runner |
+| `scripts/` | 安装、资产准备、采集、导出、回放、评估、在线 RL 与审计入口 |
+| `configs/` | VIB-820／Astribot 传感器配置、PiPER 面板布局、分层采集与在线 RL 配置 |
+| `tests/` | CPU 单元测试与可选 USD 场景集成测试（65 个测试文件，收集 969 项） |
+| `assets/*.json` | 固定资产来源、SHA-256 校验和与安装配准元数据 |
+| `docs/` | 当前流程说明、实验记录与工作交接 |
+| `docs/results/`、`docs/media/` | 随仓库发布的小型结果摘要与精选 PiPER 压缩演示 |
+| `models/` | 本地 VLA 权重、契约、数据划分与源码快照（Git 忽略） |
+| `datasets/`、`outputs/`、`logs/`、`.conda/`、`.cache/`、`vendor/` | 本地数据、证据、环境、缓存与下载（Git 忽略） |
+| `src/VLA-JEPA/`、`src/ZPRL/` | 单独克隆的依赖／参考仓库（Git 忽略） |
 
-夹爪 TCP 位于 `link6` 局部 Z=0.1358 m；按压杆尖端为 Z=0.24 m，两者不是同一个点。VLA-JEPA 训练适配将旋转转换为旋转矩阵前两行展开的 6D，XYZ 保持原值，固定夹爪开度不参与学习。训练及推理服务代码位于 [pgq18/VLA-JEPA](https://github.com/pgq18/VLA-JEPA/tree/base)。
-
-## 回放与策略评估
-
-- [录制动作回放](docs/replay.md)：从 LeRobot action 经 IK 执行并检查实际接触。
-- [策略闭环评估](docs/policy_eval.md)：输入当前双相机、实测 TCP 与任务文本，执行模型返回的绝对目标。
-- [动作平滑](docs/policy_smoothing.md)：120 Hz 关节插值之后默认使用 3 点因果均值滤波。
-
-评估须显式指定与训练集一致的配置、场景快照、checkpoint step 和 SHA-256。`--panel-layouts center_corners` 覆盖训练配置的中心与四个边界角点。成功依据真实按钮行程、接触力和无误按/异常碰撞，不以接近按钮或 IK 成功代替；远端推理期间仿真暂停，因此本测试不衡量真实时间部署延迟。
-
-旧采集机、旧控制器上的 step 10600 固定 60 条评估曾为 **5/60 成功、27 次误按、28 次超时**。这是旧环境诊断，不能与当前 fast 仿真的 25/120 基线混用；当前 RL 结果见本文开头。完整原始录像和报告保留在本地 `outputs/`，精选演示另见上方媒体。
-
-## 在线强化学习：独立三节点
-
-[在线 RL 运行说明](docs/online_rl.md) 提供仿真、冻结 VLA-JEPA 推理和 SAC 训练三个 HTTP 节点，可部署在三台不同机器。[高吞吐版本](docs/online_rl_fast.md) 增加独立 episode 重置、批量推理、采样与梯度更新重叠；支持本机 GPU 1 上共置仿真与推理、GPU 0 训练，也保留 H200 推理的跨节点配置。
-
-```mermaid
-flowchart LR
-  S["Isaac 仿真节点<br/>64 环境 · 120 Hz 物理 / 30 Hz 控制"]
-  L["SAC 训练节点<br/>actor / critics / replay"]
-  I["冻结 VLA-JEPA 推理节点<br/>batch 64 · encoder + flow"]
-  L -->|"动作 chunk / 独立 reset"| S
-  S -->|"双相机、实测状态、奖励、终止"| L
-  L -->|"encode / 指定初始噪声 decode"| I
-  I -->|"冻结特征 / 7 步基础动作"| L
-```
-
-当前训练采用 **64 环境、batch 64 推理**，不再等待整组 episode 全部结束后重置。一个 transition 是一个环境的最多 7 步动作 chunk，**不是一个 episode**。两个 1M 实验实测训练用时分别约 **19.81 h（动作残差）/ 15.16 h（初始噪声）**，均包括采样、梯度更新和保存；先前短窗口外推不是最终耗时。最新 XYZ 400k 用时约 7.43 h。视频显示仿真时间，不代表真实机械臂部署延迟。
-
-支持两种来自 ZPRL 的方法：动作输出残差与初始 flow 噪声选择。当前配置为 `configs/online_rl_fast_action_residual.json` 和 `configs/online_rl_fast_initial_noise.json`；入口为 `scripts/serve_rl_fast_simulation.py`、`scripts/serve_rl_inference.py`、`scripts/run_fast_online_rl.py`。模型权重保持冻结，训练端独立保存 replay、actor/critics、optimizer 与恢复状态；评估使用固定中心/四角条件。原 `serve_rl_simulation.py` / `run_online_rl.py` 保留用于旧调度复现。精确通信与 transition 语义见 [协议](docs/online_rl_protocol.md)。
-
-## 检查与目录
+## 测试
 
 ```bash
-.conda/envs/pressb/bin/python scripts/fetch_assets.py --check-only
 .conda/envs/pressb/bin/python -m pytest -q
 
-# 可显式指定用于 USD 场景集成测试的快照
+# USD 集成测试需要一个显式的 PiPER 场景快照
 PRESSB_TEST_SNAPSHOT=outputs/edge_feedback/scene.usda \
   PYTHONPATH=.cache/usd-inspect:src \
   .conda/envs/pressb/bin/python -m pytest -q tests/test_dataset_scene.py
 
-# 数据/视频审计测试在独立 LeRobot 环境运行
+# 数据／视频审计在独立的 LeRobot 环境运行
 .conda/envs/lerobot/bin/python -m pip install pytest
-.conda/envs/lerobot/bin/python -m pytest -q \
-  tests/test_press_dataset_audit.py tests/test_press_export.py \
-  tests/test_dataset_provenance.py tests/test_export_fps.py \
-  tests/test_camera_timing.py tests/test_collection_timing.py \
-  tests/test_feedback_panel_offsets.py tests/test_replay_audit.py \
-  tests/test_panel_metadata.py tests/test_panel_coverage_audit.py
+.conda/envs/lerobot/bin/python -m pytest -q tests/test_press_dataset_audit.py tests/test_export_fps.py
 ```
 
-没有场景快照的克隆会跳过依赖快照的 USD 集成测试；显式指定不存在的快照会报错。素材依赖的运动学测试须在下载资产后运行。Isaac 环境不包含 PyAV 时，相应视频测试会明确跳过；上面的 LeRobot 环境命令补充执行这部分检查，避免把数据依赖装进 Isaac 环境。
+没有场景快照的克隆会跳过依赖快照的 USD 集成测试；显式指定不存在的快照会报错。依赖下载素材的运动学测试必须在素材准备之后运行。Isaac 环境缺少 PyAV 时，相应视频测试会明确跳过，而不是静默通过。
 
-| 目录 | 内容 |
-|---|---|
-| `src/pressb/` | 场景、机器人运动学、规划、相机、数据语义与策略控制 |
-| `src/pressb/online_rl/` | 三节点协议、批量仿真／推理、SAC、冻结策略组合与平滑评估 |
-| `scripts/` | 安装、资产准备、采集、转换、回放、评估和审计入口 |
-| `configs/` | 固定场景、随机位置和 1,200 条分层采集配置 |
-| `tests/` | CPU 单元测试与可选 USD 场景集成测试 |
-| `assets/*.json` | 固定资产来源、校验和与安装配准元数据 |
-| `docs/` | 当前流程说明及注明范围的历史实验记录 |
-| `docs/results/`, `docs/media/` | 随仓库发布的小型结果摘要和精选压缩视频 |
-| `src/VLA-JEPA/`, `src/ZPRL/` | 单独克隆与发布的依赖／参考仓库（本仓库忽略） |
-| `vendor/`, `assets/generated/`, `assets/isaac/` | 本地下载或生成的依赖与素材（忽略） |
-| `datasets/`, `outputs/`, `logs/`, `.conda/`, `.cache/` | 本地数据、结果、环境与缓存（忽略） |
+## 文档索引
 
-更多说明：[30 Hz 数据](docs/dataset_30hz.md) · [首次亮灯裁剪](docs/dataset_press_only.md) · [位置随机化](docs/dataset_panel_randomization.md) · [分层覆盖记录](docs/dataset_panel_stratified.md)。
+当前主线：[VIB-820 场景](docs/vib820.md) · [S1 资产](docs/astribot_asset.md) · [S1 按键控制](docs/astribot_press.md) · [传感器](docs/astribot_sensors.md) · [初始姿态](docs/astribot_initial_pose.md) · [腕部相机核对](docs/astribot_wrist_camera_audit.md) · [相机清单](docs/astribot_camera_inventory.md) · [闭环评估](docs/astribot_closedloop_20261018.md) · [配对对照](docs/astribot_paired_val_20261019.md) · [在线残差 RL](docs/astribot_online_rl.md) · [采集计划](docs/plan/vib820_gpu_collection_400/plan.md) · [采集手册](docs/plan/vib820_gpu_collection_400/runbook.md) · [实验规格](docs/vib820_experiment_spec/README.md)。
+
+历史 PiPER 主线：[场景细节](docs/scene_details.md) · [数据集](docs/dataset.md) · [30 Hz 数据](docs/dataset_30hz.md) · [首次亮灯裁剪](docs/dataset_press_only.md) · [面板随机化](docs/dataset_panel_randomization.md) · [分层覆盖](docs/dataset_panel_stratified.md) · [回放](docs/replay.md) · [策略评估](docs/policy_eval.md) · [动作平滑](docs/policy_smoothing.md) · [在线 RL](docs/online_rl.md) · [高吞吐 RL](docs/online_rl_fast.md) · [固定噪声后的残差训练](docs/residual_on_frozen_noise.md)。
+
+部署与运维：[RTX 5090 说明](docs/rtx5090_setup.md) · [PRO 6000 环境](docs/PRO6000_ENV.md) · [本机部署](docs/local_deployment.md) · [工作交接](docs/HANDOVER.md)。
+
+## 数据、权重与许可
+
+Git 只保存源码、配置、资产清单、结果摘要与精选 PiPER 演示。数据集、VLA/RL 权重、场景快照、原始录像与 Conda 环境都在本地并被忽略：400 条导出数据在本地数据盘（文档记录的根目录为 `/data/shared/js/PressB/vib820_gpu_collection_400_20261015`），原始采集在 `outputs/vib820_gpu_collection_400_pro6000/raw`，微调权重在 `models/`。S1 描述与 PiPER 资产按固定提交下载并通过 SHA-256 校验（`assets/sources.lock.json`、`assets/astribot_sources.lock.json`）；VIB-820 材质为 ambientCG／Poly Haven 的 CC0 衍生贴图，来源记录在 `assets/materials/vib820/`。NVIDIA 软件与资产仍受其自身许可约束，见 [THIRD_PARTY.md](THIRD_PARTY.md)。本仓库尚未为自有代码声明开源许可证；公开可见不等于授权。
