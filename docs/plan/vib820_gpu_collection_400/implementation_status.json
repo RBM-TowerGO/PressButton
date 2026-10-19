@@ -323,6 +323,23 @@
     "progress": "progress.md",
     "runbook": "runbook.md",
     "paired_validation": "../../astribot_paired_val_20261019.md",
-    "closedloop": "../../astribot_closedloop_20261018.md"
+    "closedloop": "../../astribot_closedloop_20261018.md",
+    "online_rl": "../../astribot_online_rl.md"
+  },
+  "rl_integration": {
+    "status": "cpu_contracts_verified_gpu_smoke_pending",
+    "method": "action_residual SAC over the frozen joint8 policy",
+    "observation": "64 measured joint positions and velocities; no scene coordinates",
+    "action": "7x8 normalized residual, scale 0.02 rad (arm) / 0.05 rad (gripper)",
+    "training_split": "train only (320 scenes); val and test rejected in the training loop",
+    "runner": "scripts/run_astribot_online_rl.py",
+    "helper_module": "src/pressb/online_rl/astribot.py",
+    "tests": "20 CPU checks in tests/test_astribot_online_rl.py",
+    "not_executed": [
+      "Isaac smoke run",
+      "formal training",
+      "residual evaluation"
+    ],
+    "document": "../../astribot_online_rl.md"
   }
 }

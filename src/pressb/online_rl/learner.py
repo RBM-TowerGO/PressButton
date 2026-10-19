@@ -47,6 +47,7 @@ from torch.nn import functional as F
 
 HORIZON = 7
 POSE_DIM = 9
+_DEFAULT_RESIDUAL_SCALE = object()
 SOURCE_COMMIT = "a34a1cb"
 CHECKPOINT_VERSION = 2
 
@@ -58,8 +59,14 @@ class LearnerConfig:
     hidden_dim: int = 256
     noise_steps: int = 1
     noise_scale: float = 1.5
-    residual_scale: tuple[float, ...] = field(
-        default_factory=lambda: (.03, .03, .03, .1, .1, .1, .1, .1, .1))
+    # The sentinel keeps the historical PiPER default of 0.03 per coordinate
+    # (nine for pose9, eight for joint8).  Every explicit value, including
+    # None or an empty list, is still validated strictly below.
+    residual_scale: Any = _DEFAULT_RESIDUAL_SCALE
+    # Per-step width of the frozen base action. PiPER uses pose9; the Astribot
+    # joint8 controller uses seven right-arm joints plus one gripper opening.
+    # xyz keeps that width but learns only the first three coordinates.
+    base_dim: int = POSE_DIM
     # xyz has three learned outputs per step; rotations remain in the frozen
     # base action used for actor conditioning and critic evaluation.
     residual_mode: str = "pose9"
@@ -92,6 +99,10 @@ class LearnerConfig:
             raise ValueError("residual_mode must be pose9 or xyz")
         if self.residual_mode == "xyz" and self.method != "action_residual":
             raise ValueError("residual_mode=xyz is only defined for action_residual")
+        if type(self.base_dim) is not int or self.base_dim < 1:
+            raise ValueError("base_dim must be a positive integer")
+        if self.residual_mode == "xyz" and self.base_dim < 3:
+            raise ValueError("base_dim must be at least 3 for residual_mode=xyz")
         if self.num_qs is None:
             self.num_qs = 2 if self.method == "action_residual" else 5
         if self.target_freq is None:
@@ -107,7 +118,13 @@ class LearnerConfig:
             raise ValueError("num_subset cannot exceed num_qs")
         if type(self.seed) is not int or self.seed < 0:
             raise ValueError("seed must be a nonnegative integer")
-        scale_dim = 3 if self.residual_mode == "xyz" else POSE_DIM
+        scale_dim = 3 if self.residual_mode == "xyz" else self.base_dim
+        if self.residual_scale is _DEFAULT_RESIDUAL_SCALE:
+            # Preserve the historical PiPER defaults exactly (XYZ 0.03 m,
+            # rotation6D 0.1 rad); other base widths use 0.03 per coordinate.
+            self.residual_scale = ((.03, .03, .03, .1, .1, .1, .1, .1, .1)
+                                   if self.base_dim == POSE_DIM and self.residual_mode == "pose9"
+                                   else (0.03,) * scale_dim)
         scale_error = f"residual_scale must contain {scale_dim} finite positive numeric scales"
         try:
             scales = tuple(self.residual_scale)
@@ -144,8 +161,8 @@ class LearnerConfig:
     @property
     def action_dim(self) -> int:
         if self.method == "action_residual":
-            return HORIZON * (3 if self.residual_mode == "xyz" else POSE_DIM)
-        return POSE_DIM * self.noise_steps
+            return HORIZON * (3 if self.residual_mode == "xyz" else self.base_dim)
+        return self.base_dim * self.noise_steps
 
 
 def _array(value, shape, name, dtype=np.float32):
@@ -160,13 +177,18 @@ class ReplayBuffer:
 
     ``discount`` is the environment's actual-duration discount, not a fixed
     gamma. Capacity counts individual transitions, regardless of vector size.
-    ``add`` takes a single transition; base actions accept (7,9) or (63,).
+    ``add`` takes a single transition; base actions accept (7,base_dim) or the
+    matching flat width, so one buffer serves pose9 and joint8 controllers.
     """
 
-    def __init__(self, capacity: int, obs_dim: int, action_dim: int, seed: int = 0):
+    def __init__(self, capacity: int, obs_dim: int, action_dim: int, seed: int = 0,
+                 base_dim: int = POSE_DIM):
         if any(type(x) is not int or x < 1 for x in (capacity, obs_dim, action_dim)):
             raise ValueError("Replay dimensions and capacity must be positive integers")
+        if type(base_dim) is not int or base_dim < 1:
+            raise ValueError("Replay base_dim must be a positive integer")
         self.capacity, self.obs_dim, self.action_dim = capacity, obs_dim, action_dim
+        self.base_dim = base_dim
         self.rng = np.random.default_rng(seed)
         self.position = 0
         self.size = 0
@@ -207,15 +229,15 @@ class ReplayBuffer:
         if has_base:
             for name, value in (("base_action", base_action), ("next_base_action", next_base_action)):
                 arr = np.asarray(value)
-                if arr.shape == (HORIZON, POSE_DIM):
+                if arr.shape == (HORIZON, self.base_dim):
                     arr = arr.reshape(-1)
-                values[name] = _array(arr, (HORIZON * POSE_DIM,), name)
+                values[name] = _array(arr, (HORIZON * self.base_dim,), name)
         # Validate everything before mutating the ring or choosing its method.
         if self._has_base is None:
             self._has_base = has_base
             if has_base:
                 for name in ("base_action", "next_base_action"):
-                    self.arrays[name] = np.empty((self.capacity, HORIZON * POSE_DIM), np.float32)
+                    self.arrays[name] = np.empty((self.capacity, HORIZON * self.base_dim), np.float32)
         for name, value in values.items():
             self.arrays[name][self.position] = value
         self.position = (self.position + 1) % self.capacity
@@ -229,13 +251,15 @@ class ReplayBuffer:
 
     def state_dict(self) -> dict[str, Any]:
         return {"version": 1, "capacity": self.capacity, "obs_dim": self.obs_dim,
-                "action_dim": self.action_dim, "position": self.position, "size": self.size,
+                "action_dim": self.action_dim, "base_dim": self.base_dim,
+                "position": self.position, "size": self.size,
                 "has_base": self._has_base, "rng": copy.deepcopy(self.rng.bit_generator.state),
                 "arrays": {name: value[:self.size].copy() for name, value in self.arrays.items()}}
 
     def load_state_dict(self, state: dict):
         if (state.get("version") != 1 or state.get("capacity") != self.capacity
-                or state.get("obs_dim") != self.obs_dim or state.get("action_dim") != self.action_dim):
+                or state.get("obs_dim") != self.obs_dim or state.get("action_dim") != self.action_dim
+                or state.get("base_dim", POSE_DIM) != self.base_dim):
             raise ValueError("Replay checkpoint dimensions or version differ")
         size, position, has_base = state["size"], state["position"], state["has_base"]
         if (type(size) is not int or not 0 <= size <= self.capacity
@@ -247,7 +271,7 @@ class ReplayBuffer:
         expected = {"obs": self.obs_dim, "next_obs": self.obs_dim, "action": self.action_dim,
                     "reward": 1, "discount": 1, "terminated": 1, "truncated": 1}
         if has_base:
-            expected.update(base_action=HORIZON * POSE_DIM, next_base_action=HORIZON * POSE_DIM)
+            expected.update(base_action=HORIZON * self.base_dim, next_base_action=HORIZON * self.base_dim)
         if set(state["arrays"]) != set(expected):
             raise ValueError("Replay checkpoint fields differ")
         restored = {}
@@ -388,9 +412,10 @@ class SACLearner:
         self.rng = np.random.default_rng(self.config.seed)
         cfg = self.config
         self.residual = cfg.method == "action_residual"
-        # Residual policy outputs can be XYZ-only, but both networks retain the
-        # complete frozen pose9 chunk as input, including raw rotation6D.
-        critic_action_dim = HORIZON * POSE_DIM if self.residual else self.action_dim
+        # Residual policy outputs can be a strict subset of the frozen chunk
+        # (e.g. XYZ only), but both networks retain the complete frozen base
+        # chunk as input, so the critic width tracks cfg.base_dim.
+        critic_action_dim = HORIZON * cfg.base_dim if self.residual else self.action_dim
         actor_obs_dim = cfg.obs_dim + (critic_action_dim if self.residual else 0)
         self.actor = _Actor(actor_obs_dim, self.action_dim, cfg).to(self.device)
         self.qs = _Critics(cfg, critic_action_dim).to(self.device)
@@ -417,9 +442,9 @@ class SACLearner:
         if value is None:
             raise ValueError(f"{name} is required for action_residual")
         tensor = torch.as_tensor(value, device=self.device, dtype=torch.float32)
-        if tuple(tensor.shape) == (batch_size, HORIZON, POSE_DIM):
+        if tuple(tensor.shape) == (batch_size, HORIZON, self.config.base_dim):
             tensor = tensor.flatten(1)
-        return self._tensor(tensor, (batch_size, HORIZON * POSE_DIM), name)
+        return self._tensor(tensor, (batch_size, HORIZON * self.config.base_dim), name)
 
     def _actor_input(self, obs, base):
         return torch.cat((obs, base), dim=-1) if self.residual else obs
@@ -428,7 +453,7 @@ class SACLearner:
         if not self.residual:
             return action
         if self.config.residual_mode == "xyz":
-            base_chunk = base.reshape(-1, HORIZON, POSE_DIM)
+            base_chunk = base.reshape(-1, HORIZON, self.config.base_dim)
             xyz = base_chunk[..., :3] + (action * self.scale).reshape(-1, HORIZON, 3)
             return torch.cat((xyz, base_chunk[..., 3:]), dim=-1).flatten(1)
         return base + action * self.scale
@@ -518,7 +543,7 @@ class SACLearner:
             combined = self._critic_action(mean, batch["base_action"])
             noisy_combined = self._critic_action(noisy_mean, batch["base_action"])
             spatial = .5 * (noisy_combined - combined).square().sum(-1).mean()
-            chunk = combined.reshape(-1, HORIZON, POSE_DIM)
+            chunk = combined.reshape(-1, HORIZON, self.config.base_dim)
             temporal = .5 * (chunk[:, 1:] - chunk[:, :-1]).square().sum(-1).mean()
         loss = rl_loss + (self.config.lambda_s or 0.) * spatial + (self.config.lambda_t or 0.) * temporal
         return loss, {"actor_rl_loss": float(rl_loss.detach()),

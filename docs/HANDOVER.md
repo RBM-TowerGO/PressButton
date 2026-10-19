@@ -2,7 +2,7 @@
 
 ## 2026-10-19 主线已换成 Astribot + VIB-820
 
-本文以下内容描述 PiPER 12 按键 + 在线残差 RL 那条主线。当前主线是 Astribot S1 人形按 VIB-820 电梯厅呼叫按钮：400 条专家数据已采集并发布验收（2026-10-17），VLA-JEPA 微调到 step 8000，test 划分闭环 17/40（42.5%），validation 划分 8,000／17,000 步配对对照 23/40 对 19/40（p=0.3438）。接手先读 [采集计划](plan/vib820_gpu_collection_400/plan.md)、[状态](plan/vib820_gpu_collection_400/implementation_status.json)、[进度](plan/vib820_gpu_collection_400/progress.md)、[闭环评估](astribot_closedloop_20261018.md) 与 [配对对照](astribot_paired_val_20261019.md)。下文的 99.17% 等 PiPER 结论属于上一代任务，不能与新任务数字混用。
+本文以下内容描述 PiPER 12 按键 + 在线残差 RL 那条主线。当前主线是 Astribot S1 人形按 VIB-820 电梯厅呼叫按钮：400 条专家数据已采集并发布验收（2026-10-17），VLA-JEPA 微调到 step 8000，test 划分闭环 17/40（42.5%），validation 划分 8,000／17,000 步配对对照 23/40 对 19/40（p=0.3438）。接手先读 [采集计划](plan/vib820_gpu_collection_400/plan.md)、[状态](plan/vib820_gpu_collection_400/implementation_status.json)、[进度](plan/vib820_gpu_collection_400/progress.md)、[闭环评估](astribot_closedloop_20261018.md)、[配对对照](astribot_paired_val_20261019.md) 与 [在线残差 RL](astribot_online_rl.md)。下文的 99.17% 等 PiPER 结论属于上一代任务，不能与新任务数字混用。
 
 ## 2026-10-09 仓库发布整理
 

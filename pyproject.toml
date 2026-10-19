@@ -17,5 +17,7 @@ where = ["src"]
 include = ["pressb*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+# scripts holds the simulation entry points imported by tests
+# (e.g. astribot_closedloop_control).
+pythonpath = ["src", "scripts"]
 testpaths = ["tests"]
