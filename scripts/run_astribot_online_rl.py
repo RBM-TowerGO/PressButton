@@ -326,13 +326,15 @@ def build_learner(args):
 
 def save_state(path: Path, learner, replay, status):
     learner.save(path / "learner.pt", extra=dict(status=status))
-    save_replay(path / "replay.npz", replay)
+    if replay is not None:
+        save_replay(path / "replay.npz", replay)
 
 
 def describe(learner, replay, status, args, recent):
     return dict(kind="astribot_online_residual_sac", split="train",
                 model_sha256=status["model_sha256"], checkpoint_step=status["checkpoint_step"],
-                transitions=int(len(replay)), episodes=status["episodes"],
+                transitions=int(len(replay)) if replay is not None else 0,
+                episodes=status["episodes"],
                 updates=int(learner.updates), successes=status["successes"],
                 rolling_success_rate=(sum(e["status"] == "success" for e in recent) / len(recent)
                                       if recent else None),
@@ -400,11 +402,12 @@ def main():
         args.checkpoint_every = 4
     if not 0 < args.max_seconds <= 120:
         raise SystemExit("max seconds must be in (0,120]")
-    if min(args.max_transitions, args.warmup_transitions, args.batch_size,
-           args.training_frequency, args.checkpoint_every) < 1:
-        raise SystemExit("transition, batch and checkpoint sizes must be positive")
-    if args.warmup_transitions > args.max_transitions:
-        raise SystemExit("warmup cannot exceed the total transition budget")
+    if not args.eval_only:
+        if min(args.max_transitions, args.warmup_transitions, args.batch_size,
+               args.training_frequency, args.checkpoint_every) < 1:
+            raise SystemExit("transition, batch and checkpoint sizes must be positive")
+        if args.warmup_transitions > args.max_transitions:
+            raise SystemExit("warmup cannot exceed the total transition budget")
 
     contract, candidates = load_contract(args.model_run, "train")
     manifest, health = check_health(args.endpoint, args.model_run, args.checkpoint_step)
@@ -415,17 +418,23 @@ def main():
     counter = EpisodeCounter(args.output)
     learner_path, replay_path = args.output / "learner.pt", args.output / "replay.npz"
     if args.resume:
-        if not (learner_path.exists() and replay_path.exists()):
-            raise SystemExit("--resume requires learner.pt and replay.npz")
+        if not learner_path.exists():
+            raise SystemExit("--resume requires learner.pt")
         learner = SACLearner.load(learner_path, device="cpu")
         if learner.config.obs_dim != OBS_DIM or learner.config.base_dim != BASE_DIM:
             raise SystemExit("Checkpoint dimensions do not match joint8 proprioception")
         status = json.loads((args.output / "status.json").read_text())
-        capacity = int(status.get("replay_capacity", args.max_transitions))
-        if args.max_transitions != capacity:
-            raise SystemExit(f"--max-transitions must match the checkpoint replay capacity ({capacity})")
-        replay = load_replay(replay_path, capacity=capacity, obs_dim=OBS_DIM,
-                             action_dim=learner.action_dim, base_dim=BASE_DIM)
+        if args.eval_only:
+            # Evaluation needs the actor only; replay capacity is irrelevant.
+            replay = None
+        else:
+            if not replay_path.exists():
+                raise SystemExit("--resume for training requires replay.npz")
+            capacity = int(status.get("replay_capacity", args.max_transitions))
+            if args.max_transitions != capacity:
+                raise SystemExit(f"--max-transitions must match the checkpoint replay capacity ({capacity})")
+            replay = load_replay(replay_path, capacity=capacity, obs_dim=OBS_DIM,
+                                 action_dim=learner.action_dim, base_dim=BASE_DIM)
         status["episodes"] = counter.next
         status["history"] = status_history(args)
     else:

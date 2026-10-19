@@ -327,7 +327,7 @@
     "online_rl": "../../astribot_online_rl.md"
   },
   "rl_integration": {
-    "status": "cpu_contracts_verified_gpu_smoke_pending",
+    "status": "gpu_smoke_passed",
     "method": "action_residual SAC over the frozen joint8 policy",
     "observation": "64 measured joint positions and velocities; no scene coordinates",
     "action": "7x8 normalized residual, scale 0.02 rad (arm) / 0.05 rad (gripper)",
@@ -336,10 +336,103 @@
     "helper_module": "src/pressb/online_rl/astribot.py",
     "tests": "20 CPU checks in tests/test_astribot_online_rl.py",
     "not_executed": [
-      "Isaac smoke run",
-      "formal training",
-      "residual evaluation"
+      "formal 20k training run",
+      "residual effect evaluation vs the 23/40 baseline"
     ],
-    "document": "../../astribot_online_rl.md"
+    "document": "../../astribot_online_rl.md",
+    "gpu_smoke": {
+      "date": "2026-10-19",
+      "gpus": "2x RTX PRO 6000 Blackwell, driver 580.178.04, Isaac Sim 5.0",
+      "policy_server": "cuda:1, 1617 tensors, sha256 db98b7c5..., load 117.1 s",
+      "runs": [
+        {
+          "kind": "train_smoke",
+          "candidate": 231,
+          "status": "timeout",
+          "control_steps": 180,
+          "transitions": 26,
+          "wall_s": 11.0
+        },
+        {
+          "kind": "eval_val",
+          "candidates": [
+            1,
+            3,
+            9
+          ],
+          "successes": 2,
+          "details": {
+            "3": {
+              "control_steps": 620,
+              "travel_mm": 1.103,
+              "force_n": 0.332
+            },
+            "9": {
+              "control_steps": 763,
+              "travel_mm": 1.205,
+              "force_n": 0.369
+            }
+          }
+        },
+        {
+          "kind": "train",
+          "seed": 3,
+          "candidate": 95,
+          "status": "success",
+          "control_steps": 735,
+          "transitions": 105,
+          "travel_mm": 1.062,
+          "force_n": 0.305
+        },
+        {
+          "kind": "train",
+          "seed": 5,
+          "candidate": 304,
+          "status": "success",
+          "control_steps": 781,
+          "transitions": 112,
+          "travel_mm": 1.37,
+          "force_n": 0.41
+        },
+        {
+          "kind": "train",
+          "seed": 7,
+          "candidate": 2,
+          "status": "timeout",
+          "control_steps": 1200,
+          "transitions": 172,
+          "max_force_n": 0.0156
+        }
+      ],
+      "reward_rows": {
+        "s3": {
+          "reward": 0.9704,
+          "discount": 0.9655,
+          "terminated": true
+        },
+        "s5": {
+          "reward": 0.9851,
+          "discount": 0.9801,
+          "terminated": true
+        }
+      },
+      "throughput_transitions_per_s": [
+        2.14,
+        2.15,
+        2.36,
+        2.43
+      ],
+      "unexpected_contacts": 0,
+      "resume_eval": "loaded learner.pt and ran 3 validation scenes (2 successes)",
+      "fixes": [
+        "duplicate control_steps key in episode report",
+        "eval-only no longer requires training budgets or replay"
+      ],
+      "warnings": [
+        "omni.warp cuDeviceGetUuid CUDA error 36 at startup; Warp later initialized normally",
+        "Isaac shutdown can mask failure exit codes; check infrastructure_error.json"
+      ],
+      "evidence": "outputs/astribot_online_rl/{smoke_20261020,smoke_eval_success,smoke_train_success_s3,smoke_train_success_s5,smoke_train_success}"
+    }
   }
 }

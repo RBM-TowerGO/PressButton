@@ -154,10 +154,14 @@ def chunk_flags(*, success, failure_reason, timed_out, success_value=1.0) -> dic
 
 
 def summarize_episode(rows) -> dict:
-    """Compact, JSON-safe episode summary for logs and status files."""
+    """Compact, JSON-safe episode summary for logs and status files.
+
+    ``physics_records`` counts recorded 120 Hz ticks; it is deliberately not
+    named ``control_steps`` so callers can report 30 Hz control steps separately.
+    """
     if not rows:
-        return dict(control_steps=0, max_travel_m=0.0, max_force_n=0.0, light=False)
-    return dict(control_steps=len(rows),
+        return dict(physics_records=0, max_travel_m=0.0, max_force_n=0.0, light=False)
+    return dict(physics_records=len(rows),
                 max_travel_m=float(max(row["travel"] for row in rows)),
                 max_force_n=float(max(row["force"] for row in rows)),
                 light=bool(rows[-1]["light"]),

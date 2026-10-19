@@ -2,7 +2,7 @@
 
 2026-10-19 新增。目标是把 PressB 里已经验证过的「冻结 VLA + 在线残差 SAC」接到 Astribot S1 的 VIB-820 按键任务上：不改模型权重、不改采集数据，用一个小的残差策略修正冻结策略输出的 8 维关节目标。
 
-**当前状态：CPU 契约测试通过（20 项），GPU/Isaac 冒烟与正式训练尚未在本机执行。** 先跑通 `--smoke`，再开正式训练。
+**当前状态（2026-10-19）：CPU 契约测试 20 项通过，GPU/Isaac 冒烟已在本机双卡上跑通**——真实相机、冻结策略 RPC、物理成功判定、稀疏奖励/终止、replay 写入、SAC 更新、checkpoint 保存与 `--resume` 评估均验证过（见第 8 节）。正式长跑与残差效果评估尚未执行。
 
 ## 1. 为什么只做动作残差
 
@@ -90,13 +90,13 @@ bash scripts/start_astribot_policy_server.sh
 | `episodes/episode_*/report.json` | 每回合原因、控制步、行程、力、灯 |
 | `eval/summary.json` | 残差策略在 val/test 划分上的成功率 |
 
-## 6. 计算成本（估算，非实测）
+## 6. 计算成本（2026-10-19 冒烟实测）
 
-配对评估的实测吞吐约每 chunk 1.2 s 墙钟（4 个独立仿真实例、2 路相机、含推理）。本接入是**单进程单环境**，因为多环境相机隔离仍未通过验收：
+本接入是**单进程单环境**，因为多环境相机隔离仍未通过验收。冒烟实测训练吞吐 **2.14–2.43 transition/s**（3 个成功/超时回合，见第 8 节），因此：
 
-- 20 s 上限约 60 个 chunk，成功或安全失败会提前结束；按平均 50 个 chunk 估算；
-- 20,000 条 transition ≈ 400 回合 ≈ 7 小时；
-- 50,000 条 ≈ 17 小时。
+- 20,000 条 transition ≈ **2.5 小时**（原按 1.2 s/chunk 的估算 7 小时偏保守）；
+- 50,000 条 ≈ **6.3 小时**；
+- 回合时长取决于策略：成功回合约 20–26 s 仿真（620–781 个控制步），超时回合 40 s（1200 步）。
 
 要提速只能回到多进程 + 单一 learner 的 actor-learner 拆分（本仓库 PiPER 线的三节点结构），那是第二阶段的工作，本轮不做。
 
@@ -106,3 +106,33 @@ bash scripts/start_astribot_policy_server.sh
 - 未执行：GPU/Isaac 冒烟、正式训练、残差评估。本会话的 shell 看不到 `/dev/nvidia*`，无法验证。
 - 限制：同步仿真，不代表真机实时；训练成功率含探索偏差，不能当评估结果；残差幅度受 `--scale` 与关节限位约束，不能改变 `fixed_action32`；每场景单次评估，不给跨种子稳定性结论。
 - `--resume` 时 `--max-transitions` 必须与 checkpoint 的 replay 容量一致（脚本会直接拒绝），否则环形缓冲区语义会变。
+
+## 8. GPU/Isaac 冒烟记录（2026-10-19）
+
+环境：两张 RTX PRO 6000 Blackwell（驱动 580.178.04），Isaac Sim 5.0 / Kit 107，策略服务在 cuda:1，仿真在 GPU 0。
+
+| 运行 | 场景 | 结果 | 关键数字 |
+|---|---|---|---|
+| 训练冒烟 | train 231 | timeout | 180 控制步 / 721 物理步 / 26 transitions / 11.0 s |
+| 评估（val 1,3,9） | val 1 timeout；val 3、9 success | 2/3 成功 | 3：620 步、20.7 s、行程 1.103 mm、力 0.332 N；9：763 步、25.4 s、1.205 mm、0.369 N |
+| 训练（seed 3） | train 95 | success | 735 步、24.5 s、1.062 mm、0.305 N、105 transitions |
+| 训练（seed 5） | train 304 | success | 781 步、26.0 s、1.370 mm、0.410 N、112 transitions |
+| 训练（seed 7） | train 2 | timeout | 1200 步、40 s、172 transitions、最大力 0.0156 N（未达 0.02 N） |
+
+逐项确认：
+
+- **真实相机**：每次 `prepare_wave` 都写出 7 路初始化图像（`shared/initial_cpu_env0_*.png`），观测走 head + 右腕两路。
+- **奖励与终止**：成功回合在 replay 中写入 `reward=0.9704`（chunk 第 7 步按到，γ^6）与 `reward=0.9851`（第 4 步，γ^3），对应 `terminated=1`；折扣分别为 γ^7=0.9655 与 γ^4=0.9801，说明按实际执行步数折扣生效。超时回合写入 `truncated=1`。
+- **保存/恢复**：冒烟保存 `learner.pt` + `replay.npz`（容量 8），`--resume --eval-only --eval-episodes 3` 正确加载并完成 3 个 val 场景评估，写 `eval/summary.json`。
+- **稳定性**：6 次成功运行共 8 个回合、0 次非预期接触；运行结束后 GPU 显存释放（策略服务 10.7 GiB 归零）。
+
+冒烟发现并修复的两个问题：
+
+1. `summarize_episode` 返回的 `control_steps` 与回合字典的同名键冲突，导致回合收尾 `TypeError`；已改名为 `physics_records`。
+2. `--eval-only` 仍走训练预算校验（warmup 2000 > max-transitions 8）且强制加载 replay；已改为评估只需要 `learner.pt`，不再校验训练预算与 replay 容量。
+
+仍需注意：
+
+- 启动阶段 `omni.warp` 报 `cuDeviceGetUuid` 不可用（CUDA error 36），随后 Warp 1.7.1 正常枚举两张卡、内核在 cuda:0 加载，6 次成功运行均未受影响；正式长跑前建议复核驱动/CUDA 组合。
+- Isaac 关闭时会以 0 退出码结束，异常必须看输出目录里的 `infrastructure_error.json`，不能只看退出码。
+- 冒烟用的 actor 只更新了 8 次（残差接近 0），因此成功回合基本复现冻结策略；成功率不能当作 RL 效果。

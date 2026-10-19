@@ -126,10 +126,10 @@ def test_episode_summary_is_json_safe():
             dict(travel=0.0012, force=0.4, light=True)]
     summary = summarize_episode(rows)
     json.dumps(summary)
-    assert summary["control_steps"] == 2
+    assert summary["physics_records"] == 2
     assert summary["max_travel_m"] == pytest.approx(0.0012)
     assert summary["light"] is True
-    assert summarize_episode([])["control_steps"] == 0
+    assert summarize_episode([])["physics_records"] == 0
 
 
 def test_learner_and_replay_support_an_eight_dimensional_base_action():
