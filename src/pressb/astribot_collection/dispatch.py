@@ -81,6 +81,27 @@ def classify(row):
         return 'physical_failure'
     return 'infrastructure_error'
 
+def validate_production_authorization(path,root,args):
+    """Record an explicit scope change without pretending unfinished gates passed."""
+    decision=json.loads(Path(path).read_text())
+    expected=dict(gpus=args.gpus,envs_per_gpu=args.envs_per_gpu,
+        processes_per_gpu=args.processes_per_gpu,backend=args.backend,
+        render_subframes=args.render_subframes,render_layout=args.render_layout)
+    if (decision.get('status')!='user_authorized' or
+        decision.get('policy')!='practical_collection_with_per_episode_audit' or
+        not decision.get('user_instruction')):
+        raise ValueError('Explicit production authorization missing')
+    if decision.get('source_sha256')!=source_files(root):
+        raise ValueError('Production authorization source changed')
+    if decision.get('configuration')!=expected or args.envs_per_gpu!=1:
+        raise ValueError('Production authorization configuration differs')
+    required=('cpu_history','gpu0_video','gpu1_video','p2_slot0','p2_slot1','official_reader','unit_fault_checks','nvenc_fault_checks')
+    for name in required:
+        evidence=decision['evidence'][name]
+        if sha256(evidence['path'])!=evidence['sha256']:
+            raise ValueError(f'Production authorization evidence changed: {name}')
+    return decision
+
 def recover_journal(journal):
     """Recover completed commits, reject corrupt payloads, retry interrupted attempts."""
     for row in journal:
@@ -111,7 +132,9 @@ def run_production(args,root):
     """
     root=Path(root);out=args.output
     if args.render_layout=='padded':raise ValueError('Padded tiled camera projection has not passed acceptance')
-    gate=validate_gate(args.preflight_report,root,args.gpus,args.envs_per_gpu,args.backend,args.render_layout,args.processes_per_gpu)
+    authorization=getattr(args,'production_authorization',None)
+    gate=(validate_production_authorization(authorization,root,args) if authorization else
+          validate_gate(args.preflight_report,root,args.gpus,args.envs_per_gpu,args.backend,args.render_layout,args.processes_per_gpu))
     manifest_path=out/'manifest.json'
     manifest=(json.loads(manifest_path.read_text()) if manifest_path.exists() else
               create_manifest(out,json.loads(args.config.read_text()),args.seed,args.target_successes,args.candidate_limit))

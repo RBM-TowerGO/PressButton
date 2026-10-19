@@ -15,6 +15,24 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'));sys.path.insert(0,str(ROOT/'scripts'))
 from pressb.astribot_collection.contract import atomic_json, create_manifest, exclusive_lock, commit_episode
 
+def run_wave_with_pre_motion_recovery(runtime,configs,outputs,**kwargs):
+    """Reject an empty initial camera image without discarding the worker queue."""
+    try:
+        return runtime.run_wave(configs,outputs,**kwargs)
+    except RuntimeError as exc:
+        envs=runtime.envs[:len(configs)]
+        if (len(envs)!=1 or not str(exc).startswith('Invalid blank image:') or
+            any(e.report.get('motion_started') or e.writers for e in envs)):
+            raise
+        reports=[]
+        for e,output in zip(envs,outputs):
+            report=dict(e.report,status='failed',motion_started=False,
+                termination_reason='blank_camera_before_motion',error=str(exc),
+                elapsed_s=time.perf_counter()-e.started,traceback=traceback.format_exc())
+            atomic_json(Path(output)/'report.json',report)
+            reports.append(report)
+        return reports
+
 def worker(args):
     runtime=None;app=None;started=time.perf_counter();results=[];started_jobs=[];waves=[]
     jobs=json.loads(args.jobs.read_text())
@@ -66,7 +84,7 @@ def worker(args):
             event('wave_start',wave=wave//args.envs_per_gpu,jobs=[j['id'] for j in selected])
             started_jobs.extend(j['id'] for j in selected)
             atomic_json(args.output/'started_jobs.json',started_jobs)
-            reports=runtime.run_wave(configs,outputs,physics_only=args.physics_only_preflight,
+            reports=run_wave_with_pre_motion_recovery(runtime,configs,outputs,physics_only=args.physics_only_preflight,
                                      replay_sources=[j.get('replay_source') for j in selected])
             audit_started=time.perf_counter()
             def verify_one(item):
@@ -127,9 +145,12 @@ def main():
     p.add_argument('--physics-only-preflight',action='store_true',help='Correctness comparison only; ineligible for production or speed baseline')
     p.add_argument('--freeze-only',action='store_true',help='Freeze candidate manifest without launching physics')
     p.add_argument('--preflight-report',type=Path,help='Passed, source-matched production gate report')
+    p.add_argument('--production-authorization',type=Path,help='Explicit user decision to collect with existing evidence without further performance benchmarks')
     p.add_argument('--asset-cache',type=Path,help='Shared content-addressed scene/geometry cache on the same filesystem')
     p.add_argument('--resume',action='store_true',help='Resume the existing verified production journal')
     args=p.parse_args();args.output=args.output.resolve()
+    if args.preflight_report and args.production_authorization:
+        p.error('Choose preflight report or explicit production authorization')
     if args.processes_per_gpu > 1 and args.envs_per_gpu != 1:
         p.error('Multiple resident processes require exactly one environment per process')
     if args.physics_only_preflight and (not args.jobs or args.audit_commit):
@@ -138,7 +159,7 @@ def main():
         if args.jobs:worker(args)
         elif args.freeze_only:
             create_manifest(args.output,json.loads(args.config.read_text()),args.seed,args.target_successes,args.candidate_limit)
-        elif args.preflight_report:
+        elif args.preflight_report or args.production_authorization:
             if (args.output/'attempts.json').exists() and not args.resume:raise SystemExit('Existing attempts require --resume')
             from pressb.astribot_collection.dispatch import run_production
             run_production(args,ROOT)

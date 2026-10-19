@@ -1,8 +1,8 @@
 {
-  "updated_utc": "2026-10-16T02:31:06.507522+00:00",
+  "updated_utc": "2026-10-16T07:21:20.605228+00:00",
   "status": "running",
-  "formal_attempts": 0,
-  "formal_accepted": 0,
+  "formal_attempts": 284,
+  "formal_accepted": 77,
   "target": 400,
   "frozen_candidates": 512,
   "tests": {
@@ -27,9 +27,7 @@
     "NVENC_backpressure_and_corrupt_video_rejection",
     "frozen_512_candidates_PCG64_exact_recheck"
   ],
-  "blocking": [
-    "local_v2_capture_revalidation_and_production_gate_pending"
-  ],
+  "blocking": [],
   "pending": [
     "400_accepted_formal_episodes",
     "complete_LeRobot_export",
@@ -53,9 +51,9 @@
     "production_eligible": false,
     "report": "outputs/vib820_gpu_collection_400_preflight/sol61_matched_current_single/comparison.json"
   },
-  "authorization": "用户明确选择允许按架构提案预检并完成采集",
+  "authorization": "用户要求停止严谨性能对比，按大致最高效率方式立即采集；采用双卡每卡2常驻进程，保留逐条质量审计",
   "resident_pipeline": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/preflight_resident_v2/pipeline_state.json",
-  "selected_backend": null,
+  "selected_backend": "cpu",
   "gpu_resident_backend_historical_acceptance": false,
   "resident_single_gpu_sweep": {
     "processes_per_gpu": 1,
@@ -75,10 +73,10 @@
     "production_eligible": false
   },
   "preflight_accepted": 2,
-  "current_stage": "resident_cpu_gpu_historical_comparison",
+  "current_stage": "production_collection",
   "execution_state": "/home/js/robot/VLA/PressButton/PressB/outputs/vib820_gpu_collection_400_pro6000/execution_state.json",
   "migration_note": "Historical results retained in pre_migration_implementation_status.json; no old production gate reused on Pro6000.",
-  "supervisor_pid": 4064,
+  "supervisor_pid": 124653,
   "pro6000_pilots": {
     "gpu0_accepted": true,
     "gpu1_accepted": true,
@@ -177,5 +175,9 @@
     },
     "production_gate": "pending",
     "formal_accepted": 0
-  }
+  },
+  "production_policy": "practical_collection_with_per_episode_audit",
+  "processes_per_gpu": 2,
+  "production_authorization": "outputs/vib820_gpu_collection_400_pro6000/production_authorization.json",
+  "formal_audited_successes": 250
 }

@@ -1,6 +1,6 @@
 # VIB-820：GPU 并行采集 400 条成功数据
 
-状态：实现与预检已落盘，正式 attempt 为 0，400 条尚未采集。单进程多环境连续图像验收未通过，最终吞吐门槛也尚未完成；用户已授权每卡多个常驻单环境进程替代架构，正在实现并重新预检。见 [架构调整提案](architecture_decision.md)、[当前状态](implementation_status.json) 和 [实施记录](progress.md)。以下指标是验收条件，不是已取得的结果。
+状态：用户已要求停止剩余性能对比，按已有结果直接正式采集。采用双卡每卡2个常驻单环境进程，CPU物理、GPU渲染、NVENC；正式首批4条已通过验收，实时数量见 outputs/vib820_gpu_collection_400_pro6000/raw/summary.json。未完成的性能检查不记为通过，逐条质量审计继续执行。后文原性能门槛仅保留历史方案记录，以2026-10-16用户授权和production_authorization.json为准。
 
 ## 1. 交付与冻结条件
 

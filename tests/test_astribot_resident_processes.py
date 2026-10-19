@@ -1,8 +1,47 @@
 import json
 import pytest
+from types import SimpleNamespace
 from pressb.astribot_collection.verification import resident_throughput, choose_resident_concurrency
 from pressb.astribot_collection import dispatch
 from pressb.astribot_collection.contract import sha256
+
+
+def test_practical_authorization_requires_explicit_decision_and_frozen_evidence(tmp_path,monkeypatch):
+    monkeypatch.setattr(dispatch,'source_files',lambda root:{'capture.py':'frozen'})
+    args=SimpleNamespace(gpus=[0,1],envs_per_gpu=1,processes_per_gpu=2,
+        backend='cpu',render_subframes=1,render_layout='homogeneous')
+    evidence=tmp_path/'result.json';evidence.write_text('{}')
+    names=('cpu_history','gpu0_video','gpu1_video','p2_slot0','p2_slot1','official_reader','unit_fault_checks','nvenc_fault_checks')
+    payload=dict(status='user_authorized',policy='practical_collection_with_per_episode_audit',
+        user_instruction='Start collection using existing evidence',source_sha256={'capture.py':'frozen'},
+        configuration=vars(args),evidence={n:dict(path=str(evidence),sha256=sha256(evidence)) for n in names})
+    path=tmp_path/'authorization.json';path.write_text(json.dumps(payload))
+    assert dispatch.validate_production_authorization(path,tmp_path,args)['status']=='user_authorized'
+    payload['user_instruction']='';path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError,match='authorization missing'):dispatch.validate_production_authorization(path,tmp_path,args)
+    payload['user_instruction']='Start';path.write_text(json.dumps(payload))
+    args.processes_per_gpu=4
+    with pytest.raises(ValueError,match='configuration differs'):dispatch.validate_production_authorization(path,tmp_path,args)
+    args.processes_per_gpu=2;evidence.write_text('{"changed":true}')
+    with pytest.raises(ValueError,match='evidence changed'):dispatch.validate_production_authorization(path,tmp_path,args)
+
+
+def test_pre_motion_blank_is_rejected_without_terminating_worker(tmp_path):
+    import sys,time
+    from pathlib import Path
+    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+    from collect_astribot_dataset import run_wave_with_pre_motion_recovery
+    env=SimpleNamespace(report={'status':'running'},writers={},started=time.perf_counter())
+    def fail(*args,**kwargs):raise RuntimeError('Invalid blank image: environment 0, camera front')
+    runtime=SimpleNamespace(envs=[env],run_wave=fail)
+    rows=run_wave_with_pre_motion_recovery(runtime,[{}],[tmp_path])
+    assert rows[0]['status']=='failed' and rows[0]['motion_started'] is False
+    assert json.loads((tmp_path/'report.json').read_text())['termination_reason']=='blank_camera_before_motion'
+    assert dispatch.classify(dict(status='failed',output=str(tmp_path)))=='infrastructure_error'
+    env.report['motion_started']=True
+    with pytest.raises(RuntimeError):run_wave_with_pre_motion_recovery(runtime,[{}],[tmp_path])
+    env.report['motion_started']=False;env.writers={'head':object()}
+    with pytest.raises(RuntimeError):run_wave_with_pre_motion_recovery(runtime,[{}],[tmp_path])
 
 
 def workers(count=2):
