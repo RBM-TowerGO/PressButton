@@ -153,6 +153,28 @@ def chunk_flags(*, success, failure_reason, timed_out, success_value=1.0) -> dic
     return dict(reward=0.0, terminated=False, truncated=False, reason="running")
 
 
+def potential_shaping(distance, next_distance, discount, coefficient=1.0) -> float:
+    """Potential-based shaping with Phi = -distance to the button.
+
+    ``F = gamma*Phi(s') - Phi(s) = coefficient * (d - discount * d')``.
+    Potential-based shaping leaves the optimal policy unchanged, so it can be
+    used for training while evaluation keeps the sparse physical success rule.
+    The coefficient is a multiplier on the potential; it must stay positive.
+    """
+    values = (distance, next_distance, discount, coefficient)
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in values):
+        raise ValueError("shaping inputs must be real numbers")
+    if not all(math.isfinite(v) for v in values):
+        raise ValueError("shaping inputs must be finite")
+    if distance < 0 or next_distance < 0:
+        raise ValueError("distances must be nonnegative")
+    if not 0 < discount <= 1:
+        raise ValueError("discount must be in (0,1]")
+    if coefficient < 0:
+        raise ValueError("shaping coefficient must be nonnegative")
+    return float(coefficient * (distance - discount * next_distance))
+
+
 def episode_outcome(*, success, failure_reason, timed_out):
     """Resolve an episode verdict; a safety failure outranks a press.
 
@@ -244,6 +266,7 @@ class ChunkJournal:
         self.pending = None
         self.pending_steps = 0
         self.transitions = 0
+        self.shaping_total = 0.0
 
     def start(self, obs, action, base8):
         """Create a row for a chunk that is about to be executed."""
@@ -266,21 +289,27 @@ class ChunkJournal:
             raise ValueError("steps must be in [1,HORIZON]")
         self.pending, self.pending_steps = row, int(steps)
 
-    def flush(self, next_obs, next_base8):
+    def flush(self, next_obs, next_base8, *, shaping=0.0):
         """Commit the held running transition with its real successor."""
         if self.pending is None:
             raise ValueError("no pending transition to flush")
         row, steps = self.pending, self.pending_steps
         self.pending = None
-        return self.commit(row, next_obs=next_obs, next_base=next_base8, steps=steps)
+        return self.commit(row, next_obs=next_obs, next_base=next_base8, steps=steps,
+                           shaping=shaping)
 
     def commit(self, row, *, next_obs, next_base, steps, success=False,
-               failure_reason=None, timed_out=False):
+               failure_reason=None, timed_out=False, shaping=0.0):
         """Write one transition and return the reward/termination flags."""
         steps = max(1, min(int(steps), HORIZON))
         value = success_reward(self.gamma, steps) if success else 0.0
         flags = chunk_flags(success=success, failure_reason=failure_reason,
                             timed_out=timed_out, success_value=value)
+        if not math.isfinite(shaping) or abs(shaping) > 10.0:
+            raise ValueError("shaping reward must be finite and bounded by 1")
+        self.shaping_total += float(shaping)
+        flags["reward"] = float(flags["reward"]) + float(shaping)
+        flags["shaping"] = float(shaping)
         if self.train:
             base = np.asarray(next_base, dtype=np.float32)
             if base.shape == (HORIZON, BASE_DIM):

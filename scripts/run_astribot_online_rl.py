@@ -44,8 +44,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from astribot_closedloop_control import FIXED, interpolate_target, physical_hit, validate_prediction
 from pressb.online_rl.astribot import (BASE_DIM, DEFAULT_GAMMA, DEFAULT_SCALE, HORIZON, OBS_DIM,
                                         ChunkJournal, compose_joint8, episode_outcome,
-                                        expand_joint8, load_replay, observation, save_replay,
-                                        summarize_episode, validate_scale, within_limits)
+                                        expand_joint8, load_replay, observation,
+                                        potential_shaping, save_replay, summarize_episode,
+                                        transition_discount, validate_scale, within_limits)
 from pressb.online_rl.learner import LearnerConfig, ReplayBuffer, SACLearner
 
 
@@ -159,6 +160,12 @@ class Recorder:
     def observe(self):
         return observation(self.runtime.q[0], self.runtime.qd[0])
 
+    def distance(self):
+        """Current minimum fingertip-to-button-cap distance (training shaping only)."""
+        button_position = self.env.buttons[0].get_world_pose()[0]
+        return min(float(np.linalg.norm(self.env.finger_bodies[s].get_world_pose()[0]
+                                        - button_position)) for s in ("L11", "R11"))
+
     def tick(self, target):
         from pressb.astribot_collection.lights import set_button_light
         self.forces[0] = 0.0
@@ -182,9 +189,12 @@ class Recorder:
         actual_light = bool(self.world.stage.GetPrimAtPath(self.button["body_path"])
                             .GetAttribute("pressb:illuminated").Get())
         base = self.env.base_body.get_world_pose()[0].copy()
+        button_position = self.env.buttons[0].get_world_pose()[0]
+        distance = min(float(np.linalg.norm(self.env.finger_bodies[s].get_world_pose()[0]
+                                            - button_position)) for s in ("L11", "R11"))
         self.records.append(dict(q=q, qd=self.runtime.qd[0].copy(), target=self.command.copy(),
                                  travel=travel, force=self.forces[0], light=actual_light,
-                                 physical_hit=hit, base=base))
+                                 physical_hit=hit, base=base, distance=distance))
         if not np.isfinite(q).all() or np.any(q < self.limits[:, 0] - 0.02) \
                 or np.any(q > self.limits[:, 1] + 0.02):
             raise EpisodeStop("nonfinite_or_out_of_limit_state")
@@ -211,6 +221,13 @@ class EpisodeCounter:
         return self.root / f"episode_{self.next:06d}"
 
 
+def _shaping(row, next_distance, discount, coefficient):
+    """Potential-based shaping for one chunk, or zero when disabled."""
+    if not coefficient:
+        return 0.0
+    return potential_shaping(row["distance"], next_distance, discount, coefficient)
+
+
 def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counter,
                 train=True):
     """Run one episode; ``train`` adds transitions, evaluation never writes."""
@@ -220,6 +237,7 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
     recorder = Recorder(runtime, cfg, contract)
     recorder.start()
     journal = ChunkJournal(replay, train=train, gamma=args.gamma)
+    shaping_coefficient = args.shaping if train else 0.0
     images = runtime.last_images[0]
     reason = "timeout"
     success = False
@@ -248,7 +266,11 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
             base8 = np.asarray(result["action8"], dtype=np.float32)
             obs = recorder.observe()
             if journal.pending is not None:
-                journal.flush(obs, base8)
+                steps = journal.pending_steps
+                discount = transition_discount(args.gamma, max(1, steps))
+                journal.flush(obs, base8,
+                              shaping=_shaping(journal.pending, recorder.distance(),
+                                               discount, shaping_coefficient))
             action = learner.act(obs[None, :], base8[None, :, :], deterministic=not train,
                                  exploration_probability=args.exploration_probability)[0]
             joint8 = compose_joint8(base8, action, args.scale)
@@ -275,13 +297,19 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
             if failure:
                 journal.commit(row, next_obs=recorder.observe(),
                                next_base=np.zeros((HORIZON, BASE_DIM)),
-                               steps=steps, failure_reason=failure)
+                               steps=steps, failure_reason=failure,
+                               shaping=_shaping(row, recorder.distance(),
+                                                transition_discount(args.gamma, max(1, steps)),
+                                                shaping_coefficient))
                 reason = failure
                 break
             if success:
                 flags = journal.commit(row, next_obs=recorder.observe(),
                                        next_base=np.zeros((HORIZON, BASE_DIM)),
-                                       steps=steps, success=True)
+                                       steps=steps, success=True,
+                                       shaping=_shaping(row, recorder.distance(),
+                                                        transition_discount(args.gamma, max(1, steps)),
+                                                        shaping_coefficient))
                 reason = flags["reason"]
                 break
             journal.defer(row, steps)
@@ -292,7 +320,11 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
         if not success and not failure and journal.pending is not None:
             journal.commit(journal.pending, next_obs=recorder.observe(),
                            next_base=np.zeros((HORIZON, BASE_DIM)),
-                           steps=journal.pending_steps, timed_out=True)
+                           steps=journal.pending_steps, timed_out=True,
+                           shaping=_shaping(journal.pending, recorder.distance(),
+                                            transition_discount(args.gamma,
+                                                                max(1, journal.pending_steps)),
+                                            shaping_coefficient))
             journal.pending = None
             reason = "timeout"
     except EpisodeStop as exc:
@@ -314,6 +346,7 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
                        physics_steps=recorder.physics_step,
                        wall_seconds=time.perf_counter() - started,
                        transitions=journal.transitions,
+                       shaping_total=journal.shaping_total,
                        unexpected_contacts=len(recorder.unexpected), **summary)
         atomic_json(out / "report.json", episode)
     return episode
@@ -322,6 +355,8 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
 def build_learner(args):
     config = LearnerConfig(method="action_residual", obs_dim=OBS_DIM, base_dim=BASE_DIM,
                            residual_scale=args.scale, batch_size=args.batch_size,
+                           policy_lr=args.policy_lr, init_alpha=args.init_alpha,
+                           auto_alpha=args.auto_alpha, lambda_a=args.action_penalty,
                            seed=args.seed)
     return SACLearner(config, device="cpu")
 
@@ -366,6 +401,14 @@ def main():
     parser.add_argument("--max-seconds", type=float, default=20.0)
     parser.add_argument("--execute-horizon", type=int, default=HORIZON)
     parser.add_argument("--exploration-probability", type=float, default=1.0)
+    parser.add_argument("--action-penalty", type=float, default=0.0,
+                        help="lambda_a on the pre-tanh actor mean (stabilizes saturation)")
+    parser.add_argument("--shaping", type=float, default=0.0,
+                        help="training-only potential shaping coefficient; 0 disables")
+    parser.add_argument("--policy-lr", type=float, default=1e-4)
+    parser.add_argument("--init-alpha", type=float, default=0.01)
+    parser.add_argument("--no-auto-alpha", dest="auto_alpha", action="store_false",
+                        help="freeze alpha at --init-alpha")
     parser.add_argument("--checkpoint-every", type=int, default=1_000)
     parser.add_argument("--status-every-requests", type=int, default=20)
     parser.add_argument("--seed", type=int, default=20261020)
@@ -384,6 +427,12 @@ def main():
     args.scale = validate_scale(args.scale)
     if not 0 <= args.exploration_probability <= 1:
         raise SystemExit("exploration probability must be in [0,1]")
+    for name in ("action_penalty", "shaping", "policy_lr", "init_alpha"):
+        value = getattr(args, name)
+        if not np.isfinite(value) or value < 0:
+            raise SystemExit(f"{name} must be finite and nonnegative")
+    if args.policy_lr == 0 or args.init_alpha == 0:
+        raise SystemExit("policy learning rate and initial alpha must be positive")
     if args.execute_horizon not in range(1, HORIZON + 1):
         raise SystemExit(f"execute horizon must be in [1,{HORIZON}]")
     if args.eval_episodes:

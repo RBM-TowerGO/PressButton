@@ -188,3 +188,46 @@ val 划分 40 个冻结场景，每个一次，确定性残差，40 s 上限：
 3. **训练稳定性**：warmup 提到 5,000，actor 学习率降到 3e-5，固定 `alpha=0.02`（关掉自动 alpha，避免它一路衰减）。
 4. **预算**：至少 50k–100k transitions，并保留 40 s 回合上限。
 5. 评估协议保持不变（val 40、每场景一次、同一成功判据），这样下一轮能与本轮和 23/40 基线直接配对比较。
+
+## 10. 第二轮：稳定化配置（准备就绪，待 GPU 空闲）
+
+针对第 9 节的退化，第二轮只改「训练信号与稳定性」，不改任务、判据、观测、动作契约和评估协议，便于与 23/40 基线做同场景配对比较。
+
+### 10.1 改动
+
+| 改动 | 说明 |
+|---|---|
+| 势函数塑形（仅训练） | Φ = −指尖到按钮帽的最小距离，`F = γ^n·Φ(s') − Φ(s) = d − γ^n·d'`。potential-based，不改变最优策略；评估时系数强制为 0，成功判据仍是稀疏物理规则 |
+| 动作幅度惩罚 | `lambda_a` 作用在 **pre-tanh 均值** `mean(mean²)` 上（tanh 饱和处梯度为 0，惩罚饱和后的动作无效） |
+| 训练稳定性 | warmup 5,000；actor LR 3e-5（q 仍 3e-4）；固定 `alpha=0.02`（`--no-auto-alpha`） |
+| 预算 | 50,000 transitions（约 7 小时），checkpoint 每 2,000 次更新 |
+| 不变 | 残差 scale 0.02 rad×7 + 0.05、γ=0.995、40 s 回合、train 划分、val-40 评估协议 |
+
+### 10.2 命令
+
+```bash
+bash scripts/start_astribot_policy_server.sh
+.conda/envs/pressb/bin/python scripts/run_astribot_online_rl.py \
+  --model-run models/astribot_head_right_joint8_ft_20261018 --checkpoint-step 8000 \
+  --output outputs/astribot_online_rl/residual_50k_shaped_20261019 \
+  --max-transitions 50000 --warmup-transitions 5000 --batch-size 256 \
+  --max-seconds 40 --training-frequency 1 --checkpoint-every 2000 \
+  --shaping 1.0 --action-penalty 0.1 \
+  --policy-lr 3e-5 --init-alpha 0.02 --no-auto-alpha \
+  --seed 20261021
+```
+
+训练结束后用同一协议评估：
+
+```bash
+.conda/envs/pressb/bin/python scripts/run_astribot_online_rl.py \
+  --model-run models/astribot_head_right_joint8_ft_20261018 --checkpoint-step 8000 \
+  --output outputs/astribot_online_rl/residual_50k_shaped_20261019 \
+  --resume --eval-only --eval-episodes 40 --eval-split val
+```
+
+### 10.3 启动前提与记录
+
+- 2026-10-19 21:10 检查时两张卡被其他用户（jchen572）的 LeRobot 训练占满（GPU0 54.9 GB / GPU1 42.5 GB，均 ~99% 利用率），因此未启动；等空闲后再开。
+- 启动前会再次确认：无我们的遗留进程、8794 端口空闲、显存与磁盘余量充足。
+- 失败模式：任何基础设施错误会写入输出目录 `infrastructure_error.json`，不会把中断记为成功。

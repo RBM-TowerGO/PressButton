@@ -9,9 +9,9 @@ torch = pytest.importorskip("torch")
 from pressb.online_rl.astribot import (ARM, BASE_DIM, DEFAULT_GAMMA, DEFAULT_SCALE, FIXED, GRIP,
                                         HORIZON, OBS_DIM, SIGNS, ChunkJournal, chunk_flags,
                                         compose_joint8, episode_outcome, expand_joint8,
-                                        load_replay, observation, save_replay, success_reward,
-                                        summarize_episode, transition_discount, validate_scale,
-                                        within_limits)
+                                        load_replay, observation, potential_shaping,
+                                        save_replay, success_reward, summarize_episode,
+                                        transition_discount, validate_scale, within_limits)
 from pressb.online_rl.learner import LearnerConfig, ReplayBuffer, SACLearner
 
 
@@ -341,3 +341,66 @@ def test_episode_outcome_prefers_failure_over_a_press():
                            timed_out=True) == dict(status="timeout", reason="timeout")
     with pytest.raises(ValueError, match="must be a success"):
         episode_outcome(success=False, failure_reason=None, timed_out=False)
+
+
+def test_potential_shaping_rewards_approach_only():
+    # Moving closer must be positive; moving away negative; discount scales the
+    # successor potential so the shaping telescopes with the transition discount.
+    assert potential_shaping(0.20, 0.15, 0.9655) > 0
+    assert potential_shaping(0.15, 0.20, 0.9655) < 0
+    assert potential_shaping(0.20, 0.20, 1.0) == pytest.approx(0.0)
+    assert potential_shaping(0.20, 0.15, 0.5) == pytest.approx(0.20 - 0.5 * 0.15)
+    assert potential_shaping(0.2, 0.1, 0.9, coefficient=2.0) == pytest.approx(
+        2.0 * (0.2 - 0.9 * 0.1))
+    for bad in (dict(distance=-1.0, next_distance=0.1, discount=0.9),
+                dict(distance=0.1, next_distance=-0.1, discount=0.9),
+                dict(distance=0.1, next_distance=0.1, discount=0.0),
+                dict(distance=0.1, next_distance=0.1, discount=0.9, coefficient=-1.0),
+                dict(distance=float("nan"), next_distance=0.1, discount=0.9)):
+        with pytest.raises(ValueError):
+            potential_shaping(**bad)
+
+
+def test_chunk_journal_adds_shaping_to_the_reward():
+    learner = SACLearner(base_config(), device="cpu")
+    replay = ReplayBuffer(4, OBS_DIM, learner.action_dim, seed=4, base_dim=BASE_DIM)
+    journal = ChunkJournal(replay, gamma=DEFAULT_GAMMA)
+    obs = np.zeros(OBS_DIM, np.float32)
+    row = journal.start(obs, np.zeros(learner.action_dim, np.float32),
+                        np.zeros((HORIZON, BASE_DIM), np.float32))
+    row["distance"] = 0.10
+    flags = journal.commit(row, next_obs=obs, next_base=np.zeros((HORIZON, BASE_DIM)),
+                           steps=2, shaping=0.01)
+    assert flags["reward"] == pytest.approx(0.01)
+    assert flags["shaping"] == pytest.approx(0.01)
+    assert journal.shaping_total == pytest.approx(0.01)
+    assert replay.arrays["reward"][0, 0] == pytest.approx(0.01)
+    # A success keeps its time-discounted value plus shaping.
+    row = journal.start(obs, np.zeros(learner.action_dim, np.float32),
+                        np.zeros((HORIZON, BASE_DIM), np.float32))
+    flags = journal.commit(row, next_obs=obs, next_base=np.zeros((HORIZON, BASE_DIM)),
+                           steps=1, success=True, shaping=0.02)
+    assert flags["reward"] == pytest.approx(1.0 + 0.02)
+    with pytest.raises(ValueError, match="shaping reward"):
+        journal.commit(row, next_obs=obs, next_base=np.zeros((HORIZON, BASE_DIM)),
+                       steps=1, shaping=20.0)
+
+
+def test_action_penalty_is_validated_and_reported():
+    with pytest.raises(ValueError, match="lambda_a"):
+        base_config(lambda_a=-0.1)
+    with pytest.raises(ValueError, match="lambda_a"):
+        base_config(lambda_a=float("nan"))
+    learner = SACLearner(base_config(lambda_a=0.1), device="cpu")
+    rng = np.random.default_rng(12)
+    replay = ReplayBuffer(8, OBS_DIM, learner.action_dim, seed=5, base_dim=BASE_DIM)
+    for _ in range(6):
+        replay.add(rng.normal(size=OBS_DIM), np.zeros(learner.action_dim), 0.0, 0.9,
+                   rng.normal(size=OBS_DIM), False, False,
+                   base_action=np.zeros((HORIZON, BASE_DIM)),
+                   next_base_action=np.zeros((HORIZON, BASE_DIM)))
+    metrics = [learner.update(replay.sample(4)) for _ in range(2)]
+    reported = [m for m in metrics if "action_penalty_loss" in m]
+    assert reported
+    assert all(np.isfinite(m["action_penalty_loss"]) and m["action_penalty_loss"] >= 0
+               for m in reported)

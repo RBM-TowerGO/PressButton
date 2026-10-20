@@ -89,6 +89,9 @@ class LearnerConfig:
     max_grad_norm: float = 50.
     lambda_s: float | None = None
     lambda_t: float | None = None
+    # Penalty on the pre-tanh actor mean. Tanh saturation has zero gradient,
+    # so penalizing the squashed action would not stop saturation.
+    lambda_a: float = 0.0
     sigma: float = .01
     seed: int = 42
 
@@ -157,6 +160,10 @@ class LearnerConfig:
                 raise ValueError("CAPS weights must be finite and nonnegative")
         if not math.isfinite(self.sigma) or self.sigma < 0:
             raise ValueError("sigma must be finite and nonnegative")
+        if isinstance(self.lambda_a, bool) or not isinstance(self.lambda_a, (int, float)):
+            raise ValueError("lambda_a must be a finite nonnegative number")
+        if not math.isfinite(self.lambda_a) or self.lambda_a < 0:
+            raise ValueError("lambda_a must be a finite nonnegative number")
 
     @property
     def action_dim(self) -> int:
@@ -545,10 +552,19 @@ class SACLearner:
             spatial = .5 * (noisy_combined - combined).square().sum(-1).mean()
             chunk = combined.reshape(-1, HORIZON, self.config.base_dim)
             temporal = .5 * (chunk[:, 1:] - chunk[:, :-1]).square().sum(-1).mean()
-        loss = rl_loss + (self.config.lambda_s or 0.) * spatial + (self.config.lambda_t or 0.) * temporal
+        penalty = rl_loss.new_zeros(())
+        if self.config.lambda_a:
+            # Pre-tanh mean: d/dx tanh(x) vanishes at saturation, so a penalty
+            # on the squashed action cannot recover a saturated actor.
+            encoded = self.actor.net(actor_input)
+            penalty = self.actor.mean(encoded).square().mean()
+        loss = (rl_loss + (self.config.lambda_s or 0.) * spatial
+                + (self.config.lambda_t or 0.) * temporal
+                + self.config.lambda_a * penalty)
         return loss, {"actor_rl_loss": float(rl_loss.detach()),
                       "spatial_smoothness_loss": float(spatial.detach()),
                       "temporal_smoothness_loss": float(temporal.detach()),
+                      "action_penalty_loss": float(penalty.detach()),
                       "actor_entropy": float(-log_prob.detach().mean()),
                       "normalized_action_norm": float(action.detach().norm(dim=-1).mean())}
 

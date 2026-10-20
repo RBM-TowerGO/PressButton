@@ -504,6 +504,23 @@
     },
     "fixed_after_run": [
       "episode status now prefers safety failure over a same-chunk press (3 training episodes and the first evaluation were affected)"
-    ]
+    ],
+    "round2_plan": {
+      "status": "prepared_waiting_for_gpu",
+      "changes": [
+        "training-only potential-based shaping on fingertip-button distance",
+        "lambda_a penalty on the pre-tanh actor mean",
+        "warmup 5000, actor lr 3e-5, fixed alpha 0.02, 50k transitions"
+      ],
+      "unchanged": [
+        "residual scale",
+        "gamma",
+        "40 s horizon",
+        "train split",
+        "val-40 protocol"
+      ],
+      "blocked_by": "GPUs occupied by another user (jchen572 LeRobot training) on 2026-10-19 21:10",
+      "document": "../../astribot_online_rl.md#10-第二轮稳定化配置准备就绪待-gpu-空闲"
+    }
   }
 }
