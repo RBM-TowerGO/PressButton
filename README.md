@@ -2,6 +2,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
+**RL update, 2026-10-20:** The first 20k residual run scored 11/40 on validation, below the frozen 23/40 baseline. Both stabilized 50k seeds resumed from checkpoints around 17:56 China time after camera-pose validation interruptions; the primary seed is past 20k with updates, and the replica is collecting warmup experience. [Interruption evidence, configuration and live progress](docs/astribot_round2_20261020.md). This supersedes the older “no formal long run” status below.
+
 **Status: 2026-10-19.** One Isaac Sim codebase, two task lines. The active line is an **Astribot S1 humanoid pressing the VIB-820 hall-call button**: 400 expert episodes were collected and exported to LeRobot v3, VLA-JEPA was fine-tuned to **step 8000**, the frozen test split scored **17/40 (42.5%)**, and a paired validation comparison against a conservatively continued **step 17,000** scored **23/40 vs 19/40** (McNemar p = 0.3438, not significant). Between those two checkpoints offline action error improved while closed-loop success did not. Online residual SAC is now wired to this task and passes 20 CPU contract tests plus a GPU/Isaac smoke run; no formal long run has been executed yet. The earlier **PiPER 12-button line** is complete (best 119/120 = 99.17%) and is kept below as history.
 
 [Current results](#current-results) · [Quick start](#quick-start) · [Reproducing the active line](#reproducing-the-active-line) · [Online residual RL](#online-residual-rl) · [Legacy PiPER line](#legacy-piper-line) · [Project handover](docs/HANDOVER.md)

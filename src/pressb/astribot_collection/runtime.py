@@ -53,7 +53,7 @@ class NumpyBody:
         return tuple(array(v) for v in self.body.get_world_pose())
 
 class Runtime:
-    def __init__(self,app,config,shared,num_envs,gpu,backend='cpu',render_subframes=1,render_layout='individual',asset_cache=None):
+    def __init__(self,app,config,shared,num_envs,gpu,backend='cpu',render_subframes=1,render_layout='individual',asset_cache=None,render_cameras=None):
         from pxr import Gf, Usd, UsdGeom, UsdLux, UsdPhysics
         from isaacsim.core.api import World
         from isaacsim.core.prims import SingleArticulation, SingleRigidPrim, Articulation, RigidPrim
@@ -70,6 +70,9 @@ class Runtime:
         self.app,self.gpu,self.backend,self.rep=app,gpu,backend,rep
         self.render_subframes=render_subframes
         self.render_layout=render_layout
+        self.render_cameras=tuple(CAMERAS if render_cameras is None else render_cameras)
+        if not self.render_cameras or len(set(self.render_cameras))!=len(self.render_cameras) or any(n not in CAMERAS for n in self.render_cameras):
+            raise ValueError('render_cameras must contain unique known camera names')
         self.config=deepcopy(config);self.shared=Path(shared);self.shared.mkdir(parents=True,exist_ok=True)
         import carb
         settings=carb.settings.get_settings()
@@ -193,7 +196,7 @@ class Runtime:
         self.rgb_device_buffers={}
         self.last_light_states=None
         rep.orchestrator.set_capture_on_play(False)
-        entries=[(e,n) for e in self.envs for n in CAMERAS]
+        entries=[(e,n) for e in self.envs for n in self.render_cameras]
         if render_layout=='padded':
             product,annotator,split=build_tiled_rgb([e.camera_paths[n] for e,n in entries],resolution=RENDER_SIZE,device=f'cuda:{gpu}')
             def crop_tiles(buffer):
@@ -245,6 +248,7 @@ class Runtime:
             raise RuntimeError(f'GPU backend did not take effect: {self.actual_backend}')
         atomic_json(self.shared/'backend.json',self.actual_backend)
         atomic_json(self.shared/'render_layout.json',dict(mode=render_layout,environments=num_envs,
+            render_cameras=list(self.render_cameras),
             products=len(self.products),environment_offsets_m=[e.offset.tolist() for e in self.envs],
             visibility_policy='one room visible, seven active native products, frozen physics' if render_layout=='isolated' else 'all rooms visible',
             rgb_transfer='owned CUDA arrays, GPU RGB packing, pinned host batches, bounded NVENC queues'))

@@ -5,7 +5,12 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     exit 1
 fi
 PRESSB_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-source /home/js/miniforge3/etc/profile.d/conda.sh
+PRESSB_CONDA_BIN="${CONDA_EXE:-$(command -v conda || true)}"
+if [[ ! -x "$PRESSB_CONDA_BIN" ]]; then
+    echo 'Conda was not found; add conda to PATH before sourcing this script.' >&2
+    return 1
+fi
+source "$("$PRESSB_CONDA_BIN" info --base)/etc/profile.d/conda.sh"
 conda activate "$PRESSB_ROOT/.conda/envs/pressb"
 unset PYTHONPATH PYTHONHOME
 export PYTHONNOUSERSITE=1 OMNI_KIT_ACCEPT_EULA=YES
