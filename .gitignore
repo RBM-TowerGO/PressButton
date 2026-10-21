@@ -1,5 +1,6 @@
 # Reproducible local dependencies and downloaded third-party assets.
 /.conda/
+/.venv-astribot-inference/
 /.cache/
 /vendor/
 /src/VLA-JEPA/
@@ -14,7 +15,7 @@
 
 # Data, model weights and generated experiment evidence stay outside Git.
 /datasets/
-/models/
+/models
 /outputs
 /logs/
 *.pt
