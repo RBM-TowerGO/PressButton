@@ -73,6 +73,7 @@ class LearnerConfig:
     batch_size: int = 256
     policy_lr: float = 1e-4
     q_lr: float = 3e-4
+    critic_init: str = "legacy"
     tau: float = .005
     init_alpha: float = .01
     auto_alpha: bool = True
@@ -96,6 +97,8 @@ class LearnerConfig:
     seed: int = 42
 
     def __post_init__(self):
+        if self.critic_init not in ("legacy", "fan_in"):
+            raise ValueError("critic_init must be legacy or fan_in")
         if self.method not in ("action_residual", "initial_noise"):
             raise ValueError("method must be action_residual or initial_noise")
         if self.residual_mode not in ("pose9", "xyz"):
@@ -347,14 +350,16 @@ class _Actor(nn.Module):
 
 class _EnsembleLinear(nn.Module):
     """ZPRL's independently initialized batched linear layers."""
-    def __init__(self, count, in_dim, out_dim):
+    def __init__(self, count, in_dim, out_dim, initialization="legacy"):
         super().__init__()
         self.weight = nn.Parameter(torch.empty(count, in_dim, out_dim))
         self.bias = nn.Parameter(torch.empty(count, 1, out_dim))
         for i in range(count):
-            nn.init.kaiming_uniform_(self.weight[i], a=math.sqrt(5))
-            # Preserve the source's (in,out) matrix initialization convention.
-            bound = 1 / math.sqrt(out_dim)
+            # x @ weight stores (in,out); PyTorch initialization expects (out,in).
+            # Keep the source convention available for historical checkpoints.
+            matrix = self.weight[i].T if initialization == "fan_in" else self.weight[i]
+            nn.init.kaiming_uniform_(matrix, a=math.sqrt(5))
+            bound = 1 / math.sqrt(in_dim if initialization == "fan_in" else out_dim)
             nn.init.uniform_(self.bias[i], -bound, bound)
 
     def forward(self, value):
@@ -378,17 +383,20 @@ class _Critics(nn.Module):
         self.count, self.bounded = cfg.num_qs, cfg.method == "action_residual"
         layers = []
         for width in (cfg.obs_dim + action_dim, cfg.hidden_dim, cfg.hidden_dim):
-            layers.append(_EnsembleLinear(cfg.num_qs, width, cfg.hidden_dim))
+            layers.append(_EnsembleLinear(cfg.num_qs, width, cfg.hidden_dim, cfg.critic_init))
             if self.bounded:
                 layers.append(nn.GELU())
             else:
                 layers.extend((_EnsembleLayerNorm(cfg.num_qs, cfg.hidden_dim), nn.Tanh()))
-        layers.append(_EnsembleLinear(cfg.num_qs, cfg.hidden_dim, 1))
+        layers.append(_EnsembleLinear(cfg.num_qs, cfg.hidden_dim, 1, cfg.critic_init))
         self.net = nn.Sequential(*layers)
 
-    def forward(self, obs, action):
+    def logits(self, obs, action):
         value = torch.cat((obs, action), dim=-1).unsqueeze(0).expand(self.count, -1, -1)
-        logits = self.net(value)
+        return self.net(value)
+
+    def forward(self, obs, action):
+        logits = self.logits(obs, action)
         return .5 * (logits.tanh() + 1) if self.bounded else logits
 
 
@@ -566,12 +574,14 @@ class SACLearner:
                       "temporal_smoothness_loss": float(temporal.detach()),
                       "action_penalty_loss": float(penalty.detach()),
                       "actor_entropy": float(-log_prob.detach().mean()),
-                      "normalized_action_norm": float(action.detach().norm(dim=-1).mean())}
+                      "normalized_action_norm": float(action.detach().norm(dim=-1).mean()),
+                      "residual_saturation_fraction": float((action.detach().abs() >= .99).float().mean())}
 
     def update(self, batch: dict) -> dict[str, float]:
         values = self._prepare_batch(batch)
         target = self._bellman_target(values)
-        current = self.qs(values["obs"], self._critic_action(values["action"], values["base_action"]))
+        logits = self.qs.logits(values["obs"], self._critic_action(values["action"], values["base_action"]))
+        current = .5 * (logits.tanh() + 1) if self.qs.bounded else logits
         loss = (current - target.unsqueeze(0)).square().mean(dim=(1, 2)).sum()
         if not torch.isfinite(loss):
             raise FloatingPointError("Nonfinite critic loss")
@@ -591,6 +601,17 @@ class SACLearner:
                    "critic_grad_norm": float(critic_norm), "reward": float(values["reward"].mean()),
                    "discount": float(values["discount"].mean()), "target_updated": float(target_updated),
                    "actor_updated": 0.}
+        with torch.no_grad():
+            for index in range(self.config.num_qs):
+                metrics[f"q{index}_logit_min"] = float(logits[index].min())
+                metrics[f"q{index}_logit_max"] = float(logits[index].max())
+                if self.qs.bounded:
+                    metrics[f"q{index}_exact_boundary_fraction"] = float(
+                        ((current[index] == 0) | (current[index] == 1)).float().mean())
+            quantiles = torch.quantile(target.flatten(), target.new_tensor([0., .05, .5, .95, 1.]))
+            metrics.update({f"q_target_p{p}": float(v) for p, v in zip((0, 5, 50, 95, 100), quantiles)})
+            metrics["q_target_outside_unit_fraction"] = float(((target < 0) | (target > 1)).float().mean())
+            metrics["q_boundary_fraction"] = float(((current.detach() <= .01) | (current.detach() >= .99)).float().mean())
         if self.updates % self.config.policy_freq == 0:
             # Q remains differentiable with respect to action, but its weights
             # receive no actor gradients and are never stepped by actor_opt.

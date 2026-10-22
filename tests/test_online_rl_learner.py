@@ -246,3 +246,51 @@ def test_malformed_transition_does_not_mutate_replay_or_learner():
     with pytest.raises(ValueError, match="both terminated"):
         learner.update(batch)
     assert learner.updates == 0
+
+
+def test_legacy_checkpoint_without_initialization_field(tmp_path):
+    learner = make_learner()
+    path = tmp_path / 'legacy.pt'
+    learner.save(path)
+    payload = torch.load(path, weights_only=False)
+    del payload['config']['critic_init']
+    torch.save(payload, path)
+    restored = SACLearner.load(path)
+    assert restored.config.critic_init == 'legacy'
+    for key, value in learner.qs.state_dict().items():
+        torch.testing.assert_close(value, restored.qs.state_dict()[key], rtol=0, atol=0)
+
+
+@pytest.mark.parametrize('seed', [20261024, 42, 43, 44, 45])
+def test_high_dimensional_critic_fits_nonzero_target_and_retains_action_gradient(seed, tmp_path):
+    learner = SACLearner(LearnerConfig(
+        method='action_residual', obs_dim=2112, base_dim=8, seed=seed,
+        critic_init='fan_in', q_lr=3e-5, policy_lr=1e-5, auto_alpha=False))
+    rng = np.random.default_rng(17)
+    z = rng.normal(size=(1, 2048)).astype(np.float32)
+    z = (z - z.mean()) / z.std()
+    obs = np.concatenate([np.zeros((4, 64), np.float32),
+                          np.repeat(z, 4, axis=0)], axis=1)
+    batch = dict(obs=obs, next_obs=obs.copy(), action=np.zeros((4, 56), np.float32),
+                 base_action=np.zeros((4, 56), np.float32),
+                 next_base_action=np.zeros((4, 56), np.float32),
+                 reward=np.full((4, 1), .35, np.float32),
+                 discount=np.ones((4, 1), np.float32),
+                 terminated=np.ones((4, 1), bool), truncated=np.zeros((4, 1), bool))
+    # Terminal transitions fix the supervised target: it cannot collapse with Q.
+    for _ in range(60):
+        metrics = learner.update(batch)
+        assert metrics['critic_grad_norm'] > 0
+        assert metrics['q0_exact_boundary_fraction'] == 0
+        assert metrics['q1_exact_boundary_fraction'] == 0
+    action = torch.zeros((4, 56), requires_grad=True)
+    q = learner.qs(torch.from_numpy(obs), action)
+    assert (q - .35).abs().max().item() < .02
+    gradient, = torch.autograd.grad(q.sum(), action)
+    assert torch.isfinite(gradient).all() and gradient.norm() > 1e-6
+    path = tmp_path / 'fanin.pt'
+    learner.save(path)
+    expected = learner.update(batch)
+    restored = SACLearner.load(path)
+    assert restored.config.critic_init == 'fan_in'
+    assert restored.update(batch) == expected
