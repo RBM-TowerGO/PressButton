@@ -37,6 +37,7 @@ def main():
                   "--checkpoint-step", "8000", "--output", str(run), "--observation-mode", mode,
                   "--endpoint", args.endpoint, "--gpu", "0", "--physics-backend", "gpu",
                   "--smoke", "--max-seconds", "2", "--policy-lr", "1e-5", "--init-alpha", ".005",
+                  "--critic-init", "fan_in", "--q-lr", "3e-5",
                   "--no-auto-alpha", "--action-penalty", "1", "--shaping", "1",
                   "--scale", *([".01"] * 7), ".025", "--seed", "20261024"]
         phases = [("train", ["--render-cameras", "head", "wrist_right"]),
@@ -62,7 +63,7 @@ def main():
                         child.wait(timeout=5)
                     except subprocess.TimeoutExpired:
                         pass
-            if child.returncode or (run / "infrastructure_error.json").exists():
+            if child.returncode or (run / "infrastructure_error.json").exists() or (run / "learning_error.json").exists():
                 raise RuntimeError(f"{mode}/{phase} failed; inspect preserved log and infrastructure_error.json")
             results[f"{mode}_{phase}_seconds"] = time.perf_counter() - started
             if phase == "train":
@@ -98,8 +99,11 @@ def main():
                 results[f"{mode}_evaluation"] = summary
             (args.output / "smoke_results.json").write_text(json.dumps(results, indent=2) + "\n")
             print(f"{mode}/{phase} passed in {time.perf_counter()-started:.1f}s", flush=True)
+    if any(results[f"{mode}_zero_critic_gradient_updates"] for mode in ("state_only", "state_latent")):
+        raise RuntimeError("Smoke has zero critic gradients; no stability trial is permitted")
     results["engineering_data_path_passed"] = True
     results["learning_stability_passed"] = False
+    results["smoke_learning_gate_passed"] = True
     results["scope"] = "engineering only; 2s train episode and one 2s val episode per mode"
     (args.output / "smoke_results.json").write_text(json.dumps(results, indent=2) + "\n")
 

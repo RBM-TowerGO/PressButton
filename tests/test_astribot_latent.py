@@ -98,7 +98,7 @@ def test_runner_feature_failure_never_commits_incomplete(monkeypatch, tmp_path, 
     run_fake(monkeypatch, tmp_path, outcome, "state_latent", bad_request)
 
 
-def run_fake(monkeypatch, tmp_path, outcome, mode, bad_request=None):
+def run_fake(monkeypatch, tmp_path, outcome, mode, bad_request=None, budget=None):
     import pressb.astribot_validation
     monkeypatch.setattr(pressb.astribot_validation, "initial_overlap_check", lambda *a, **kw: {"status": "clear"})
     monkeypatch.setattr(runner, "interpolate_target", lambda previous, target: [target])
@@ -147,7 +147,7 @@ def run_fake(monkeypatch, tmp_path, outcome, mode, bad_request=None):
     args = SimpleNamespace(observation_mode=mode, gamma=.995, shaping=1., endpoint="fake",
                            max_seconds=.3, exploration_probability=1., scale=[.01] * 8,
                            execute_horizon=7, status_every_requests=100)
-    replay = ReplayBuffer(20, observation_contract(mode)["obs_dim"], 56, base_dim=8)
+    replay = ReplayBuffer(budget or 20, observation_contract(mode)["obs_dim"], 56, base_dim=8)
     learner = SimpleNamespace(act=lambda obs, base, **kw: np.zeros((1, 56), np.float32))
     counter = runner.EpisodeCounter(tmp_path)
     if bad_request is not None:
@@ -161,6 +161,15 @@ def run_fake(monkeypatch, tmp_path, outcome, mode, bad_request=None):
         assert report["physical_outcome"]["status"] == expected_physical
         return
     report = runner.run_episode(runtime, {}, {"fixed_action32": np.zeros(32)}, 1, args, learner, replay, counter)
+    if budget is not None:
+        assert len(replay) == budget and report["transitions"] == budget
+        assert report["status"] == "budget_exhausted"
+        assert report["physical_outcome"] == dict(status="incomplete", reason="budget_exhausted")
+        assert len(ticks) == 1 + 7 * budget and len(calls) == budget + 1
+        assert not replay.arrays["terminated"][:budget].any()
+        assert not replay.arrays["truncated"][:budget].any()
+        np.testing.assert_array_equal(replay.arrays["next_obs"][budget-1, :32], calls[-1][0])
+        return
     assert len(replay) == (2 if outcome == "timeout" else 1)
     assert len(ticks) == {"timeout": 10, "rejected": 8, "success": 2, "failure": 2}[outcome]
     if mode == "state_latent":
@@ -208,3 +217,20 @@ def test_runner_critic_defaults_and_overrides():
     assert runner.critic_settings(SimpleNamespace(observation_mode='state_only')) == ('legacy', 3e-4)
     assert runner.critic_settings(SimpleNamespace(observation_mode='state_only',
                                   critic_init='fan_in', q_lr=1e-5)) == ('fan_in', 1e-5)
+
+
+def test_learning_stall_requires_sustained_error_and_resets():
+    streaks = {}
+    metrics = dict(critic_grad_norm=0., critic_loss=.1, q_target_p0=.2, q_target_p100=.8,
+                   q0_exact_boundary_fraction=1.)
+    assert not runner.learning_stall(metrics, streaks)
+    assert not runner.learning_stall(metrics, streaks)
+    assert runner.learning_stall(metrics, streaks)
+    assert not runner.learning_stall(dict(metrics, critic_grad_norm=1., q0_exact_boundary_fraction=0.), streaks)
+    for _ in range(5):
+        assert not runner.learning_stall(dict(metrics, critic_loss=0., q_target_p0=0.), {})
+
+
+@pytest.mark.parametrize("mode", ["state_only", "state_latent"])
+def test_exact_budget_keeps_real_successor_without_extra_action(monkeypatch, tmp_path, mode):
+    run_fake(monkeypatch, tmp_path, "timeout", mode, budget=1)

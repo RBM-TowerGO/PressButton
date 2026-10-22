@@ -54,6 +54,26 @@ from pressb.online_rl.astribot_features import (MODES, observation_contract,
                                                validate_capability, validate_restore)
 
 
+class LearningStop(RuntimeError):
+    """A sustained learning anomaly, distinct from infrastructure failure."""
+
+
+def learning_stall(metrics, streaks):
+    """Stop after three consecutive batches with a demonstrably stuck critic.
+
+    A zero total gradient with appreciable loss, or an entire critic exactly
+    saturated against strictly interior targets, cannot supply value feedback.
+    """
+    bad = {"total": metrics.get("critic_grad_norm") == 0 and metrics.get("critic_loss", 0) > 1e-6}
+    interior = metrics.get("q_target_p0", 0) > 1e-6 and metrics.get("q_target_p100", 1) < 1 - 1e-6
+    for key, value in metrics.items():
+        if key.endswith("_exact_boundary_fraction"):
+            bad[key] = value == 1 and interior
+    for key, value in bad.items():
+        streaks[key] = streaks.get(key, 0) + 1 if value else 0
+    return any(count >= 3 for count in streaks.values())
+
+
 class EpisodeStop(Exception):
     """A physical or contract failure that terminates the episode."""
 
@@ -262,6 +282,7 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
     timings = dict(inference_s=0.0, control_s=0.0, render_s=0.0, terminal_inference_s=0.0)
     request_context = None
     saturated = components = 0
+    budget_exhausted = False
 
     def request_observation(purpose):
         nonlocal requested, request_context
@@ -338,6 +359,12 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
                 journal.flush(obs, base8,
                               shaping=_shaping(journal.pending, recorder.distance(),
                                                discount, shaping_coefficient))
+            if train and len(replay) >= replay.capacity:
+                # The pending row has its real successor; do not execute an
+                # extra chunk or mislabel a budget boundary as physical timeout.
+                budget_exhausted = True
+                reason = "budget_exhausted"
+                break
             action = learner.act(obs[None, :], base8[None, :, :], deterministic=not train,
                                  exploration_probability=args.exploration_probability)[0]
             saturated += int((np.abs(action) >= 0.99).sum())
@@ -416,6 +443,7 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
             terminal_potential = None
         outcome = (dict(status="infrastructure_error", reason="infrastructure_error")
                    if infrastructure_error else
+                   dict(status="budget_exhausted", reason="budget_exhausted") if budget_exhausted else
                    episode_outcome(success=success, failure_reason=failure, timed_out=not success))
         episode = dict(kind="train" if train else "eval", candidate_id=candidate,
                        status=outcome["status"], reason=outcome["reason"],
@@ -435,7 +463,7 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
                        physical_outcome=(episode_outcome(success=success, failure_reason=failure,
                                                         timed_out=not success)
                                          if success or failure or control_index >= round(args.max_seconds * 30)
-                                         else dict(status="incomplete", reason="infrastructure_interruption")),
+                                         else dict(status="incomplete", reason="budget_exhausted" if budget_exhausted else "infrastructure_interruption")),
                        last_request=request_context, **summary)
         if infrastructure_error:
             episode["error"] = infrastructure_error
@@ -704,6 +732,7 @@ def main():
         index = status["episodes"] % len(candidates)
         next_checkpoint = (int(learner.updates) // max(1, args.checkpoint_every) + 1) * args.checkpoint_every
         metrics_path = args.output / "metrics.jsonl"
+        stall_streaks = {}
         while not args.eval_only and len(replay) < args.max_transitions:
             candidate = candidates[int(order[index % len(order)])]
             index += 1
@@ -722,6 +751,8 @@ def main():
                 metrics = learner.update(replay.sample(args.batch_size))
                 with metrics_path.open("a") as stream:
                     stream.write(json.dumps(metrics) + "\n")
+                if learning_stall(metrics, stall_streaks):
+                    raise LearningStop("Critic stuck for three consecutive minibatches; inspect metrics.jsonl")
             atomic_json(args.output / "status.json", describe(learner, replay, status, args,
                                                               status["history"]))
             if int(learner.updates) == 0:
@@ -734,6 +765,10 @@ def main():
                 break
         if args.eval_episodes:
             evaluate(runtime, args, learner, base_cfg)
+    except LearningStop:
+        atomic_json(args.output / "learning_error.json", dict(error=traceback.format_exc(),
+                    updates=learner.updates, stall_streaks=stall_streaks))
+        raise
     except BaseException:
         atomic_json(args.output / "infrastructure_error.json", dict(error=traceback.format_exc()))
         raise
@@ -799,7 +834,7 @@ def completed_episode_reports(output):
     for report in sorted(path.glob("episode_*/report.json")):
         try:
             row = json.loads(report.read_text())
-            if row.get("status") in ("success", "failed", "timeout"):
+            if row.get("status") in ("success", "failed", "timeout", "budget_exhausted"):
                 rows.append(row)
         except (OSError, ValueError):
             continue
