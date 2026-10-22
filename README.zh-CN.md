@@ -2,7 +2,7 @@
 
 [English](README.md) | **简体中文**
 
-**2026-10-20 RL 更新：** 第一轮 20k 残差 SAC 的 val-40 为 11/40，低于冻结基线 23/40；第二轮两个种子各 50k，在相机位姿检查中断后已于约 17:56 恢复，主种子超过 20k 并更新，复核种子暖身中。[中断记录、配置与实时进度](docs/astribot_round2_20261020.md)。下方旧状态中的“尚未正式长跑”已由此更新取代。
+**2026-10-20 RL 更新：** 第一轮 20k 残差 SAC 的 val-40 为 11/40，低于冻结基线 23/40；第二轮两个种子各 50k，在相机位姿检查中断后已于约 17:56 恢复，主种子超过 20k 并更新，复核种子暖身中。[中断记录、配置与实时进度](docs/astribot_rl/astribot_round2_20261020.md)。下方旧状态中的“尚未正式长跑”已由此更新取代。
 
 **状态：2026-10-19。** 同一套 Isaac Sim 代码里并存两条任务主线。当前主线是 **Astribot S1 人形按 VIB-820 电梯厅呼叫按钮**：400 条专家数据已采集并导出为 LeRobot v3，VLA-JEPA 微调到 **step 8000**，冻结的 test 划分闭环为 **17/40（42.5%）**；在 validation 划分与保守续训的 **step 17,000** 做逐场景配对，结果为 **23/40 对 19/40**（McNemar p = 0.3438，不显著）。这两个权重之间，离线动作误差改善了，闭环成功率没有。在线残差 SAC 已接到该任务上，20 项 CPU 契约测试与本机 GPU/Isaac 冒烟均通过，但尚未执行正式长跑。上一代 **PiPER 12 按键主线**已完成（最佳 119/120 = 99.17%），保留在下文作为历史记录。
 
@@ -179,7 +179,7 @@ bash scripts/run_astribot_closedloop.sh test  outputs/astribot_closedloop/NEW_te
   --output outputs/astribot_online_rl/NEW_smoke --smoke
 ```
 
-正式配方（20,000 条 transition）、续跑与评估命令见[在线残差强化学习](docs/astribot_online_rl.md)。
+正式配方（20,000 条 transition）、续跑与评估命令见[在线残差强化学习](docs/astribot_rl/astribot_online_rl.md)。
 
 ## 在线残差强化学习
 
@@ -225,7 +225,7 @@ S1 任务只接入了动作残差这一种方法：`AstribotPolicy.predict` 只�
 | 上一设置，残差 scale 减半 | 400k | 87/120 | 72.50% |
 | **固定噪声，重训 XYZ 残差，γ=0.995** | **400k** | **119/120** | **99.17%** |
 
-最新 XYZ actor 只输出 7 × 3 = 21 维残差，位置 scale 为 0.02 m，旋转与夹爪沿用冻结模型输出。该轮 400k 训练约 7 小时 25 分钟，完成 398k 次更新；119/120 是单次固定条件结果，不代表所有随机种子下都有 99.17% 成功率。平滑实验（1,320 次评估）未通过预设门槛：XYZ 指数平滑 α=0.8 使实际关节 jerk 中位数下降约 14%、末端位置 jerk 下降约 30%，筛选为 119/120，但独立种子复核为 117/120，没有候选满足全部条件，因此默认仍是**不做额外后处理**。细节与复现见[固定噪声后的残差训练](docs/residual_on_frozen_noise.md)、[结果 JSON](docs/results/online_rl_20261009.json)、[结果 CSV](docs/results/online_rl_20261009.csv)、[平滑汇总](docs/results/smoothing_20261009.csv)。
+最新 XYZ actor 只输出 7 × 3 = 21 维残差，位置 scale 为 0.02 m，旋转与夹爪沿用冻结模型输出。该轮 400k 训练约 7 小时 25 分钟，完成 398k 次更新；119/120 是单次固定条件结果，不代表所有随机种子下都有 99.17% 成功率。平滑实验（1,320 次评估）未通过预设门槛：XYZ 指数平滑 α=0.8 使实际关节 jerk 中位数下降约 14%、末端位置 jerk 下降约 30%，筛选为 119/120，但独立种子复核为 117/120，没有候选满足全部条件，因此默认仍是**不做额外后处理**。细节与复现见[固定噪声后的残差训练](docs/piper/residual_on_frozen_noise.md)、[结果 JSON](docs/results/online_rl_20261009.json)、[结果 CSV](docs/results/online_rl_20261009.csv)、[平滑汇总](docs/results/smoothing_20261009.csv)。
 
 演示视频覆盖全部 12 个按键，保持 1× 仿真时间，上为全局视角、下为腕部视角；任务结束后显示带标记的终止停帧。点击预览图播放或下载。这些演示不是包含面板偏移的 120 次评估。
 
@@ -236,7 +236,7 @@ S1 任务只接入了动作残差这一种方法：`AstribotPolicy.predict` 只�
 
 原视频来源、压缩参数、实际帧数与审核记录见[媒体说明](docs/media/README.md)。
 
-PiPER 主线建立了三服务架构：Isaac 仿真节点、冻结 VLA-JEPA 推理节点与 SAC 训练节点通过 HTTP 通信，采用 64 个并行环境、批量推理与独立 episode 重置。1M transition 的实测训练用时约 19.81 h（动作残差）与 15.16 h（初始噪声）；最新 XYZ 400k 约 7.43 h。一个 transition 是一个环境内最多 7 步的动作 chunk，不是一条 episode。S1 的 runner 是单进程版本，因为多环境相机隔离尚未通过验收；见[在线 RL](docs/online_rl.md)、[高吞吐版本](docs/online_rl_fast.md)与[协议](docs/online_rl_protocol.md)。视频平滑度来自实测轨迹回放，未用播放加速或插帧制造差异。
+PiPER 主线建立了三服务架构：Isaac 仿真节点、冻结 VLA-JEPA 推理节点与 SAC 训练节点通过 HTTP 通信，采用 64 个并行环境、批量推理与独立 episode 重置。1M transition 的实测训练用时约 19.81 h（动作残差）与 15.16 h（初始噪声）；最新 XYZ 400k 约 7.43 h。一个 transition 是一个环境内最多 7 步的动作 chunk，不是一条 episode。S1 的 runner 是单进程版本，因为多环境相机隔离尚未通过验收；见[在线 RL](docs/piper/online_rl.md)、[高吞吐版本](docs/piper/online_rl_fast.md)与[协议](docs/piper/online_rl_protocol.md)。视频平滑度来自实测轨迹回放，未用播放加速或插帧制造差异。
 
 ## 目录结构
 
@@ -274,11 +274,11 @@ PRESSB_TEST_SNAPSHOT=outputs/edge_feedback/scene.usda \
 
 ## 文档索引
 
-当前主线：[VIB-820 场景](docs/vib820.md) · [S1 资产](docs/astribot_asset.md) · [S1 按键控制](docs/astribot_press.md) · [传感器](docs/astribot_sensors.md) · [初始姿态](docs/astribot_initial_pose.md) · [腕部相机核对](docs/astribot_wrist_camera_audit.md) · [相机清单](docs/astribot_camera_inventory.md) · [闭环评估](docs/astribot_closedloop_20261018.md) · [配对对照](docs/astribot_paired_val_20261019.md) · [在线残差 RL](docs/astribot_online_rl.md) · [采集计划](docs/plan/vib820_gpu_collection_400/plan.md) · [采集手册](docs/plan/vib820_gpu_collection_400/runbook.md) · [实验规格](docs/vib820_experiment_spec/README.md)。
+当前主线：[VIB-820 场景](docs/astribot/vib820.md) · [S1 资产](docs/astribot/astribot_asset.md) · [S1 按键控制](docs/astribot/astribot_press.md) · [传感器](docs/astribot/astribot_sensors.md) · [初始姿态](docs/astribot/astribot_initial_pose.md) · [腕部相机核对](docs/astribot/astribot_wrist_camera_audit.md) · [相机清单](docs/astribot/astribot_camera_inventory.md) · [闭环评估](docs/astribot_eval/astribot_closedloop_20261018.md) · [配对对照](docs/astribot_eval/astribot_paired_val_20261019.md) · [在线残差 RL](docs/astribot_rl/astribot_online_rl.md) · [采集计划](docs/plan/vib820_gpu_collection_400/plan.md) · [采集手册](docs/plan/vib820_gpu_collection_400/runbook.md) · [实验规格](docs/vib820_experiment_spec/README.md)。
 
-历史 PiPER 主线：[场景细节](docs/scene_details.md) · [数据集](docs/dataset.md) · [30 Hz 数据](docs/dataset_30hz.md) · [首次亮灯裁剪](docs/dataset_press_only.md) · [面板随机化](docs/dataset_panel_randomization.md) · [分层覆盖](docs/dataset_panel_stratified.md) · [回放](docs/replay.md) · [策略评估](docs/policy_eval.md) · [动作平滑](docs/policy_smoothing.md) · [在线 RL](docs/online_rl.md) · [高吞吐 RL](docs/online_rl_fast.md) · [固定噪声后的残差训练](docs/residual_on_frozen_noise.md)。
+历史 PiPER 主线：[场景细节](docs/piper/scene_details.md) · [数据集](docs/piper/dataset.md) · [30 Hz 数据](docs/piper/dataset_30hz.md) · [首次亮灯裁剪](docs/piper/dataset_press_only.md) · [面板随机化](docs/piper/dataset_panel_randomization.md) · [分层覆盖](docs/piper/dataset_panel_stratified.md) · [回放](docs/piper/replay.md) · [策略评估](docs/piper/policy_eval.md) · [动作平滑](docs/piper/policy_smoothing.md) · [在线 RL](docs/piper/online_rl.md) · [高吞吐 RL](docs/piper/online_rl_fast.md) · [固定噪声后的残差训练](docs/piper/residual_on_frozen_noise.md)。
 
-部署与运维：[RTX 5090 说明](docs/rtx5090_setup.md) · [PRO 6000 环境](docs/PRO6000_ENV.md) · [本机部署](docs/local_deployment.md) · [工作交接](docs/HANDOVER.md)。
+部署与运维：[RTX 5090 说明](docs/setup/rtx5090_setup.md) · [PRO 6000 环境](docs/setup/PRO6000_ENV.md) · [本机部署](docs/setup/local_deployment.md) · [工作交接](docs/HANDOVER.md)。
 
 ## 数据、权重与许可
 

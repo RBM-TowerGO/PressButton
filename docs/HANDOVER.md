@@ -2,7 +2,7 @@
 
 ## 2026-10-19 主线已换成 Astribot + VIB-820
 
-本文以下内容描述 PiPER 12 按键 + 在线残差 RL 那条主线。当前主线是 Astribot S1 人形按 VIB-820 电梯厅呼叫按钮：400 条专家数据已采集并发布验收（2026-10-17），VLA-JEPA 微调到 step 8000，test 划分闭环 17/40（42.5%），validation 划分 8,000／17,000 步配对对照 23/40 对 19/40（p=0.3438）。接手先读 [采集计划](plan/vib820_gpu_collection_400/plan.md)、[状态](plan/vib820_gpu_collection_400/implementation_status.json)、[进度](plan/vib820_gpu_collection_400/progress.md)、[闭环评估](astribot_closedloop_20261018.md)、[配对对照](astribot_paired_val_20261019.md) 与 [在线残差 RL](astribot_online_rl.md)。下文的 99.17% 等 PiPER 结论属于上一代任务，不能与新任务数字混用。
+本文以下内容描述 PiPER 12 按键 + 在线残差 RL 那条主线。当前主线是 Astribot S1 人形按 VIB-820 电梯厅呼叫按钮：400 条专家数据已采集并发布验收（2026-10-17），VLA-JEPA 微调到 step 8000，test 划分闭环 17/40（42.5%），validation 划分 8,000／17,000 步配对对照 23/40 对 19/40（p=0.3438）。接手先读 [采集计划](plan/vib820_gpu_collection_400/plan.md)、[状态](plan/vib820_gpu_collection_400/implementation_status.json)、[进度](plan/vib820_gpu_collection_400/progress.md)、[闭环评估](astribot_eval/astribot_closedloop_20261018.md)、[配对对照](astribot_eval/astribot_paired_val_20261019.md) 与 [在线残差 RL](astribot_rl/astribot_online_rl.md)。下文的 99.17% 等 PiPER 结论属于上一代任务，不能与新任务数字混用。
 
 ## 2026-10-09 仓库发布整理
 
@@ -14,7 +14,7 @@
 
 ## 2026-10-09 XYZ 动作后处理平滑实验
 
-- 已冻结原 XYZ scale=0.02 的 400k checkpoint、噪声策略和 VLA，在 64 环境中完成 **1,320 次**评估，尝试位置 EMA 和位置＋姿态 SLERP 平滑；没有训练或修改模型权重。新增入口 `scripts/eval_smoothed_residual.py`，实现及复现见 [residual_on_frozen_noise.md](residual_on_frozen_noise.md)。
+- 已冻结原 XYZ scale=0.02 的 400k checkpoint、噪声策略和 VLA，在 64 环境中完成 **1,320 次**评估，尝试位置 EMA 和位置＋姿态 SLERP 平滑；没有训练或修改模型权重。新增入口 `scripts/eval_smoothed_residual.py`，实现及复现见 [residual_on_frozen_noise.md](piper/residual_on_frozen_noise.md)。
 - **没有候选通过全部预设成功率门槛，默认保持 `none`，不自动启用后处理。** 门槛为每组至少 119/120、不低于同期基线，并用预先声明的新种子确认。原始 XYZ 自动评估的 119/120 仍是单次结果；本次无新增平滑基线跨种子为 116–119/120。
 - XYZ alpha=0.8：筛选 119/120（同期基线 117），独立种子 117/120（基线 116）；实际共同成功轨迹的关节 jerk 中位数下降约 14%，末端位置 jerk 下降约 30%，时间变化约 +0.7%～+2.7%。平滑改善可复现，但未稳定达到绝对 119/120 门槛，仅保留为实验选项。
 - 位置＋姿态 alpha=0.8：筛选 120/120，独立确认 117/120 < 基线 118，拒绝采用；更轻 XYZ alpha=0.9 为 118/120 < 基线 119，也拒绝。alpha=0.6 两种模式均为 117/120，未进入确认。保留所有失败记录，不将筛选最佳成绩当作独立验证结果。
@@ -32,14 +32,14 @@
 - [W&B 实时日志](https://wandb.ai/penggq2025-southern-university-of-science-technology/pressb-online-rl/runs/d154fb90) 包含 recent SR、每按键近期成功率、损失及采样速度。训练 SR 与固定条件评估分开。
 - 核心新增 `LearnerConfig.residual_mode="xyz"`：actor/replay 真正为 21 维（7×3），actor 仍以完整 63 维基础动作作为条件，critic 使用完整合成 pose9；旋转不加残差，执行时四元数和夹爪沿用解码器原值。默认目标熵为 −10.5；旧 checkpoint 缺省 `pose9` 保持兼容。
 - 初始噪声仍为 `outputs/online_rl_fast_20261003/initial_noise_train/last.pt`，noise_scale=1.5；VLA 仍为冻结 step10600。初始化和冻结检查见本轮 `initial.pt`、`composition.json`（均在 `train/`）及 `startup_verification.json`；配置、源码快照、运行指令均留存在运行目录。
-- 本轮启动前 338 项相关 CPU 测试通过。详细方法与命令见 [residual_on_frozen_noise.md](residual_on_frozen_noise.md)。历史 γ=0.995 原 scale 的 120 次 eval 为 118/120；半 scale 为 87/120，不能将中心布局演示视频 12/12、9/12 当作完整 eval。
+- 本轮启动前 338 项相关 CPU 测试通过。详细方法与命令见 [residual_on_frozen_noise.md](piper/residual_on_frozen_noise.md)。历史 γ=0.995 原 scale 的 120 次 eval 为 118/120；半 scale 为 87/120，不能将中心布局演示视频 12/12、9/12 当作完整 eval。
 
 ## 2026-10-03 在线 RL 续接入口
 
 本节覆盖下文 2026-10-02 原始交接中的“无运行任务/仅 H200 推理”状态；下文保留原评估和部署历史。
 
 - 用户已授权优化并运行长程在线 RL，动作残差与初始噪声两种方法各 1M transition。三个 HTTP 节点保留跨机器能力，目前部署改为本机：GPU0 SAC，GPU1 Isaac 并行仿真与冻结 VLA-JEPA。
-- 当前运行入口始终读取 `outputs/online_rl_current.json`，再读所指 `queue_status.json`；不要依据本文静态 PID 或计数启动重复服务。完整设计与命令见 [online_rl_fast.md](online_rl_fast.md)。
+- 当前运行入口始终读取 `outputs/online_rl_current.json`，再读所指 `queue_status.json`；不要依据本文静态 PID 或计数启动重复服务。完整设计与命令见 [online_rl_fast.md](piper/online_rl_fast.md)。
 - VLA-JEPA 已在 H200 创建提交 `9c9dc71c8e199c7428b25d103ab666395832c001`，H200 DNS 无法推送，由本机中继成功 push。独立本地克隆为 `src/VLA-JEPA`，独立推理环境 `.conda/envs/vlajepa-inference`；原 Isaac 环境保留。冻结 step10600 权重位于 `.cache/vlajepa/`，SHA 验证和跨 GPU 数值对照见 `outputs/online_rl_local_inference_20261002/`。
 - 已实现 64 环境独立结束/重置、批量受限 IK、PhysX 视图、chunk 边界渲染、批量视觉/flow 推理、无损 packed 特征、SAC 与 RPC 等待重叠。一个 transition 仍是一个环境的最多 7 动作 chunk，不能称 episode/s。warmup 后 UTD=1。
 - GPU 物理缓冲溢出曾导致不可信速度，已显式配置容量并加入同步原生日志错误检查；真实溢出负例退出 1，正常配置 62/62 专家接触、错按和无接触负例通过。证据见 `outputs/online_rl_fast_probe_20261003/`。
@@ -63,10 +63,10 @@
 
 新 agent 优先阅读：
 
-- 本文；`docs/rtx5090_setup.md`：5090 安装、运行与验收。
-- `docs/policy_eval.md`：推理接口、动作语义、闭环执行与审计。
+- 本文；`docs/setup/rtx5090_setup.md`：5090 安装、运行与验收。
+- `docs/piper/policy_eval.md`：推理接口、动作语义、闭环执行与审计。
 - `outputs/rtx5090_eval_comparison/results/verification.json`、`outputs/rtx5090_eval_comparison/results/summary.md`：本次对比结果。
-- `docs/dataset_panel_stratified.md`：带偏移数据集及验收边界。
+- `docs/piper/dataset_panel_stratified.md`：带偏移数据集及验收边界。
 - `logs/handover_20261002/`：本次交接附带的机器状态、训练证据和历史基线摘要。
 
 ## 2. 用户已确定的场景与数据要求
@@ -169,7 +169,7 @@ H200：`/home/pengguanqi/Datasets/piper_elevator_lerobot_panel_stratified_press_
 - 完整原始轨迹为 648,454 帧；首次亮灯裁剪移除后续 341,624 帧。
 - 每层 100 格各一条，四个角点齐全；物理、位置覆盖、整包解码、训练前缀及官方读取通过。
 - 相机视锥覆盖不等于操作中完全无遮挡。腕部 1,200 条末帧均提供清晰亮灯证据；桌面有 109 条终点遮挡/像素不足，由腕部与物理记录确认。
-- 完整原始 episode 776 的桌面橙色阈值诊断有一帧迟滞，原失败报告仍保留；腕部正确、几何同步正确，训练前缀没有延长或改阈值。详见 `docs/dataset_panel_stratified.md`，不要将其描述成所有全局视角严格首亮检查都通过。
+- 完整原始 episode 776 的桌面橙色阈值诊断有一帧迟滞，原失败报告仍保留；腕部正确、几何同步正确，训练前缀没有延长或改阈值。详见 `docs/piper/dataset_panel_stratified.md`，不要将其描述成所有全局视角严格首亮检查都通过。
 
 历史固定面板数据还在 H200：`/home/pengguanqi/Datasets/piper_elevator_lerobot_press_30hz`，同为 1,200 条，但为 306,230 帧。两者不要混用。
 
@@ -304,12 +304,12 @@ eval 模式是 **`center_corners`**：中心 `(0,0)` 与四角 `(±0.01,±0.025)
 |---|---|
 | `README.md`、`pyproject.toml` | 5090 入口；Python 3.10–3.11 支持 |
 | `configs/constraints-5090.txt`、`scripts/setup_env_5090.sh` | Sim 5.0/Lab 2.2 依赖组合 |
-| `scripts/verify_gpu_5090.py`、`scripts/verify_simulation_5090.sh`、`docs/rtx5090_setup.md` | 硬件/仿真验收与部署文档 |
+| `scripts/verify_gpu_5090.py`、`scripts/verify_simulation_5090.sh`、`docs/setup/rtx5090_setup.md` | 硬件/仿真验收与部署文档 |
 | `scripts/collect_dataset.py` | 16 次灯光稳定刷新 |
 | `src/pressb/camera_recording.py`、`tests/test_camera_recording_metadata.py` | Sim 5.0 相机元数据兼容 |
 | `tests/test_dataset_scene.py`、`tests/test_motion_smoothing.py` | USD 双精度偏移及浮点断言适配 |
 | `scripts/eval_policy.py`、`scripts/audit_policy_eval.py`、`src/pressb/scene_portability.py`、`tests/test_scene_portability.py` | 冻结资产跨机器重定位、证据与独立审计 |
-| `scripts/compare_policy_eval_runs.py`、`tests/test_compare_policy_eval_runs.py`、`docs/policy_eval.md` | 条件配对、跨机器对照与使用说明 |
+| `scripts/compare_policy_eval_runs.py`、`tests/test_compare_policy_eval_runs.py`、`docs/piper/policy_eval.md` | 条件配对、跨机器对照与使用说明 |
 
 **不要 `git reset --hard` / `git clean` 清掉工作区；不要从原采集机整目录覆盖。** 原机仍有 Sim 4.5 的相机与 4 次灯光刷新代码。若后续需要提交，先区分兼容性改动与实验产物，针对性检查后提交。数据、权重、环境、素材、输出、日志都在 `.gitignore` 中；本次交接未执行新的 commit/push。
 
@@ -334,7 +334,7 @@ bash scripts/run.sh --headless --gpu 0 --video --output outputs/handover_demo_ne
 .conda/envs/pressb/bin/python scripts/check_results.py outputs/handover_demo_new
 ```
 
-完整演示判据为 `PASS: 12/12 physically pressed in order` 及独立审计成功，不能截断几步就当完整验收。GUI 示例见 `docs/rtx5090_setup.md`。
+完整演示判据为 `PASS: 12/12 physically pressed in order` 及独立审计成功，不能截断几步就当完整验收。GUI 示例见 `docs/setup/rtx5090_setup.md`。
 
 ### 9.2 复用 5090→H200 SSH，并启动一个推理服务
 
@@ -434,7 +434,7 @@ PYTHONPATH=.cache/usd-inspect:src .conda/envs/pressb/bin/python \
 
 ### 9.4 后续在 5090 新采 1,200 条的入口
 
-当前尚未在本机执行此整批。先按 `docs/rtx5090_setup.md` 做两条预检，通过后才沿用下面配置：
+当前尚未在本机执行此整批。先按 `docs/setup/rtx5090_setup.md` 做两条预检，通过后才沿用下面配置：
 
 ```bash
 cd /home/pengguanqi/Workspace/Research/PressB
@@ -445,7 +445,7 @@ cd /home/pengguanqi/Workspace/Research/PressB
   --output datasets/piper_elevator_raw_panel_stratified_5090_new
 ```
 
-这是新采集批次，使用 5090 当前场景和软件指纹；不要续写原采集机 Sim 4.5 数据。后续按 `docs/dataset_panel_stratified.md`、`docs/dataset_press_only.md` 和 README 完成物理/覆盖/图像同步审计、首次亮灯裁剪、独立 LeRobot 环境导出及官方读取。不能直接把含撤回的 raw 目录当训练集。
+这是新采集批次，使用 5090 当前场景和软件指纹；不要续写原采集机 Sim 4.5 数据。后续按 `docs/piper/dataset_panel_stratified.md`、`docs/piper/dataset_press_only.md` 和 README 完成物理/覆盖/图像同步审计、首次亮灯裁剪、独立 LeRobot 环境导出及官方读取。不能直接把含撤回的 raw 目录当训练集。
 
 如需重新训练，从 H200 既有 `scripts/run_piper_ft.sh`、运行目录 `config.yaml` 与 `docs/piper_lerobot.md` 入手。根据用户后续要求明确官方重启还是 checkpoint 续训，使用新的 run id；不要重跑旧 `launch.py` 或覆盖已完成的目录。新数据也不能沿用旧 dataset/split fingerprint。
 

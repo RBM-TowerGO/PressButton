@@ -2,7 +2,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-**RL update, 2026-10-20:** The first 20k residual run scored 11/40 on validation, below the frozen 23/40 baseline. Both stabilized 50k seeds resumed from checkpoints around 17:56 China time after camera-pose validation interruptions; the primary seed is past 20k with updates, and the replica is collecting warmup experience. [Interruption evidence, configuration and live progress](docs/astribot_round2_20261020.md). This supersedes the older “no formal long run” status below.
+**RL update, 2026-10-20:** The first 20k residual run scored 11/40 on validation, below the frozen 23/40 baseline. Both stabilized 50k seeds resumed from checkpoints around 17:56 China time after camera-pose validation interruptions; the primary seed is past 20k with updates, and the replica is collecting warmup experience. [Interruption evidence, configuration and live progress](docs/astribot_rl/astribot_round2_20261020.md). This supersedes the older “no formal long run” status below.
 
 **Status: 2026-10-19.** One Isaac Sim codebase, two task lines. The active line is an **Astribot S1 humanoid pressing the VIB-820 hall-call button**: 400 expert episodes were collected and exported to LeRobot v3, VLA-JEPA was fine-tuned to **step 8000**, the frozen test split scored **17/40 (42.5%)**, and a paired validation comparison against a conservatively continued **step 17,000** scored **23/40 vs 19/40** (McNemar p = 0.3438, not significant). Between those two checkpoints offline action error improved while closed-loop success did not. Online residual SAC is now wired to this task and passes 20 CPU contract tests plus a GPU/Isaac smoke run; no formal long run has been executed yet. The earlier **PiPER 12-button line** is complete (best 119/120 = 99.17%) and is kept below as history.
 
@@ -179,7 +179,7 @@ Each run writes `protocol.json`, `summary.json` and one directory per scenario w
   --output outputs/astribot_online_rl/NEW_smoke --smoke
 ```
 
-The formal recipe (20,000 transitions), resume and evaluation commands are in [online residual RL](docs/astribot_online_rl.md).
+The formal recipe (20,000 transitions), resume and evaluation commands are in [online residual RL](docs/astribot_rl/astribot_online_rl.md).
 
 ## Online residual RL
 
@@ -225,7 +225,7 @@ The base VLA-JEPA was fine-tuned on those 1,200 episodes (step 10600) and frozen
 | Previous setting, residual scale halved | 400k | 87/120 | 72.50% |
 | **Fixed noise, retrained XYZ residual, γ=0.995** | **400k** | **119/120** | **99.17%** |
 
-The latest XYZ actor emits only 7 × 3 = 21 residual dimensions with position scale 0.02 m; rotation and gripper keep the frozen model's outputs. That run took about 7 h 25 min for 400k transitions and 398k updates, and 119/120 is a single fixed-condition result, not a claim about all seeds. Smoothing experiments (1,320 evaluations) were rejected: XYZ exponential smoothing with α=0.8 cut measured joint jerk by ~14% and end-effector jerk by ~30% and passed screening at 119/120, but independent-seed checks landed at 117/120 and no candidate met every predefined threshold, so the default remains **no extra post-processing**. Details and reproduction: [residual training over frozen noise](docs/residual_on_frozen_noise.md), [result JSON](docs/results/online_rl_20261009.json), [result CSV](docs/results/online_rl_20261009.csv), [smoothing summary](docs/results/smoothing_20261009.csv).
+The latest XYZ actor emits only 7 × 3 = 21 residual dimensions with position scale 0.02 m; rotation and gripper keep the frozen model's outputs. That run took about 7 h 25 min for 400k transitions and 398k updates, and 119/120 is a single fixed-condition result, not a claim about all seeds. Smoothing experiments (1,320 evaluations) were rejected: XYZ exponential smoothing with α=0.8 cut measured joint jerk by ~14% and end-effector jerk by ~30% and passed screening at 119/120, but independent-seed checks landed at 117/120 and no candidate met every predefined threshold, so the default remains **no extra post-processing**. Details and reproduction: [residual training over frozen noise](docs/piper/residual_on_frozen_noise.md), [result JSON](docs/results/online_rl_20261009.json), [result CSV](docs/results/online_rl_20261009.csv), [smoothing summary](docs/results/smoothing_20261009.csv).
 
 Demo videos cover all 12 buttons at 1× simulation time with the global view above the wrist view; a labelled freeze-frame marks each task's end. Click a preview to play or download. These demos are not the 120-trial evaluation, which includes panel offsets.
 
@@ -236,7 +236,7 @@ Demo videos cover all 12 buttons at 1× simulation time with the global view abo
 
 See the [media notes](docs/media/README.md) for sources, compression settings, frame counts and audit records.
 
-The PiPER line introduced the three-service architecture — an Isaac simulation node, a frozen VLA-JEPA inference node and a SAC learner node speaking HTTP — with 64 parallel environments, batched inference and independent episode resets. A 1M-transition run measured about 19.81 h for the action residual and 15.16 h for the initial-noise policy; the latest XYZ 400k run took about 7.43 h. One transition is a ≤ 7-step action chunk in one environment, not an episode. The S1 runner is a single-process variant because multi-environment camera isolation has not passed acceptance; see [online RL](docs/online_rl.md), [high-throughput runner](docs/online_rl_fast.md) and the [protocol](docs/online_rl_protocol.md). Video smoothness comes from replayed measured trajectories; no acceleration or frame interpolation is used to create differences.
+The PiPER line introduced the three-service architecture — an Isaac simulation node, a frozen VLA-JEPA inference node and a SAC learner node speaking HTTP — with 64 parallel environments, batched inference and independent episode resets. A 1M-transition run measured about 19.81 h for the action residual and 15.16 h for the initial-noise policy; the latest XYZ 400k run took about 7.43 h. One transition is a ≤ 7-step action chunk in one environment, not an episode. The S1 runner is a single-process variant because multi-environment camera isolation has not passed acceptance; see [online RL](docs/piper/online_rl.md), [high-throughput runner](docs/piper/online_rl_fast.md) and the [protocol](docs/piper/online_rl_protocol.md). Video smoothness comes from replayed measured trajectories; no acceleration or frame interpolation is used to create differences.
 
 ## Repository layout
 
@@ -274,11 +274,11 @@ A clone without a snapshot skips the USD integration tests; naming a missing sna
 
 ## Documentation map
 
-Active line: [VIB-820 scene](docs/vib820.md) · [S1 asset](docs/astribot_asset.md) · [S1 press control](docs/astribot_press.md) · [sensors](docs/astribot_sensors.md) · [initial pose](docs/astribot_initial_pose.md) · [camera mounts](docs/astribot_wrist_camera_audit.md) · [camera inventory](docs/astribot_camera_inventory.md) · [closed-loop evaluation](docs/astribot_closedloop_20261018.md) · [paired comparison](docs/astribot_paired_val_20261019.md) · [online residual RL](docs/astribot_online_rl.md) · [collection plan](docs/plan/vib820_gpu_collection_400/plan.md) · [collection runbook](docs/plan/vib820_gpu_collection_400/runbook.md) · [experiment specification](docs/vib820_experiment_spec/README.md).
+Active line: [VIB-820 scene](docs/astribot/vib820.md) · [S1 asset](docs/astribot/astribot_asset.md) · [S1 press control](docs/astribot/astribot_press.md) · [sensors](docs/astribot/astribot_sensors.md) · [initial pose](docs/astribot/astribot_initial_pose.md) · [camera mounts](docs/astribot/astribot_wrist_camera_audit.md) · [camera inventory](docs/astribot/astribot_camera_inventory.md) · [closed-loop evaluation](docs/astribot_eval/astribot_closedloop_20261018.md) · [paired comparison](docs/astribot_eval/astribot_paired_val_20261019.md) · [online residual RL](docs/astribot_rl/astribot_online_rl.md) · [collection plan](docs/plan/vib820_gpu_collection_400/plan.md) · [collection runbook](docs/plan/vib820_gpu_collection_400/runbook.md) · [experiment specification](docs/vib820_experiment_spec/README.md).
 
-Legacy PiPER line: [scene details](docs/scene_details.md) · [dataset](docs/dataset.md) · [30 Hz data](docs/dataset_30hz.md) · [first-light trimming](docs/dataset_press_only.md) · [panel randomization](docs/dataset_panel_randomization.md) · [stratified coverage](docs/dataset_panel_stratified.md) · [replay](docs/replay.md) · [policy evaluation](docs/policy_eval.md) · [smoothing](docs/policy_smoothing.md) · [online RL](docs/online_rl.md) · [high-throughput RL](docs/online_rl_fast.md) · [residual on frozen noise](docs/residual_on_frozen_noise.md).
+Legacy PiPER line: [scene details](docs/piper/scene_details.md) · [dataset](docs/piper/dataset.md) · [30 Hz data](docs/piper/dataset_30hz.md) · [first-light trimming](docs/piper/dataset_press_only.md) · [panel randomization](docs/piper/dataset_panel_randomization.md) · [stratified coverage](docs/piper/dataset_panel_stratified.md) · [replay](docs/piper/replay.md) · [policy evaluation](docs/piper/policy_eval.md) · [smoothing](docs/piper/policy_smoothing.md) · [online RL](docs/piper/online_rl.md) · [high-throughput RL](docs/piper/online_rl_fast.md) · [residual on frozen noise](docs/piper/residual_on_frozen_noise.md).
 
-Setup and operations: [RTX 5090 guide](docs/rtx5090_setup.md) · [PRO 6000 setup](docs/PRO6000_ENV.md) · [local deployment](docs/local_deployment.md) · [project handover](docs/HANDOVER.md).
+Setup and operations: [RTX 5090 guide](docs/setup/rtx5090_setup.md) · [PRO 6000 setup](docs/setup/PRO6000_ENV.md) · [local deployment](docs/setup/local_deployment.md) · [project handover](docs/HANDOVER.md).
 
 ## Data, weights, and licenses
 

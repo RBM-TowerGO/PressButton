@@ -14,9 +14,9 @@
 - 躯干、头部和左臂最大关节偏差：0.001476 rad（约 0.085°）。
 - 目标按钮最大行程：1.556–1.624 mm；各次按压峰值接触力：0.461–0.482 N。
 - URDF 与 PhysX 指尖位置最大差：0.450 mm；重置后最大关节目标误差：0.00309 rad。
-- [验收报告](../outputs/astribot_press_acceptance_v6/report.json)、
-  [独立审计](../outputs/astribot_press_acceptance_v6/independent_audit.json)、
-  [物理轨迹](../outputs/astribot_press_acceptance_v6/trajectory.npz)。验收对应的六份
+- [验收报告](../../outputs/astribot_press_acceptance_v6/report.json)、
+  [独立审计](../../outputs/astribot_press_acceptance_v6/independent_audit.json)、
+  [物理轨迹](../../outputs/astribot_press_acceptance_v6/trajectory.npz)。验收对应的六份
   源码/配置按报告 SHA-256 归档在同目录 `sources/`。
 
 这是同一站位、面板位置和控制参数的重复验证，不是随机面板位置的泛化测试。
@@ -27,11 +27,11 @@
 203.6 秒视频，按 1× 仿真时间播放，包含初始闭合和重置。场景重新加载检查
 确认 33 个机器人刚体全部有碰撞覆盖、12 个按钮关节及所有非运行时资产引用完整。
 
-- [全景视频](../outputs/astribot_press_demo_v7/overview.mp4)
-- [按钮近景视频](../outputs/astribot_press_demo_v7/panel.mp4)
-- [演示物理审计](../outputs/astribot_press_demo_v7/independent_audit.json)、
-  [视频帧数审计](../outputs/astribot_press_demo_v7/video_audit.json)、
-  [场景检查](../outputs/astribot_press_demo_v7/scene_audit.json)
+- [全景视频](../../outputs/astribot_press_demo_v7/overview.mp4)
+- [按钮近景视频](../../outputs/astribot_press_demo_v7/panel.mp4)
+- [演示物理审计](../../outputs/astribot_press_demo_v7/independent_audit.json)、
+  [视频帧数审计](../../outputs/astribot_press_demo_v7/video_audit.json)、
+  [场景检查](../../outputs/astribot_press_demo_v7/scene_audit.json)
 
 ## 运行
 
@@ -63,7 +63,7 @@ python scripts/audit_astribot_press.py outputs/astribot_press_acceptance
 例如在 VIB-820 预备姿态配置的副本中设置为 30，配合 `--video --all-cameras`
 录制头部、双腕及场景观察相机。独立物理审计按此角度检查头部保持误差。
 本次 30°完整按压录像及三路同步合成见
-[`outputs/vib820_press_head30_20261014/WATCH.md`](../outputs/vib820_press_head30_20261014/WATCH.md)。
+[`outputs/vib820_press_head30_20261014/WATCH.md`](../../outputs/vib820_press_head30_20261014/WATCH.md)。
 
 不带 `--headless` 时打开仿真窗口。程序完成任务后关闭；这与保持窗口的静态
 `preview_astribot_panel.py` 不同。每个输出目录保留配置和控制器源码 SHA-256。

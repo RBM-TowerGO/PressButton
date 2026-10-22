@@ -104,7 +104,7 @@ bash scripts/collect_dataset.sh --gpu 1 --num-envs 2 --fps 30 \
   datasets/new_smoke_30hz --episode-ids 0 1 --output outputs/new_smoke_camera_sync
 ```
 
-原始轨迹包含撤回和归位，训练数据仍按项目已有的首次亮灯前缀导出流程处理。完整 1,200 条分层采集的配置及 seed 要求见 [dataset_panel_stratified.md](dataset_panel_stratified.md)。此次只配置仿真环境并运行预检，未采集新的完整数据集，也未安装独立 LeRobot 导出环境。
+原始轨迹包含撤回和归位，训练数据仍按项目已有的首次亮灯前缀导出流程处理。完整 1,200 条分层采集的配置及 seed 要求见 [dataset_panel_stratified.md](../piper/dataset_panel_stratified.md)。此次只配置仿真环境并运行预检，未采集新的完整数据集，也未安装独立 LeRobot 导出环境。
 
 ## 版本适配
 

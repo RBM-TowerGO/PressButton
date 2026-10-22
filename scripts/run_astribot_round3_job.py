@@ -188,7 +188,7 @@ def main():
     parser.add_argument('--physics-backend', choices=('cpu', 'gpu'), default='gpu')
     parser.add_argument('--seed', type=int, default=20261023)
     parser.add_argument('--doc', type=Path,
-                        default=ROOT / 'docs/astribot_round3_local_20261020.md')
+                        default=ROOT / 'docs/astribot_rl/astribot_round3_local_20261020.md')
     parser.add_argument('--resume-job', action='store_true')
     parser.add_argument('--adopt-running-job', action='store_true')
     args = parser.parse_args()

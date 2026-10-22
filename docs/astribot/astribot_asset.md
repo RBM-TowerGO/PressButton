@@ -10,10 +10,10 @@
 
 已验收输出：`outputs/astribot_asset_validation_v5/`，进程退出码 0。
 
-- [模型预览](../outputs/astribot_asset_validation_v5/preview.png)
-- [重置后预览](../outputs/astribot_asset_validation_v5/after_reset.png)
-- [物理验证报告](../outputs/astribot_asset_validation_v5/validation.json)
-- [导出场景与轨迹独立检查](../outputs/astribot_asset_validation_v5/independent_audit.json)
+- [模型预览](../../outputs/astribot_asset_validation_v5/preview.png)
+- [重置后预览](../../outputs/astribot_asset_validation_v5/after_reset.png)
+- [物理验证报告](../../outputs/astribot_asset_validation_v5/validation.json)
+- [导出场景与轨迹独立检查](../../outputs/astribot_asset_validation_v5/independent_audit.json)
 
 35 个源文件通过 SHA-256 校验。生成资产有 42 个网格、33 个刚体、32 个关节；
 运行适配后有 17 个实际碰撞形状。以 120 Hz 完成 2,820 个物理步（23.5 秒），
@@ -68,8 +68,8 @@ python scripts/preview_astribot_panel.py
 站位、面板高度和镜头参数在 `configs/astribot_panel_preview.json` 中。
 
 已验证的同场景预览：
-[机器人与面板全景](../outputs/astribot_panel_preview_v2/overview.png)、
-[面板近景](../outputs/astribot_panel_preview_v2/panel.png)。
+[机器人与面板全景](../../outputs/astribot_panel_preview_v2/overview.png)、
+[面板近景](../../outputs/astribot_panel_preview_v2/panel.png)。
 `outputs/astribot_panel_preview_v2/scene.usda` 可重新加载；240 个物理步后机器人稳定，
 12 个按钮的滑动关节和资产引用检查通过。原场景的 16 项集成测试通过。
 
