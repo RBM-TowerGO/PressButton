@@ -19,12 +19,12 @@ done
 python scripts/run_astribot_round2_job.py \
     --output "$RUN_ROOT/residual_50k_shaped_20261020_seed20261021" \
     --physics-backend gpu --seed 20261021 \
-    --doc docs/astribot_round2_20261020.md "${RESUME_FLAG[@]}" >> logs/round2-seed20261021-supervisor.log 2>&1 &
+    --doc docs/astribot_rl/astribot_round2_20261020.md "${RESUME_FLAG[@]}" >> logs/round2-seed20261021-supervisor.log 2>&1 &
 PRIMARY_PID=$!
 python scripts/run_astribot_round2_job.py \
     --output "$RUN_ROOT/residual_50k_shaped_20261020_seed20261022" \
     --physics-backend gpu --seed 20261022 \
-    --doc docs/astribot_round2_20261020_seed20261022.md "${RESUME_FLAG[@]}" >> logs/round2-seed20261022-supervisor.log 2>&1 &
+    --doc docs/astribot_rl/astribot_round2_20261020_seed20261022.md "${RESUME_FLAG[@]}" >> logs/round2-seed20261022-supervisor.log 2>&1 &
 REPLICA_PID=$!
 printf '%s\n' "$PRIMARY_PID" > logs/round2-primary-supervisor.pid
 printf '%s\n' "$REPLICA_PID" > logs/round2-replica-supervisor.pid
@@ -49,7 +49,7 @@ for seed, result in zip((20261021, 20261022), map(int, sys.argv[1:3])):
                      comparison=read(output/'run/eval/paired_comparison.json')))
 report = dict(finished_at=datetime.now(timezone(timedelta(hours=8))).isoformat(), runs=rows)
 (root/'round2_batch_summary_20261020.json').write_text(json.dumps(report, indent=2)+'\n')
-doc = Path('docs/astribot_round2_20261020.md')
+doc = Path('docs/astribot_rl/astribot_round2_20261020.md')
 lines = ['\n\n## 双种子最终汇总\n', '| seed | 状态 | val 成功 | 基线 |', '|---|---|---:|---:|']
 for row in rows:
     lines.append(f'| {row["seed"]} | {row["job"].get("phase", "supervisor failed")} | '

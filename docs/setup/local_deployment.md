@@ -10,13 +10,13 @@ Python 3.12、CPU PyTorch 2.10.0 和 LeRobot 0.6.1。
 ## 使用
 
 Astribot S1 的独立资产下载、加载验证与关节控制适配见
-[Astribot 资产说明](astribot_asset.md)。该入口使用同一仿真环境。
+[Astribot 资产说明](../astribot/astribot_asset.md)。该入口使用同一仿真环境。
 
 已验收的视频可直接点击打开 VS Code 视频预览：
 
-- [场景演示：12 个按钮完整按压](../outputs/local_deployment_20261012_v4/episode.mp4)
-- [腕部相机视频](../outputs/local_deployment_20261012_v4/wrist_camera/rgb.mp4)
-- [全局相机视频](../outputs/local_deployment_20261012_v4/global_camera/rgb.mp4)
+- [场景演示：12 个按钮完整按压](../../outputs/local_deployment_20261012_v4/episode.mp4)
+- [腕部相机视频](../../outputs/local_deployment_20261012_v4/wrist_camera/rgb.mp4)
+- [全局相机视频](../../outputs/local_deployment_20261012_v4/global_camera/rgb.mp4)
 
 在 Markdown 源码编辑器中按住 Ctrl 点击链接；在 Markdown 预览中直接点击。
 打开后点击播放器的播放按钮。视频均为本机文件，无需启动仿真或下载插件。
@@ -66,9 +66,9 @@ Blackwell。Warp 1.7.1 会打印 `cuDeviceGetUuid` 接口提示；GPU 0 上的
 - 已验收运行：`outputs/local_deployment_20261012_v4/`。12/12 按钮依次真实
   按压、回弹并归位，23,206 个物理样本，两路相机各 1,934 帧 RGB-D。
   仿真和四项独立审计均退出 0。
-- 视频：[场景演示](../outputs/local_deployment_20261012_v4/episode.mp4)、
-  [腕部相机](../outputs/local_deployment_20261012_v4/wrist_camera/rgb.mp4)、
-  [全局相机](../outputs/local_deployment_20261012_v4/global_camera/rgb.mp4)。
+- 视频：[场景演示](../../outputs/local_deployment_20261012_v4/episode.mp4)、
+  [腕部相机](../../outputs/local_deployment_20261012_v4/wrist_camera/rgb.mp4)、
+  [全局相机](../../outputs/local_deployment_20261012_v4/global_camera/rgb.mp4)。
   后续采集可使用同目录的 `scene.usda` 和双相机内参。
 - 仿真日志：`logs/verification-local-simulation-v4.log`。
 - 物理审计：`outputs/local_deployment_20261012_v4/audit_summary.json`。
@@ -118,10 +118,10 @@ VLA-JEPA 源码位于 `src/VLA-JEPA`，固定运行提交为
 保存在 `/home/js/.codex/backups/vscode-image-link-fix-26.1007.21434/`。
 需要再次执行 `Developer: Reload Window` 才能加载本次图片修复。
 
-重载后可点击 [Astribot 与按钮面板全景](../outputs/astribot_panel_preview_v2/overview.png)
-或 [面板近景](../outputs/astribot_panel_preview_v2/panel.png)。
+重载后可点击 [Astribot 与按钮面板全景](../../outputs/astribot_panel_preview_v2/overview.png)
+或 [面板近景](../../outputs/astribot_panel_preview_v2/panel.png)。
 在本文的 Markdown 预览中也可直接点击图片链接。
 
-Astribot 全身传感器入口与实际验收数据见 [传感器接入说明](astribot_sensors.md)。
+Astribot 全身传感器入口与实际验收数据见 [传感器接入说明](../astribot/astribot_sensors.md)。
 启动 `python scripts/preview_astribot_panel.py --sensors --lidar-points` 可在按钮场景中
 启用头部/双腕 RGB-D、底座雷达、IMU、关节及接触读数；`--view head` 可直接切到头部相机。

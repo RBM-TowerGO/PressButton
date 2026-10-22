@@ -1,6 +1,6 @@
 # 场景结构、相机与历史验证记录
 
-本页保留项目的场景设计和历史本机验证说明。`outputs/`、`datasets/`、依赖和下载素材不随 Git 仓库发布；下列产物路径须在本机生成后查看。新机器请先按 [README](../README.md) 的安装与场景准备步骤运行。
+本页保留项目的场景设计和历史本机验证说明。`outputs/`、`datasets/`、依赖和下载素材不随 Git 仓库发布；下列产物路径须在本机生成后查看。新机器请先按 [README](../../README.md) 的安装与场景准备步骤运行。
 
 ## 本机完整验证结果
 
@@ -87,11 +87,11 @@ PYTHONPATH=.cache/usd-inspect .conda/envs/pressb/bin/python scripts/audit_mount_
 
 `gripper_joint_positions_m` 配置两指的闭合位置。官方手指在两个关节都为 0 时指腹互相贴合，所以夹住直径 8 mm 的杆应使用 `[0.004, -0.004] m`。杆体仍作为腕部固定工具，其根部为 `link6` 局部 `z=0.125 m`，伸入指腹，末端按压位置不变。记录中额外保存两指目标和实测位置；独立审计要求全程偏差不超过 0.25 mm，并检查官方关节限位。
 
-任务过程中只发送关节驱动目标，不逐帧传送机器人位置，也不脚本移动按钮。按键允许沿墙面法向移动 4 mm，由弹簧回弹。控制采样 **120 Hz**。`run.sh` 单场景演示默认每 12 个物理步同步保存两路图像，即 **10 Hz**；可通过 `render_stride`、`wrist_camera_capture_stride` 和 `global_camera_capture_stride` 调整。LeRobot 批量采集使用独立的 `--fps` 参数，当前默认 **30 Hz**、每 4 个物理步同步采图，详见[30 Hz 采集入口](../docs/dataset_30hz.md)。两种方式均不改变物理时间步。
+任务过程中只发送关节驱动目标，不逐帧传送机器人位置，也不脚本移动按钮。按键允许沿墙面法向移动 4 mm，由弹簧回弹。控制采样 **120 Hz**。`run.sh` 单场景演示默认每 12 个物理步同步保存两路图像，即 **10 Hz**；可通过 `render_stride`、`wrist_camera_capture_stride` 和 `global_camera_capture_stride` 调整。LeRobot 批量采集使用独立的 `--fps` 参数，当前默认 **30 Hz**、每 4 个物理步同步采图，详见[30 Hz 采集入口](dataset_30hz.md)。两种方式均不改变物理时间步。
 
 ## 输出文件
 
-本节列出 `run.sh` 单场景演示的输出；当前 30 Hz LeRobot 批量数据的目录与内容见[数据集说明](../docs/dataset_30hz.md)。
+本节列出 `run.sh` 单场景演示的输出；当前 30 Hz LeRobot 批量数据的目录与内容见[数据集说明](dataset_30hz.md)。
 
 | 文件 | 内容 |
 | --- | --- |
@@ -130,7 +130,7 @@ CSV 的按键向量后缀 `0…11` 对应楼层 `24…35`；`gripper_q_actual_0/
 
 官方基础 USD 含中文 prim 名称，Isaac Sim 4.5 自带的 USD 版本无法直接读取。`scripts/prepare_wrist_asset.py` 在隔离的 OpenUSD 24.11 进程中原样复制上述两个网格，舍弃不兼容的中文 `Looks` 节点，生成 `assets/generated/official_wrist/assembly.usda` 和 `provenance.json`。场景引用这一兼容副本；这一步只解决文件格式兼容，不重建或简化原网格。独立资产审计对照固定来源核验点、面、安装变换和生成记录。
 
-这套装配与当前 Piper 使用不同的腕部坐标。依据两版本真实夹爪几何配准，旧 `link6` 到当前 `link6` 的变换为 **绕 Z 轴 +90°、沿 Z 轴 −4 mm**，证据见 [官方支架配准记录](../assets/official_wrist_registration.json)。在这一坐标映射之后，官方 URDF 的支架、相机固定关节和相机外壳视觉变换完整保留；RGB 光学中心采用 Intel `_d435.urdf.xacro` 中相对 `camera_link` 的 `+0.015 m Y` 偏移。相机随真实物理腕部运动；独立审计由实际关节角、URDF 和安装外参逐帧复算相机位姿。
+这套装配与当前 Piper 使用不同的腕部坐标。依据两版本真实夹爪几何配准，旧 `link6` 到当前 `link6` 的变换为 **绕 Z 轴 +90°、沿 Z 轴 −4 mm**，证据见 [官方支架配准记录](../../assets/official_wrist_registration.json)。在这一坐标映射之后，官方 URDF 的支架、相机固定关节和相机外壳视觉变换完整保留；RGB 光学中心采用 Intel `_d435.urdf.xacro` 中相对 `camera_link` 的 `+0.015 m Y` 偏移。相机随真实物理腕部运动；独立审计由实际关节角、URDF 和安装外参逐帧复算相机位姿。
 
 640×480 图像按 [D435 官方 RGB 标称视场 69°×42°](https://www.realsenseai.com/products/stereo-depth-camera-d435/) 作方形像素中心裁切：`fx=fy≈625.2214 px`、`cx=320`、`cy=240`，有效视场约 **54.2084°×42°**。这些是仿真内参，不是某台实机的标定结果。位姿四元数按 **wxyz** 保存，光学坐标采用 USD 的 **+X 向右、+Y 向上、−Z 向前**。深度是到成像平面的轴向距离，与 RGB 对齐。
 

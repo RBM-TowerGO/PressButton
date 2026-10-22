@@ -63,8 +63,8 @@ python scripts/compose_astribot_cameras.py outputs/vib820_ready_official_wrist_2
 
 正式运行验证（v4）：31 项相关测试通过；导出 USD 中两侧相机的父节点、局部平移、旋转和世界矩阵全部通过检查，局部和世界矩阵均在设定容差内。物理按压独立检查 23 项全部通过。右腕按压画面包含夹爪和按钮；左臂保持预备姿态，其相机朝向电梯门。
 
-- [左右腕新旧视角对照](../outputs/vib820_ready_official_wrist_20261014_v4/wrist_before_after.jpg)
-- [修正后的七路视频](../outputs/vib820_ready_official_wrist_20261014_v4/all_cameras.mp4)
-- [单路视频与验证索引](../outputs/vib820_ready_official_wrist_20261014_v4/WATCH.md)
+- [左右腕新旧视角对照](../../outputs/vib820_ready_official_wrist_20261014_v4/wrist_before_after.jpg)
+- [修正后的七路视频](../../outputs/vib820_ready_official_wrist_20261014_v4/all_cameras.mp4)
+- [单路视频与验证索引](../../outputs/vib820_ready_official_wrist_20261014_v4/WATCH.md)
 
 正式 v4 每路 839 帧、30 FPS；所有相机原生时间戳与采样物理时间的最大差值为 0，跨相机时间差为 0。采集时如相机回调仍持有旧帧，会在同一物理时刻重渲染等待；没有插帧或重复写帧。

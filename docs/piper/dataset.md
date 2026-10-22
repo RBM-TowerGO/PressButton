@@ -1,6 +1,6 @@
 # Piper 电梯按键：10 Hz 历史批次与 LeRobot 读取
 
-> 文中的数据集、权重、图像和运行报告属于本地产物，不随 Git 仓库分发；新机器请先按 [README](../README.md) 生成场景。历史结果不代表本次安装已经完成验证。
+> 文中的数据集、权重、图像和运行报告属于本地产物，不随 Git 仓库分发；新机器请先按 [README](../../README.md) 生成场景。历史结果不代表本次安装已经完成验证。
 
 **当前训练 episode 在目标按键首次亮起橙色边框时结束，不包含之后的撤回或归位。** 训练入口为 `datasets/piper_elevator_lerobot_press_30hz`，1,200 条、306,230 帧已完成转换、全量内容审计和官方 LeRobot 发布目录读取验证，见[训练数据说明](dataset_press_only.md)。完整原始采集和含归位的历史导出见 [30 Hz 采集说明](dataset_30hz.md)。本文以下 v9 批次、10 Hz 命令和边框初版预检均为历史记录。
 
@@ -14,7 +14,7 @@
 # 历史单场景演示入口：10 Hz RGB-D，非 LeRobot 批量采集
 bash scripts/run.sh --headless --gpu 4 --video --output outputs/edge_feedback
 
-# 保留的 10 Hz 边框采集示例；当前 30 Hz 入口见 docs/dataset_30hz.md
+# 保留的 10 Hz 边框采集示例；当前 30 Hz 入口见 docs/piper/dataset_30hz.md
 .conda/envs/pressb/bin/python scripts/collect_parallel.py \
   --snapshot outputs/edge_feedback/scene.usda \
   --output datasets/piper_elevator_raw_edge \

@@ -32,7 +32,7 @@
 
 ## 4. 运行
 
-前置：策略服务已在 GPU 1 上启动（见 [闭环评估](astribot_closedloop_20261018.md)）：
+前置：策略服务已在 GPU 1 上启动（见 [闭环评估](../astribot_eval/astribot_closedloop_20261018.md)）：
 
 ```bash
 bash scripts/start_astribot_policy_server.sh

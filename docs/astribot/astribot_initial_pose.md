@@ -62,14 +62,14 @@ sha256: 49be39c500e763d6d0194d4449751967bff16df5a2c044f1f53f7e9b7adffcb7
 
 静态预览输出目录：`outputs/astribot_initial_pose_research/`。预览直接设置命名关节状态，用 Isaac Sim 渲染外形；没有执行从零位抬臂的运动，也没有进行按压或碰撞安全验证。
 
-- [双臂抬起预览](../outputs/astribot_initial_pose_research/activearena_arm_home_oblique.png)、[正面预览](../outputs/astribot_initial_pose_research/activearena_arm_home_front.png)
-- [原零位对照](../outputs/astribot_initial_pose_research/zero_oblique.png)
-- [按关节名保存的候选角度与来源](../outputs/astribot_initial_pose_research/candidate_pose.json)
-- [设置值与实际关节读回值](../outputs/astribot_initial_pose_research/report.json)
+- [双臂抬起预览](../../outputs/astribot_initial_pose_research/activearena_arm_home_oblique.png)、[正面预览](../../outputs/astribot_initial_pose_research/activearena_arm_home_front.png)
+- [原零位对照](../../outputs/astribot_initial_pose_research/zero_oblique.png)
+- [按关节名保存的候选角度与来源](../../outputs/astribot_initial_pose_research/candidate_pose.json)
+- [设置值与实际关节读回值](../../outputs/astribot_initial_pose_research/report.json)
 
 预览已完成，14 个候选角度通过当前 URDF 限位核对，两种姿态的实际关节读回与设置值一致。此处“通过”仅指角度映射与静态显示核对。
 
-当前 [随机站位结果](plan/vib820_random_base_validation/results.md) 的 5 次失败都发生在从零位移向右臂工作位姿阶段。使用双臂预备姿态作为回合起点值得单独验证，但不能据此断言已经解决这 5 次碰撞。
+当前 [随机站位结果](../plan/vib820_random_base_validation/results.md) 的 5 次失败都发生在从零位移向右臂工作位姿阶段。使用双臂预备姿态作为回合起点值得单独验证，但不能据此断言已经解决这 5 次碰撞。
 
 接入需要统一处理的事项（下节记录单次演示的实施结果）：
 

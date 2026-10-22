@@ -20,7 +20,7 @@ Enforced by code, not by convention:
   real-time robot claim.
 
 Ready for a first run, but it has only been unit-tested on CPU here: the GPU /
-Isaac steps must be executed on the workstation.  See docs/astribot_online_rl.md.
+Isaac steps must be executed on the workstation.  See docs/astribot_rl/astribot_online_rl.md.
 """
 from __future__ import annotations
 

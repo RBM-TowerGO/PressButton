@@ -1,6 +1,6 @@
 # 边缘灯带场景：30 Hz LeRobot 数据集
 
-> 文中的数据集、权重、图像和运行报告属于本地产物，不随 Git 仓库分发；新机器请先按 [README](../README.md) 生成场景。历史结果不代表本次安装已经完成验证。
+> 文中的数据集、权重、图像和运行报告属于本地产物，不随 Git 仓库分发；新机器请先按 [README](../../README.md) 生成场景。历史结果不代表本次安装已经完成验证。
 
 **训练入口为 `datasets/piper_elevator_lerobot_press_30hz`：每条从折叠初始姿态开始，保留至目标按键首次亮起橙色边框的帧。** 后续撤回、释放和归位只保留在原始诊断记录中。1,200 条已完成转换和最终验收，保留 306,230 组同步采样、612,460 帧 RGB；官方 LeRobot 首/中/末样本、批量读取和末端 action padding 全部通过。读取和重建方法见[首次亮灯数据说明](dataset_press_only.md)，证据见质量汇总（本地产物：`outputs/press_only_30hz/quality_summary.json`）。
 

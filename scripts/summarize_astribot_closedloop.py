@@ -80,7 +80,7 @@ lines=[
  f'- 非预期接触场景数：{stats["unexpected_contact_trials"]}。',
  '- 初期发现的 PhysX/Fabric 姿态同步问题已修正。旧 smoke 与 primary_chunk7 结果已作废，不计入这 40 个结果。',
  '',
- f'完整结果、协议和校验记录位于 `{run}`。每个 candidate 目录含四路视频、逐物理时刻轨迹、每次模型请求及相机标定。运行说明见 `{ROOT}/docs/astribot_closedloop_20261018.md`。',
+ f'完整结果、协议和校验记录位于 `{run}`。每个 candidate 目录含四路视频、逐物理时刻轨迹、每次模型请求及相机标定。运行说明见 `{ROOT}/docs/astribot_eval/astribot_closedloop_20261018.md`。',
  '',
  '模型权重及归一化统计在整个测试过程中均未修改。后续改进应优先针对观察到的停滞和接触阶段偏差，再使用独立测试验证，不能将离线动作误差直接当作任务成功率。',
  '',
