@@ -1,8 +1,8 @@
-# Astribot latent 工程实施与验收记录
+# Astribot latent 初始接入版本验收（历史记录）
 
-日期：2026-10-22（北京时间）。本次范围由用户限定为工程接入、CPU 契约验证和真实 GPU 冒烟。
+日期：2026-10-22（北京时间）。**本文仅记录修复前初始接入版本，原实测数值和失败证据保留。** 当时范围为工程接入、CPU契约和GPU短冒烟。其后critic已修复，新协议GPU冒烟通过并进入10k；当前仅授权单种子A/B各一次100k＋val-40，见 [本轮记录](training_campaign.md) 和 [当前验收要求](validation.md)。
 
-**结论：工程数据链路验收通过；学习稳定性未通过，发现 latent critic 饱和。** 本次没有运行 10k 稳定性试验、三种子 100k 正式训练或完整 val-40，也没有算法收益结论。
+**结论：工程数据链路验收通过；学习稳定性未通过，发现 latent critic 饱和。** 该历史版本没有运行10k稳定性试验、正式训练或完整val-40，也没有算法收益结论。
 
 ## 实现
 
@@ -48,7 +48,7 @@ CPU：`101 passed`，完整输出见 [cpu_tests.log](../../../outputs/astribot_o
 
 两模式均完成 actor 和 critic 更新调用、真实 replay 保存恢复，以及确定性 learner 加载评估。每模式 val 仅完成 1 个场景，均为 2 秒 timeout；这只验证工程链路，不是完整 val-40 或成功率结论。每个回合 60 个控制步、241 个物理 tick；latent 比 state-only 多 1 次只采集后继的请求，没有增加控制步。
 
-现有 runner 在回合末检查预算，故本次实际提交 9 条、容量 8 的 replay 留存 8 条，未将留存条数冒充实际交互数。这次小容量烟测不用于证明正式预算控制或长期内存性能。100k 的新增 latent 理论存储仍为约 1.53 GiB；本次未实际分配或序列化 100k replay。
+当时版本的runner在回合末检查预算，故本次实际提交 9 条、容量 8 的 replay 留存 8 条，未将留存条数冒充实际交互数。这次小容量烟测不用于证明正式预算控制或长期内存性能。100k 的新增 latent 理论存储仍为约 1.53 GiB；本次未实际分配或序列化 100k replay。
 
 两模式资源、保存/恢复耗时和实际文件大小见 [engineering_summary.json](../../../outputs/astribot_online_rl/latent_engineering_20261022/engineering_summary.json)；原始资源采样、所有命令、协议、逐回合记录及 checkpoint 见 [final/](../../../outputs/astribot_online_rl/latent_engineering_20261022/final/)。采样显存为整卡占用，包含原有其他进程；不是本任务独占显存或精确瞬时峰值。
 
@@ -60,11 +60,11 @@ CPU：`101 passed`，完整输出见 [cpu_tests.log](../../../outputs/astribot_o
 
 首次预验证曾因回合目录提前创建而失败，日志及 `state_only/infrastructure_error.json` 原样保留；修复后在独立 `verified/` 路径通过首轮验证。随后补充 replay 语义元数据及中途错误物理状态区分，最终源码在独立 `final/` 路径重跑通过。`source_manifest.json` 和最终协议记录当前代码身份，旧产物没有覆盖。
 
-未执行：A/B 10k、正式三种子 100k、完整 val-40、test-40、真实机器人、未来优化。正式实验的学习稳定性与算法有效性保持未通过/未评估状态。
+该历史版本未执行：A/B 10k、正式训练、完整val-40、test-40、真实机器人及未来优化。其学习稳定性未通过。后续修复版本的状态以本轮记录为准，不能把历史失败覆盖或当作当前配置结果。
 
-## 复现入口
+## 原始验收入口与复现边界
 
-先启动推理服务，再用项目仿真 Python 执行串行验收；输出目录必须不存在：
+以下是原始入口形式。当前脚本已使用修复配置和精确预算，重新运行不会复现本文旧版的9条提交/8条留存或旧初始化；复现旧结果须使用对应归档源码/协议。新验收使用当前脚本与新目录，当前训练期间不要另启同卡实验。
 
 ```bash
 .venv-astribot-inference/bin/python scripts/astribot_policy_server.py \

@@ -1,6 +1,6 @@
 """Run the authorized, gated Astribot campaign on one local GPU.
 
-Smoke -> both fresh 10k trials -> six fresh 100k runs and paired val-40.
+Smoke -> both fresh 10k trials -> one A/B seed and paired val-40.
 A failed gate stops the campaign and preserves all evidence. No auto-resume,
 reward changes, or silent protocol adjustments are performed.
 """
@@ -24,7 +24,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 MODES = ("state_only", "state_latent")
-SEEDS = (20261024, 20261025, 20261026)
+SEEDS = (20261024,)
 CAMERAS = ["head", "overview", "wrist_left", "wrist_right", "panel", "front", "lobby"]
 SOURCES = ["scripts/run_astribot_online_rl.py", "scripts/astribot_policy_server.py",
            "scripts/validate_astribot_latent_engineering.py", "scripts/run_astribot_latent_campaign.py",
@@ -98,9 +98,9 @@ def episode_summary(run):
                 max_residual_saturation_fraction=max((r["residual_saturation_fraction"] for r in reports), default=0.))
 
 
-def paired_results(output):
+def paired_results(output, seeds=SEEDS):
     pairs = []
-    for seed in SEEDS:
+    for seed in seeds:
         groups = {mode: read_json(output / "formal" / f"{mode}_seed{seed}" / "eval/summary.json") for mode in MODES}
         a, b = ({r["candidate_id"]: r["status"] == "success" for r in groups[mode]["episodes"]} for mode in MODES)
         if len(a) != 40 or a.keys() != b.keys():
@@ -116,20 +116,74 @@ def paired_results(output):
                           exact_mcnemar_p=p, success_wall_seconds=success_times,
                           per_scene={str(k): dict(A=a[k], B=b[k]) for k in sorted(a)}))
     differences = [r["rate_difference"] for r in pairs]
-    result = dict(seeds=pairs, mean_rate_difference=sum(differences)/3,
+    result = dict(seeds=pairs, mean_rate_difference=sum(differences)/len(differences),
                   rate_difference_range=[min(differences), max(differences)],
-                  uncertainty="Three training seeds; repeated scenes are not 120 independent scenes. No pooled independence test.",
+                  uncertainty=f"{len(seeds)} training seed(s); engineering A/B comparison, no claim of robustness across seeds.",
                   algorithm_conclusion="Review all seeds, contacts and paired uncertainty; no automated efficacy claim.")
     write_json(output / "paired_results.json", result)
     return result
 
 
+class ExistingProcess:
+    """Adopt our existing worker without resetting its simulation or replay.
+
+    Its exit code is unavailable; completion is checked through error markers,
+    exact budgets, metrics and checkpoint gates before any following stage.
+    """
+    def __init__(self, pid):
+        self.pid = int(pid)
+        self.returncode = None
+
+    def poll(self):
+        try:
+            state = Path(f"/proc/{self.pid}/stat").read_text().split(") ", 1)[1].split()[0]
+            if state != "Z":
+                return None
+        except OSError:
+            pass
+        self.returncode = 0
+        return 0
+
+    def wait(self, timeout):
+        deadline = time.monotonic() + timeout
+        while self.poll() is None:
+            if time.monotonic() >= deadline:
+                raise subprocess.TimeoutExpired(str(self.pid), timeout)
+            time.sleep(min(1, max(0, deadline-time.monotonic())))
+        return self.returncode
+
+    def terminate(self):
+        os.kill(self.pid, signal.SIGTERM)
+
+    def kill(self):
+        os.kill(self.pid, signal.SIGKILL)
+
+
 class Campaign:
-    def __init__(self, output, port):
+    def __init__(self, output, port, adopt=False):
         self.output = output
         self.port = port
         self.endpoint = f"http://127.0.0.1:{port}"
         self.server = self.child = None
+        self.adopted = read_json(output / "progress.json") if adopt else None
+        if adopt:
+            if not self.adopted or self.adopted["state"] not in ("trial_state_only_train", "trial_state_latent_train"):
+                raise ValueError("Adoption requires an actively collecting 10k trial")
+            for name, checksum in self.adopted["source_sha256"].items():
+                if name != "scripts/run_astribot_latent_campaign.py" and sha(ROOT / name) != checksum:
+                    raise ValueError(f"Training source changed; cannot adopt: {name}")
+            worker_cmd = Path(f"/proc/{self.adopted['worker_pid']}/cmdline").read_bytes()
+            server_cmd = Path(f"/proc/{self.adopted['policy_pid']}/cmdline").read_bytes()
+            if (b"run_astribot_online_rl.py" not in worker_cmd
+                    or self.adopted["active_run"].encode() not in worker_cmd
+                    or b"astribot_policy_server.py" not in server_cmd
+                    or str(port).encode() not in server_cmd):
+                raise ValueError("Worker/server identity differs from recorded campaign")
+            revision = output / "revisions" / datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y%m%dT%H%M%S")
+            revision.mkdir(parents=True)
+            for name in ("protocol.json", "progress.json"):
+                (revision / name).write_bytes((output / name).read_bytes())
+            self.revision = revision
         self.source = {name: sha(ROOT / name) for name in SOURCES}
         self.env = os.environ.copy()
         for key in ("PYTHONHOME", "PYTHONPATH"):
@@ -145,8 +199,16 @@ class Campaign:
                             reward_and_q_output="unchanged", bootstrap_truncated=False),
                         gate=dict(sustained_stall_batches=3, nonzero_loss_threshold=1e-6,
                                   failures="stop and preserve; never auto-start later stage after failure"))
+        if self.adopted:
+            self.job["started_unix_s"] = self.adopted["started_unix_s"]
+            self.job["completed"] = self.adopted["completed"]
+            self.job["revision_reason"] = "User requested engineering scope: one A/B seed, preserve current 10k data"
+            self.job["replaced_supervisor_pid"] = self.adopted["supervisor_pid"]
+            self.job["policy_pid"] = self.adopted["policy_pid"]
+            self.job["worker_pid"] = self.adopted["worker_pid"]
+            self.job["adopted_worker_pid"] = self.adopted["worker_pid"]
         write_json(output / "protocol.json", self.job)
-        snapshot = output / "source"
+        snapshot = self.revision / "source" if self.adopted else output / "source"
         snapshot.mkdir()
         for name in SOURCES:
             target = snapshot / name
@@ -187,15 +249,18 @@ class Campaign:
                 "--init-alpha", ".005", "--no-auto-alpha", "--action-penalty", "1", "--shaping", "1",
                 "--scale", *([".01"] * 7), ".025", "--seed", str(seed)]
 
-    def worker(self, command, label, run=None):
+    def worker(self, command, label, run=None, adopt_existing=False):
         self.check_source()
         self.job.update(state=label, active_run=str(run) if run else None, active_status=None)
         self.publish(run)
         write_json(self.output / (label.replace("/", "_") + "_command.json"), command)
         log_path = self.output / (label.replace("/", "_") + ".log")
         started = time.perf_counter()
-        with log_path.open("w") as log:
-            self.child = subprocess.Popen(command, cwd=ROOT, env=self.env, stdout=log, stderr=subprocess.STDOUT)
+        with log_path.open("a" if adopt_existing else "w") as log:
+            if adopt_existing:
+                self.child = ExistingProcess(self.adopted["worker_pid"])
+            else:
+                self.child = subprocess.Popen(command, cwd=ROOT, env=self.env, stdout=log, stderr=subprocess.STDOUT)
             self.job["worker_pid"] = self.child.pid
             while self.child.poll() is None:
                 if self.server and self.server.poll() is not None:
@@ -212,7 +277,8 @@ class Campaign:
             for marker in ("infrastructure_error.json", "learning_error.json"):
                 if (run / marker).exists():
                     raise RuntimeError(f"{label} failed: {run / marker}")
-        self.job["completed"].append(dict(phase=label, wall_seconds=time.perf_counter()-started))
+        self.job["completed"].append(dict(phase=label, wall_seconds=time.perf_counter()-started,
+                                          adopted_existing_worker=adopt_existing, exit_code_known=not adopt_existing))
         self.child = None
         self.publish(run)
 
@@ -258,10 +324,14 @@ class Campaign:
         raise TimeoutError("Policy server startup timed out")
 
     def run(self):
-        self.start_server()
+        if self.adopted:
+            self.server = ExistingProcess(self.adopted["policy_pid"])
+        else:
+            self.start_server()
         smoke = self.output / "smoke"
-        self.worker([sys.executable, str(ROOT / "scripts/validate_astribot_latent_engineering.py"),
-                     "--output", str(smoke), "--endpoint", self.endpoint], "smoke")
+        if not self.adopted:
+            self.worker([sys.executable, str(ROOT / "scripts/validate_astribot_latent_engineering.py"),
+                         "--output", str(smoke), "--endpoint", self.endpoint], "smoke")
         smoke_result = read_json(smoke / "smoke_results.json")
         if not smoke_result or not smoke_result.get("smoke_learning_gate_passed"):
             raise RuntimeError("Repaired online smoke gate failed")
@@ -270,7 +340,8 @@ class Campaign:
         for mode in MODES:
             run = self.output / "trials" / f"{mode}_seed{SEEDS[0]}"
             command = self.command(mode, SEEDS[0], 10000, run)
-            self.worker(command + ["--render-cameras", "head", "wrist_right"], f"trial_{mode}_train", run)
+            self.worker(command + ["--render-cameras", "head", "wrist_right"], f"trial_{mode}_train", run,
+                        adopt_existing=bool(self.adopted and self.adopted["state"] == f"trial_{mode}_train"))
             self.gate(run, 10000)
             # Exercise the actual training restore path including replay and
             # optimizer, with no new interaction after the exact budget.
@@ -315,10 +386,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--port", type=int, default=8798)
+    parser.add_argument("--adopt-running", action="store_true", help="Preserve the live 10k worker during a supervisor-only scope revision")
     args = parser.parse_args()
     output = args.output.resolve()
-    output.mkdir(parents=True, exist_ok=False)
-    campaign = Campaign(output, args.port)
+    output.mkdir(parents=True, exist_ok=args.adopt_running)
+    campaign = Campaign(output, args.port, adopt=args.adopt_running)
     def interrupted(signum, frame):
         raise KeyboardInterrupt(f"Supervisor received signal {signum}")
     signal.signal(signal.SIGTERM, interrupted)

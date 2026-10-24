@@ -2,43 +2,49 @@
 
 ## 最新诊断结果（2026-10-24 更新）
 
+后续方案见 [latent 残差快速效果迭代计划](../astribot_latent_fast_iteration/README.md)：按基线诊断、均值正则、共享残差、偏移辅助学习依次筛选，以确定性成功率改善为首要目标。当前仅完成计划文档，新增实验均待执行。
+
 [latent 偏移实验报告](../../results/astribot_latent_offset_probe_20261023.md)与[复现说明](offset_probe.md)已完成：100 个受控场景、7,500 条观测，以及 40 个原始 VLA 仿真闭环场景；本轮没有重新训练 A/B 策略。
 
 受控测试中加入 latent 后，水平 MAE 从 2.894 降至 0.829 mm；垂直 MAE 从 0.448 增至 0.628 mm。闭环接触前仅使用 latent 的探针达到水平 1.234、垂直 0.914 mm，但融合探针因状态分布偏移而失稳，尚不能确认闭环中相对 A 输入的增量收益，更不能据此宣称策略已学会纠错。相关测试 36 项通过；独立重置的轨迹等价性仍未通过。
 
 以下训练状态是此前阶段记录，不代表本次诊断运行状态；A/B 作业的具体进度以对应运行记录和产物为准。
 
-状态：**critic 修复后分阶段训练已启动；当前进度以运行记录为准**。创建/更新日期：2026-10-22。
+状态：**B正式100k运行中；已授权按B训练→B val-40→A训练→A val-40串行完成。** 创建/更新日期：2026-10-22。
 
-用户已授权冒烟 → A/B各10k → 通过后三种子100k及val-40，详见 [本轮协议与实时产物](training_campaign.md)。以下早期验收记录保留为历史证据，不代表当前训练已完成。
+本轮按工程项目执行，仅使用种子 **20261024**：A/B 各 10k 稳定性检查，通过后各从头训练一次 100k，再各评估 val-40。合计两次正式训练、200000 条正式训练经验和 80 个评估回合；不要求多种子复现或统计显著性。实际阶段和进度见 [本轮运行记录](training_campaign.md)，已完成的 [A/B 10k对比](trial_10k_comparison.md) 可直接查阅。
 
-本目录包含原始设计与本次工程实现证据。用户将本次范围限定为代码接入、CPU 契约测试和真实 GPU 冒烟；已完成 101 项 CPU 测试、真实接口比对及两模式短冒烟。latent critic 出现饱和，未开展 10k 或正式训练，不声明性能提升。详见 [实施与验收记录](implementation_report.md)。
+## 目标与边界
 
-## 目标
+在 Astribot S1 / VIB-820 上，让残差 SAC 利用冻结 VLA-JEPA 的视觉语言 latent、实测关节状态和基座动作，学习适合当前场景的小幅动作修正。基座固定为 step 8000，只更新残差 actor 和 critic。
 
-在当前 Astribot S1 / VIB-820 主线上，让残差 SAC 同时读取冻结 VLA-JEPA 的视觉语言 latent、实测关节状态和基座动作，学习“根据当前场景如何修正”。基座固定为 step 8000，RL 只更新残差 actor 和 critic。
-
-第一阶段自身是完整可训练、可评估的方案。**只接入 latent，保留当前训练设置**；奖励塑形、Q 值范围和终止语义问题单列诊断，不在本阶段顺便修正。后续优化全部列为未来待定，不自动启动。
+A 为 `state_only`，B 为 `state_latent`。两组统一显式使用 `--critic-init fan_in --q-lr 3e-5`，其余训练配置一致。修复了旧 critic 初始化与新增输入规模不匹配的问题；奖励、Q 有界输出和 bootstrap 语义保留。mapper、特权 critic、示范正则、TD3、低维残差和真机实验均不自动启动。
 
 ## 阅读顺序
 
 | 文档 | 内容 |
 |---|---|
-| [implementation_report.md](implementation_report.md) | 已实现内容、C01–C12 证据、GPU 结果、风险和复现入口 |
-| [plan.md](plan.md) | 背景、固定设计、实施任务及工程验收 |
-| [data_contract.md](data_contract.md) | 特征来源、RPC、观测布局、时序、replay 和恢复契约 |
-| [validation.md](validation.md) | 契约测试、GPU 冒烟、对照实验、风险诊断和结果模板 |
-| [future_work.md](future_work.md) | 后续方向、启动条件与范围边界 |
+| [plan.md](plan.md) | 当前工程目标、固定设计、实施任务及阶段门槛 |
+| [validation.md](validation.md) | 单种子 A/B 参数、稳定性检查、工程比较指标和结果模板 |
+| [trial_10k_comparison.md](trial_10k_comparison.md) | 完整训练回合、学习稳定性、耗时、资源及结论边界 |
+| [training_campaign.md](training_campaign.md) | 本轮协议、进度快照、监督进程、日志和实时产物 |
+| [data_contract.md](data_contract.md) | 特征身份、观测布局、时序、精确预算、replay 与恢复契约 |
+| [critic_diagnosis.md](critic_diagnosis.md) | 旧版饱和诊断、已实施修复及后续验证边界 |
+| [implementation_report.md](implementation_report.md) | 初始接入版本的历史验收与饱和证据，不代表当前配置状态 |
+| [taskmemory.md](taskmemory.md) | 当前授权、约束及接续工作要点 |
+| [future_work.md](future_work.md) | 不属于当前交付范围的后续方向 |
 
-## 证据与参考
+## 验证状态与完成标准
 
-- [可行性评估](../../research/vlarl_feasibility_20261022.md)：论文与当前实现差距、最新结果和风险分析。
-- [现有 Astribot 在线 RL](../../astribot_rl/astribot_online_rl.md)：基础执行与训练流程；其中早期状态不代表本计划已完成。
-- [第三轮保守残差实验](../../astribot_rl/astribot_round3_local_20261020.md)：本阶段训练设置的参考。
-- [VLaRL 原文](https://arxiv.org/html/2609.30868v1)：方法来源。本阶段是借鉴 latent 条件化思路，不是完整 sim-to-real 复现。
+特征链路已有真实接口比对和 GPU 证据：tokens 为 `[1,32,2048]` float32，新旧动作逐元素一致，池化与重复请求通过。旧配置曾出现 critic 饱和；修复后的两组短 GPU 冒烟各完成 8 次更新，均无零 critic 梯度，保存恢复及七相机确定性评估通过。随后两组10k及恢复均通过，无零critic梯度或精确边界饱和。正式A保持停止；用户随后启动B组从头100k，并进一步授权B完成后先做val-40，再接续A正式训练和val-40；当前A尚未启动接续。尚无最终策略val-40，不能从训练成功率宣布latent收益。
 
-历史验证基座为 23/40，第三轮保守残差为 25/40，配对改善 3、退步 1，精确 McNemar p=0.625；这些结果不证明 latent 有效，也不替代本计划重新运行的无 latent 对照。PiPER 的历史结果不作为 Astribot 验收目标。
+工程验收关注可持续学习、数据与恢复正确、完整评估，以及成功率、耗时、异常接触是否满足本项目使用需要。报告实际结果，不预设任意成功率门槛，也不将单种子 A/B 解释为跨种子算法结论。任何失败门槛触发后都停止并保留证据。
 
-## 完成的含义
+## 历史参考
 
-工程完成与算法有效分开记录：接口和数据链路可以全部通过，而效果仍可能是“证据不足”或“出现退化”。原计划中的“初始状态”保留为历史基线；当前实测状态以实施与验收记录为准。10k、正式对照和完整 val-40 均未执行。不得用计划参数填充实测结果。
+- [可行性评估](../../research/vlarl_feasibility_20261022.md)：方法背景、实现差距与风险。
+- [现有 Astribot 在线 RL](../../astribot_rl/astribot_online_rl.md)：基础执行流程。
+- [第三轮保守残差实验](../../astribot_rl/astribot_round3_local_20261020.md)：历史配置及结果。
+- [VLaRL 原文](https://arxiv.org/html/2609.30868v1)：方法来源；本阶段不是完整 sim-to-real 复现。
+
+历史基座 23/40、第三轮残差 25/40 只作背景，不替代本轮 A/B。所有历史证据保留，计划预算、运行状态和实测结果分别记录。

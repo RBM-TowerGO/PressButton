@@ -1,15 +1,15 @@
 # 第一阶段实施计划
 
-状态：**已实现工程接入并完成短 GPU 验证；学习稳定性未通过**。创建/更新日期：2026-10-22。原始第一阶段设计如下；本次用户限定完成到工程与 GPU 冒烟，实测证据及 critic 饱和问题见 [实施记录](implementation_report.md)。10k 和正式对照未执行。
+状态：**两组10k及恢复均通过；B正式100k运行中，按B→B val-40→A→A val-40完成。** 创建/更新日期：2026-10-22。本轮为工程项目，正式仅用种子20261024做 A/B 各一次100k及val-40。运行快照见 [本轮记录](training_campaign.md)，旧版接入和饱和证据见 [历史实施记录](implementation_report.md)。
 
 ## 1. 背景、目标与边界
 
-当前 Astribot 残差 actor 使用 64 维关节位置/速度，并由 learner 拼接 56 维基座动作 chunk，没有直接读取视觉语言特征。假设是：基座动作相似的场景可能需要不同修正，增加视觉条件可以帮助残差区分这些情形。该假设需要对照实验验证，不能视为已证明的性能瓶颈。
+原 Astribot 残差 actor 使用64维关节位置/速度并拼接56维基座动作。本次已实现可选的2048维视觉语言latent输入。假设是：基座动作相似的场景可能需要不同修正，增加视觉条件可以帮助残差区分这些情形。该假设需要对照实验验证，不能视为已证明的性能瓶颈。
 
-模型底层 `VLA_JEPA.predict_action()` 已返回 `embodied_action_tokens`，也是动作头使用的条件；Astribot 推理包装层目前只提取动作。第一阶段复用同一次推理的 tokens，不增加第二次视觉前向。
+模型底层 `VLA_JEPA.predict_action()` 已返回 `embodied_action_tokens`，也是动作头使用的条件；历史推理包装只提取动作；本次在外部适配层保留并池化tokens。第一阶段复用同一次推理的 tokens，不增加第二次视觉前向。
 
 - **工程成功：** 特征正确进入 actor、critic、replay、续训和评估，接口与时序验证通过。
-- **算法有效：** 同协议、多训练种子的对照支持可靠收益；接入成功不等于成功率提高。
+- **工程效果比较：** 单种子、相同配置的 A/B 各完成100k和val-40，比较成功率、成功耗时及异常接触。接入成功不等于效果提升；不要求多种子复现或统计显著性。
 - **范围：** Astribot S1 / VIB-820，冻结 VLA-JEPA step 8000，现有残差 SAC。
 - **不纳入：** mapper、投影网络、特权 critic、示范正则、TD3、低维动作、反馈频率改变、真机实验。奖励/Q/终止问题只记录诊断。
 
@@ -26,7 +26,8 @@
 | actor 输入 | observation 拼接 7×8 基座 chunk，latent 模式共 2168 维 |
 | critic | 同样读取扩展 observation，继续评价合成动作，不增加特权信息 |
 | 残差输出 | 7×8 归一化关节残差，保持原动作合成、限位与展开 |
-| 网络与算法 | SAC 隐藏层、更新逻辑不变，仅输入宽度随模式变化 |
+| 网络与算法 | SAC结构与优化目标不变，输入宽度随模式变化；两组critic统一fan_in初始化、LR=3e-5 |
+| 工程预算 | 单种子20261024；A/B各10k检查，通过后各从头100k＋val-40 |
 | 基座 | 参数全部冻结，沿用原图像处理、动作反归一化与随机种子契约 |
 | 时序 | GPU 物理、120 Hz 物理/30 Hz 目标、最多 7 步 chunk、推理暂停物理 |
 | 额外模块 | 无 mapper、无投影、无新视觉编码器 |
@@ -75,7 +76,7 @@ latent actor、critic、优化器与 replay 从头初始化，不能继承旧残
 
 无 latent 与 latent 模式使用同一 runner、相同训练和评估协议。观测模式写入协议、checkpoint 和报告。接口、时序与恢复验收全部通过后，再进入 10k 学习稳定性试验；通过后从头开始正式对照。
 
-产出：完整验证证据、每组每种子的结果和失败诊断。计划参数、实际参数和实测结果分开保存。
+产出：完整验证证据、两组的结果和失败诊断。计划参数、实际参数和实测结果分开保存。
 
 ## 4. 已确认的改动入口
 
@@ -85,7 +86,7 @@ latent actor、critic、优化器与 replay 从头初始化，不能继承旧残
 |---|---|
 | 模型运行时 | `models/astribot_head_right_joint8_ft_20261018/runtime/starVLA/model/framework/VLA_JEPA.py` 返回 tokens；`starVLA/inference/astribot_policy.py` 丢弃 tokens；在外部适配而非覆盖快照 |
 | RPC | `scripts/astribot_policy_server.py` 返回 NumPy 字段；扩展特征和能力声明 |
-| 观测与 journal | `src/pressb/online_rl/astribot.py` 的 `observation` 与 `ChunkJournal.start` 当前固定 64 维 |
+| 观测与 journal | `src/pressb/online_rl/astribot.py` 的 `observation` 与 `ChunkJournal.start` 已按模式检查64/2112维 |
 | runner | `scripts/run_astribot_online_rl.py` 的推理、观测、末帧、初始化/恢复与模式记录 |
 | learner | `src/pressb/online_rl/learner.py` 已支持配置 obs_dim；保留基座动作拼接和合成动作 critic 逻辑 |
 
@@ -96,12 +97,21 @@ latent actor、critic、优化器与 replay 从头初始化，不能继承旧残
 3. 完成观测/journal/replay/恢复链路与 CPU 契约检查。
 4. 完成真实相机、GPU 推理、物理执行、更新和恢复冒烟。
 5. A/B 各执行 10k 学习稳定性试验。
-6. A/B 各从头运行三种子 100k 正式对照并完成 val-40。
+6. 两组10k都通过后，仅使用种子20261024，A/B各从头训练一次100k并各完成val-40，共两次正式训练、80个评估回合。
 
-详细配置、测试和报告模板以 [validation.md](validation.md) 为准。工程验收全部通过才可声明接入完成；算法结论独立给出。test-40 不参与本阶段默认验收。
+详细配置、测试和报告模板以 [validation.md](validation.md) 为准。工程数据链路已通过；稳定性与最终工程效果分别记录，阶段启动不记为完成。test-40 不参与本阶段默认验收。
 
 ## 6. 风险与版本边界
 
-Q 的 `(0,1)` 限制、塑形回报范围、终止势函数和几何距离代理均保留现状，仅增加诊断。若诊断说明需要修正，建立新协议并重新运行 A/B，不能将修改混入当前对照。旧实验与新实验分目录保存，不覆盖历史证据。
+旧critic初始化导致的饱和已通过fan_in初始化与critic LR=3e-5形成新协议；A/B统一采用该配置。Q有界输出、奖励、终止势函数及几何距离代理均保留，持续记录诊断。若诊断说明需要修正，建立新协议并重新运行 A/B，不能将修改混入当前对照。旧实验与新实验分目录保存，不覆盖历史证据。
 
 本阶段工程规模不包含后续优化。所有未来方向见 [future_work.md](future_work.md)，它们不是完成本阶段的前提。
+
+## 7. 当前工程执行约定
+
+- 先通过修复后A/B短GPU冒烟，再各收集精确10000条transition（warmup=5000、batch=256），检查正常更新及训练恢复。
+- 正式A/B各精确100000条；10k与正式训练分别初始化actor、critic、target、优化器和replay，不能将10k权重续训为100k。
+- 训练按回合采集，再从replay抽batch更新；每条transition对应一个最多7步的动作chunk。warmup期间采集但不更新网络，达到门槛后补齐计划更新次数。
+- 预算边界使用下一真实请求补齐最后一条后继，不再执行额外chunk，不将预算停止记成物理timeout。实际提交数与留存数都必须等于预算。
+- 严重学习异常、基础设施失败或源码身份不一致时停止后续阶段并保存证据。连续3个batch的零梯度/精确饱和检测规则见validation.md。
+- 监督进程只按门槛自动推进已授权的单种子流程。单卡串行正式训练及评估暂估20–30小时，按实测更新；不是完成时间承诺。

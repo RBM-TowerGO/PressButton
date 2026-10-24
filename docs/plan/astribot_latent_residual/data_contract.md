@@ -1,6 +1,6 @@
 # latent 残差数据与接口契约
 
-状态：**本次工程实现已接入，真实模型与数据链路验证见 [实施记录](implementation_report.md)**。创建/更新日期：2026-10-22。以下为当前观测契约；学习稳定性仍有 critic 饱和问题，正式实验未执行。
+状态：**特征链路已接入并验证；修复后GPU短冒烟通过，10k检查运行中。** 创建/更新日期：2026-10-22。特征契约仍为版本1；本轮训练使用单种子工程协议，详见 [本轮记录](training_campaign.md)。历史critic饱和及修复见 [诊断记录](critic_diagnosis.md)。
 
 ## 1. 特征身份与模式
 
@@ -77,6 +77,12 @@ critic 读取相同模式的 observation 和合成动作，不增加按钮真值
 
 若状态无效、图像捕获或末帧请求失败，保存已观察到的物理结果及基础设施错误，当前不完整 transition 不入 replay，已合法提交的数据保留。不能把特征采集失败伪装成物理 timeout，也不能重复提交末条。
 
+### 4.3 训练预算边界
+
+每执行一个chunk形成一条transition，最多7个控制步；回合40秒最多1200个控制步，约172条。10k/100k是跨回合累计transition数，不是回合数、控制步数或更新次数。
+
+训练在最后一条pending通过下一真实请求补齐并提交后检查预算；达到容量就停止执行新chunk。最后一条若并未物理终止，保留正常后继及原terminated/truncated标志；回合报告标为`budget_exhausted`，不伪装成物理timeout。A/B采用相同的精确预算规则，实际提交数与replay留存数必须一致。
+
 ## 5. Replay 与资源
 
 沿用当前/下一 observation、归一化残差 action、reward、实际步数 discount、terminated/truncated、当前/下一 base action 字段。缓存经固定 LayerNorm 处理的 latent，包含在 obs/next_obs 中；不存完整 token 序列，不存随训练变化的投影。
@@ -87,8 +93,12 @@ critic 读取相同模式的 observation 和合成动作，不增加按钮真值
 
 ## 6. Checkpoint、恢复与兼容
 
-协议/checkpoint 至少保存：观测模式和维数、特征类型和版本、token/池化维度、float32 与 LayerNorm 参数、基座 checkpoint hash、适配代码版本、动作尺度、划分身份、训练配置和原有恢复状态。
+协议/checkpoint 至少保存：观测模式和维数、特征类型和版本、token/池化维度、float32 与 LayerNorm 参数、基座 checkpoint hash、适配代码版本、动作尺度、划分身份、训练配置（包括critic初始化策略、critic LR）和原有恢复状态。replay元数据同时保存观测与训练身份，不能只凭相同维数恢复。
 
 恢复验证语义和维数均一致。旧 state-only 权重只能在对应模式恢复；不得零填充/截断权重或 replay 来转换模式。新的 latent actor、critic、优化器和 replay 从头开始。正式实验与 10k 试验分别初始化、分别保存。
 
 评估加载与训练相同的观测契约，使用确定性残差，不更新网络或 replay。仅 actor 评估时不需要加载训练 replay，但不得跳过模式/特征身份检查。
+
+本轮A/B显式使用`critic_init=fan_in`、`q_lr=3e-5`，种子均为20261024；旧配置与新配置不是同一训练协议。原已饱和checkpoint只作为历史诊断证据。`state_only`旧checkpoint仍按对应legacy配置加载，不能冒充新协议。
+
+只调整正式种子数量的监督编排不改变正在运行的learner/replay契约；本次交接保留了原A组采样进程和数据，旧监督协议另行归档。10k结束后的正式A/B仍须从头初始化。

@@ -25,16 +25,21 @@ def test_gate_rejects_stuck_critic_and_nonfinite_metrics(tmp_path):
 
 
 def test_pairing_counts_scenes_and_reports_each_seed(tmp_path):
-    for seed in campaign.SEEDS:
+    seeds = (20261024, 20261025, 20261026)
+    for seed in seeds:
         for mode in campaign.MODES:
             path = tmp_path / "formal" / f"{mode}_seed{seed}" / "eval"
             path.mkdir(parents=True)
             successes = set(range(20)) if mode == "state_only" else set(range(1, 23))
             rows = [dict(candidate_id=i, status="success" if i in successes else "timeout", wall_seconds=1.) for i in range(40)]
             (path / "summary.json").write_text(json.dumps(dict(episodes=rows)))
-    result = campaign.paired_results(tmp_path)
+    result = campaign.paired_results(tmp_path, seeds=seeds)
     assert len(result["seeds"]) == 3
     assert result["mean_rate_difference"] == pytest.approx(.05)
     for row in result["seeds"]:
         assert (row["improved"], row["regressed"]) == (3, 1)
         assert row["exact_mcnemar_p"] == .625
+
+
+def test_engineering_default_runs_only_one_seed():
+    assert campaign.SEEDS == (20261024,)
