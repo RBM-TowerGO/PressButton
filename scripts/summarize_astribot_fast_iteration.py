@@ -128,6 +128,8 @@ def main():
    ax.plot([r['updates'] for r in rows],[r['mean_head_gradient_norm'][term] for r in rows],label=term)
   ax.set(xlabel='New learner updates',ylabel='Mean-head gradient norm',yscale='symlog');ax.legend();fig.tight_layout();fig.savefig(out/f'{name}_gradients.png');plt.close(fig)
   points=[]
+  initial=read(root/name/'initial_actions.json')
+  if initial:points.append((0,initial))
   for cp in sorted((root/name/'checkpoints').glob('new_*')):
    stats=read(cp/'fixed_observation_actions.json')
    if stats:points.append((int(cp.name.split('_')[1]),stats))
