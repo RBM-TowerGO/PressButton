@@ -1,6 +1,7 @@
 """Local-only, lossless NumPy RPC for the frozen Astribot model."""
 import argparse
 import io
+import hashlib
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -18,11 +19,16 @@ def main():
     p.add_argument('--port', type=int, default=8794)
     a = p.parse_args()
     sys.path.insert(0, str(a.run / 'runtime'))
-    from starVLA.inference.astribot_policy import AstribotPolicy
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+    from pressb.online_rl.astribot_policy import AstribotLatentPolicy as AstribotPolicy
+    from pressb.online_rl.astribot_features import FEATURE
     import torch
     started = time.perf_counter()
     policy = AstribotPolicy(a.run / 'checkpoints/step_008000', a.device)
-    health = dict(ready=True, loaded_tensors=policy.loaded_tensors,
+    root = Path(__file__).resolve().parents[1]
+    adapter_sha256 = {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in (
+        "src/pressb/online_rl/astribot_features.py", "src/pressb/online_rl/astribot_policy.py")}
+    health = dict(ready=True, latent=FEATURE, adapter_sha256=adapter_sha256, loaded_tensors=policy.loaded_tensors,
                   model_sha256=policy.checked['manifest']['model_sha256'],
                   torch=torch.__version__, device=a.device,
                   gpu=torch.cuda.get_device_name(policy.device),
