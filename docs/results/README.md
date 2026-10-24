@@ -1,5 +1,13 @@
 # 发布的实验结果摘要
 
+## Astribot latent 偏移诊断（2026-10-23）
+
+[中文实验报告](astribot_latent_offset_probe_20261023.md)：7,500 条受控观测与 40 个仿真闭环场景。受控水平预测 MAE 从 2.894 降至 0.829 mm；闭环 latent-only 可解码偏移，但融合探针受分布偏移影响，闭环增量收益尚未可靠确认。未重新训练 A/B 策略。
+
+[复现命令与数据契约](../plan/astribot_latent_residual/offset_probe.md)随代码提交；原始数据、预测指标 JSON 和图保存在报告所列本地 `outputs/`，未纳入 Git。报告中的本地图需该产物目录才能显示。
+
+## 既有评估摘要
+
 这些文件从已完成的本地评估日志导出，不需要下载模型或运行 Isaac 即可查看。
 
 - [online_rl_20261009.json](online_rl_20261009.json)：8 个方法／配置的 120 次评估及逐按键成功率，包含 seed、gamma、scale、来源目录和原始 manifest／summary SHA-256。
