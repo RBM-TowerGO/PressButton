@@ -1,0 +1,4 @@
+rerun-sdk==0.39.0
+h5py==3.16.0
+numpy==2.2.6
+Pillow==12.3.0

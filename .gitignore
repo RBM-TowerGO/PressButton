@@ -1,6 +1,8 @@
 # Reproducible local dependencies and downloaded third-party assets.
 /.conda/
 /.venv-astribot-inference/
+/.venv-data-review/
+/data/
 /.cache/
 /vendor/
 /src/VLA-JEPA/

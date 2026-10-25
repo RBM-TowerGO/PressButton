@@ -14,6 +14,11 @@
 - [左右腕相机安装核对（2026-10-14）](astribot/astribot_wrist_camera_audit.md)
 - [VIB-820 单按钮外呼面板与 S1 按压](astribot/vib820.md)
 
+## Astribot 真机数据整理
+
+- [本地图形审核工具使用指南：启动、回放、删除、裁剪、排序与导出](astribot_data_review_gui.md)
+- [数据审核技术说明：安装、Rerun 与命令行](astribot/data_review.md)
+
 ## Astribot S1 闭环评估
 
 - [Astribot VLA 闭环评估（2026-10-18）](astribot_eval/astribot_closedloop_20261018.md)
