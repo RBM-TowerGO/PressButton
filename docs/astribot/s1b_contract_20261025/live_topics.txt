@@ -1,0 +1,17 @@
+header:
+  stamp:
+    sec: 1792933631
+    nanosec: 151269803
+  frame_id: ''
+mode: 0
+name: []
+position:
+- -0.16016846266957185
+velocity:
+- -0.36648857541115865
+acceleration:
+- -0.24297434812898092
+torque:
+- -0.3524680667453342
+---
+2644cdfba47f3dd311d923b172ac6c24909f6fda

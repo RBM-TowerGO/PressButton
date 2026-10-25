@@ -1,0 +1,90 @@
+{
+  "version": "s1b-real-joint10-record-time-v1",
+  "status": "specified_not_exported_or_training_validated",
+  "model_ready": false,
+  "dataset": "data/astribot_reviewed_v1",
+  "state_source": "joints_dict/joints_position_state",
+  "command_source": "joints_dict/joints_position_command",
+  "source_columns": [
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "names": [
+    "astribot_arm_right_joint_1",
+    "astribot_arm_right_joint_2",
+    "astribot_arm_right_joint_3",
+    "astribot_arm_right_joint_4",
+    "astribot_arm_right_joint_5",
+    "astribot_arm_right_joint_6",
+    "astribot_arm_right_joint_7",
+    "astribot_gripper_right/closure",
+    "astribot_head_joint_1",
+    "astribot_head_joint_2"
+  ],
+  "arm_head_units": "rad",
+  "state_gripper_units": "SDK closure scale, continuous, retain feedback excursions",
+  "action_gripper": {
+    "encoding": "binary",
+    "open": 0,
+    "closed": 1,
+    "raw_threshold": 50,
+    "closed_comparison": ">=",
+    "normalization": "identity; exclude from fitted mean/std",
+    "deployment_threshold_after_denormalization": 0.5,
+    "sdk_open": 0,
+    "sdk_closed": 100,
+    "invalid_raw_command": "reject nonfinite or outside [0,100]"
+  },
+  "time": {
+    "basis": "HDF5 head image MCAP log_time; record-time proxy, not exposure/execution time",
+    "fps": 30,
+    "grid": "time[0] + k/30 through time[-1], inclusive within numerical tolerance",
+    "observation_row": "latest source row with time <= grid time",
+    "source_row_max_age_seconds": 0.06666666666666667,
+    "gap_segmentation_seconds": 0.06666666666666667,
+    "action_row": "latest source row with time <= target grid time; use that row command, not measured state",
+    "horizon": 7,
+    "target_offsets_steps": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "tail": "exclude anchors without all 7 valid future targets; no endpoint repetition/padding",
+    "invalid_window": "exclude any window spanning a gap/invalid row; retain source indices and reason",
+    "command_timestamp_role": "QC only; not each component timestamp",
+    "timestamp_qc_abs_ms": {
+      "state": 10,
+      "command": 20,
+      "right_image": 40,
+      "head_image": 0.001
+    },
+    "qc_threshold_status": "chosen engineering gates, not verified sensor latency bounds",
+    "calculation": "relative time = time-time[0]; compare to k/30",
+    "single_step_storage": "action[k] = command selected for grid[k+1]; omit last grid row without next target",
+    "training_window": "action[k:k+7], no additional one-step shift; require all seven valid"
+  },
+  "images": [
+    "head",
+    "right"
+  ],
+  "state_normalization": "train split only; continuous all 10 dimensions; minimum std 1e-6 in native units",
+  "action_normalization": "train split mean/std for arm/head only; minimum std 1e-6 rad; constant head targets normalize to zero",
+  "source_preservation": true,
+  "limitations": [
+    "Original reviewed episodes lack matching raw per-component timestamp provenance.",
+    "HDF5 internal nearest matching can include messages after head record time.",
+    "Online delay and physical exposure/execution timing require separate validation."
+  ]
+}

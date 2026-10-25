@@ -16,8 +16,10 @@
 
 ## Astribot 真机数据整理
 
+- [S1B 真机数据微调计划 v1.2：10 维接口、待办与阶段验收](plan/astribot_s1b_real_finetune/README.md)
 - [本地图形审核工具使用指南：启动、回放、删除、裁剪、排序与导出](astribot_data_review_gui.md)
 - [数据审核技术说明：安装、Rerun 与命令行](astribot/data_review.md)
+- [真机头部数据检查：右臂＋夹爪＋头部 10 维映射（2026-10-25）](astribot/real_head_data_audit_20261025.md)
 
 ## Astribot S1 闭环评估
 

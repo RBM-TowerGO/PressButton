@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "episodes": 96,
+  "frames": 22754,
+  "anchors": {
+    "train": 18541,
+    "validation": 3637
+  },
+  "numeric_rows_checked": 22754,
+  "reader": "LeRobotDataset 0.6.1 / pyav",
+  "output": "/home/js/robot/VLA/PressButton/data/astribot_s1b_real_joint10_v1",
+  "format": "LeRobot v3.0",
+  "train_episodes": 80,
+  "validation_episodes": 16,
+  "image_checks": 576,
+  "max_image_mae": 1.6379730701446533,
+  "mean_image_mae": 1.377785548981693,
+  "tests_passed": 9,
+  "source_files_unchanged": true
+}
