@@ -114,7 +114,7 @@ def test_actual_commands_and_reset(monkeypatch,tmp_path,outcome):
     monkeypatch.setattr(runner,'validate_prediction',validate)
     args=SimpleNamespace(observation_mode=MODE,gamma=.995,shaping=0.,endpoint='fake',max_seconds=.3,
                          exploration_probability=1.,scale=[.01]*8,execute_horizon=7,status_every_requests=100)
-    learner=SimpleNamespace(act=lambda *a,**kw:np.full((1,56),.5,np.float32))
+    learner=SimpleNamespace(action_dim=56,act=lambda *a,**kw:np.full((1,56),.5,np.float32))
     replay=ReplayBuffer(20,2120,56,base_dim=8);counter=runner.EpisodeCounter(tmp_path)
     if outcome=='command_changed':
         with pytest.raises(RuntimeError,match='command changed'):

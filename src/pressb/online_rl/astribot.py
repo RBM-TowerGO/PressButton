@@ -273,7 +273,10 @@ class ChunkJournal:
     evaluation rollout cannot contaminate training data.
     """
 
-    def __init__(self, replay, *, train=True, gamma=DEFAULT_GAMMA, observation_mode="state_only"):
+    def __init__(self, replay, *, train=True, gamma=DEFAULT_GAMMA, observation_mode="state_only", action_dim=HORIZON * BASE_DIM):
+        if action_dim not in (21, 56) or (replay is not None and replay.action_dim != action_dim):
+            raise ValueError("Replay action dimension mismatch")
+        self.action_dim = action_dim
         self.obs_dim = observation_contract(observation_mode)["obs_dim"]
         if replay is not None and replay.obs_dim != self.obs_dim:
             raise ValueError("Replay observation mode mismatch")
@@ -298,8 +301,8 @@ class ChunkJournal:
                    base_action=np.asarray(base8, dtype=np.float32).copy())
         if row["obs"].shape != (self.obs_dim,) or not np.isfinite(row["obs"]).all():
             raise ValueError(f"obs must have shape ({self.obs_dim},) and be finite")
-        if row["action"].shape != (HORIZON * BASE_DIM,):
-            raise ValueError(f"action must have shape ({HORIZON * BASE_DIM},)")
+        if row["action"].shape != (self.action_dim,) or not np.isfinite(row["action"]).all():
+            raise ValueError(f"action must have shape ({self.action_dim},) and be finite")
         if row["base_action"].shape != (HORIZON, BASE_DIM):
             raise ValueError(f"base action must have shape ({HORIZON},{BASE_DIM})")
         return row
