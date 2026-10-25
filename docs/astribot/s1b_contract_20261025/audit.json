@@ -1,0 +1,424 @@
+{
+  "episodes": 102,
+  "frames": 23572,
+  "qualified_names25": [
+    "astribot_chassis/astribot_chassis_x",
+    "astribot_chassis/astribot_chassis_y",
+    "astribot_chassis/astribot_chassis_z_rot",
+    "astribot_torso/astribot_torso_joint_1",
+    "astribot_torso/astribot_torso_joint_2",
+    "astribot_torso/astribot_torso_joint_3",
+    "astribot_torso/astribot_torso_joint_4",
+    "astribot_arm_left/astribot_arm_left_joint_1",
+    "astribot_arm_left/astribot_arm_left_joint_2",
+    "astribot_arm_left/astribot_arm_left_joint_3",
+    "astribot_arm_left/astribot_arm_left_joint_4",
+    "astribot_arm_left/astribot_arm_left_joint_5",
+    "astribot_arm_left/astribot_arm_left_joint_6",
+    "astribot_arm_left/astribot_arm_left_joint_7",
+    "astribot_gripper_left/astribot_gripper_joint",
+    "astribot_arm_right/astribot_arm_right_joint_1",
+    "astribot_arm_right/astribot_arm_right_joint_2",
+    "astribot_arm_right/astribot_arm_right_joint_3",
+    "astribot_arm_right/astribot_arm_right_joint_4",
+    "astribot_arm_right/astribot_arm_right_joint_5",
+    "astribot_arm_right/astribot_arm_right_joint_6",
+    "astribot_arm_right/astribot_arm_right_joint_7",
+    "astribot_gripper_right/astribot_gripper_joint",
+    "astribot_head/astribot_head_joint_1",
+    "astribot_head/astribot_head_joint_2"
+  ],
+  "extracted_names8": [
+    "astribot_arm_right/astribot_arm_right_joint_1",
+    "astribot_arm_right/astribot_arm_right_joint_2",
+    "astribot_arm_right/astribot_arm_right_joint_3",
+    "astribot_arm_right/astribot_arm_right_joint_4",
+    "astribot_arm_right/astribot_arm_right_joint_5",
+    "astribot_arm_right/astribot_arm_right_joint_6",
+    "astribot_arm_right/astribot_arm_right_joint_7",
+    "astribot_gripper_right/astribot_gripper_joint"
+  ],
+  "units8": [
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "SDK closure scale 0=open,100=closed"
+  ],
+  "model_ready": false,
+  "reason": "Gripper SDK-to-model calibration is unverified",
+  "frame_period_ms": {
+    "min": 6.028890609741211,
+    "median": 33.15162658691406,
+    "p95": 36.83191537857056,
+    "max": 63.627004623413086
+  },
+  "timestamp_minus_head_image_ms": {
+    "joints_dict/state_timestamp": {
+      "min": -3.9746761322021484,
+      "median": 0.0036954879760742188,
+      "p95": 1.8088817596435547,
+      "max": 3.0956268310546875
+    },
+    "joints_dict/command_timestamp": {
+      "min": -11.565446853637695,
+      "median": 0.023126602172851562,
+      "p95": 5.164837837219238,
+      "max": 1793.8213348388672
+    },
+    "images_dict/head/rgb_timestamp": {
+      "min": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "images_dict/right/rgb_timestamp": {
+      "min": -30.531883239746094,
+      "median": 1.5679597854614258,
+      "p95": 14.945995807647707,
+      "max": 24.94072914123535
+    }
+  },
+  "worst_command_offsets": [
+    {
+      "episode": "elevator1_episode_0.hdf5",
+      "row": 0,
+      "command_minus_image_ms": 1793.8213348388672
+    },
+    {
+      "episode": "elevator1_episode_93.hdf5",
+      "row": 50,
+      "command_minus_image_ms": 13.078927993774414
+    },
+    {
+      "episode": "elevator1_episode_106.hdf5",
+      "row": 115,
+      "command_minus_image_ms": 11.904478073120117
+    },
+    {
+      "episode": "elevator1_episode_91.hdf5",
+      "row": 198,
+      "command_minus_image_ms": -11.565446853637695
+    },
+    {
+      "episode": "elevator1_episode_95.hdf5",
+      "row": 232,
+      "command_minus_image_ms": -11.368036270141602
+    },
+    {
+      "episode": "elevator1_episode_101.hdf5",
+      "row": 106,
+      "command_minus_image_ms": -11.170148849487305
+    },
+    {
+      "episode": "elevator1_episode_116.hdf5",
+      "row": 0,
+      "command_minus_image_ms": 11.124849319458008
+    },
+    {
+      "episode": "elevator1_episode_84.hdf5",
+      "row": 43,
+      "command_minus_image_ms": 11.063098907470703
+    },
+    {
+      "episode": "elevator1_episode_90.hdf5",
+      "row": 44,
+      "command_minus_image_ms": 10.857582092285156
+    },
+    {
+      "episode": "elevator1_episode_107.hdf5",
+      "row": 39,
+      "command_minus_image_ms": 10.643243789672852
+    }
+  ],
+  "raw_mcap": "data/astribot_s1b_20261025/storage/sequential_archive/elevator1/mcap/elevator1_2026_10_25-17_32_50_2/storage_x86_2026_10_25-17_32_50.mcap",
+  "raw_first_messages": [
+    {
+      "topic": "/astribot_chassis/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0948317,
+      "log_seconds": 1792920770.0949056,
+      "publish_seconds": 1792920770.0949056,
+      "values": [
+        0.5057913343059522,
+        0.4205087593207399,
+        0.06869677717826642
+      ]
+    },
+    {
+      "topic": "/astribot_torso/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0948577,
+      "log_seconds": 1792920770.0949693,
+      "publish_seconds": 1792920770.0949693,
+      "values": [
+        0.5959960722045898,
+        -1.189181925048828,
+        0.5919437241821289,
+        0.004656834899902344
+      ]
+    },
+    {
+      "topic": "/astribot_arm_left/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0948753,
+      "log_seconds": 1792920770.094974,
+      "publish_seconds": 1792920770.094974,
+      "values": [
+        0.2639358849487305,
+        0.12934002642822265,
+        -1.3982649512939453,
+        1.782198446533203,
+        -0.20716297735595704,
+        0.1435538911743164,
+        0.2647979078979492
+      ]
+    },
+    {
+      "topic": "/astribot_head/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0948422,
+      "log_seconds": 1792920770.094975,
+      "publish_seconds": 1792920770.094975,
+      "values": [
+        -0.04826039996337891,
+        0.2777340846557617
+      ]
+    },
+    {
+      "topic": "/astribot_arm_right/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0948966,
+      "log_seconds": 1792920770.0950336,
+      "publish_seconds": 1792920770.0950336,
+      "values": [
+        -0.07518575140380859,
+        0.08250837518310547,
+        1.4581568016357422,
+        1.6175446575927734,
+        0.21020450946044922,
+        0.17395830096435547,
+        -0.28561220025634765
+      ]
+    },
+    {
+      "topic": "/astribot_gripper_right/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0949354,
+      "log_seconds": 1792920770.0950398,
+      "publish_seconds": 1792920770.0950398,
+      "values": [
+        97.44477144115416
+      ]
+    },
+    {
+      "topic": "/astribot_gripper_left/joint_space_states",
+      "names": [],
+      "mode": 0,
+      "header_seconds": 1792920770.0949152,
+      "log_seconds": 1792920770.0950458,
+      "publish_seconds": 1792920770.0950458,
+      "values": [
+        -0.08692087319369972
+      ]
+    },
+    {
+      "topic": "/astribot_gripper_left/joint_space_command",
+      "names": [
+        "astribot_gripper_joint"
+      ],
+      "mode": 1,
+      "header_seconds": 1620.307812929,
+      "log_seconds": 1792920770.0982342,
+      "publish_seconds": 1792920770.0982342,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "topic": "/astribot_head/joint_space_command",
+      "names": [
+        "astribot_head_joint_1",
+        "astribot_head_joint_2"
+      ],
+      "mode": 1,
+      "header_seconds": 520.235390539,
+      "log_seconds": 1792920770.0982914,
+      "publish_seconds": 1792920770.0982914,
+      "values": [
+        -0.04289121356201172,
+        0.2740719752807617,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "topic": "/astribot_chassis/joint_space_command",
+      "names": [
+        "astribot_chassis_x",
+        "astribot_chassis_y",
+        "astribot_chassis_z_rot"
+      ],
+      "mode": 1,
+      "header_seconds": 481.354819774,
+      "log_seconds": 1792920770.0982952,
+      "publish_seconds": 1792920770.0982952,
+      "values": [
+        0.5061538660640105,
+        0.4208367642446973,
+        0.06986727018927678,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "topic": "/astribot_gripper_right/joint_space_command",
+      "names": [
+        "astribot_gripper_joint"
+      ],
+      "mode": 1,
+      "header_seconds": 1620.308181047,
+      "log_seconds": 1792920770.0982997,
+      "publish_seconds": 1792920770.0982997,
+      "values": [
+        100.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "topic": "/astribot_torso/joint_space_command",
+      "names": [
+        "astribot_torso_joint_1",
+        "astribot_torso_joint_2",
+        "astribot_torso_joint_3",
+        "astribot_torso_joint_4"
+      ],
+      "mode": 1,
+      "header_seconds": 469.169999999,
+      "log_seconds": 1792920770.101365,
+      "publish_seconds": 1792920770.101365,
+      "values": [
+        0.5991481339091199,
+        -1.198911192641519,
+        0.5996976257407907,
+        2.198964747974045e-05,
+        5.0614885860333914e-05,
+        -4.837763079024171e-05,
+        -1.5869440872506857e-06,
+        -6.6602054430163525e-06,
+        -0.009723224180246959,
+        0.016335077264173492,
+        -0.006845378658359991,
+        4.913716295284939e-05
+      ]
+    },
+    {
+      "topic": "/astribot_arm_left/joint_space_command",
+      "names": [
+        "astribot_arm_left_joint_1",
+        "astribot_arm_left_joint_2",
+        "astribot_arm_left_joint_3",
+        "astribot_arm_left_joint_4",
+        "astribot_arm_left_joint_5",
+        "astribot_arm_left_joint_6",
+        "astribot_arm_left_joint_7"
+      ],
+      "mode": 1,
+      "header_seconds": 467.189999999,
+      "log_seconds": 1792920770.1014156,
+      "publish_seconds": 1792920770.1014156,
+      "values": [
+        0.26716283036495253,
+        0.1292275954847809,
+        -1.3961502204996792,
+        1.7841220914401528,
+        -0.20498608945193764,
+        0.14392064872794882,
+        0.26353005838746646,
+        -0.00018890216645361946,
+        0.00014891280483986247,
+        -0.00030350745008345115,
+        0.00121066596081576,
+        0.00030887940962454064,
+        0.000854302746117197,
+        -0.00015645502167704883,
+        0.03744300587638083,
+        -0.012500541640980689,
+        -0.06042091253322113,
+        0.27610088884744144,
+        0.03334218815098655,
+        0.20546884151179112,
+        0.026565132599798424
+      ]
+    },
+    {
+      "topic": "/astribot_arm_right/joint_space_command",
+      "names": [
+        "astribot_arm_right_joint_1",
+        "astribot_arm_right_joint_2",
+        "astribot_arm_right_joint_3",
+        "astribot_arm_right_joint_4",
+        "astribot_arm_right_joint_5",
+        "astribot_arm_right_joint_6",
+        "astribot_arm_right_joint_7"
+      ],
+      "mode": 1,
+      "header_seconds": 469.109999999,
+      "log_seconds": 1792920770.1014192,
+      "publish_seconds": 1792920770.1014192,
+      "values": [
+        -0.07132517183304982,
+        0.08094866120895128,
+        1.4584970549730352,
+        1.6187851847569201,
+        0.21038010655227582,
+        0.17396234822744752,
+        -0.2857372631622365,
+        0.009995224196256147,
+        0.006725023028006372,
+        0.00062882601998826,
+        -0.010938806884430718,
+        -0.006336193012301816,
+        0.0021267796859542054,
+        -0.0052899067810807665,
+        0.07411701032314366,
+        0.5128173514601375,
+        0.27106989783476365,
+        0.3602503312016836,
+        0.4417688082086757,
+        0.17202013062739274,
+        -0.42992567934996284
+      ]
+    }
+  ],
+  "state_gripper_range": {
+    "min": -1.8710082654824354,
+    "median": 97.63492838990449,
+    "p95": 97.66661429351154,
+    "max": 97.90947269916612
+  },
+  "command_gripper_range": {
+    "min": 0.0,
+    "median": 100.0,
+    "p95": 100.0,
+    "max": 100.0
+  }
+}

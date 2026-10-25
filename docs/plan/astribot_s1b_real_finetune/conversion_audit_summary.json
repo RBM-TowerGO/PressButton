@@ -1,0 +1,429 @@
+{
+  "episodes": 96,
+  "frames": 23039,
+  "sha256_mismatches": [],
+  "state": {
+    "min": -1.8710082654824354,
+    "p50": 97.63492838990449,
+    "p95": 97.66661429351154,
+    "max": 97.90947269916612
+  },
+  "total_binary_switches": 176,
+  "non_endpoint_targets": 391,
+  "master_interval_ms": {
+    "min": 6.028890609741211,
+    "p50": 33.15162658691406,
+    "p95": 36.85276508331299,
+    "max": 63.627004623413086
+  },
+  "probe_timestamp_comparisons": [
+    {
+      "field": "time",
+      "frames": 165,
+      "best_candidates": [
+        {
+          "topic": "/astribot_camera/head_rgbd/color_compress/compressed",
+          "clock": "log",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_camera/head_rgbd/color_compress/compressed",
+          "clock": "publish",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_gripper_left/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9838809967041016,
+          "median_error_ms": 1.1212825775146484,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "header",
+          "max_error_ms": 1.9867420196533203,
+          "median_error_ms": 1.0273456573486328,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_right/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9907951354980469,
+          "median_error_ms": 1.1119842529296875,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_gripper_right/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9910335540771484,
+          "median_error_ms": 1.1186599731445312,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "log",
+          "max_error_ms": 1.9958019256591797,
+          "median_error_ms": 1.058340072631836,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "publish",
+          "max_error_ms": 1.9958019256591797,
+          "median_error_ms": 1.058340072631836,
+          "exact_rows": 0
+        }
+      ]
+    },
+    {
+      "field": "joints_dict/command_timestamp",
+      "frames": 165,
+      "best_candidates": [
+        {
+          "topic": "/astribot_arm_left/joint_space_command",
+          "clock": "log",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_arm_left/joint_space_command",
+          "clock": "publish",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_torso/joint_space_command",
+          "clock": "log",
+          "max_error_ms": 0.11110305786132812,
+          "median_error_ms": 0.0591278076171875,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_torso/joint_space_command",
+          "clock": "publish",
+          "max_error_ms": 0.11110305786132812,
+          "median_error_ms": 0.0591278076171875,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_right/joint_space_command",
+          "clock": "log",
+          "max_error_ms": 0.17905235290527344,
+          "median_error_ms": 0.0171661376953125,
+          "exact_rows": 3
+        },
+        {
+          "topic": "/astribot_arm_right/joint_space_command",
+          "clock": "publish",
+          "max_error_ms": 0.17905235290527344,
+          "median_error_ms": 0.0171661376953125,
+          "exact_rows": 3
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "header",
+          "max_error_ms": 1.9664764404296875,
+          "median_error_ms": 1.1832714080810547,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_chassis/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9764900207519531,
+          "median_error_ms": 1.1911392211914062,
+          "exact_rows": 0
+        }
+      ]
+    },
+    {
+      "field": "joints_dict/state_timestamp",
+      "frames": 165,
+      "best_candidates": [
+        {
+          "topic": "/astribot_chassis/joint_space_states",
+          "clock": "log",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_chassis/joint_space_states",
+          "clock": "publish",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_head/joint_space_states",
+          "clock": "log",
+          "max_error_ms": 0.2951622009277344,
+          "median_error_ms": 0.057220458984375,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_head/joint_space_states",
+          "clock": "publish",
+          "max_error_ms": 0.2951622009277344,
+          "median_error_ms": 0.057220458984375,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_torso/joint_space_states",
+          "clock": "log",
+          "max_error_ms": 0.3294944763183594,
+          "median_error_ms": 0.08392333984375,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_torso/joint_space_states",
+          "clock": "publish",
+          "max_error_ms": 0.3294944763183594,
+          "median_error_ms": 0.08392333984375,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "header",
+          "max_error_ms": 0.335693359375,
+          "median_error_ms": 0.2970695495605469,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_right/endpoint_current_states",
+          "clock": "header",
+          "max_error_ms": 0.4134178161621094,
+          "median_error_ms": 0.3707408905029297,
+          "exact_rows": 0
+        }
+      ]
+    },
+    {
+      "field": "images_dict/head/rgb_timestamp",
+      "frames": 165,
+      "best_candidates": [
+        {
+          "topic": "/astribot_camera/head_rgbd/color_compress/compressed",
+          "clock": "log",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_camera/head_rgbd/color_compress/compressed",
+          "clock": "publish",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_gripper_left/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9838809967041016,
+          "median_error_ms": 1.1212825775146484,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "header",
+          "max_error_ms": 1.9867420196533203,
+          "median_error_ms": 1.0273456573486328,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_right/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9907951354980469,
+          "median_error_ms": 1.1119842529296875,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_gripper_right/joint_space_states",
+          "clock": "header",
+          "max_error_ms": 1.9910335540771484,
+          "median_error_ms": 1.1186599731445312,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "log",
+          "max_error_ms": 1.9958019256591797,
+          "median_error_ms": 1.058340072631836,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/endpoint_current_states",
+          "clock": "publish",
+          "max_error_ms": 1.9958019256591797,
+          "median_error_ms": 1.058340072631836,
+          "exact_rows": 0
+        }
+      ]
+    },
+    {
+      "field": "images_dict/right/rgb_timestamp",
+      "frames": 165,
+      "best_candidates": [
+        {
+          "topic": "/astribot_camera/right_wrist_rgbd/color_compress/compressed",
+          "clock": "log",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_camera/right_wrist_rgbd/color_compress/compressed",
+          "clock": "publish",
+          "max_error_ms": 0.0,
+          "median_error_ms": 0.0,
+          "exact_rows": 165
+        },
+        {
+          "topic": "/astribot_arm_left/joint_space_states",
+          "clock": "log",
+          "max_error_ms": 1.9745826721191406,
+          "median_error_ms": 1.081228256225586,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_arm_left/joint_space_states",
+          "clock": "publish",
+          "max_error_ms": 1.9745826721191406,
+          "median_error_ms": 1.081228256225586,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_head/joint_space_states",
+          "clock": "log",
+          "max_error_ms": 1.9841194152832031,
+          "median_error_ms": 1.0728836059570312,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_head/joint_space_states",
+          "clock": "publish",
+          "max_error_ms": 1.9841194152832031,
+          "median_error_ms": 1.0728836059570312,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_torso/joint_space_states",
+          "clock": "log",
+          "max_error_ms": 1.9872188568115234,
+          "median_error_ms": 1.0678768157958984,
+          "exact_rows": 0
+        },
+        {
+          "topic": "/astribot_torso/joint_space_states",
+          "clock": "publish",
+          "max_error_ms": 1.9872188568115234,
+          "median_error_ms": 1.0678768157958984,
+          "exact_rows": 0
+        }
+      ]
+    }
+  ],
+  "probe_command_selection": [
+    {
+      "topic": "/astribot_arm_right/joint_space_command",
+      "nearest_log_to_head_exact_rows": 165,
+      "frames": 165,
+      "max_value_error": 0.0,
+      "nearest_log_minus_head_ms": {
+        "min": -6.061077117919922,
+        "p50": -0.10848045349121094,
+        "p95": 4.747533798217772,
+        "max": 5.527496337890625
+      }
+    },
+    {
+      "topic": "/astribot_gripper_right/joint_space_command",
+      "nearest_log_to_head_exact_rows": 165,
+      "frames": 165,
+      "max_value_error": 0.0,
+      "nearest_log_minus_head_ms": {
+        "min": -4.962444305419922,
+        "p50": 0.2872943878173828,
+        "p95": 4.425621032714844,
+        "max": 6.141424179077148
+      }
+    },
+    {
+      "topic": "/astribot_head/joint_space_command",
+      "nearest_log_to_head_exact_rows": 165,
+      "frames": 165,
+      "max_value_error": 0.0,
+      "nearest_log_minus_head_ms": {
+        "min": -6.159543991088867,
+        "p50": 0.055789947509765625,
+        "p95": 4.016637802124022,
+        "max": 5.6705474853515625
+      }
+    }
+  ],
+  "limitations": [
+    "Probe is not one of the reviewed 96 episodes.",
+    "Nearest timestamp/value matches alone do not prove converter algorithm or physical execution time."
+  ],
+  "gripper_counts": {
+    "exact_open": 5696,
+    "exact_closed": 16952,
+    "intermediate": 391,
+    "binary_open": 5887,
+    "binary_closed": 17152,
+    "unique_raw_targets": 366,
+    "intermediate_runs": 177,
+    "monotonic_runs": 173
+  },
+  "clock_perturbation": {
+    "time": {
+      "min_shift_s": 10.0,
+      "max_shift_s": 10.0,
+      "frames": 165
+    },
+    "joints_dict/command_timestamp": {
+      "min_shift_s": 10.0,
+      "max_shift_s": 10.0,
+      "frames": 165
+    },
+    "joints_dict/state_timestamp": {
+      "min_shift_s": 10.0,
+      "max_shift_s": 10.0,
+      "frames": 165
+    },
+    "images_dict/head/rgb_timestamp": {
+      "min_shift_s": 10.0,
+      "max_shift_s": 10.0,
+      "frames": 165
+    },
+    "images_dict/right/rgb_timestamp": {
+      "min_shift_s": 10.0,
+      "max_shift_s": 10.0,
+      "frames": 165
+    },
+    "joints_dict/joints_position_command": {
+      "identical": true
+    },
+    "joints_dict/joints_position_state": {
+      "identical": true
+    },
+    "images_dict/head/rgb": {
+      "identical": true
+    },
+    "images_dict/right/rgb": {
+      "identical": true
+    }
+  },
+  "conversion_dry_run": {
+    "episodes": 96,
+    "grid_frames": 22850,
+    "full_horizon_anchors": 22178,
+    "invalid_qc_grid_rows": 0,
+    "excluded_full_horizon_anchors": 0
+  }
+}

@@ -9,3 +9,5 @@ datasets==4.8.0
 pandas==2.3.3
 pyarrow==21.0.0
 lerobot[dataset]==0.6.1
+# Astribot reviewed real HDF5 input.
+h5py==3.16.0

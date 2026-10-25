@@ -1,0 +1,143 @@
+{
+  "schema": {
+    "kind": "s1b_real_joint10_record_time_v1",
+    "state_dim": 10,
+    "action_dim": 10,
+    "action_horizon": 7,
+    "video_horizon": 8,
+    "fps": 30,
+    "camera_keys": [
+      "observation.images.head",
+      "observation.images.right"
+    ],
+    "units": [
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "binary_action_continuous_sdk_state",
+      "rad",
+      "rad"
+    ],
+    "action_timing": "stored_action_already_next_grid_target",
+    "normalization": "train_only_mean_std_binary_action_identity"
+  },
+  "dataset_sha256": "8bfd18e4dab199216c113c4400d152c8377f1f3a0a65078e444ba4f8acbe3cf3",
+  "file_sha256": {
+    "README.md": "459505654922cd414a479b4bb107ff32d167286925c25a385f8912b3463cd4fd",
+    "data/chunk-000/file-000.parquet": "09d78a158e3a728631fa7839c032e6b1e631c282d16688c412761fdfd596b3a1",
+    "meta/data_contract.json": "4c4abfe4be9e66a996bd558845f1aba0de439f7ef07361856fe20c67de51bda3",
+    "meta/episodes/chunk-000/file-000.parquet": "e69e348b05eb379b0170541952568d81e8cbee3bc8ed8ef88a4d1119622c2b37",
+    "meta/export_provenance.json": "781e8193fca14dfe2c996b7a087bf129a09fa64c3967ab049ac0ea546ffb4c0c",
+    "meta/info.json": "ce6325741b79c6ef0254c1ddc80897f32bcdd5650cecb6d67cd0bb5b9572354b",
+    "meta/reader_audit.json": "1fda27c7c69821e26996b5656a97df55ec30db27a9095e29f788450d0c911a7f",
+    "meta/source_mapping.json": "bdfc44920b41c18ca9dfb67924d01ba6da0835d7ccf8fb63ac739a000fe9d99e",
+    "meta/splits.json": "0df86cb0ac7f12fba7596e326db2b187a3b55dd59f2da41cf14507c5bf20f5b2",
+    "meta/stats.json": "2061363de4a3396c56d4531e93efa45ad1983f1503bd7ea62e4d4127813590da",
+    "meta/tasks.parquet": "0e23ae3b137340acd93a1788dcf16950a783fb80c76bd64ee2a99ecd798bdfdb",
+    "meta/training_anchors.json": "d1fdf6c47999f42579500ed997d38b601bc9df42f8643fc8043e33aa99b8ee08",
+    "meta/training_normalization.json": "d0e0bd7437fd120e3c7bfaec95930dcedc60f8d26e8bfdabda06dce60f2e0599",
+    "videos/observation.images.head/chunk-000/file-000.mp4": "2acc115b66e265d085125875329053deb43d3970630f4151744733c355efc9c9",
+    "videos/observation.images.head/chunk-000/file-001.mp4": "9a657869e4c2d0f47603409a224811e27d6f18a636e3deaec9b7171fa10df5cb",
+    "videos/observation.images.right/chunk-000/file-000.mp4": "f6e5ef7ab0360e84164dec5d5c3e1788500fa07094afbe66db7d354b8ab33005"
+  },
+  "file_sizes": {
+    "README.md": 417,
+    "data/chunk-000/file-000.parquet": 3467420,
+    "meta/data_contract.json": 3200,
+    "meta/episodes/chunk-000/file-000.parquet": 5405836,
+    "meta/export_provenance.json": 497,
+    "meta/info.json": 6418,
+    "meta/reader_audit.json": 63238,
+    "meta/source_mapping.json": 248465,
+    "meta/splits.json": 1001,
+    "meta/stats.json": 22039,
+    "meta/tasks.parquet": 2294,
+    "meta/training_anchors.json": 233161,
+    "meta/training_normalization.json": 2571,
+    "videos/observation.images.head/chunk-000/file-000.mp4": 209059499,
+    "videos/observation.images.head/chunk-000/file-001.mp4": 62866721,
+    "videos/observation.images.right/chunk-000/file-000.mp4": 104582006
+  },
+  "normalization": {
+    "state": {
+      "mean": [
+        0.017533406603986265,
+        0.03328508276749647,
+        1.4652428233305754,
+        1.8154551138430888,
+        0.23255631722085524,
+        -0.14637229322684403,
+        -0.38496128183879985,
+        73.06096444474221,
+        -0.04936710112887748,
+        0.27868853199745813
+      ],
+      "scale": [
+        0.29603410863634017,
+        0.05901326000664707,
+        0.075147835292095,
+        0.1768811057831584,
+        0.09635603515679343,
+        0.13935636887196215,
+        0.05704892352082477,
+        41.25716341268719,
+        0.0006572043358562523,
+        0.0008646150749710765
+      ],
+      "constant": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "action": {
+      "mean": [
+        0.02067388981955259,
+        0.03340966563707314,
+        1.4665466375979181,
+        1.8149363422461484,
+        0.234263617216661,
+        -0.1462292125544197,
+        -0.38580468019209013,
+        0.0,
+        -0.042891211807727814,
+        0.27407196164131165
+      ],
+      "scale": [
+        0.28989897741388276,
+        0.058833552331605386,
+        0.07385562962809185,
+        0.17101107771784835,
+        0.09620315681190554,
+        0.13821820885720532,
+        0.05679941682584714,
+        1.0,
+        1e-06,
+        1e-06
+      ],
+      "constant": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true
+      ]
+    }
+  }
+}
