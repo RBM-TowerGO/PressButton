@@ -179,7 +179,7 @@ def run_fake(monkeypatch, tmp_path, outcome, mode, bad_request=None, fault=None)
                            max_seconds=.3, exploration_probability=1., scale=[.01] * 8,
                            execute_horizon=7, status_every_requests=100)
     replay = ReplayBuffer(20, observation_contract(mode)["obs_dim"], 56, base_dim=8)
-    learner = SimpleNamespace(act=lambda obs, base, **kw: np.zeros((1, 56), np.float32))
+    learner = SimpleNamespace(action_dim=56, act=lambda obs, base, **kw: np.zeros((1, 56), np.float32))
     counter = runner.EpisodeCounter(tmp_path)
     if fault:
         with pytest.raises(RuntimeError, match="camera failed|Physics advanced"):

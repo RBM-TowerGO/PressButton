@@ -25,6 +25,9 @@ docs/plan/astribot_latent_residual/.
 from __future__ import annotations
 
 import argparse
+import signal
+import os
+import uuid
 from copy import deepcopy
 import hashlib
 import io
@@ -49,6 +52,8 @@ from pressb.online_rl.astribot import (BASE_DIM, DEFAULT_GAMMA, DEFAULT_SCALE, H
                                         expand_joint8, load_replay, observation,
                                         potential_shaping, save_replay, summarize_episode, command_joint8,
                                         transition_discount, validate_scale, within_limits)
+from pressb.online_rl.astribot_xyz import compose_xyz, XYZ_CONTRACT
+from pressb.astribot_kinematics import AstribotKinematics, URDF
 from pressb.online_rl.learner import LearnerConfig, ReplayBuffer, SACLearner
 from pressb.online_rl.astribot_features import (MODES, observation_contract,
                                                validate_capability, validate_restore, needs_latent, needs_previous_command)
@@ -249,8 +254,33 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
     recorder = Recorder(runtime, cfg, contract)
     recorder.start()
     mode = getattr(args, "observation_mode", "state_only")
-    journal = ChunkJournal(replay, train=train, gamma=args.gamma, observation_mode=mode)
+    journal = ChunkJournal(replay, train=train, gamma=args.gamma, observation_mode=mode, action_dim=learner.action_dim)
     shaping_coefficient = args.shaping if train else 0.0
+    if getattr(args, "residual_mode", "joint8") == "astribot_xyz":
+        tcp = recorder.env.hand["tcp_in_wrist"]
+        geometry_path = args.output / "xyz_geometry.json"
+        geometry = dict(tcp_in_wrist=tcp, urdf_sha256=sha256(URDF), **XYZ_CONTRACT)
+        if geometry_path.exists():
+            if json.loads(geometry_path.read_text()) != geometry:
+                raise ValueError("XYZ geometry changed")
+        else:
+            atomic_json(geometry_path, geometry)
+        if getattr(args, "smoke", False):
+            from scipy.spatial.transform import Rotation
+            def physical_transform(body):
+                position, quaternion = body.get_world_pose()
+                transform = np.eye(4)
+                transform[:3, :3] = Rotation.from_quat(np.roll(quaternion, -1)).as_matrix()
+                transform[:3, 3] = position
+                return transform
+            root = physical_transform(recorder.env.base_body)
+            wrist = physical_transform(recorder.env.wrist)
+            expected = root @ AstribotKinematics().tcp(command_joint8(runtime.q[0])[:7], np.asarray(tcp))
+            actual = wrist @ np.asarray(tcp)
+            error = float(np.linalg.norm(expected[:3, 3] - actual[:3, 3]))
+            atomic_json(out / "fk_verification.json", dict(position_error_m=error, passed=error < .004))
+            if error >= .004:
+                raise RuntimeError("XYZ FK disagrees with simulator")
     images = runtime.last_images[0]
     reason = "timeout"
     success = False
@@ -263,6 +293,8 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
     timings = dict(inference_s=0.0, control_s=0.0, render_s=0.0, terminal_inference_s=0.0)
     request_context = None
     saturated = components = 0
+    xyz_records = []
+    kin = AstribotKinematics() if getattr(args, "residual_mode", "joint8") == "astribot_xyz" else None
 
     def request_observation(purpose):
         nonlocal requested, request_context
@@ -347,9 +379,18 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
                                                discount, shaping_coefficient))
             action = learner.act(obs[None, :], base8[None, :, :], deterministic=not train,
                                  exploration_probability=args.exploration_probability)[0]
+            if getattr(args, "zero_residual", False):
+                action = np.zeros_like(action)
             saturated += int((np.abs(action) >= 0.99).sum())
             components += action.size
-            joint8 = compose_joint8(base8, action, args.scale)
+            if kin is not None:
+                joint8, detail = compose_xyz(base8, action, recorder.env.hand["tcp_in_wrist"],
+                                            command_joint8(recorder.command), args.scale, kin=kin)
+                xyz_records.append(detail)
+                with (out / "xyz_execution.jsonl").open("a") as stream:
+                    stream.write(json.dumps(detail) + "\n")
+            else:
+                joint8 = compose_joint8(base8, action, args.scale)
             action32 = expand_joint8(joint8, contract["fixed_action32"])
             if not within_limits(action32, recorder.limits, 0.02):
                 raise EpisodeStop("residual_exceeds_joint_limits")
@@ -434,6 +475,11 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
                        shaping_total=journal.shaping_total,
                        discounted_return=journal.discounted_return,
                        process_peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
+                       xyz_execution=dict(chunks=len(xyz_records),
+                           reduced=sum(0 < r["factor"] < 1 for r in xyz_records),
+                           fallback=sum(r["factor"] == 0 and not r["zero_request"] for r in xyz_records),
+                           seconds=sum(r["seconds"] for r in xyz_records),
+                           max_position_error_m=max((r["position_error_m"] for r in xyz_records), default=0.)),
                        timings=timings,
                        unexpected_contacts=len(recorder.unexpected),
                        observation_contract=observation_contract(mode),
@@ -452,6 +498,7 @@ def run_episode(runtime, cfg, contract, candidate, args, learner, replay, counte
 
 def build_learner(args):
     config = LearnerConfig(method="action_residual", obs_dim=observation_contract(getattr(args, "observation_mode", "state_only"))["obs_dim"], base_dim=BASE_DIM,
+                           residual_mode="astribot_xyz" if getattr(args, "residual_mode", "joint8") == "astribot_xyz" else "pose9",
                            residual_scale=args.scale, batch_size=args.batch_size,
                            policy_lr=args.policy_lr, init_alpha=args.init_alpha,
                            auto_alpha=args.auto_alpha, lambda_a=args.action_penalty,
@@ -461,9 +508,27 @@ def build_learner(args):
 
 def save_state(path: Path, learner, replay, status):
     started = time.perf_counter()
-    learner.save(path / "learner.pt", extra=dict(status=status))
+    # Publish learner/replay together through one atomic generation pointer.
+    generations = path / "checkpoints"
+    generations.mkdir(parents=True, exist_ok=True)
+    generation = generations / (str(learner.updates) + "_" + uuid.uuid4().hex[:8])
+    generation.mkdir()
+    learner.save(generation / "learner.pt", extra=dict(status=status))
     if replay is not None:
-        save_replay(path / "replay.npz", replay, contract=status.get("restore_contract"))
+        save_replay(generation / "replay.npz", replay, contract=status.get("restore_contract"))
+    atomic_json(generation / "status.json", status)
+    pointer = path / "current.tmp"
+    pointer.symlink_to(generation.relative_to(path), target_is_directory=True)
+    pointer.replace(path / "current")
+    for name in ("learner.pt", "replay.npz"):
+        if name == "replay.npz" and replay is None:
+            continue
+        link = path / (name + ".link")
+        link.symlink_to("current/" + name)
+        link.replace(path / name)
+    for old in generations.iterdir():
+        if old != generation:
+            shutil.rmtree(old)
     atomic_json(path / "save_metrics.json", dict(seconds=time.perf_counter() - started,
                 learner_bytes=(path / "learner.pt").stat().st_size,
                 replay_bytes=(path / "replay.npz").stat().st_size if replay is not None else None))
@@ -475,8 +540,10 @@ def describe(learner, replay, status, args, recent):
                 transitions=int(len(replay)) if replay is not None else 0,
                 episodes=status["episodes"],
                 updates=int(learner.updates), successes=status["successes"],
+                rolling_success_rate_20=(sum(e["status"] == "success" for e in recent[-20:]) / len(recent[-20:]) if recent else None),
                 rolling_success_rate=(sum(e["status"] == "success" for e in recent) / len(recent)
                                       if recent else None),
+                residual_mode=getattr(args, "residual_mode", "joint8"),
                 residual_scale=list(args.scale), gamma=args.gamma,
                 exploration_probability=args.exploration_probability,
                 shaping=args.shaping, action_penalty=learner.config.lambda_a,
@@ -514,6 +581,10 @@ def main():
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--training-frequency", type=int, default=1)
     parser.add_argument("--gamma", type=float, default=DEFAULT_GAMMA)
+    parser.add_argument("--residual-mode", choices=("joint8", "astribot_xyz"), default="joint8")
+    parser.add_argument("--xyz-scale", type=float, nargs=3, default=[.01]*3)
+    parser.add_argument("--zero-residual", action="store_true")
+    parser.add_argument("--eval-output", type=Path)
     parser.add_argument("--scale", type=float, nargs=8, default=list(DEFAULT_SCALE))
     parser.add_argument("--max-seconds", type=float, default=20.0)
     parser.add_argument("--execute-horizon", type=int, default=HORIZON)
@@ -541,7 +612,14 @@ def main():
                         help="Short smoke run: six simulated seconds, tiny learner batch")
     args = parser.parse_args()
 
-    args.scale = validate_scale(args.scale)
+    if args.residual_mode == "astribot_xyz":
+        args.scale = args.xyz_scale
+        if not np.isfinite(args.scale).all() or min(args.scale) <= 0:
+            raise ValueError("xyz scales must be finite and positive")
+    else:
+        args.scale = validate_scale(args.scale)
+    if args.zero_residual and not args.eval_only:
+        raise ValueError("zero residual is evaluation-only")
     if args.render_cameras is not None and (len(set(args.render_cameras)) != len(args.render_cameras)
             or not {"head", "wrist_right"}.issubset(args.render_cameras)):
         raise SystemExit("render cameras must be unique and include head and wrist_right")
@@ -610,6 +688,10 @@ def main():
                             training_frequency=args.training_frequency,
                             exploration_probability=args.exploration_probability,
                             execute_horizon=args.execute_horizon, max_seconds=args.max_seconds)
+    if args.residual_mode == "astribot_xyz":
+        restore_contract["xyz"] = dict(XYZ_CONTRACT, urdf_sha256=sha256(URDF),
+            source_sha256={name: sha256(ROOT / name) for name in
+                ("src/pressb/online_rl/astribot_xyz.py", "src/pressb/astribot_kinematics.py", "src/pressb/astribot_press.py")})
     try:
         args.output.mkdir(parents=True, exist_ok=args.resume)
     except FileExistsError:
@@ -665,6 +747,8 @@ def main():
                                      "astribot_closedloop_control.py":
                                          sha256(ROOT / "scripts/astribot_closedloop_control.py")},
                       split="train", inference=health)
+    if not args.resume:
+        learner.save(args.output / "initial.pt", extra=dict(status=status, replay_size=0))
     atomic_json(args.output / ("eval_protocol.json" if args.eval_only else "protocol.json"), dict(describe(learner, replay, status, args, []),
                                                     contract_sha256=sha256(args.model_run / "data_contract.json"),
                                                     policy_server=health))
@@ -680,6 +764,14 @@ def main():
                                          "--/validate/iommu/enabled=false",
                                          "--/app/extensions/fsWatcherEnabled=false"]))
     runtime = None
+    stop_requested = False
+    def request_stop(signum, frame):
+        nonlocal stop_requested
+        stop_requested = True
+        print("Stop requested; saving at the next episode boundary", flush=True)
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
+    completed_normally = False
     try:
         if args.physics_backend == "cpu":
             from isaacsim.core.utils.extensions import enable_extension
@@ -692,7 +784,7 @@ def main():
         index = status["episodes"] % len(candidates)
         next_checkpoint = (int(learner.updates) // max(1, args.checkpoint_every) + 1) * args.checkpoint_every
         metrics_path = args.output / "metrics.jsonl"
-        while not args.eval_only and len(replay) < args.max_transitions:
+        while not args.eval_only and not stop_requested and len(replay) < args.max_transitions:
             candidate = candidates[int(order[index % len(order)])]
             index += 1
             condition = contract["scene_conditions"][str(candidate)]
@@ -703,7 +795,7 @@ def main():
                                   counter, train=True)
             status["episodes"] += 1
             status["successes"] += int(episode["status"] == "success")
-            status["history"] = (status["history"] + [episode])[-20:]
+            status["history"] = (status["history"] + [episode])[-100:]
             print(json.dumps(episode, ensure_ascii=False), flush=True)
             while (len(replay) >= args.warmup_transitions and len(replay) >= args.batch_size
                    and int(learner.updates) < len(replay) * args.training_frequency):
@@ -718,20 +810,26 @@ def main():
             while int(learner.updates) >= next_checkpoint:
                 save_state(args.output, learner, replay, status)
                 next_checkpoint += args.checkpoint_every
+            for milestone in (20000, 50000, args.max_transitions):
+                destination = args.output / "milestones" / str(milestone)
+                if len(replay) >= milestone and not destination.exists():
+                    destination.mkdir(parents=True)
+                    save_state(destination, learner, replay, status)
             if args.smoke:
                 break
-        if args.eval_episodes:
+        completed_normally = True
+        if args.eval_episodes and not stop_requested:
             evaluate(runtime, args, learner, base_cfg)
     except BaseException:
         atomic_json(args.output / "infrastructure_error.json", dict(error=traceback.format_exc()))
         raise
     finally:
-        if runtime is not None:
-            runtime.close()
-        if not args.eval_only:
+        if not args.eval_only and completed_normally:
             save_state(args.output, learner, replay, status)
             atomic_json(args.output / "status.json", describe(learner, replay, status, args,
                                                               status_history(args)))
+        if runtime is not None:
+            runtime.close()
         app.app.post_quit()
         app.close()
 
@@ -747,7 +845,8 @@ def evaluate(runtime, args, learner, base_cfg):
         return digest.hexdigest()
     before_digest, before_updates = parameter_digest(), learner.updates
     eval_contract, candidates = load_contract(args.model_run, args.eval_split)
-    counter = EpisodeCounter(args.output / "eval")
+    eval_output = args.eval_output or args.output / "eval"
+    counter = EpisodeCounter(eval_output)
     count = min(args.eval_episodes, len(candidates))
     rows = []
     original_seconds = args.max_seconds
@@ -771,13 +870,14 @@ def evaluate(runtime, args, learner, base_cfg):
                    successes=sum(row["status"] == "success" for row in rows),
                    episodes=rows, deterministic=True,
                    note="Held-out validation scenes; each scene once; synchronous simulation")
-    atomic_json(args.output / "eval" / "summary.json", summary)
+    summary["zero_residual"] = args.zero_residual
+    atomic_json(eval_output / "summary.json", summary)
     print(json.dumps({key: value for key, value in summary.items() if key != "episodes"}),
           flush=True)
 
 
 def status_history(args):
-    return completed_episode_reports(args.output)[-20:]
+    return completed_episode_reports(args.output)[-100:]
 
 
 def completed_episode_reports(output):

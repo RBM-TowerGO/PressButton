@@ -22,6 +22,10 @@ def gripper_targets(angle, side="right"):
             for name, sign in GRIPPER_SIGNS.items()}
 
 
+class UnreachablePose(ValueError):
+    """A finite pose could not be reached within the IK tolerances."""
+
+
 class AstribotKinematics:
     def __init__(self, urdf=URDF):
         self.joints = {}
@@ -78,5 +82,5 @@ class AstribotKinematics:
                                q_rad=result.x.tolist(), nfev=int(result.nfev),
                                target_in_robot_root=target.tolist())
         if error > .0005 or rotation_error > .01:
-            raise ValueError(f"Unreachable pose: position={error:.6f} m, rotation={rotation_error:.5f} rad")
+            raise UnreachablePose(f"Unreachable pose: position={error:.6f} m, rotation={rotation_error:.5f} rad")
         return result.x

@@ -98,14 +98,17 @@ class LearnerConfig:
     def __post_init__(self):
         if self.method not in ("action_residual", "initial_noise"):
             raise ValueError("method must be action_residual or initial_noise")
-        if self.residual_mode not in ("pose9", "xyz"):
-            raise ValueError("residual_mode must be pose9 or xyz")
-        if self.residual_mode == "xyz" and self.method != "action_residual":
+        if self.residual_mode not in ("pose9", "xyz", "astribot_xyz"):
+            raise ValueError("residual_mode must be pose9, xyz or astribot_xyz")
+        if self.residual_mode in ("xyz", "astribot_xyz") and self.method != "action_residual":
             raise ValueError("residual_mode=xyz is only defined for action_residual")
         if type(self.base_dim) is not int or self.base_dim < 1:
             raise ValueError("base_dim must be a positive integer")
         if self.residual_mode == "xyz" and self.base_dim < 3:
             raise ValueError("base_dim must be at least 3 for residual_mode=xyz")
+        if self.residual_mode == "astribot_xyz":
+            if self.base_dim != 8 or self.lambda_s is not None or self.lambda_t is not None:
+                raise ValueError("astribot_xyz requires base_dim=8 and no smoothness regularizers")
         if self.num_qs is None:
             self.num_qs = 2 if self.method == "action_residual" else 5
         if self.target_freq is None:
@@ -121,7 +124,7 @@ class LearnerConfig:
             raise ValueError("num_subset cannot exceed num_qs")
         if type(self.seed) is not int or self.seed < 0:
             raise ValueError("seed must be a nonnegative integer")
-        scale_dim = 3 if self.residual_mode == "xyz" else self.base_dim
+        scale_dim = 3 if self.residual_mode in ("xyz", "astribot_xyz") else self.base_dim
         if self.residual_scale is _DEFAULT_RESIDUAL_SCALE:
             # Preserve the historical PiPER defaults exactly (XYZ 0.03 m,
             # rotation6D 0.1 rad); other base widths use 0.03 per coordinate.
@@ -168,7 +171,7 @@ class LearnerConfig:
     @property
     def action_dim(self) -> int:
         if self.method == "action_residual":
-            return HORIZON * (3 if self.residual_mode == "xyz" else self.base_dim)
+            return HORIZON * (3 if self.residual_mode in ("xyz", "astribot_xyz") else self.base_dim)
         return self.base_dim * self.noise_steps
 
 
@@ -424,6 +427,8 @@ class SACLearner:
         # chunk as input, so the critic width tracks cfg.base_dim.
         critic_action_dim = HORIZON * cfg.base_dim if self.residual else self.action_dim
         actor_obs_dim = cfg.obs_dim + (critic_action_dim if self.residual else 0)
+        if cfg.residual_mode == "astribot_xyz":
+            critic_action_dim += self.action_dim
         self.actor = _Actor(actor_obs_dim, self.action_dim, cfg).to(self.device)
         self.qs = _Critics(cfg, critic_action_dim).to(self.device)
         self.q_targets = copy.deepcopy(self.qs).requires_grad_(False)
@@ -459,6 +464,8 @@ class SACLearner:
     def _critic_action(self, action, base):
         if not self.residual:
             return action
+        if self.config.residual_mode == "astribot_xyz":
+            return torch.cat((base, action), dim=-1)
         if self.config.residual_mode == "xyz":
             base_chunk = base.reshape(-1, HORIZON, self.config.base_dim)
             xyz = base_chunk[..., :3] + (action * self.scale).reshape(-1, HORIZON, 3)
