@@ -1,16 +1,16 @@
 # joint10 有线部署实现规格 v1.0
 
-本文定义新代码应实现的行为。以下模块名和 CLI 为**拟新增接口**，目前不可当作已存在的启动命令。
+本文保留完整部署规格。P0/P1 已实现 `contract`、`policy`、`protocol`、`server`、`recorder` 以及配置审计、离线评估和本机服务入口；参见 [操作手册](operations_p0_p1.md)。机器人桥接、观测、调度、执行器及 analyze 模式仍为拟新增接口，不能作为现有命令使用。
 
 ## 1. 模块与配置
 
 在 `src/pressb/s1b_deployment/` 下实现 `policy`、`protocol`、`observation`、`scheduler`、`executor`、`recorder` 六个职责模块。新增入口：
 
-| 拟新增入口 | 参数与职责 |
+| 入口（实现状态见说明） | 参数与职责 |
 |---|---|
 | `scripts/s1b_policy_server.py` | `--run --checkpoint --config --device --port`；5090 推理服务，显式选择 2000／8000，不硬编码 step 8000 |
-| `scripts/s1b_robot_bridge.py` | `--config --mode shadow\|execute`；机器人端采集、请求、调度及可选 SDK 执行；默认 shadow |
-| `scripts/eval_s1b_deployment.py` | `--mode offline\|analyze --config --output`；离线推理、日志延迟与轨迹对比分析 |
+| `scripts/s1b_robot_bridge.py`（待实现） | `--config --mode shadow\|execute`；机器人端采集、请求、调度及可选 SDK 执行；默认 shadow |
+| `scripts/eval_s1b_deployment.py` | `--mode offline --checkpoint 2000\|8000 --config --output`；离线推理已实现，analyze 日志分析待实现 |
 
 配置模板放在 `configs/s1b_deployment_v1.yaml`。按模型、网络、采集、调度、SDK、约束、日志分组，禁止存放 SSH 密码。执行所需的尚未确认字段使用 `null`，配置检查要列出所有缺项并拒绝 execute。保存 resolved config 及其哈希，不在代码中隐藏限值。
 
