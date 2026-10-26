@@ -1,6 +1,6 @@
 # joint10 有线部署实现规格 v1.0
 
-本文保留完整部署规格。P0/P1 已实现 `contract`、`policy`、`protocol`、`server`、`recorder` 以及配置审计、离线评估和本机服务入口；参见 [操作手册](operations_p0_p1.md)。P2 已实现只读机器人桥接与观测、独立双相机副本准备和 `scripts/analyze_s1b_p2.py` 日志分析，见 [P2 手册](operations_p2.md)。调度、执行器及完整 eval analyze 模式仍为拟新增接口，不能作为现有命令使用。
+本文保留完整部署规格。P0/P1 已实现 `contract`、`policy`、`protocol`、`server`、`recorder` 以及配置审计、离线评估和本机服务入口；参见 [操作手册](operations_p0_p1.md)。P2 已实现只读机器人桥接与观测、独立双相机副本准备和 `scripts/analyze_s1b_p2.py` 日志分析，见 [P2 手册](operations_p2.md)。P3 已实现独立 30 Hz 影子调度、内存假执行器、状态/故障恢复与两个独立分析入口，见 [P3 手册](operations_p3.md)。真实 SDK 执行器及完整 eval analyze 模式仍为拟新增接口，不能作为现有命令使用。
 
 ## 1. 模块与配置
 
@@ -9,7 +9,7 @@
 | 入口（实现状态见说明） | 参数与职责 |
 |---|---|
 | `scripts/s1b_policy_server.py` | `--run --checkpoint --config --device --port`；5090 推理服务，显式选择 2000／8000，不硬编码 step 8000 |
-| `scripts/s1b_robot_bridge.py` | `--config --mode shadow\|execute`；机器人端采集与请求已实现；默认 shadow，execute 明确拒绝；调度和 SDK 执行待 P3/P4 |
+| `scripts/s1b_robot_bridge.py` | `--config --mode shadow\|execute`；机器人端采集与请求已实现；默认 shadow，execute 明确拒绝；30 Hz 影子调度已实现，SDK 执行待 P4 |
 | `scripts/eval_s1b_deployment.py` | `--mode offline --checkpoint 2000\|8000 --config --output`；离线推理已实现，analyze 日志分析待实现 |
 
 配置模板放在 `configs/s1b_deployment_v1.yaml`。按模型、网络、采集、调度、SDK、约束、日志分组，禁止存放 SSH 密码。执行所需的尚未确认字段使用 `null`，配置检查要列出所有缺项并拒绝 execute。保存 resolved config 及其哈希，不在代码中隐藏限值。

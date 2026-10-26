@@ -22,7 +22,7 @@ def main():
     policy=Policy(a.run or c['model']['run'],a.checkpoint,c['model']['identity'],a.device)
     recorder=Recorder(Path(c['logging']['root'])/f'server_{a.checkpoint}_{time.time_ns()}',c,policy.identity)
     recorder.append('startup', code_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(), sdk='not imported', device=str(policy.device), load_seconds=policy.load_seconds)
-    with make_server(policy,a.port,recorder) as server:
+    with make_server(policy,a.port,recorder,tcp_nodelay=c['network'].get('tcp_nodelay',True)) as server:
         print(f'ready: http://127.0.0.1:{server.server_port}',flush=True)
         try: server.serve_forever()
         except KeyboardInterrupt: pass

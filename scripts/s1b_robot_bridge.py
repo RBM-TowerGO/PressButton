@@ -14,6 +14,8 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
 from pressb.s1b_deployment.contract import VERSION,OFFSETS,canonical,read_config,sha
 from pressb.s1b_deployment.observation import Sample,TimeMapper,ObservationBuffer,ObservationError
 from pressb.s1b_deployment.protocol import encode,decode,MAX_BYTES
+from pressb.s1b_deployment.scheduler import Scheduler,ScheduleError
+from pressb.s1b_deployment.shadow import ShadowRunner
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
@@ -22,12 +24,13 @@ def main():
     p.add_argument('--mode',choices=['shadow','execute'],default='shadow')
     p.add_argument('--duration',type=float,default=600)
     p.add_argument('--output',required=True)
+    p.add_argument('--schedule',action=argparse.BooleanOptionalAction,default=True)
     a=p.parse_args();c=read_config(a.config,a.mode)
     if a.mode!='shadow':raise ValueError('P2 supports only read-only shadow mode')
     mapping=json.loads(Path(a.mapping).read_text());out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
     for name,value in [('resolved_config',c),('mapping',mapping)]:
         (out/(name+'.json')).write_text(json.dumps(dict(value=value,sha256=canonical(value)),indent=2)+'\n')
-    logs={name:(out/(name+'.jsonl')).open('w',buffering=1) for name in ('sources','requests','events')}
+    logs={name:(out/(name+'.jsonl')).open('w',buffering=1) for name in ('sources','requests','events','ticks')}
     log_lock=threading.Lock();log_bytes=0
     def log(name, row):
         nonlocal log_bytes
@@ -96,10 +99,16 @@ def main():
         if not health['ready'] or health['protocol_version']!=VERSION or health['action_dim']!=10 or health['horizon']!=7 or health['model_sha256']!=expected['models'][str(health['step'])] or health['data_contract_sha256']!=contract_hash:raise ValueError('health_identity_mismatch')
         log('events',dict(event='health',health=health,robot_monotonic_ns=time.monotonic_ns()))
     session=str(uuid.uuid4());start=time.monotonic();started_ns=time.monotonic_ns();last_sequence=-1;last_saved=0.;image_bytes=0;image_drops=0;requests=[];rejects=Counter();timeouts=0;response_errors=0;wire_bytes=0;max_inflight=0
+    scheduler=None;runner=None
     try:
-        connect();print(json.dumps(dict(event='ready',session=session,step=health['step'])),flush=True)
+        connect()
+        if a.schedule:
+            scheduler=Scheduler(session,health['model_sha256'],health['data_contract_sha256'])
+            runner=ShadowRunner(scheduler,lambda row:log('ticks',row));runner.start()
+        print(json.dumps(dict(event='ready',session=session,step=health['step'])),flush=True)
         while time.monotonic()-start<a.duration:
             if fatal:raise RuntimeError(';'.join(fatal))
+            if runner and runner.error:raise RuntimeError(runner.error)
             if mapper.failed:raise RuntimeError('clock_jump')
             try:selected,state=buffer.snapshot(time.monotonic_ns(),last_sequence)
             except ObservationError as exc:
@@ -122,11 +131,23 @@ def main():
                 if action.shape!=(7,10) or action.dtype!=np.float32 or not np.isfinite(action).all() or not np.array_equal(result['target_offsets_ns'],OFFSETS):raise ValueError('invalid_action_response')
                 row.update(received_ns=received_ns,rtt_ns=received_ns-send_ns,observation_to_response_ns=received_ns-head.receipt_ns,source_to_response_ns=received_ns-head.mapped_ns,action_raw=action.tolist(),gripper_binary=(action[:,7]>=.5).astype(int).tolist(),preprocess_seconds=float(result['preprocess_seconds']),inference_seconds=float(result['inference_seconds']),request_bytes=len(body),response_bytes=len(data),valid=True)
             except (OSError,ValueError,KeyError,http.client.HTTPException) as exc:
+                if scheduler:scheduler.fault('network_or_response_failure')
                 if isinstance(exc,TimeoutError):timeouts+=1
                 response_errors+=1;row.update(valid=False,error=str(exc));log('requests',row)
-                try:connect()
+                try:
+                    connect()
+                    session=str(uuid.uuid4())
+                    if scheduler:scheduler.reconnect_shadow(session)
+                    log('events',dict(event='reconnected_shadow',session_id=session))
+                except RuntimeError:raise
                 except Exception as connect_exc:log('events',dict(event='reconnect_failed',error=str(connect_exc)));time.sleep(.1)
                 continue
+            if scheduler:
+                row['scheduler_accept_ns']=time.monotonic_ns()
+                try:row['scheduler_accepted']=scheduler.accept(result,received_ns)
+                except ScheduleError as exc:
+                    row['scheduler_accepted']=False;row['scheduler_error']=str(exc)
+                    log('events',dict(event='schedule_rejected',error=str(exc),observation_id=head.sequence))
             requests.append(row);log('requests',row)
             if time.monotonic()-last_saved>=mapping['image_save_interval_seconds']:
                 if image_bytes+len(body)>mapping['image_disk_limit_bytes']:image_drops+=1
@@ -136,16 +157,18 @@ def main():
             if len(requests)%100==0:print(json.dumps(dict(event='progress',elapsed=time.monotonic()-start,requests=len(requests),errors=response_errors,rtt_ms=row['rtt_ns']/1e6)),flush=True)
     except BaseException as exc:
         fatal.append(type(exc).__name__+': '+str(exc))
+        if scheduler:scheduler.fault('bridge_failure')
         raise
     finally:
         elapsed=time.monotonic()-start
+        if runner:runner.close()
         if conn:conn.close()
         if rclpy.ok():rclpy.shutdown()
         thread.join(timeout=5);node.destroy_node()
         def percentiles(values):return np.percentile(values,[50,95,99,100]).tolist() if len(values) else []
         valid_span=(requests[-1]['received_ns']-requests[0]['received_ns'])/1e9 if len(requests)>1 else 0.
         max_request_gap=max((b['received_ns']-a['received_ns'])/1e9 for a,b in zip(requests,requests[1:])) if len(requests)>1 else 0.
-        summary=dict(valid_request_span_seconds=valid_span,max_valid_request_gap_seconds=max_request_gap,session_id=session,step=health['step'] if health else None,elapsed_seconds=elapsed,requested_duration_seconds=a.duration,valid_requests=len(requests),response_errors=response_errors,timeouts=timeouts,reconnections=reconnections,max_inflight=max_inflight,wire_payload_bytes=wire_bytes,mean_payload_mbps=wire_bytes*8/max(elapsed,1)/1e6,buffer=buffer.stats(),selection_rejections=dict(rejects),callback_errors=dict(errors),callbacks=dict(callback_counts),fatal=fatal,mapper_offset_ns=mapper.offset,clock_jump=mapper.failed,source_interval_p50_p95_p99_max_ns={k:percentiles(v) for k,v in intervals.items()},source_hz={k:(len(v)*1e9/sum(v) if v else 0) for k,v in intervals.items()},source_age_min_ns=min_age,source_age_max_ns=max_age,rtt_p50_p95_p99_max_ns=percentiles([r['rtt_ns'] for r in requests]),observation_to_response_p50_p95_p99_max_ns=percentiles([r['observation_to_response_ns'] for r in requests]),head_age_at_send_p50_p95_p99_max_ns=percentiles([r['head_receipt_age_at_send_ns'] for r in requests]),cross_stream_skew_p50_p95_p99_max_ns={k:percentiles([abs(r['source_mapped_ns'][k]-r['source_mapped_ns']['head']) for r in requests]) for k in ('right','arm','gripper','head_state')},estimated_missing_camera_frames={k:int(sum(max(0,round(dt/(1e9/30))-1) for dt in intervals[k])) for k in ('head','right')},unsent_replaced_head_frames=max(0,callback_counts['head']-len(requests)),image_bytes=image_bytes,image_saved_count=len(list(out.glob('observation_*.npz'))),image_drops=image_drops,log_bytes=log_bytes,sdk_imported=any(n=='astribot' or n.startswith('astribot_sdk') for n in sys.modules),application_publishers_created=0,ros_service_clients_created=0,execution_enabled=False,complete=elapsed>=a.duration and bool(requests) and not fatal and not mapper.failed and (a.duration<600 or valid_span>=600) and max_request_gap<=mapping['max_request_gap_seconds'])
+        summary=dict(scheduler=scheduler.stats() if scheduler else None,shadow_thread_error=runner.error if runner else None,skipped_control_ticks=runner.skipped_ticks if runner else 0,valid_request_span_seconds=valid_span,max_valid_request_gap_seconds=max_request_gap,session_id=session,step=health['step'] if health else None,elapsed_seconds=elapsed,requested_duration_seconds=a.duration,valid_requests=len(requests),response_errors=response_errors,timeouts=timeouts,reconnections=reconnections,max_inflight=max_inflight,wire_payload_bytes=wire_bytes,mean_payload_mbps=wire_bytes*8/max(elapsed,1)/1e6,buffer=buffer.stats(),selection_rejections=dict(rejects),callback_errors=dict(errors),callbacks=dict(callback_counts),fatal=fatal,mapper_offset_ns=mapper.offset,clock_jump=mapper.failed,source_interval_p50_p95_p99_max_ns={k:percentiles(v) for k,v in intervals.items()},source_hz={k:(len(v)*1e9/sum(v) if v else 0) for k,v in intervals.items()},source_age_min_ns=min_age,source_age_max_ns=max_age,rtt_p50_p95_p99_max_ns=percentiles([r['rtt_ns'] for r in requests]),observation_to_response_p50_p95_p99_max_ns=percentiles([r['observation_to_response_ns'] for r in requests]),head_age_at_send_p50_p95_p99_max_ns=percentiles([r['head_receipt_age_at_send_ns'] for r in requests]),cross_stream_skew_p50_p95_p99_max_ns={k:percentiles([abs(r['source_mapped_ns'][k]-r['source_mapped_ns']['head']) for r in requests]) for k in ('right','arm','gripper','head_state')},estimated_missing_camera_frames={k:int(sum(max(0,round(dt/(1e9/30))-1) for dt in intervals[k])) for k in ('head','right')},unsent_replaced_head_frames=max(0,callback_counts['head']-len(requests)),image_bytes=image_bytes,image_saved_count=len(list(out.glob('observation_*.npz'))),image_drops=image_drops,log_bytes=log_bytes,sdk_imported=any(n=='astribot' or n.startswith('astribot_sdk') for n in sys.modules),application_publishers_created=0,ros_service_clients_created=0,execution_enabled=False,complete=elapsed>=a.duration and bool(requests) and not fatal and not mapper.failed and (a.duration<600 or valid_span>=600) and max_request_gap<=mapping['max_request_gap_seconds'])
         (out/'summary.json').write_text(json.dumps(summary,indent=2,allow_nan=False)+'\n')
         for stream in logs.values():stream.close()
         print(json.dumps(dict(event='finished',**summary)),flush=True)

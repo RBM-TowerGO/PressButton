@@ -3,10 +3,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from .protocol import Application, ProtocolError, MAX_BYTES, encode, decode
 
-def make_server(policy, port=8796, recorder=None):
+def make_server(policy, port=8796, recorder=None, tcp_nodelay=True):
     app = Application(policy, recorder)
     class Handler(BaseHTTPRequestHandler):
         protocol_version = 'HTTP/1.1'
+        disable_nagle_algorithm = tcp_nodelay
         def log_message(self, *args): pass
         def setup(self):
             super().setup()
