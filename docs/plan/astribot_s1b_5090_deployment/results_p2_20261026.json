@@ -1,0 +1,701 @@
+{
+  "date": "2026-10-26",
+  "status": "P2 passed for isolated head/right camera configuration",
+  "code_baseline": "7bd4fac",
+  "tested_source_sha256": {
+    "scripts/s1b_robot_bridge.py": "f014a58db4e5df0d781ca5aef9a905b6d2f3da90a82d14c91f55651fbd4a1df6",
+    "src/pressb/s1b_deployment/__init__.py": "4dd4376f78854232862379c72eba8e9601f8ad237234d05a1dbef6d996f1d358",
+    "src/pressb/s1b_deployment/contract.py": "13e7fc506b38aefbf37e1e67ec5dec7da61dfdb0801cc2ed1ab36593789ada0d",
+    "src/pressb/s1b_deployment/observation.py": "33fc1a1e5ad4ba4af1ae5f1017d608f60c3d80a7aaef18d82fe0a50d3ce297a3",
+    "src/pressb/s1b_deployment/policy.py": "698841af4b3b914addb5fedc2dc12a579c48f12869264319be9b09f16661f3c3",
+    "src/pressb/s1b_deployment/protocol.py": "155005b8fb13561c17c5c9e77ddf8b2531db84677ea36863acb1b1587e745e4a",
+    "src/pressb/s1b_deployment/recorder.py": "e02543cec1ea651c4c1361c0b7c2344e41d2b12480c9e35bd161423409e82498",
+    "src/pressb/s1b_deployment/server.py": "269bc677cdd16f77d4c1a08df0ba2ce1f1ceb2dea6a8e9a994a8bdc7b2128fb4",
+    "configs/s1b_deployment_v1.yaml": "351056cc78110d7dcc7466acf1d26f7809f6b4d08623b89b9ecd825ad854c252",
+    "configs/s1b_deployment_assets_v1.json": "8cf37b3c20b2c7e7acffb82e3a62ee4835c776fc972fef6e83185ca77338f690",
+    "configs/s1b_observation_v1.json": "9c9c18e9216115131fae90630f8c89fd95a0c8aa8d7e07e03477d50eb54896f0"
+  },
+  "camera_runtime": {
+    "source": "/opt/astribot_ros/software/astribot_camera",
+    "output": "/home/astribot/pressb_readonly_p2/camera_repro",
+    "baseline_sha256": {
+      "config/camera_config/camera_config.yaml": "40eb59859bbeec35c993cba405bed6f00e52e1678e5b2cfe5c22d3bc812ed35f",
+      "config/camera_config/camera_config.yaml.bak.20260526_214627": "3b414e3c66dc0ebb665f4d498b69c447241d1170d21afe8d96fd2310b36aca61",
+      "config/camera_config/camera_config_default.yaml": "3b414e3c66dc0ebb665f4d498b69c447241d1170d21afe8d96fd2310b36aca61",
+      "config/camera_config/per_camera_config/chest_camera.yaml": "6da26804f0acb8e21cbac2276234831cdf152b3c62cc2cbf8d499a3cdcdc4280",
+      "config/camera_config/per_camera_config/chest_camera.yaml.bak.20260526_214651": "59c0cccd318c2fce9f2ae91ed613cb17611c319f35083707acbcb5b5ba2efc30",
+      "config/camera_config/per_camera_config/chest_camera_color.yaml": "a52ad3a3bb7dc277dd02416a1f8eed5d8cf6ff6cfc0f82f5a0483d909ec4e333",
+      "config/camera_config/per_camera_config/chest_camera_depth.yaml": "1f6dcb148278951b389e5b1acd7d997782986417a3f7e5f98374db279a513196",
+      "config/camera_config/per_camera_config/head_depth_camera.yaml": "025f378e3faad9827e0e0f5043533ab1d1826c43ba2258e7804cb6a8fcf31177",
+      "config/camera_config/per_camera_config/head_depth_camera.yaml.bak.vlm_manip": "eda3e133f4cbd6449ebde3642836aded0d73a2aff34e025192581b25b36fe546",
+      "config/camera_config/per_camera_config/head_depth_camera_color.yaml": "f88281f63bc66d7e037fde3fb8153bd28b50e7ac617e6e4b7fe99825c9464a17",
+      "config/camera_config/per_camera_config/head_depth_camera_depth.yaml": "9bfd07a9d95a9e9a687fdf7071bc1862f9092f329a8ea577cde77f7a6a6841e8",
+      "config/camera_config/per_camera_config/head_stereo_camera.yaml": "0b1d7930a6767a40dd5b02b30ceb2a30d08e2ddc6559bca77fa7008f6241b614",
+      "config/camera_config/per_camera_config/head_stereo_left_camera.yaml": "360d3e50488fe1c9ff111d8eb6b3886200624304d3bbfc9eb8643f6282dc8e82",
+      "config/camera_config/per_camera_config/head_stereo_merge_camera.yaml": "fe8feb74ee9a336e6393739861d6d1798888ceec337b3ef46bf6587cddef021c",
+      "config/camera_config/per_camera_config/left_hand_camera.yaml": "90caebebb1519b9c683e8dd757e4ae26e1c1b8ae168cee0222368b6149e6cb0f",
+      "config/camera_config/per_camera_config/left_hand_camera_color.yaml": "7f72c4e5e4ae70b65c92db0cd28ca8007286877beefce7af7c2a5f4d51785c7c",
+      "config/camera_config/per_camera_config/left_hand_camera_depth.yaml": "50cb2ea355265df9c973a38344946b73dc8c645e5626c95ce7d15d28c8e84ec8",
+      "config/camera_config/per_camera_config/right_hand_camera.yaml": "e30ef110fd640f4c1a4dcba2d515d4e4e2d76eadff43f14e92854dd67bdf2f4c",
+      "config/camera_config/per_camera_config/right_hand_camera_color.yaml": "35989db7a8aafd0c6a1261b5d7970103a22a640b8d739f7c2383f75e5840c233",
+      "config/camera_config/per_camera_config/right_hand_camera_depth.yaml": "84e5601432111235ac7c709a055a828114469363a53ee57ee857c3cd32242ac1",
+      "config/camera_config/vendor_camera_config/merge_usb.yaml": "759cad8ae87b4c739a1780beb546a2767f8bbffaf9f7dea9b0e4fbda6a9164fc",
+      "config/camera_config/vendor_camera_config/orbbec_335.yaml": "78d60a141501bb53c20b80534af8bd6234830bfe6dfe728c774075eeba9ec022",
+      "config/camera_config/vendor_camera_config/orbbec_bolt.yaml": "741a7a6d4647d5148a7ec97fb606077dbe296336ff1523068ce483a6dd491a62",
+      "config/camera_config/vendor_camera_config/realsense_D405.yaml": "759cad8ae87b4c739a1780beb546a2767f8bbffaf9f7dea9b0e4fbda6a9164fc",
+      "config/camera_config/vendor_camera_config/stereo_uvc.yaml": "d5c735c8bd11e571554b893230223d17e2073d3f0341139f510d999fce9d6cc1",
+      "config/communication_config/communication_config.yaml": "d1e34f7dd20115f914f0703748dd22d217a14b64b6cd52d2a274569e9a1aa9fc",
+      "config/communication_config/ros_topic_config/topic_config.yaml": "fb44a132ca15cf97365eb97365077ac7a03360da0b1d47ca3b61296ee5d1648d",
+      "config/communication_config/zmq_config/zmq_config.yaml": "3a2e9b1a4bf4a8bf7fd8256c811b6bd1e000a066bad258b2f08d32c17ab24e01",
+      "config/sensor_calib.json": "40ffd44fa5b103b2b03f2877fa9f4c4bd4511de2bd72d17263456a0b7acc1cd3",
+      "lib/astribot_camera/astribot_camera_main": "097a4da23bd02d55316e24cf3e380248100e368636c36d20fb9f58517019d3f5",
+      "lib/astribot_camera/astribot_camera_sub": "097a4da23bd02d55316e24cf3e380248100e368636c36d20fb9f58517019d3f5"
+    },
+    "selected": [
+      {
+        "id": 6,
+        "location": "right_wrist_rgbd_color",
+        "config_file": "right_hand_camera_color.yaml"
+      },
+      {
+        "id": 9,
+        "location": "head_rgbd",
+        "config_file": "head_depth_camera.yaml"
+      }
+    ],
+    "head_rgbd_and_communication_config_preserved": true,
+    "resolved_sha256": {
+      "config/camera_config/camera_config.yaml": "eb409ec78735b0f54d5d88342e09fb0c4d0d0a7daa83e5eb9f8762f0c55970b7",
+      "config/camera_config/camera_config.yaml.bak.20260526_214627": "3b414e3c66dc0ebb665f4d498b69c447241d1170d21afe8d96fd2310b36aca61",
+      "config/camera_config/camera_config_default.yaml": "3b414e3c66dc0ebb665f4d498b69c447241d1170d21afe8d96fd2310b36aca61",
+      "config/camera_config/per_camera_config/chest_camera.yaml": "6da26804f0acb8e21cbac2276234831cdf152b3c62cc2cbf8d499a3cdcdc4280",
+      "config/camera_config/per_camera_config/chest_camera.yaml.bak.20260526_214651": "59c0cccd318c2fce9f2ae91ed613cb17611c319f35083707acbcb5b5ba2efc30",
+      "config/camera_config/per_camera_config/chest_camera_color.yaml": "a52ad3a3bb7dc277dd02416a1f8eed5d8cf6ff6cfc0f82f5a0483d909ec4e333",
+      "config/camera_config/per_camera_config/chest_camera_depth.yaml": "1f6dcb148278951b389e5b1acd7d997782986417a3f7e5f98374db279a513196",
+      "config/camera_config/per_camera_config/head_depth_camera.yaml": "025f378e3faad9827e0e0f5043533ab1d1826c43ba2258e7804cb6a8fcf31177",
+      "config/camera_config/per_camera_config/head_depth_camera.yaml.bak.vlm_manip": "eda3e133f4cbd6449ebde3642836aded0d73a2aff34e025192581b25b36fe546",
+      "config/camera_config/per_camera_config/head_depth_camera_color.yaml": "f88281f63bc66d7e037fde3fb8153bd28b50e7ac617e6e4b7fe99825c9464a17",
+      "config/camera_config/per_camera_config/head_depth_camera_depth.yaml": "9bfd07a9d95a9e9a687fdf7071bc1862f9092f329a8ea577cde77f7a6a6841e8",
+      "config/camera_config/per_camera_config/head_stereo_camera.yaml": "0b1d7930a6767a40dd5b02b30ceb2a30d08e2ddc6559bca77fa7008f6241b614",
+      "config/camera_config/per_camera_config/head_stereo_left_camera.yaml": "360d3e50488fe1c9ff111d8eb6b3886200624304d3bbfc9eb8643f6282dc8e82",
+      "config/camera_config/per_camera_config/head_stereo_merge_camera.yaml": "fe8feb74ee9a336e6393739861d6d1798888ceec337b3ef46bf6587cddef021c",
+      "config/camera_config/per_camera_config/left_hand_camera.yaml": "90caebebb1519b9c683e8dd757e4ae26e1c1b8ae168cee0222368b6149e6cb0f",
+      "config/camera_config/per_camera_config/left_hand_camera_color.yaml": "7f72c4e5e4ae70b65c92db0cd28ca8007286877beefce7af7c2a5f4d51785c7c",
+      "config/camera_config/per_camera_config/left_hand_camera_depth.yaml": "50cb2ea355265df9c973a38344946b73dc8c645e5626c95ce7d15d28c8e84ec8",
+      "config/camera_config/per_camera_config/right_hand_camera.yaml": "e30ef110fd640f4c1a4dcba2d515d4e4e2d76eadff43f14e92854dd67bdf2f4c",
+      "config/camera_config/per_camera_config/right_hand_camera_color.yaml": "35989db7a8aafd0c6a1261b5d7970103a22a640b8d739f7c2383f75e5840c233",
+      "config/camera_config/per_camera_config/right_hand_camera_depth.yaml": "84e5601432111235ac7c709a055a828114469363a53ee57ee857c3cd32242ac1",
+      "config/camera_config/vendor_camera_config/merge_usb.yaml": "759cad8ae87b4c739a1780beb546a2767f8bbffaf9f7dea9b0e4fbda6a9164fc",
+      "config/camera_config/vendor_camera_config/orbbec_335.yaml": "78d60a141501bb53c20b80534af8bd6234830bfe6dfe728c774075eeba9ec022",
+      "config/camera_config/vendor_camera_config/orbbec_bolt.yaml": "741a7a6d4647d5148a7ec97fb606077dbe296336ff1523068ce483a6dd491a62",
+      "config/camera_config/vendor_camera_config/realsense_D405.yaml": "759cad8ae87b4c739a1780beb546a2767f8bbffaf9f7dea9b0e4fbda6a9164fc",
+      "config/camera_config/vendor_camera_config/stereo_uvc.yaml": "d5c735c8bd11e571554b893230223d17e2073d3f0341139f510d999fce9d6cc1",
+      "config/communication_config/communication_config.yaml": "d1e34f7dd20115f914f0703748dd22d217a14b64b6cd52d2a274569e9a1aa9fc",
+      "config/communication_config/ros_topic_config/topic_config.yaml": "fb44a132ca15cf97365eb97365077ac7a03360da0b1d47ca3b61296ee5d1648d",
+      "config/communication_config/zmq_config/zmq_config.yaml": "3a2e9b1a4bf4a8bf7fd8256c811b6bd1e000a066bad258b2f08d32c17ab24e01",
+      "config/sensor_calib.json": "40ffd44fa5b103b2b03f2877fa9f4c4bd4511de2bd72d17263456a0b7acc1cd3",
+      "lib/astribot_camera/astribot_camera_main": "097a4da23bd02d55316e24cf3e380248100e368636c36d20fb9f58517019d3f5",
+      "lib/astribot_camera/astribot_camera_sub": "097a4da23bd02d55316e24cf3e380248100e368636c36d20fb9f58517019d3f5"
+    }
+  },
+  "analysis": {
+    "summary": {
+      "valid_request_span_seconds": 607.829195709,
+      "max_valid_request_gap_seconds": 0.238591776,
+      "session_id": "1847dc9a-606b-410b-b844-bf2eb0bb8c9c",
+      "step": 2000,
+      "elapsed_seconds": 610.0305470579999,
+      "requested_duration_seconds": 610.0,
+      "valid_requests": 5236,
+      "response_errors": 0,
+      "timeouts": 0,
+      "reconnections": 0,
+      "max_inflight": 1,
+      "wire_payload_bytes": 18137305032,
+      "mean_payload_mbps": 237.85438443331668,
+      "buffer": {
+        "counts": {
+          "arm": 152363,
+          "head_state": 152364,
+          "gripper": 152360,
+          "head": 18340,
+          "right": 18230
+        },
+        "invalid": {},
+        "overwrites": {
+          "arm": 152107,
+          "gripper": 152104,
+          "head_state": 152108,
+          "head": 18084,
+          "right": 17974
+        },
+        "high_water": {
+          "arm": 256,
+          "head_state": 256,
+          "gripper": 256,
+          "head": 256,
+          "right": 256
+        },
+        "occupancy": {
+          "head": 256,
+          "right": 256,
+          "arm": 256,
+          "gripper": 256,
+          "head_state": 256
+        },
+        "capacity": 256
+      },
+      "selection_rejections": {
+        "missing_stream": 410,
+        "stale_head": 6,
+        "skew_gripper": 2,
+        "stale_right": 4,
+        "stale_after_encoding": 1,
+        "no_new_head": 1
+      },
+      "callback_errors": {},
+      "callbacks": {
+        "arm": 152363,
+        "head_state": 152364,
+        "gripper": 152360,
+        "head": 18340,
+        "right": 18230
+      },
+      "fatal": [],
+      "mapper_offset_ns": -1792988100507917042,
+      "clock_jump": false,
+      "source_interval_p50_p95_p99_max_ns": {
+        "head": [
+          33148160.0,
+          34423116.8,
+          36761722.879999995,
+          56076032.0
+        ],
+        "right": [
+          33341184.0,
+          33610137.6,
+          33950136.32,
+          66721024.0
+        ],
+        "arm": [
+          3999997.0,
+          4006054.0,
+          4009038.0,
+          124008464.0
+        ],
+        "gripper": [
+          3999987.0,
+          4007145.0,
+          4010567.42,
+          124009339.0
+        ],
+        "head_state": [
+          3999995.0,
+          4003759.0,
+          4005825.0,
+          111997865.0
+        ]
+      },
+      "source_hz": {
+        "head": 30.167191339169644,
+        "right": 29.987522316494,
+        "arm": 249.76230669304246,
+        "gripper": 249.75902746869247,
+        "head_state": 249.76394376342353
+      },
+      "source_age_min_ns": {
+        "arm": -6780,
+        "head_state": -77053,
+        "gripper": 217935,
+        "head": 64343027,
+        "right": 51740958
+      },
+      "source_age_max_ns": {
+        "arm": 21319540,
+        "head_state": 20987784,
+        "gripper": 20839461,
+        "head": 184744312,
+        "right": 163324049
+      },
+      "rtt_p50_p95_p99_max_ns": [
+        103135225.0,
+        105576516.25,
+        110311356.89999996,
+        225640053.0
+      ],
+      "observation_to_response_p50_p95_p99_max_ns": [
+        137217995.0,
+        152326903.25,
+        155588145.0,
+        256024655.0
+      ],
+      "head_age_at_send_p50_p95_p99_max_ns": [
+        33719369.5,
+        48873138.0,
+        51053212.199999996,
+        66898471.0
+      ],
+      "cross_stream_skew_p50_p95_p99_max_ns": {
+        "right": [
+          8161920.0,
+          16054976.0,
+          18117798.39999999,
+          28194048.0
+        ],
+        "arm": [
+          970270.5,
+          1897433.0,
+          1983576.1499999994,
+          8798225.0
+        ],
+        "gripper": [
+          965273.5,
+          1894348.0,
+          1980901.05,
+          8826625.0
+        ],
+        "head_state": [
+          969546.0,
+          1899986.25,
+          1976402.1499999997,
+          3249163.0
+        ]
+      },
+      "estimated_missing_camera_frames": {
+        "head": 18,
+        "right": 3
+      },
+      "unsent_replaced_head_frames": 13104,
+      "image_bytes": 211073664,
+      "image_saved_count": 61,
+      "image_drops": 0,
+      "log_bytes": 210635096,
+      "sdk_imported": false,
+      "application_publishers_created": 0,
+      "ros_service_clients_created": 0,
+      "execution_enabled": false,
+      "complete": true
+    },
+    "sources": {
+      "arm": {
+        "count": 152363,
+        "observed_span_seconds": 610.027998289,
+        "header_strictly_monotonic": true,
+        "receipt_strictly_monotonic": true,
+        "source_to_receipt_p50_p95_p99_max_ns": [
+          1239153.0,
+          6959323.299999999,
+          10499676.940000001,
+          21319540.0
+        ],
+        "header_gap_p50_p95_p99_max_ns": [
+          3999997.0,
+          4006054.0,
+          4009038.0,
+          124008464.0
+        ],
+        "receipt_gap_p50_p95_p99_max_ns": [
+          3849297.5,
+          9189375.849999996,
+          11763384.939999979,
+          140523211.0
+        ],
+        "estimated_missing_by_nominal_header_period": 145
+      },
+      "head_state": {
+        "count": 152364,
+        "observed_span_seconds": 610.028003659,
+        "header_strictly_monotonic": true,
+        "receipt_strictly_monotonic": true,
+        "source_to_receipt_p50_p95_p99_max_ns": [
+          1399556.5,
+          7363112.65,
+          11078049.639999999,
+          20987784.0
+        ],
+        "header_gap_p50_p95_p99_max_ns": [
+          3999995.0,
+          4003759.0,
+          4005825.0,
+          111997865.0
+        ],
+        "receipt_gap_p50_p95_p99_max_ns": [
+          3860124.0,
+          9356424.7,
+          12172023.460000006,
+          131409664.0
+        ],
+        "estimated_missing_by_nominal_header_period": 144
+      },
+      "gripper": {
+        "count": 152360,
+        "observed_span_seconds": 610.023996106,
+        "header_strictly_monotonic": true,
+        "receipt_strictly_monotonic": true,
+        "source_to_receipt_p50_p95_p99_max_ns": [
+          1595922.0,
+          7614546.749999994,
+          11539654.580000013,
+          20839461.0
+        ],
+        "header_gap_p50_p95_p99_max_ns": [
+          3999987.0,
+          4007145.0,
+          4010567.42,
+          124009339.0
+        ],
+        "receipt_gap_p50_p95_p99_max_ns": [
+          3857568.0,
+          9351152.700000001,
+          12069029.120000036,
+          140554928.0
+        ],
+        "estimated_missing_by_nominal_header_period": 147
+      },
+      "head": {
+        "count": 18340,
+        "observed_span_seconds": 607.912078848,
+        "header_strictly_monotonic": true,
+        "receipt_strictly_monotonic": true,
+        "source_to_receipt_p50_p95_p99_max_ns": [
+          65118430.0,
+          67577640.2,
+          70230468.89,
+          184744312.0
+        ],
+        "header_gap_p50_p95_p99_max_ns": [
+          33148160.0,
+          34423116.8,
+          36761722.879999995,
+          56076032.0
+        ],
+        "receipt_gap_p50_p95_p99_max_ns": [
+          33152703.0,
+          36103551.19999999,
+          39817954.77999998,
+          152193332.0
+        ],
+        "estimated_missing_by_nominal_header_period": 18
+      },
+      "right": {
+        "count": 18230,
+        "observed_span_seconds": 607.88616704,
+        "header_strictly_monotonic": true,
+        "receipt_strictly_monotonic": true,
+        "source_to_receipt_p50_p95_p99_max_ns": [
+          52387607.0,
+          58506760.0,
+          61380478.70999997,
+          163324049.0
+        ],
+        "header_gap_p50_p95_p99_max_ns": [
+          33341184.0,
+          33610137.6,
+          33950136.32,
+          66721024.0
+        ],
+        "receipt_gap_p50_p95_p99_max_ns": [
+          33339255.0,
+          37014012.199999996,
+          40340567.76,
+          144323826.0
+        ],
+        "estimated_missing_by_nominal_header_period": 3
+      }
+    },
+    "invalid_sources": {},
+    "invalid_requests": {},
+    "valid_request_span_seconds": 607.829195709,
+    "first_request_receipt_ns": 1276354141363,
+    "last_request_receipt_ns": 1884183337072,
+    "request_gap_p50_p95_p99_max_ns": [
+      115757647.0,
+      119338670.0,
+      123991590.28,
+      238591776.0
+    ],
+    "rtt_p50_p95_p99_max_ns": [
+      103135225.0,
+      105576516.25,
+      110311356.89999996,
+      225640053.0
+    ],
+    "header_source_to_response_p50_p95_p99_max_ns": [
+      202414336.0,
+      217400417.75,
+      220615651.35,
+      322221261.0
+    ],
+    "encoding_and_selection_p50_p95_p99_max_ns": [
+      33719369.5,
+      48873138.0,
+      51053212.199999996,
+      66898471.0
+    ],
+    "inference_p50_p95_p99_max_seconds": [
+      0.04506473592482507,
+      0.045921971439383924,
+      0.04671293469145893,
+      0.0803482229821384
+    ],
+    "preprocessing_p50_p95_p99_max_seconds": [
+      0.00253248936496675,
+      0.0026223885361105204,
+      0.002844887436367569,
+      0.004328273236751556
+    ],
+    "robot_wall_monotonic_offset_range_ns": 198563,
+    "responses_with_any_future_point_fraction": 0.9998090145148969,
+    "future_point_count_histogram": {
+      "5": 6,
+      "4": 2001,
+      "3": 3225,
+      "2": 3,
+      "0": 1
+    },
+    "source_log_records": 493657,
+    "source_log_matches_callback_counts": true,
+    "artifact_sha256": {
+      "events.jsonl": "fe5d6b480f4d2a3e1bba75144a6b04a0f7d308e6fd1c513135498e31aff89724",
+      "mapping.json": "45d0900b3ac9a96ab644770fe4e3b28ffcd0836851a6b33c7c5db7b4baaf7053",
+      "observation_00000001.npz": "a1fea6e0607c920a3490dbf2fdb8aec19f349e1fe86988c320e306c71a0c0a1c",
+      "observation_00000303.npz": "35f7fc09a368f450239a05cc137e22d868af4a4e27d71fd558f1252c5f40ca1a",
+      "observation_00000607.npz": "36baeb9bc6d87ac43d03874efbbbcf9e91181484860fa57ba98e063f40160eac",
+      "observation_00000912.npz": "3d1a1761af1f3a36ad2ef32a3bb6844ea3b4430bcae2cedccb4c8c614255ec74",
+      "observation_00001217.npz": "4e242ff1fb95639449a11bdbd59b09482292407415dcda27a38f7da3c5e296dc",
+      "observation_00001520.npz": "125dc063c103b3200505567714f9792c4363167b7ee87eadcea049e5629c334c",
+      "observation_00001824.npz": "3e398389591624e8c3e385893d0fe8a59db82e7c04330313d0fc422b2ef6f923",
+      "observation_00002127.npz": "1c19fe29f67b9e88f9e1db764c18fea910046dbe192b24d535a2920036d6fab2",
+      "observation_00002432.npz": "54aeb4942246de0303119d6229e44611f6d05f3e0d32ee2db6fb0f3cbca89d1c",
+      "observation_00002734.npz": "6f21cc63cc55c30cbff75d4ff54798bcb9a09606de87a084209d28a5348d4a2a",
+      "observation_00003036.npz": "eed306b3596a5f2f156d4b7c683f45abc23d0d01b9a65d0da0f2ac2ad02627e3",
+      "observation_00003340.npz": "94d46d67378d0b83a8f581f8f85a460c43657e1eca66fd86921ce8d68fa23762",
+      "observation_00003644.npz": "3cb7bd826c2485136f95500d028ba03704b7c4e44eecce09d6a6be41da950f7a",
+      "observation_00003947.npz": "ca0f520d5d4221f115010efd17f9f977b5bc235a3ec6aae8d11f1e3a453d983b",
+      "observation_00004251.npz": "d19be93ac265f3057ad2b529d3b260415a63e9534a60204edf3d31b4ab1d8ff5",
+      "observation_00004555.npz": "2c9ca525e4a43d296adce1b81b69f03492d3ec02506e13021f41908c3a2ce120",
+      "observation_00004859.npz": "f5c050f43c1dded4c275cd809ec3ce13f76c3f3524fde281a4cdb1b99dd49180",
+      "observation_00005163.npz": "7824da2a9b868bbdc49890790f919d32f81b2ad0a240ebba43d6b9fb0e17428d",
+      "observation_00005465.npz": "d328df5e0227413d8786c2ec612f8f930a950be2d1a00b35242d29a484964acc",
+      "observation_00005768.npz": "44e9b98ee87c255538ceb0c7c2c2eadf94a13852b0dec1062dea31bd98b790e0",
+      "observation_00006072.npz": "13325257f64ac868e9b876511f9c903892a5bb29b03562d25e422f6dfd8c5248",
+      "observation_00006377.npz": "da91539154a9b670462b5c643d7d7aa39d4b8e8d72e8a561f690f45e9d6d1934",
+      "observation_00006681.npz": "f6a2cfa152915a7222e0b7beba62188b1f140d5007201ef479ceb84f3394c047",
+      "observation_00006984.npz": "ace858d4915d9fa1452f99fff3cf64680b34ed6baf3b8c08a18efa6a2bf60040",
+      "observation_00007288.npz": "8dcfc2e06668ec23c426590c02c9f052827ec4d0090703bc7fa4217f002471cb",
+      "observation_00007593.npz": "e8748fd1f32dd0cfc939aa23ab891760196ca0a838fa05b4a5dca1491074a3db",
+      "observation_00007898.npz": "060941284580785c168c6f586925419be8a9246cb0bf6fc597b6f89684cd4370",
+      "observation_00008202.npz": "49048bc363631fc2c2f45cba893f89f81068ad8454d57e3cd5201e432d51c866",
+      "observation_00008505.npz": "78a422c5848899b2939653418c514f92ebf69266942a176e34c66d64f27a6cb6",
+      "observation_00008809.npz": "eedcc6fa5578615b673f73c8979c73e465eb7310e81a3c5e3bfe70f2ad1392ac",
+      "observation_00009113.npz": "4c5408b60f6c7acda95566661ee76a1e8c9ab8aaf51871256ff9c9a04e790fc5",
+      "observation_00009416.npz": "8f64e8a1ff67fc0daf4337951a6732a1a6b5aac722a8980892b206fd72814d3f",
+      "observation_00009721.npz": "f64d3cb05055425d0012d6227df40bac1ecece1ef1986b6e008b5043fe91aebf",
+      "observation_00010025.npz": "dfc40c22ed9f6cefe5ba78b4b2e984ccce78d728d587cd8bef602c3916302781",
+      "observation_00010329.npz": "960e545857d38a7b029a0efb04de9210ce5f426a095fba7866bb6aeda874d268",
+      "observation_00010633.npz": "55e46a892cce68caec6d4e0e914bd119141d6e4a7402d3666419139f6aa33554",
+      "observation_00010938.npz": "fccabb44cf64ba9b17f7192bacdbe30d300eac960f46a0a2c1ca8602e87a8511",
+      "observation_00011243.npz": "fa2849c09ccb08791ea0d3364514293e9a91f5bf56db5af4cf37c5041d54b46a",
+      "observation_00011546.npz": "d5a7625edad1e7c2913e47cd7d13346d477e2ddfa8fb41608b8fa843a1806b28",
+      "observation_00011850.npz": "812fb4a256936e733ca381825958cf5aa9a85c43d6f45ada5fa06537d7d02755",
+      "observation_00012154.npz": "4fecb2ae9d083513b1d5e5a099489801f0cb7b3c73018108bfa92a294b0681b1",
+      "observation_00012456.npz": "64c98e1fa3decf1598b632a61d07cd1a32318beb0ec4cb2a35f6064fb83e205c",
+      "observation_00012761.npz": "ca3d93f0008d12e6477204304f720e3adeb49de187ce0c3b9801ac992700eb94",
+      "observation_00013065.npz": "bf8edbdd42e56cb5bf4ad9b1eaf73d6788a561d846c13dec09d06e7f94b40cf1",
+      "observation_00013369.npz": "ea98c5f7484d8b621c3c1a9c94c605db6a2f58f61eef70e27eee991638113941",
+      "observation_00013672.npz": "93fd7ce82020573e67ed4b45cb1afa63ec39f4a437cca8d3a5e3d3334ef7d2cc",
+      "observation_00013976.npz": "dcbdc7770b7ffbc18211e79cc6a626a5622b46c6ee644c184be4db7e22ec5795",
+      "observation_00014281.npz": "65208ffa80007d814df4725fcc9f81d5ab6d70f6f8ba30676d381087d9aed88c",
+      "observation_00014585.npz": "132e9648d193caf57cda6506e4093b9a9a50aeaad69a6cf45d902b6efb6ab2bb",
+      "observation_00014890.npz": "92952b54b70b47e5b7e5d2f8cbbc6ea920e7c56dda8bef44fb2f510f86bc99b4",
+      "observation_00015192.npz": "337cc6737fc13a9165450f3dba660ffcf82d7f38024868c8392fef3c41c84f94",
+      "observation_00015495.npz": "cd57f7585954ee09d0ae09b7b68216b30eb8b5d5dca5c0ffb84b2661d02f082d",
+      "observation_00015798.npz": "8a7005c310a5fc70be3b91143bbc72368f6cac9eefc5670cd4858171b6a577ed",
+      "observation_00016102.npz": "568bc38c75d41a9b22a9d1512e2e6d7b96dfa555bcb25725de7ef989f90665ee",
+      "observation_00016405.npz": "87c8e52d10163ba877e9b8fa95745d0351b0c9424420aea8ebde8940ed96a995",
+      "observation_00016708.npz": "4f1f96ad0ce16248b437d943244143703c8059f3ff982f9a4c7cbb02beb14ffa",
+      "observation_00017012.npz": "a9c9f694f27815f3b482d02e736f97e97be54b83edf278998a9a1209c4e7df6f",
+      "observation_00017314.npz": "e7af3b782799d2c0646fd94176b41c5b7d783de4afc81fe7e830a37c0a0e753e",
+      "observation_00017618.npz": "8307fea1391366fb071e3af8096cd9aa22ede8882a7e56100c2bbb6fce89572f",
+      "observation_00017923.npz": "68834ad97e4d9c20c1b4731a221c9f2a0adad736abd0c24daecd7ecddb208e17",
+      "observation_00018228.npz": "5452a16bc0b565d6b22c2b6343e52495a0b0263580c86bd2769d4b50f6f59082",
+      "requests.jsonl": "fdc7fe65c761af425b67664d76a6da27628be583cc2064bce0c3656db5a0f20d",
+      "resolved_config.json": "b9bb5aa6040f8add22e09d6d161b4d5385cd83a9f121664fc32fb63f705e82c4",
+      "sources.jsonl": "5eaa0fe8000ccb4098ede33a037f4da01b97bb5d5335193ee5338db7b1418885",
+      "summary.json": "37d698582cf3fd318c1ff23f1327413076c94d4a417d35613caa27bf3416369c"
+    }
+  },
+  "tests": {
+    "passed": 32,
+    "command": ".venv-astribot-inference/bin/python -m pytest tests/test_s1b_deployment.py tests/test_s1b_observation.py -q"
+  },
+  "failed_trials": [
+    {
+      "name": "probe15",
+      "summary": {
+        "session_id": "bab9200f-1aed-4170-a806-4689e7804c05",
+        "step": 2000,
+        "elapsed_seconds": 15.000597004000042,
+        "requested_duration_seconds": 15.0,
+        "valid_requests": 0,
+        "response_errors": 0,
+        "timeouts": 0,
+        "reconnections": 0,
+        "max_inflight": 0,
+        "wire_payload_bytes": 0,
+        "mean_payload_mbps": 0.0,
+        "buffer": {
+          "counts": {
+            "arm": 3751,
+            "gripper": 3751,
+            "head_state": 3751
+          },
+          "invalid": {},
+          "overwrites": {
+            "arm": 3495,
+            "head_state": 3495,
+            "gripper": 3495
+          },
+          "high_water": {
+            "arm": 256,
+            "gripper": 256,
+            "head_state": 256
+          },
+          "occupancy": {
+            "head": 0,
+            "right": 0,
+            "arm": 256,
+            "gripper": 256,
+            "head_state": 256
+          },
+          "capacity": 256
+        },
+        "selection_rejections": {
+          "missing_stream": 2925
+        },
+        "callback_errors": {},
+        "callbacks": {
+          "arm": 3751,
+          "gripper": 3751,
+          "head_state": 3751
+        },
+        "fatal": [],
+        "mapper_offset_ns": -1792988100507916337,
+        "clock_jump": false,
+        "source_interval_p50_p95_p99_max_ns": {
+          "head": [],
+          "right": [],
+          "arm": [
+            3999979.0,
+            4006723.4,
+            4009646.12,
+            4047321.0
+          ],
+          "gripper": [
+            3999991.5,
+            4007636.75,
+            4011195.84,
+            4047481.0
+          ],
+          "head_state": [
+            4000012.0,
+            4004634.55,
+            4006414.81,
+            4049060.0
+          ]
+        },
+        "source_hz": {
+          "head": 0,
+          "right": 0,
+          "arm": 250.00004413334113,
+          "gripper": 250.0000740833553,
+          "head_state": 250.00007793335763
+        },
+        "source_age_min_ns": {
+          "arm": 244521,
+          "gripper": 484347,
+          "head_state": 230083
+        },
+        "source_age_max_ns": {
+          "arm": 9472593,
+          "gripper": 10802761,
+          "head_state": 10003292
+        },
+        "rtt_p50_p95_p99_max_ns": [],
+        "observation_to_response_p50_p95_p99_max_ns": [],
+        "head_age_at_send_p50_p95_p99_max_ns": [],
+        "cross_stream_skew_p50_p95_p99_max_ns": {
+          "right": [],
+          "arm": [],
+          "gripper": [],
+          "head_state": []
+        },
+        "estimated_missing_camera_frames": {
+          "head": 0,
+          "right": 0
+        },
+        "unsent_replaced_head_frames": 0,
+        "image_bytes": 0,
+        "image_saved_count": 0,
+        "image_drops": 0,
+        "log_bytes": 4382841,
+        "sdk_imported": false,
+        "ros_publishers_created": 0,
+        "ros_service_clients_created": 0,
+        "execution_enabled": false,
+        "complete": false
+      }
+    },
+    {
+      "name": "all_camera_long_trial",
+      "complete": false,
+      "valid_requests": 2713,
+      "valid_span_seconds": 316.25344419,
+      "reason": "vendor camera main segmentation fault after JPEG errors; stale observations rejected; pre-fix SIGINT cleanup also hit duplicate rclpy shutdown",
+      "path": "outputs/s1b_deployment/p2_20261026/robot_runs/p2_final_610"
+    },
+    {
+      "name": "minimal RGB-only experiment",
+      "complete": false,
+      "reason": "CameraType=1 raised bad_optional_access; disabling vendor depth publisher slots also failed; neither configuration used for final run"
+    }
+  ],
+  "evidence_sha256": {
+    "camera_minimal_gdb.log": "a7edbe75ac737c1fa59b36246a8a781171200991b23ae9737d9077ec2e3a6531",
+    "cleanup.log": "553339d3af7c6afdf3017e3696080cfcbe9791da6f9cb58899700c9f43b92b22",
+    "bridge_minimal_final.log": "ff96ddadc4eeb1acfcae491e7dacaabd29d3c817498445eb9415fbeeaada8e50",
+    "cleanup_verification.txt": "0a00c4ff2d6c1668fd98fcb5c96578970867c40ad9565d70998812328de86b08",
+    "camera_minimal_driver.log": "30dad4bf9632d19ae3b17314ee1548fb0cf0ae61ddb3746329e0a0f356023b7e",
+    "probe15b_summary.json": "09d54816d2ba1a855a1693b086b4723af0109335082d527596d9f56eecc76e6a",
+    "source_manifest_final.json": "9b48f71e9bfd7731ab397002c64c5c0334cfb74f8a93789fa13217df9f38fad7",
+    "camera_preparation_manifest.json": "81f3f4c0a0fbf642f7d833b7b4ebbfe67ad8f7045c2cf3b49c3beb7c6df54bb4",
+    "policy_server.log": "273c26cc590215bae4a49252fb1c222adb3bed1d4db41f9eab24cf8d72edcd9f",
+    "analysis.json": "5320da12de5a3db5b0f107043f6f9679f9ecf553fa6f84ef92a1f491da150e80",
+    "camera_driver.log": "fafd913243db03228e52bdef971763ba6958818933000aedec54caac852f9434",
+    "source_manifest.json": "bcc8b88546af7b3bb3db59728764adbfd827eb131754318db362a85f1e686c64",
+    "probe15_summary.json": "f6a38c865e8bfb7bc9ed85095191bd196e48b61728cf094809509cda1067b21a",
+    "bridge_probe15.log": "526fd541fd50be29f9a4f9413e3d362837d0d16586501f48e1a8d8ef1a7d89cd",
+    "robot_final_audit.txt": "3fded514e0e13a2205e9b94b357d875bd2d3090118836cd62f33d95d833897db",
+    "tests.txt": "ef8dcc2e9f36d90cbbde693a8ed465b3f391495a1c1189740d7e4d9c55c8ada8",
+    "camera_minimal_compress.log": "d908bb360eeea4ac3c61446d52e3c6e7e3195fb89975324e434ed565f8215060",
+    "bridge_final.log": "408626bb19dff4ba64cf6c4a7682fad3f8a512a912fbb9b292582739a8db4c5d",
+    "robot_audit.txt": "345c8b9cf0de451134020170e31b654ff3ef27d6da89eb75c603f2e40a926e9e",
+    "camera_minimal_compress_v3.log": "907da1f12a741cd4961395eef6af8e761a52d51e786f20b0c45a02f120b5f233",
+    "network_local.txt": "41397fb64800e037b9c6ebfb5d409b57aea8244806696b6c01b96e1d77d40956",
+    "camera_minimal_driver_v2.log": "75cf7d46a5b6634a4b28836b71639586dcd7c9e9acd0be5f605a58c3c2064112",
+    "stream_probe.jsonl": "e91bf8c3341ce0e6f92f5073b92c6a45fff3dfaea2e7b77644eaac015836d797",
+    "bridge_probe15b.log": "44c2c5f989bc0085374b1de9cf9d60e17bb7e38a42ddd1bf2e8cd847a9b27697",
+    "camera_compress.log": "505e280adc36ac97f105d3e127eb88fabb9d87f422a52b483fe7fe822e3cf63b"
+  },
+  "raw_root": "outputs/s1b_deployment/p2_20261026",
+  "robot_raw_root": "/home/astribot/pressb_readonly_p2/outputs/p2_minimal_final_610",
+  "cleanup": {
+    "robot_camera_processes_stopped": true,
+    "calibration_helper_stopped": true,
+    "bridge_stopped": true,
+    "policy_server_stopped": true,
+    "tunnel_stopped": true,
+    "original_vendor_files_unchanged": true,
+    "robot_interface_route_preserved": true
+  }
+}
