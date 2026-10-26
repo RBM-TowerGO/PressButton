@@ -1,0 +1,424 @@
+{
+  "date": "2026-10-26",
+  "p0_status": "passed",
+  "config_sha256": "edfb098142b71cfef7fdd3bcf4edd7bd706061addd718ef0349c27cf47f5f0ce",
+  "asset_lock_sha256": "8cf37b3c20b2c7e7acffb82e3a62ee4835c776fc972fef6e83185ca77338f690",
+  "checkpoints": [
+    {
+      "step": 2000,
+      "model_sha256": "522b6425d3c71b43d1b41fb72e5468c9dbe5619828211501c3b12136e38ce99d",
+      "data_contract_sha256": "3a4c776dab3d97b0634ec782eb464145a8a6c1b50f305a32e173c60bb914345c"
+    },
+    {
+      "step": 8000,
+      "model_sha256": "3c56bf3aeb692eebb74a5fbf2753b0d2fc30ebeed2efb6ad26ad7553cc885765",
+      "data_contract_sha256": "3a4c776dab3d97b0634ec782eb464145a8a6c1b50f305a32e173c60bb914345c"
+    }
+  ],
+  "sdk": {
+    "archived_commit": "2644cdfba47f3dd311d923b172ac6c24909f6fda",
+    "source": "docs/astribot/s1b_contract_20261025/README.md",
+    "local_sdk_imported": false,
+    "robot_connected": false,
+    "current_robot_sdk_version_verified": false
+  },
+  "automated_tests": {
+    "command": ".venv-astribot-inference/bin/python -m pytest tests/test_s1b_deployment.py -q",
+    "passed": 21
+  },
+  "p1": {
+    "2000": {
+      "summary": {
+        "http_first_request_rtt_seconds": 0.06561874924227595,
+        "load_peak_allocated_gib": 9.571345329284668,
+        "http_first_request_inference_seconds": 0.05667962273582816,
+        "step": 2000,
+        "joints": [
+          "astribot_arm_right_joint_1",
+          "astribot_arm_right_joint_2",
+          "astribot_arm_right_joint_3",
+          "astribot_arm_right_joint_4",
+          "astribot_arm_right_joint_5",
+          "astribot_arm_right_joint_6",
+          "astribot_arm_right_joint_7",
+          "astribot_gripper_right/closure",
+          "astribot_head_joint_1",
+          "astribot_head_joint_2"
+        ],
+        "anchors": 48,
+        "load_seconds": 51.97880308609456,
+        "first_inference_seconds": 0.2266834038309753,
+        "warmup": 20,
+        "iterations": 200,
+        "p50_p95_p99_seconds": [
+          0.04543882911093533,
+          0.04596198482904583,
+          0.046595036387443535
+        ],
+        "peak_allocated_gib": 9.655643463134766,
+        "peak_reserved_gib": 9.759765625,
+        "per_horizon_per_dimension_mae": [
+          [
+            0.01755303074605763,
+            0.006117131987897058,
+            0.008230971793333689,
+            0.015221737325191498,
+            0.009753421104202667,
+            0.02066034295906623,
+            0.008045061801870665,
+            0.034671810475022845,
+            2.1886080503463745e-08,
+            8.692344029744467e-09
+          ],
+          [
+            0.017959874608398724,
+            0.0064692241527761025,
+            0.008072917660077414,
+            0.017682825525601704,
+            0.01008163175235192,
+            0.022782679957648117,
+            0.00928944597641627,
+            0.06993990883347578,
+            2.499048908551534e-08,
+            1.1175870895385742e-08
+          ],
+          [
+            0.019612001914841432,
+            0.006894326652400196,
+            0.008676362534364065,
+            0.020401179790496826,
+            0.010725205608954033,
+            0.025297527201473713,
+            0.010003994839886824,
+            0.06924012404245634,
+            1.924733320871989e-08,
+            1.3659397761027018e-08
+          ],
+          [
+            0.020052649585219722,
+            0.007489785202778876,
+            0.008770518004894257,
+            0.023105936745802563,
+            0.011706157277027765,
+            0.026931642709920805,
+            0.010966450596849123,
+            0.10012933437246829,
+            2.2196521361668904e-08,
+            9.934107462565104e-09
+          ],
+          [
+            0.02173957754469787,
+            0.008020756067708135,
+            0.009147308766841888,
+            0.025956471761067707,
+            0.01230875945960482,
+            0.029261122302462656,
+            0.012026270230611166,
+            0.14022022807815424,
+            2.2196521361668904e-08,
+            1.0554989178975424e-08
+          ],
+          [
+            0.023379486830284197,
+            0.008391313487663865,
+            0.009228569765885672,
+            0.028265918294588726,
+            0.0127664798249801,
+            0.030639943356315296,
+            0.012975146062672138,
+            0.08967269968707114,
+            2.491287887096405e-08,
+            1.179675261179606e-08
+          ],
+          [
+            0.025221477262675762,
+            0.008955971027414003,
+            0.00960392008225123,
+            0.03048998365799586,
+            0.013752920553088188,
+            0.03173670778051019,
+            0.013719505940874418,
+            0.16421780036762357,
+            2.4369607369105022e-08,
+            6.829698880513509e-09
+          ]
+        ],
+        "per_dimension_mae": [
+          0.020788299784596478,
+          0.007476929796948319,
+          0.008818652658235459,
+          0.02301772187153498,
+          0.011584939368601357,
+          0.02675856660962814,
+          0.011003696492740083,
+          0.09544170083661031,
+          2.2828490251586548e-08,
+          1.0377594402858189e-08
+        ],
+        "arm_mae_rad": 0.01563554379746926,
+        "gripper_accuracy": 0.9315476190476191,
+        "http_max_abs_error": 0.0,
+        "http_tolerance": 0,
+        "boundary": [
+          {
+            "gripper_feedback": -1.0,
+            "finite": true,
+            "preprocess_seconds": 0.0026796781457960606,
+            "inference_seconds": 0.04521560901775956
+          },
+          {
+            "gripper_feedback": 0.0,
+            "finite": true,
+            "preprocess_seconds": 0.0029524010606110096,
+            "inference_seconds": 0.04454681184142828
+          },
+          {
+            "gripper_feedback": 100.0,
+            "finite": true,
+            "preprocess_seconds": 0.002575390972197056,
+            "inference_seconds": 0.04467216832563281
+          },
+          {
+            "gripper_feedback": 101.0,
+            "finite": true,
+            "preprocess_seconds": 0.002521269954741001,
+            "inference_seconds": 0.04407193884253502
+          }
+        ],
+        "complete": true
+      },
+      "environment": {
+        "python": "3.11.17 (main, Oct  1 2026, 20:17:42) [GCC 14.3.0]",
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "packages": {
+          "torch": "2.7.0+cu128",
+          "transformers": "4.57.0",
+          "numpy": "1.26.0",
+          "Pillow": "11.2.1",
+          "omegaconf": "2.3.0",
+          "accelerate": "1.5.2"
+        },
+        "gpu": "NVIDIA GeForce RTX 5090",
+        "cuda": "12.8",
+        "code_commit": "cd52f8437de579eef880b6efb3b7070e357a96be",
+        "git_status": "?? configs/s1b_deployment_assets_v1.json\n?? configs/s1b_deployment_v1.yaml\n?? scripts/check_s1b_deployment.py\n?? scripts/eval_s1b_deployment.py\n?? scripts/s1b_policy_server.py\n?? src/pressb/s1b_deployment/\n?? tests/test_s1b_deployment.py\n",
+        "sdk": "not imported; P0/P1 offline only",
+        "source_sha256": {
+          "/home/js/robot/VLA/PressButton/scripts/eval_s1b_deployment.py": "f1c4f884a73936f5115c218eec00b4b668dc44c58fd313a2cd215c9c1e80a8f4",
+          "src/pressb/s1b_deployment/__init__.py": "4dd4376f78854232862379c72eba8e9601f8ad237234d05a1dbef6d996f1d358",
+          "src/pressb/s1b_deployment/contract.py": "13e7fc506b38aefbf37e1e67ec5dec7da61dfdb0801cc2ed1ab36593789ada0d",
+          "src/pressb/s1b_deployment/policy.py": "698841af4b3b914addb5fedc2dc12a579c48f12869264319be9b09f16661f3c3",
+          "src/pressb/s1b_deployment/protocol.py": "155005b8fb13561c17c5c9e77ddf8b2531db84677ea36863acb1b1587e745e4a",
+          "src/pressb/s1b_deployment/recorder.py": "e02543cec1ea651c4c1361c0b7c2344e41d2b12480c9e35bd161423409e82498",
+          "src/pressb/s1b_deployment/server.py": "269bc677cdd16f77d4c1a08df0ba2ce1f1ceb2dea6a8e9a994a8bdc7b2128fb4"
+        }
+      },
+      "raw_artifact_sha256": {
+        "anchors.json": "e3b7ea711f224d76d1c6be845af56386f3978fcd4765ccaacc6ae72b98c0c32f",
+        "environment.json": "e8a1743ede2efd1b6e4c1c8f2df0dc593eb8544c27fdf2f70ad6237cfdda306e",
+        "identity.json": "770b60d6d0124cf4b0c5c6518118a50ca2f9593886585dd91d8d5ba5a3c8b8ff",
+        "resolved_config.json": "cf4e157d6e44aba46e5793a88680b6d151413998d773920c4ce0917c610df470",
+        "summary.json": "b1e85c8a2351f815b980a418b124c6533aa985dca4c83e0f939b2e72da15ec8c",
+        "timings.json": "60a0a56eb2f53573fc84e21d35ae2ac93c61de26d5bbeae49c7163353eba8765"
+      }
+    },
+    "8000": {
+      "summary": {
+        "http_first_request_rtt_seconds": 0.05879562068730593,
+        "load_peak_allocated_gib": 9.571589469909668,
+        "http_first_request_inference_seconds": 0.05016365181654692,
+        "step": 8000,
+        "joints": [
+          "astribot_arm_right_joint_1",
+          "astribot_arm_right_joint_2",
+          "astribot_arm_right_joint_3",
+          "astribot_arm_right_joint_4",
+          "astribot_arm_right_joint_5",
+          "astribot_arm_right_joint_6",
+          "astribot_arm_right_joint_7",
+          "astribot_gripper_right/closure",
+          "astribot_head_joint_1",
+          "astribot_head_joint_2"
+        ],
+        "anchors": 48,
+        "load_seconds": 53.31534038390964,
+        "first_inference_seconds": 0.22655937215313315,
+        "warmup": 20,
+        "iterations": 200,
+        "p50_p95_p99_seconds": [
+          0.04542365041561425,
+          0.0458755805157125,
+          0.046208290746435524
+        ],
+        "peak_allocated_gib": 9.655887603759766,
+        "peak_reserved_gib": 9.755859375,
+        "per_horizon_per_dimension_mae": [
+          [
+            0.01546938622292752,
+            0.009166373289190233,
+            0.009367639819780985,
+            0.01647953937451045,
+            0.013269745744764805,
+            0.027796754768739145,
+            0.013181087250510851,
+            0.014739997956591347,
+            6.1312069495519e-09,
+            3.725290298461914e-09
+          ],
+          [
+            0.016157122639318306,
+            0.009709332099494835,
+            0.009586445987224579,
+            0.019151777029037476,
+            0.014191695488989353,
+            0.02992620722701152,
+            0.014627497643232346,
+            0.012561783730537476,
+            5.743155876795451e-09,
+            1.241763432820638e-09
+          ],
+          [
+            0.01805191079620272,
+            0.010130817769095302,
+            0.010201486448446909,
+            0.021242064734299976,
+            0.015102474484592676,
+            0.032099773486455284,
+            0.015764122518400352,
+            0.012959125529353818,
+            5.5103252331415815e-09,
+            0.0
+          ],
+          [
+            0.01971704966854304,
+            0.010673319222405553,
+            0.010349730650583902,
+            0.024753332138061523,
+            0.015992443698147934,
+            0.03438806068152189,
+            0.016682714844743412,
+            0.014144771150313318,
+            5.587935447692871e-09,
+            0.0
+          ],
+          [
+            0.021957576119651396,
+            0.010942608661328753,
+            0.010651109119256338,
+            0.02830341209967931,
+            0.0165366983662049,
+            0.036444499933471285,
+            0.01753503146270911,
+            0.03317026235163212,
+            5.587935447692871e-09,
+            0.0
+          ],
+          [
+            0.023203597016011674,
+            0.011417761056994399,
+            0.010682915647824606,
+            0.03113302340110143,
+            0.01657757752885421,
+            0.03824732266366482,
+            0.01848828575263421,
+            0.04645642964169383,
+            5.587935447692871e-09,
+            6.20881716410319e-10
+          ],
+          [
+            0.024379147527118523,
+            0.011833591929947337,
+            0.011189597348372141,
+            0.03459669152895609,
+            0.016776109890391428,
+            0.03977408710246285,
+            0.019071634237964947,
+            0.15154630058289817,
+            5.122274160385132e-09,
+            1.241763432820638e-09
+          ]
+        ],
+        "per_dimension_mae": [
+          0.019847969998539026,
+          0.010553400575493773,
+          0.010289846431641351,
+          0.025094262900806606,
+          0.015492392171706473,
+          0.034096672266189544,
+          0.016478624815742176,
+          0.040796952991860015,
+          5.610109794707526e-09,
+          9.75671268644787e-10
+        ],
+        "arm_mae_rad": 0.018836167022874137,
+        "gripper_accuracy": 0.9732142857142857,
+        "http_max_abs_error": 0.0,
+        "http_tolerance": 0,
+        "boundary": [
+          {
+            "gripper_feedback": -1.0,
+            "finite": true,
+            "preprocess_seconds": 0.0027193930000066757,
+            "inference_seconds": 0.04502771608531475
+          },
+          {
+            "gripper_feedback": 0.0,
+            "finite": true,
+            "preprocess_seconds": 0.0025001009926199913,
+            "inference_seconds": 0.044213905930519104
+          },
+          {
+            "gripper_feedback": 100.0,
+            "finite": true,
+            "preprocess_seconds": 0.0025793686509132385,
+            "inference_seconds": 0.044131942093372345
+          },
+          {
+            "gripper_feedback": 101.0,
+            "finite": true,
+            "preprocess_seconds": 0.0025001298636198044,
+            "inference_seconds": 0.044257508125156164
+          }
+        ],
+        "complete": true
+      },
+      "environment": {
+        "python": "3.11.17 (main, Oct  1 2026, 20:17:42) [GCC 14.3.0]",
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "packages": {
+          "torch": "2.7.0+cu128",
+          "transformers": "4.57.0",
+          "numpy": "1.26.0",
+          "Pillow": "11.2.1",
+          "omegaconf": "2.3.0",
+          "accelerate": "1.5.2"
+        },
+        "gpu": "NVIDIA GeForce RTX 5090",
+        "cuda": "12.8",
+        "code_commit": "cd52f8437de579eef880b6efb3b7070e357a96be",
+        "git_status": "?? configs/s1b_deployment_assets_v1.json\n?? configs/s1b_deployment_v1.yaml\n?? docs/plan/astribot_s1b_5090_deployment/operations_p0_p1.md\n?? scripts/check_s1b_deployment.py\n?? scripts/eval_s1b_deployment.py\n?? scripts/s1b_policy_server.py\n?? src/pressb/s1b_deployment/\n?? tests/test_s1b_deployment.py\n",
+        "sdk": "not imported; P0/P1 offline only",
+        "source_sha256": {
+          "/home/js/robot/VLA/PressButton/scripts/eval_s1b_deployment.py": "f1c4f884a73936f5115c218eec00b4b668dc44c58fd313a2cd215c9c1e80a8f4",
+          "src/pressb/s1b_deployment/__init__.py": "4dd4376f78854232862379c72eba8e9601f8ad237234d05a1dbef6d996f1d358",
+          "src/pressb/s1b_deployment/contract.py": "13e7fc506b38aefbf37e1e67ec5dec7da61dfdb0801cc2ed1ab36593789ada0d",
+          "src/pressb/s1b_deployment/policy.py": "698841af4b3b914addb5fedc2dc12a579c48f12869264319be9b09f16661f3c3",
+          "src/pressb/s1b_deployment/protocol.py": "155005b8fb13561c17c5c9e77ddf8b2531db84677ea36863acb1b1587e745e4a",
+          "src/pressb/s1b_deployment/recorder.py": "e02543cec1ea651c4c1361c0b7c2344e41d2b12480c9e35bd161423409e82498",
+          "src/pressb/s1b_deployment/server.py": "269bc677cdd16f77d4c1a08df0ba2ce1f1ceb2dea6a8e9a994a8bdc7b2128fb4"
+        }
+      },
+      "raw_artifact_sha256": {
+        "anchors.json": "693a7746ea249d525372073fdb2fbc07226eef44ce27764dba4c0c1d9488279a",
+        "environment.json": "ef9523cb254247188de6504a02a9e56999c324e8f6a80e0e4cdc60c8bc27adc1",
+        "identity.json": "0c8f1fb5889a595f9b0253815e504811193e3a39378f90cc0f21694eb52c2d1e",
+        "resolved_config.json": "cf4e157d6e44aba46e5793a88680b6d151413998d773920c4ce0917c610df470",
+        "summary.json": "f9406d608e65ad7ddd3f88b43c2173b6880a36e5ed81eb42bfb9f71330078460",
+        "timings.json": "aefbed52805cb835ee2e73af0d6523e0df666d35f0b440a789b10b119ff2ea39"
+      }
+    }
+  },
+  "driver": "580.95.05",
+  "full_environment_path": "outputs/s1b_deployment/environment_20261026.txt",
+  "full_environment_sha256": "d648df93e89ce754326b5dc8c7b48350016bd2fff8649e978d21b428752a83f7"
+}
