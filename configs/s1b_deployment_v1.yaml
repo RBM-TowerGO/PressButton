@@ -14,6 +14,7 @@ network:
   port: 8796
   max_request_bytes: 8388608
   timeout_seconds: 1
+  tcp_nodelay: true
 observation:
   head_shape: [720, 1280, 3]
   right_shape: [360, 640, 3]
