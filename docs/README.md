@@ -1,5 +1,7 @@
 # 文档索引
 
+- [Astribot 模型与数据资产列表](assert/assert_list.md)
+
 当前主线为 Astribot S1 / VIB-820。交接入口为 [HANDOVER.md](HANDOVER.md)；仓库中原文件名为 HANDOVER.md，沿用该名称。
 
 建议先读交接文档，再按任务查看场景、评估或强化学习说明。带日期的报告记录当时的状态，最新运行状态应结合实际产物确认。
@@ -15,6 +17,8 @@
 - [VIB-820 单按钮外呼面板与 S1 按压](astribot/vib820.md)
 
 ## Astribot 真机数据整理
+
+- [S1B 真机部署实现计划 v1.0：5090 推理、有线桥接与阶段验收](plan/astribot_s1b_5090_deployment/README.md)
 
 - [S1B 真机数据微调计划 v1.2：10 维接口、待办与阶段验收](plan/astribot_s1b_real_finetune/README.md)
 - [本地图形审核工具使用指南：启动、回放、删除、裁剪、排序与导出](astribot_data_review_gui.md)
