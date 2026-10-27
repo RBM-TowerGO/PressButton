@@ -27,7 +27,12 @@ def worker(rank, rendezvous, checkpoint):
             opt.step()
         step(model, optimizer)
         step(reference, reference_optimizer)
-        optimizer.consolidate_state_dict(to=0)
+        from starVLA.training import optimizer_checkpoint
+        import torch.distributed.optim.zero_redundancy_optimizer as zero
+        original = zero._broadcast_object
+        optimizer_checkpoint.CHUNK_BYTES = 64  # Force many chunks for tiny states.
+        optimizer_checkpoint.consolidate_optimizer_state(optimizer, to=0)
+        assert zero._broadcast_object is original
         if rank == 0:
             torch.save(optimizer.state_dict(), checkpoint)
         dist.barrier()
