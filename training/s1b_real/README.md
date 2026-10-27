@@ -1,5 +1,8 @@
 # S1B 真机 joint10 训练
 
+Qwen3.5-4B 使用独立的 [接线与 HPC 训练说明](../../docs/plan/qwen3_5_4b_migration/README.md)、
+`requirements-qwen3_5.txt` 与 `submit_qwen3_5_hpc2.sh`。以下说明对应原 Qwen3-VL 训练配置。
+
 以仿真微调 step 8000 权重迁移到真实右臂7＋二值夹爪1＋头部2。保留兼容模型权重，明确重置五个坐标接口参数（状态第一层权重／偏置、动作第一层权重、动作输出层权重／偏置），不继承仿真 AdamW 状态。加载父运行保存的 processor。
 
 运行时来源为 `models/astribot_head_right_joint8_ft_20261018/runtime/starVLA` 的现有部署快照；原文件保留，在 `dataloader/s1b_real.py` 和 `training/train_s1b_real.py` 新增真机接口。原有文件的版权头及许可证声明保持不变。数据接口独立于旧 Joint8 仿真 reader。

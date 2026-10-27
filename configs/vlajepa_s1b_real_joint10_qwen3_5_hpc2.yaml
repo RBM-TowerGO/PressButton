@@ -1,0 +1,86 @@
+run_id: s1b_real_joint10_qwen3_5_4b_v1
+run_root_dir: /hpc2hdd/home/jluo628/robot/VLA/PressButton/runs
+seed: 42
+framework:
+  name: VLA_JEPA
+  qwenvl:
+    model_type: qwen3_5
+    base_vlm: /hpc2hdd/home/jluo628/robot/VLA/PressButton/models/astribot_backbones/Qwen3.5-4B
+    init_from_config: true
+    attn_implementation: sdpa
+    features_only: true
+    vl_hidden_dim: 2560
+    device_map: cuda
+  action_model:
+    action_model_type: DiT-B
+    action_hidden_dim: 1024
+    hidden_size: 1024
+    add_pos_embed: true
+    max_seq_len: 1024
+    action_dim: 10
+    state_dim: 10
+    future_action_window_size: 6
+    action_horizon: 7
+    past_action_window_size: 0
+    noise_beta_alpha: 1.5
+    noise_beta_beta: 1.0
+    noise_s: 0.999
+    num_timestep_buckets: 1000
+    num_inference_timesteps: 4
+    num_target_vision_tokens: 32
+    diffusion_model_cfg:
+      cross_attention_dim: 2560
+      dropout: 0.2
+      final_dropout: true
+      interleave_self_attention: true
+      norm_type: ada_norm
+      num_layers: 16
+      output_dim: 1024
+      positional_embeddings: null
+  vj2_model:
+    base_encoder: /hpc2hdd/home/jluo628/robot/VLA/models/vjepa2-vitl-fpc64-256
+    init_from_config: true
+    num_frames: 8
+    depth: 12
+    num_heads: 8
+    special_action_token: <|action_{}|>
+    num_action_tokens_per_timestep: 8
+    embodied_action_token: <|embodied_action|>
+    num_embodied_action_tokens_per_instruction: 32
+datasets:
+  vla_data:
+    data_root_dir: /hpc2hdd/home/jluo628/robot/VLA/PressButton/data/astribot_s1b_real_joint10_v1
+    contract_path: /hpc2hdd/home/jluo628/robot/VLA/PressButton/training/s1b_real/dataset_contract.json
+    CoT_prompt: Your task is {instruction}. Infer the temporal dynamics from frames
+      {actions} and produce the corresponding policy actions {e_actions}.
+    resolution_size: 224
+    per_device_batch_size: 1
+    num_workers: 2
+    sample_stride: 1
+    frame_cache_size: 256
+    decoder_cache_size: 4
+trainer:
+  pretrained_initialization: qwen3_5_from_qwen3_vl_joint8
+  optimizer_sharding: true
+  pretrained_checkpoint: /hpc2hdd/home/jluo628/robot/VLA/PressButton/runs/astribot_head_right_joint8_ft_20261018/checkpoints/step_008000/model.pt
+  max_train_steps: 8000
+  num_warmup_steps: 300
+  eval_interval: 500
+  val_anchors_per_episode: 3
+  val_max_samples: 0
+  gradient_accumulation_steps: 8
+  repeated_diffusion_steps: 4
+  enable_gradient_checkpointing: true
+  memory_limit_gib: 74
+  learning_rate:
+    qwen_vl_interface: 5.0e-06
+    action_model: 0.0001
+    vj_predictor: 5.0e-05
+  optimizer:
+    betas:
+    - 0.9
+    - 0.95
+    eps: 1.0e-08
+  weight_decay: 1.0e-08
+  max_grad_norm: 1.0
+  logging_frequency: 10

@@ -74,7 +74,7 @@ def training_contract(config):
                   data={key: config["datasets"]["vla_data"][key] for key in data_keys},
                   trainer={key: config["trainer"][key] for key in trainer_keys})
     # Preserve the original run's fingerprint when these options are absent.
-    for key in ("target_epochs", "continuation_schedule"):
+    for key in ("target_epochs", "continuation_schedule", "pretrained_initialization", "optimizer_sharding"):
         if key in config["trainer"]:
             result["trainer"][key] = copy.deepcopy(config["trainer"][key])
     fingerprint = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -244,21 +244,62 @@ def load_pretrained(model, path):
         checkpoint = checkpoint["state_dict"]
     from transformers import AutoProcessor
     from starVLA.inference.piper_policy import install_saved_processor
-    processor = Path(path).parent.parent.parent / 'processor'
-    if not processor.is_dir(): raise ValueError('Missing simulation parent processor')
-    install_saved_processor(model, AutoProcessor.from_pretrained(processor, local_files_only=True))
-    selected, report = select_pretrained_state(checkpoint, model.state_dict())
+    mode = model.config.trainer.get("pretrained_initialization", "sim_joint8")
+    if mode == "qwen3_5_from_qwen3_vl_joint8":
+        from starVLA.training.qwen3_5_transfer import select_qwen3_5_state
+        if model.qwen_vl_interface.model.config.model_type != "qwen3_5":
+            raise ValueError("Qwen3.5 transfer requires a Qwen3.5 backbone")
+        selected, report = select_qwen3_5_state(checkpoint, model.state_dict())
+        # The old processor would reinterpret every image/action/text token.
+        report["parent_processor"] = None
+        report["base_vlm"] = model.config.framework.qwenvl.base_vlm
+    elif mode == "sim_joint8":
+        processor = Path(path).parent.parent.parent / 'processor'
+        if not processor.is_dir(): raise ValueError('Missing simulation parent processor')
+        install_saved_processor(model, AutoProcessor.from_pretrained(processor, local_files_only=True))
+        selected, report = select_pretrained_state(checkpoint, model.state_dict())
+        report['parent_processor'] = str(processor)
+    else:
+        raise ValueError(f"Unknown pretrained_initialization: {mode}")
     for name, tensor in list(model.named_parameters(remove_duplicate=False)) + list(model.named_buffers(remove_duplicate=False)):
         if name in selected and tensor.dtype != selected[name].dtype:
             tensor.data = tensor.data.to(dtype=selected[name].dtype)
     report['optimizer_restored'] = False
-    report['parent_processor'] = str(processor)
     report["tied_parameter_groups_checked"] = validate_tied_source(model, selected)
     result = model.load_state_dict(selected, strict=False)
     expected_missing = set(report["missing_keys"]) | {entry["key"] for entry in report["adapted_keys"]}
     if set(result.missing_keys) != expected_missing or result.unexpected_keys:
         raise RuntimeError("Loaded checkpoint differs from the verified key plan")
     return report
+
+
+def construct_training_model(config, *, restarting=False):
+    """Fresh migration loads base weights; resume constructs then loads full VLA weights."""
+    from starVLA.model.framework.VLA_JEPA import VLA_JEPA
+    mode = config.trainer.get("pretrained_initialization", "sim_joint8")
+    if mode not in ("sim_joint8", "qwen3_5_from_qwen3_vl_joint8"):
+        raise ValueError(f"Unknown pretrained_initialization: {mode}")
+    if mode == "sim_joint8":
+        return VLA_JEPA(config=config)
+    settings = config.framework.qwenvl
+    original = settings.get("init_from_config", False)
+    if settings.get("model_type") != "qwen3_5" or not original:
+        raise ValueError("Migration config requires model_type=qwen3_5 and init_from_config=true")
+    settings.init_from_config = bool(restarting)
+    try:
+        return VLA_JEPA(config=config)
+    finally:
+        # Persist the full-checkpoint construction mode for inference/resume.
+        settings.init_from_config = original
+
+
+def build_optimizer(groups, trainer):
+    options = dict(betas=tuple(trainer.optimizer.betas), eps=float(trainer.optimizer.eps),
+                   weight_decay=float(trainer.weight_decay), foreach=False)
+    if trainer.get("optimizer_sharding", False):
+        from torch.distributed.optim import ZeroRedundancyOptimizer
+        return ZeroRedundancyOptimizer(groups, optimizer_class=torch.optim.AdamW, **options)
+    return torch.optim.AdamW(groups, **options)
 
 
 def configure_parameters(model, checkpointing):
@@ -408,6 +449,8 @@ def parameter_probes(model):
 def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance):
     states = [None] * world
     dist.all_gather_object(states, get_rng())
+    if hasattr(optimizer, "consolidate_state_dict"):
+        optimizer.consolidate_state_dict(to=0)
     if rank == 0:
         root = output / "checkpoints"
         root.mkdir(exist_ok=True)
@@ -559,8 +602,7 @@ def main():
         lineage_path = checkpoint_dir.parent.parent / "continuation.json"
         if lineage_path.exists():
             lineage = json.loads(lineage_path.read_text())
-    from starVLA.model.framework.VLA_JEPA import VLA_JEPA
-    model = VLA_JEPA(config=cfg)
+    model = construct_training_model(cfg, restarting=bool(restart))
     if restart:
         from transformers import AutoProcessor
         from starVLA.inference.piper_policy import install_saved_processor
@@ -586,8 +628,7 @@ def main():
               for prefix in ("qwen_vl_interface.", "vj_predictor.", "action_model.")]
     if sum(sum(p.numel() for p in group["params"]) for group in groups) != parameter_report["trainable_numel"]:
         raise RuntimeError("Optimizer groups omit or duplicate trainable parameters")
-    optimizer = torch.optim.AdamW(groups, betas=tuple(cfg.trainer.optimizer.betas), eps=float(cfg.trainer.optimizer.eps),
-                                 weight_decay=float(cfg.trainer.weight_decay), foreach=False)
+    optimizer = build_optimizer(groups, cfg.trainer)
     if restart:
         resumed_weights = torch.load(checkpoint_dir / "model.pt", map_location="cpu", weights_only=True, mmap=True)
         validate_tied_source(model, resumed_weights)
@@ -603,7 +644,8 @@ def main():
                        saved_processor_files_sha256=processor_hashes)
         del resumed_weights
         optimizer.load_state_dict(training["optimizer"])
-        optimizer_steps = [int(state["step"]) for state in optimizer.state.values() if "step" in state]
+        local_optimizer = getattr(optimizer, "optim", optimizer)
+        optimizer_steps = [int(state["step"]) for state in local_optimizer.state.values() if "step" in state]
         if not optimizer_steps or any(value != progress["step"] for value in optimizer_steps):
             raise ValueError("Restored AdamW moments have inconsistent optimizer-step counters")
         loading["optimizer_state_evidence"] = dict(parameter_states=len(optimizer_steps),
