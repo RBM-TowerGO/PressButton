@@ -71,6 +71,7 @@ V-JEPA2 路径与 joint8 父 checkpoint 路径沿用当前 HPC 布局；提交�
 - `configs/vlajepa_s1b_real_joint10_qwen3_5_hpc2.yaml`：真机 v1 数据。
 - `configs/vlajepa_s1b_real_joint10_mixed_qwen3_5_hpc2.yaml`：mixed_v2 数据。
 - 两者都为 4 卡、每卡 batch 2、累积 8，有效 batch 64，初始预算 8000 个优化器步。
+- 使用允许 4 卡的 `i64m1tga800u` partition/QoS；`i64m1tga800u8ka` 强制申请 8 卡，不能用于本配置。
 - 启用 `optimizer_sharding: true`，使用 PyTorch `ZeroRedundancyOptimizer` 分摊 AdamW 状态。
   可训练参数仍为 FP32，算子 BF16 autocast，保留 gradient checkpointing。
 - 保存前所有 rank 汇总优化器状态到 rank 0；恢复读取完整状态后分片。模型权重保持普通完整
@@ -120,6 +121,10 @@ S1B_SMOKE_ONLY=0 sbatch training/s1b_real/submit_qwen3_5_hpc2.sh
 
 脚本将代码、配置、数据契约和环境列表写入 `outputs/s1b_qwen35_jobs/<jobid>/`。
 `S1B_QWEN35_ENV` 可指定独立环境路径，`S1B_QWEN35_CONFIG` 可指定已核对路径的配置。
+如使用本次 HPC 上创建的独立 venv，设置 `S1B_QWEN35_ENV="$PROJECT/.venv-qwen3-5"`。
+排队前可将已提交代码导出到独立 release 目录，设置 `S1B_TRAINING_SOURCE` 指向其中的
+`training/s1b_real`，`S1B_SOURCE_COMMIT` 指定该提交，`S1B_QWEN35_CONFIG` 指向 release 内配置，
+避免排队期间工作区更新改变将要执行的训练代码。
 冒烟 run 带 job ID，正式 run 独立命名；已存在的正式 run 不会被覆盖。
 恢复正式训练须使用该作业快照的 config/runtime 与相同 world size：
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=s1b-qwen35-joint10
-#SBATCH --partition=i64m1tga800u8ka
-#SBATCH --qos=i64m1tga800u8ka
+#SBATCH --partition=i64m1tga800u
+#SBATCH --qos=i64m1tga800u
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
@@ -23,8 +23,12 @@ cd "$PROJECT"
 # Keep the running job immutable if the working branch is updated later.
 SNAPSHOT="$PROJECT/outputs/s1b_qwen35_jobs/$SLURM_JOB_ID"
 mkdir -p "$SNAPSHOT"
-git rev-parse HEAD > "$SNAPSHOT/git_commit.txt"
-cp -a training/s1b_real "$SNAPSHOT/code"
+if [[ -n "${S1B_SOURCE_COMMIT:-}" ]]; then
+    printf '%s\n' "$S1B_SOURCE_COMMIT" > "$SNAPSHOT/git_commit.txt"
+else
+    git rev-parse HEAD > "$SNAPSHOT/git_commit.txt"
+fi
+cp -a "${S1B_TRAINING_SOURCE:-$PROJECT/training/s1b_real}" "$SNAPSHOT/code"
 cp "${S1B_QWEN35_CONFIG:-configs/vlajepa_s1b_real_joint10_qwen3_5_hpc2.yaml}" "$SNAPSHOT/config.yaml"
 export PYTHONPATH="$SNAPSHOT/code/runtime"
 export S1B_PROJECT="$PROJECT"
