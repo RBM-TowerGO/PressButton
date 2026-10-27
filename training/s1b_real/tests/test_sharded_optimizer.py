@@ -20,6 +20,7 @@ def worker(rank, rendezvous, checkpoint):
         def groups(m):
             return [dict(params=list(layer.parameters()), lr=1e-3, name=str(i)) for i, layer in enumerate(m)]
         optimizer = build_optimizer(groups(model), cfg)
+        assert optimizer.parameters_as_bucket_view
         reference_optimizer = torch.optim.AdamW(groups(reference), betas=(.9, .95), eps=1e-8, weight_decay=1e-8, foreach=False)
         def step(m, opt):
             opt.zero_grad(set_to_none=True)
@@ -42,6 +43,12 @@ def worker(rank, rendezvous, checkpoint):
         assert all(int(state["step"]) == 1 for state in restored.optim.state.values())
         step(model, restored)
         step(reference, reference_optimizer)
+        for actual, expected in zip(model.parameters(), reference.parameters()):
+            torch.testing.assert_close(actual, expected, atol=1e-7, rtol=1e-6)
+        # Exercise repeated shard synchronization after restoring AdamW moments.
+        for _ in range(8):
+            step(model, restored)
+            step(reference, reference_optimizer)
         for actual, expected in zip(model.parameters(), reference.parameters()):
             torch.testing.assert_close(actual, expected, atol=1e-7, rtol=1e-6)
     finally:

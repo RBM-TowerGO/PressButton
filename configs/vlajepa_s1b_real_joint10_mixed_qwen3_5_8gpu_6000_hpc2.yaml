@@ -1,4 +1,4 @@
-run_id: s1b_real_joint10_mixed_qwen3_5_4b_native_8gpu_6000_v1
+run_id: s1b_real_joint10_mixed_qwen3_5_4b_native_8gpu_6000_v2
 run_root_dir: /hpc2hdd/home/jluo628/robot/VLA/PressButton/runs
 seed: 42
 framework:
