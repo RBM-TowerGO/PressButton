@@ -70,7 +70,7 @@ V-JEPA2 路径与 joint8 父 checkpoint 路径沿用当前 HPC 布局；提交�
 
 - `configs/vlajepa_s1b_real_joint10_qwen3_5_hpc2.yaml`：真机 v1 数据。
 - `configs/vlajepa_s1b_real_joint10_mixed_qwen3_5_hpc2.yaml`：mixed_v2 数据。
-- 两者都为 8 卡、每卡 batch 1、累积 8，有效 batch 64，初始预算 8000 个优化器步。
+- 两者都为 4 卡、每卡 batch 2、累积 8，有效 batch 64，初始预算 8000 个优化器步。
 - 启用 `optimizer_sharding: true`，使用 PyTorch `ZeroRedundancyOptimizer` 分摊 AdamW 状态。
   可训练参数仍为 FP32，算子 BF16 autocast，保留 gradient checkpointing。
 - 保存前所有 rank 汇总优化器状态到 rank 0；恢复读取完整状态后分片。模型权重保持普通完整
@@ -125,7 +125,7 @@ S1B_SMOKE_ONLY=0 sbatch training/s1b_real/submit_qwen3_5_hpc2.sh
 
 ```bash
 export PYTHONPATH="$SNAPSHOT/code/runtime"
-python -m torch.distributed.run --standalone --nproc_per_node=8 \
+python -m torch.distributed.run --standalone --nproc_per_node=4 \
   -m starVLA.training.train_s1b_real --config "$SNAPSHOT/config.yaml" \
   --resume "$PROJECT/runs/s1b_real_joint10_qwen3_5_4b_v1/checkpoints/last"
 ```
