@@ -5,7 +5,7 @@ framework:
   name: VLA_JEPA
   qwenvl:
     model_type: qwen3_5
-    base_vlm: /hpc2hdd/home/jluo628/robot/VLA/PressButton/models/astribot_backbones/Qwen3.5-4B
+    base_vlm: /hpc2hdd/home/jluo628/robot/VLA/models/Qwen3.5-4B
     init_from_config: true
     attn_implementation: sdpa
     features_only: true
