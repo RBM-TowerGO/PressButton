@@ -450,10 +450,16 @@ def parameter_probes(model):
 
 
 def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance):
+    from starVLA.training.optimizer_checkpoint import consolidate_optimizer_state
+    started = time.monotonic()
+    if rank == 0:
+        print(json.dumps(dict(event="checkpoint_started", step=progress["step"])), flush=True)
     states = [None] * world
     dist.all_gather_object(states, get_rng())
-    if hasattr(optimizer, "consolidate_state_dict"):
-        optimizer.consolidate_state_dict(to=0)
+    consolidate_optimizer_state(optimizer, to=0)
+    if rank == 0:
+        print(json.dumps(dict(event="optimizer_consolidated", step=progress["step"],
+                              seconds=time.monotonic()-started)), flush=True)
     if rank == 0:
         root = output / "checkpoints"
         root.mkdir(exist_ok=True)
@@ -480,6 +486,9 @@ def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank
             if path.is_dir() and path.resolve() not in keep and not path.name.endswith(".tmp"):
                 shutil.rmtree(path)
     dist.barrier()
+    if rank == 0:
+        print(json.dumps(dict(event="checkpoint_completed", step=progress["step"],
+                              seconds=time.monotonic()-started)), flush=True)
 
 
 def main():
