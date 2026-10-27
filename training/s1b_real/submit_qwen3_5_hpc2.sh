@@ -12,6 +12,10 @@
 set -euo pipefail
 PROJECT=${S1B_PROJECT:-/hpc2hdd/home/jluo628/robot/VLA/PressButton}
 ENV_ROOT=${S1B_QWEN35_ENV:-/hpc2hdd/home/jluo628/.conda/envs/vlajepa-qwen35}
+if [[ ! -x "$ENV_ROOT/bin/python" ]]; then
+    echo "Missing Qwen3.5 environment: $ENV_ROOT" >&2
+    exit 1
+fi
 export PATH="$ENV_ROOT/bin:$PATH"
 export OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONUNBUFFERED=1
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
