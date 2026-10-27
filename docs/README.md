@@ -18,6 +18,7 @@
 
 ## Astribot 真机数据整理
 
+- [Qwen3.5-4B 接线与 HPC 训练](plan/qwen3_5_4b_migration/README.md)
 - [S1B 真机部署实现计划 v1.0：5090 推理、有线桥接与阶段验收](plan/astribot_s1b_5090_deployment/README.md)
 
 - [S1B 真机数据微调计划 v1.2：10 维接口、待办与阶段验收](plan/astribot_s1b_real_finetune/README.md)

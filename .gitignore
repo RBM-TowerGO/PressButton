@@ -1,6 +1,7 @@
 # Reproducible local dependencies and downloaded third-party assets.
 /.conda/
 /.venv-astribot-inference/
+/.venv-qwen3-5/
 /.venv-data-review/
 /data/
 /.cache/
