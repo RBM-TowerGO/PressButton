@@ -504,6 +504,8 @@ def main():
     restarts.add_argument("--continue-from", type=Path, help="Extend a complete checkpoint into a new run, retaining optimizer/RNG")
     parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")
     args = parser.parse_args()
+    import faulthandler, signal
+    faulthandler.register(signal.SIGUSR1, all_threads=True)
     from omegaconf import OmegaConf
     cfg = OmegaConf.merge(OmegaConf.load(args.config), OmegaConf.from_dotlist(args.set))
     if args.run_id:
@@ -720,6 +722,10 @@ def main():
     optimizer.zero_grad(set_to_none=True)
     start = time.monotonic()
     checked_gradients = False
+    def trace(phase, micro=None):
+        if progress['step'] < int(os.environ.get('S1B_TRACE_STEPS', '0')):
+            print(json.dumps(dict(event='train_trace', rank=rank, step=progress['step'],
+                                  phase=phase, micro=micro)), flush=True)
     stop_at=maximum if args.stop_after_step is None else min(maximum,args.stop_after_step)
     if stop_at <= progress["step"]:raise ValueError("Stop cursor must exceed current step")
     while progress["step"] < stop_at:
@@ -731,19 +737,25 @@ def main():
         iterator = iter(loader)
         while progress["batch_in_epoch"] < epoch_batches and progress["step"] < stop_at:
             microbatches = min(accumulation, epoch_batches - progress["batch_in_epoch"])
+            trace("load_batches")
             batches = [next(iterator) for _ in range(microbatches)]
+            trace("loss_weights")
             weights = loss_weights(batches, model.vj_encoder.config.tubelet_size, device, world)
             logged = torch.zeros(2, device=device)
             for micro, batch in enumerate(batches):
                 context = ddp.no_sync() if micro + 1 < microbatches else nullcontext()
                 with context:
                     with torch.autocast("cuda", dtype=torch.bfloat16):
+                        trace("forward", micro)
                         losses = ddp(batch)
+                        trace("forward_complete", micro)
                         components = torch.stack((losses["action_loss"], losses["wm_loss"])) * weights[micro]
                         loss = components.sum()
                     if not torch.isfinite(loss):
                         raise RuntimeError("Nonfinite training loss")
+                    trace("backward", micro)
                     loss.backward()
+                    trace("backward_complete", micro)
                 logged += components.detach()
                 progress["batch_in_epoch"] += 1
             if not checked_gradients:
@@ -752,7 +764,9 @@ def main():
                     raise RuntimeError(f"Trainable parameters outside the actual loss graph: {missing}")
                 checked_gradients = True
             norm = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], float(cfg.trainer.max_grad_norm), error_if_nonfinite=True)
+            trace("optimizer_step")
             optimizer.step()
+            trace("optimizer_complete")
             scheduler.step()
             optimizer.zero_grad(set_to_none=True)
             progress["step"] += 1
