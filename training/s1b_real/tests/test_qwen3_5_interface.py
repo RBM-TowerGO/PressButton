@@ -26,7 +26,8 @@ def tiny_config():
                            out_hidden_size=32, num_position_embeddings=16))
 
 
-def test_multimodal_feature_path_backward_and_no_lm_logits(monkeypatch):
+@pytest.mark.parametrize('rectangular_views', [False, True])
+def test_multimodal_feature_path_backward_and_no_lm_logits(monkeypatch, rectangular_views):
     torch.set_num_threads(2)
     monkeypatch.setattr(QWen3_5.AutoConfig, "from_pretrained", lambda *_: tiny_config())
     processor = SimpleNamespace(tokenizer=SimpleNamespace(padding_side="right"))
@@ -42,11 +43,18 @@ def test_multimodal_feature_path_backward_and_no_lm_logits(monkeypatch):
                   attention_mask=torch.tensor([[0, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]]),
                   pixel_values=torch.randn(8, 3 * 2 * 16 * 16),
                   image_grid_thw=torch.tensor([[1, 2, 2], [1, 2, 2]]))
+    if rectangular_views:
+        # Two unequal rectangular views per sample, plus unequal text lengths.
+        sequence = [7, 5, 5, 8, 7] + [5] * 6 + [8, 9, 10]
+        inputs = dict(input_ids=torch.tensor([[0] + sequence, sequence + [11]]),
+                      attention_mask=torch.tensor([[0] + [1] * len(sequence), [1] * (len(sequence) + 1)]),
+                      pixel_values=torch.randn(64, 3 * 2 * 16 * 16),
+                      image_grid_thw=torch.tensor([[1, 2, 4], [1, 4, 6]] * 2))
     def reject_logits(*_):
         raise AssertionError("features_only invoked the vocabulary head")
     monkeypatch.setattr(interface.model.lm_head, "forward", reject_logits)
     output = interface(**inputs, output_hidden_states=True, return_dict=True)
-    assert output.hidden_states[-1].shape == (2, 6, 32)
+    assert output.hidden_states[-1].shape == (*inputs['input_ids'].shape, 32)
     assert torch.isfinite(output.hidden_states[-1]).all()
     output.hidden_states[-1][:, -1].square().mean().backward()
     language = interface.model.model.language_model

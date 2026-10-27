@@ -73,6 +73,9 @@ def training_contract(config):
     result = dict(seed=config["seed"], framework=framework,
                   data={key: config["datasets"]["vla_data"][key] for key in data_keys},
                   trainer={key: config["trainer"][key] for key in trainer_keys})
+    # Preserve legacy fingerprints while binding new runs to their image preprocessing.
+    if 'image_mode' in config['datasets']['vla_data']:
+        result['data']['image_mode'] = config['datasets']['vla_data']['image_mode']
     # Preserve the original run's fingerprint when these options are absent.
     for key in ("target_epochs", "continuation_schedule", "pretrained_initialization", "optimizer_sharding"):
         if key in config["trainer"]:
@@ -524,6 +527,7 @@ def main():
     from starVLA.dataloader.s1b_real import S1BRealDataset, collate_fn, SEMANTICS, _sha256
     common = dict(root=cfg.datasets.vla_data.data_root_dir, contract_path=cfg.datasets.vla_data.contract_path, split_manifest=output / "split.json",
                   action_horizon=7, video_horizon=8, resolution=int(cfg.datasets.vla_data.resolution_size), seed=int(cfg.seed),
+                  image_mode=cfg.datasets.vla_data.get('image_mode', 'resize'),
                   frame_cache_size=int(cfg.datasets.vla_data.frame_cache_size), decoder_cache_size=int(cfg.datasets.vla_data.decoder_cache_size))
     train_data = S1BRealDataset(split="train", sample_stride=int(cfg.datasets.vla_data.sample_stride), **common)
     val_data = S1BRealDataset(split="val", **common)

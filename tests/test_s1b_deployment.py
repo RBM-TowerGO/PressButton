@@ -112,10 +112,12 @@ def test_strict_loader_rejects_missing_trained_key(tmp_path):
     path=tmp_path/'model.pt';torch.save(state,path)
     with pytest.raises(RuntimeError,match='Missing key'):module.load_trained_state(model,path)
 
-def test_camera_preprocess_matches_training_without_head_override():
+@pytest.mark.parametrize("image_mode", ["resize", "native"])
+def test_camera_preprocess_matches_training_without_head_override(image_mode):
     from PIL import Image
     policy=Policy.__new__(Policy)
     policy.stats=json.loads((ROOT/'models/s1b_real_joint10_8000_v1/data_contract.json').read_text())['normalization']
+    policy.image_mode=image_mode;policy.resolution=224
     rng=np.random.default_rng(42)
     head=rng.integers(0,256,(720,1280,3),np.uint8)
     right=rng.integers(0,256,(360,640,3),np.uint8)
@@ -123,7 +125,7 @@ def test_camera_preprocess_matches_training_without_head_override():
     expected=np.arange(70,dtype=np.float32).reshape(7,10)
     def predict(images, normalized, seed):
         for image,raw in zip(images,(head,right)):
-            np.testing.assert_array_equal(np.asarray(image),np.asarray(Image.fromarray(raw).resize((224,224),Image.Resampling.BILINEAR)))
+            np.testing.assert_array_equal(np.asarray(image),(raw if image_mode == "native" else np.asarray(Image.fromarray(raw).resize((224,224),Image.Resampling.BILINEAR))))
         assert normalized.shape==(1,1,10);assert seed==42
         return expected,0.
     policy.predict_prepared=predict

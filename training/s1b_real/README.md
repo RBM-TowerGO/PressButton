@@ -3,6 +3,32 @@
 Qwen3.5-4B 使用独立的 [接线与 HPC 训练说明](../../docs/plan/qwen3_5_4b_migration/README.md)、
 `requirements-qwen3_5.txt` 与 `submit_qwen3_5_hpc2.sh`。以下说明对应原 Qwen3-VL 训练配置。
 
+## Qwen3.5 原图输入
+
+两份 Qwen3.5 普通／混合数据配置现在均使用 `datasets.vla_data.image_mode: native`，
+运行名含 `native`。Qwen 在训练、验证和部署时接收解码后的头部 1280×720、右腕 640×360 RGB 原图，
+不额外缩放或补成正方形；Qwen 处理器仍执行必要的 patch 尺寸对齐。
+`resolution_size: 224` 继续控制 JEPA 视频输入，视频像素、时间顺序及 mask 与旧路径一致。
+原图解码缓存限制为每个 reader 32 帧；batch、梯度累积和学习率沿用当前配置。
+
+未配置 `image_mode` 时默认 `resize`，保留旧输入与训练指纹。
+部署从模型保存的训练配置读取模式，并与训练契约核对；不能只改旧模型的部署配置切换原图。
+新模式进入训练指纹，旧 224 checkpoint 不能作为该原图运行的断点直接恢复。
+`native` 与额外的 `image_size` 缩放配置冲突时会报错。
+
+本地检查（不提交 HPC 作业、不控制机器人）：
+
+```bash
+PYTHONPATH=training/s1b_real/runtime:src HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+  .venv-qwen3-5/bin/python -m pytest -q training/s1b_real/tests tests/test_s1b_deployment.py
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv-qwen3-5/bin/python \
+  training/s1b_real/check_qwen3_5.py --output outputs/qwen35_native_images/wiring.json
+```
+
+测试覆盖真实帧原图保真、JEPA 不变、双视角多样本处理器一致性、旧配置兼容及小模型反向传播。
+检查脚本使用合成原尺寸图像，报告视觉 token、训练前向损失、动作输出、显存和单次推理耗时；
+它不包含完整训练优化器，不能用于估计训练峰值显存或证明闭环按压效果。
+
 以仿真微调 step 8000 权重迁移到真实右臂7＋二值夹爪1＋头部2。保留兼容模型权重，明确重置五个坐标接口参数（状态第一层权重／偏置、动作第一层权重、动作输出层权重／偏置），不继承仿真 AdamW 状态。加载父运行保存的 processor。
 
 运行时来源为 `models/astribot_head_right_joint8_ft_20261018/runtime/starVLA` 的现有部署快照；原文件保留，在 `dataloader/s1b_real.py` 和 `training/train_s1b_real.py` 新增真机接口。原有文件的版权头及许可证声明保持不变。数据接口独立于旧 Joint8 仿真 reader。

@@ -42,7 +42,12 @@ def main():
     loading = load_pretrained(model, args.parent_checkpoint)
     assert torch.equal(before, embedding[:4].detach().cpu()), "Old checkpoint overwrote new Qwen weights"
     model.to(device).eval().requires_grad_(False)
-    images = [[Image.new("RGB", (224, 224), color) for color in ("gray", "navy")]]
+    raw_images = [Image.new('RGB', size, color) for size, color in
+                  [((1280, 720), 'gray'), ((640, 360), 'navy')]]
+    image_mode = config.datasets.vla_data.get('image_mode', 'resize')
+    resolution = int(config.datasets.vla_data.resolution_size)
+    video_images = [image.resize((resolution, resolution), Image.Resampling.BILINEAR) for image in raw_images]
+    images = [raw_images if image_mode == 'native' else video_images]
     inputs = model.qwen_vl_interface.build_qwenvl_inputs(
         images, ["Press the elevator button."],
         prompt_replace_dict={"{actions}": model.replace_prompt, "{e_actions}": model.embodied_replace_prompt})
@@ -53,15 +58,25 @@ def main():
     with torch.inference_mode():
         hidden = model.qwen_vl_interface(**inputs).hidden_states[-1]
         assert hidden.shape == (*ids.shape, 2560) and torch.isfinite(hidden).all()
+        if device.type == 'cuda':
+            torch.cuda.synchronize(device)
+        inference_started = time.perf_counter()
         actions = model.predict_action(
             batch_images=images, instructions=["Press the elevator button."],
             state=np.zeros((1, 1, 10), dtype=np.float32))["normalized_actions"]
-        video = np.stack([np.repeat(np.asarray(image)[None], 8, axis=0) for image in images[0]])
+        if device.type == 'cuda':
+            torch.cuda.synchronize(device)
+        inference_seconds = time.perf_counter() - inference_started
+        video = np.stack([np.repeat(np.asarray(image)[None], 8, axis=0) for image in video_images])
         example = dict(image=images[0], video=video, lang="Press the elevator button.",
                        state=np.zeros((1, 10), dtype=np.float32), action=np.zeros((7, 10), dtype=np.float32),
                        action_is_pad=np.zeros(7, dtype=bool), video_is_pad=np.zeros(8, dtype=bool))
+        forward_started = time.perf_counter()
         with torch.autocast(device.type, dtype=torch.bfloat16, enabled=device.type == "cuda"):
             losses = model([example])
+        if device.type == 'cuda':
+            torch.cuda.synchronize(device)
+        forward_seconds = time.perf_counter() - forward_started
         assert all(torch.isfinite(value).all() for value in losses.values())
     assert actions.shape == (1, 7, 10) and np.isfinite(actions).all()
     if device.type == "cuda":
@@ -71,6 +86,11 @@ def main():
                   torch_version=torch.__version__, transformers_version=transformers.__version__,
                   device=str(device), hidden_shape=list(hidden.shape), action_shape=list(actions.shape),
                   action_token_count=action_count, embodied_token_count=embodied_count,
+                  image_mode=image_mode, image_sizes=[list(image.size) for image in images[0]],
+                  image_grid_thw=inputs['image_grid_thw'].tolist(),
+                  vision_tokens_per_view=(inputs['image_grid_thw'].prod(-1) //
+                      model.qwen_vl_interface.processor.image_processor.merge_size**2).tolist(),
+                  inference_seconds=inference_seconds, training_forward_seconds=forward_seconds,
                   synthetic_losses={key: float(value) for key, value in losses.items()},
                   pretrained_backbone_preserved=True, loading=loading,
                   peak_allocated_gib=torch.cuda.max_memory_allocated(device) / 1024**3 if device.type == "cuda" else None,
