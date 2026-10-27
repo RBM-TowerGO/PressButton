@@ -1,0 +1,39 @@
+{
+  "sdk_root": "/home/astribot/astribot_sdk_aarch64",
+  "sdk_commit": "2644cdfba47f3dd311d923b172ac6c24909f6fda",
+  "note": "Read-only copies; examples were not executed.",
+  "files": {
+    "examples/103-move_to_joint_position.py": {
+      "copy": "103-move_to_joint_position.py",
+      "sha256": "e3289fc62aca9ded47bb577ed0d0dca7349870b1240c6f2b883d6d79335a31e0"
+    },
+    "examples/104-set_joint_position.py": {
+      "copy": "104-set_joint_position.py",
+      "sha256": "3b83978c3bdd1e285bc53fcfa4a90ce431c4dffbd9778aac2e9016ea0cdf3f16"
+    },
+    "examples/105-set_joint_position_direct.py": {
+      "copy": "105-set_joint_position_direct.py",
+      "sha256": "d974f7733373a1d1590af597525a2cc6ade3128cc50ef64c5b55030c84753bf6"
+    },
+    "examples/206-move_joints_waypoints.py": {
+      "copy": "206-move_joints_waypoints.py",
+      "sha256": "e6be51e0bc1b76a37577e9ffcbf2e3dded89fdd88a6abe3fa21bb1bec9f6f1ae"
+    },
+    "examples/208-traj_replay.py": {
+      "copy": "208-traj_replay.py",
+      "sha256": "3b285a80a687c109ab858df1faf9730a68dfa338a4ff3fac76b33b305813d00f"
+    },
+    "examples/999-stop_robot.py": {
+      "copy": "999-stop_robot.py",
+      "sha256": "f74f909e578cf81d7efc3eb31370f143d38f44d6e9fa6c6b2c75c7d788e5af95"
+    },
+    "astribot_sdk/core/astribot_api/astribot_client.py": {
+      "copy": "astribot_client.py",
+      "sha256": "0c14e0fd07039f78b505b69f0f1dfa7a3598a30125aec528e8803b627cc80c45"
+    },
+    "astribot_sdk/core/astribot_api/astribot_interface.py": {
+      "copy": "astribot_interface.py",
+      "sha256": "aed33a65f17fad38257a6d23805e0f20d1f793ea195073f869e18cf6da538d6a"
+    }
+  }
+}

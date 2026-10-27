@@ -17,6 +17,7 @@
 
 # Data, model weights and generated experiment evidence stay outside Git.
 /datasets/
+/runs/
 /models
 /outputs
 /logs/

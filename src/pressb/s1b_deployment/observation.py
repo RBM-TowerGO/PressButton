@@ -7,6 +7,41 @@ import numpy as np
 class ObservationError(ValueError):
     pass
 
+CAMERA_SHAPES = {'head': (720, 1280, 3), 'right': (360, 640, 3)}
+
+
+@dataclass(frozen=True)
+class JpegFrame:
+    """Own compressed bytes in callbacks; decode only selected observations.
+
+    Decoding runs outside the buffer lock and ROS spin thread. In particular,
+    slow image work must not prevent joint feedback from reaching the buffer.
+    """
+    data: bytes
+
+    def __post_init__(self):
+        if not isinstance(self.data, bytes) or not 0 < len(self.data) <= 8 * 1024**2:
+            raise ObservationError('invalid_jpeg_payload')
+
+    def rgb(self, key):
+        import cv2
+        try:
+            bgr = cv2.imdecode(np.frombuffer(self.data, np.uint8), cv2.IMREAD_COLOR)
+            if bgr is None:
+                raise ObservationError('jpeg_decode_failed')
+            if bgr.shape != CAMERA_SHAPES[key] or bgr.dtype != np.uint8:
+                raise ObservationError('bad_' + key)
+            return cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        except cv2.error as exc:
+            raise ObservationError('jpeg_decode_failed') from exc
+
+
+def selected_rgb(selected):
+    """Materialize the two selected images without changing their timestamps."""
+    return {key: sample.value.rgb(key) if isinstance(sample.value, JpegFrame) else sample.value
+            for key, sample in selected.items() if key in CAMERA_SHAPES}
+
+
 @dataclass
 class Sample:
     sequence: int
@@ -14,7 +49,7 @@ class Sample:
     mapped_ns: int
     receipt_ns: int
     header: dict
-    value: np.ndarray
+    value: np.ndarray | JpegFrame
 
 class TimeMapper:
     """Map epoch header stamps into local monotonic, retaining proxy limitations."""
@@ -38,10 +73,15 @@ class ObservationBuffer:
         self.head_age_ns=head_age_ns;self.state_skew_ns=state_skew_ns;self.right_skew_ns=right_skew_ns
         self.counts=Counter();self.rejections=Counter();self.overwrites=Counter();self.high_water=Counter()
         self.lock=threading.Lock()
+        self.selection_counts=Counter()
     def add(self, key, sample):
         shape={'head':(720,1280,3),'right':(360,640,3),'arm':(7,),'gripper':(1,),'head_state':(2,)}[key]
         dtype=np.uint8 if key in ('head','right') else np.float32
-        if sample.value.shape!=shape or sample.value.dtype!=dtype or not np.isfinite(sample.value).all(): raise ObservationError('bad_'+key)
+        if isinstance(sample.value, JpegFrame):
+            if key not in CAMERA_SHAPES:raise ObservationError('bad_'+key)
+        elif (sample.value.shape!=shape or sample.value.dtype!=dtype
+              or (dtype!=np.uint8 and not np.isfinite(sample.value).all())):
+            raise ObservationError('bad_'+key)
         with self.lock:
             b=self.buffers[key]
             if b and (sample.source_ns<=b[-1].source_ns or sample.receipt_ns<=b[-1].receipt_ns):
@@ -55,16 +95,32 @@ class ObservationBuffer:
             head=self.buffers['head'][-1]
             if head.sequence<=after_sequence:raise ObservationError('no_new_head')
             if not 0<=now_ns-head.receipt_ns<=self.head_age_ns:raise ObservationError('stale_head')
-            selected={'head':head}
+            # Check stream liveness independently of alignment. A fresh latest
+            # head may fall inside a state gap; try earlier unused fresh heads
+            # instead of starving inference until another camera frame arrives.
             for key in ('right','arm','gripper','head_state'):
-                b=self.buffers[key]
-                if now_ns-b[-1].receipt_ns>self.head_age_ns:raise ObservationError('stale_'+key)
-                candidate=min(b,key=lambda s:abs(s.mapped_ns-head.mapped_ns))
-                limit=self.right_skew_ns if key=='right' else self.state_skew_ns
-                if abs(candidate.mapped_ns-head.mapped_ns)>limit:raise ObservationError('skew_'+key)
-                selected[key]=candidate
-            state=np.concatenate([selected[k].value for k in ('arm','gripper','head_state')]).astype(np.float32)
-            return selected,state
+                if now_ns-self.buffers[key][-1].receipt_ns>self.head_age_ns:
+                    raise ObservationError('stale_'+key)
+            newest_reason=None
+            for head in reversed(self.buffers['head']):
+                if head.sequence<=after_sequence:break
+                if not 0<=now_ns-head.receipt_ns<=self.head_age_ns:continue
+                selected={'head':head}
+                for key in ('right','arm','gripper','head_state'):
+                    candidate=min(self.buffers[key],key=lambda s:abs(s.mapped_ns-head.mapped_ns))
+                    limit=self.right_skew_ns if key=='right' else self.state_skew_ns
+                    if abs(candidate.mapped_ns-head.mapped_ns)>limit:
+                        reason='skew_'+key
+                        if newest_reason is None:newest_reason=reason
+                        self.selection_counts['candidate_'+reason]+=1
+                        break
+                    selected[key]=candidate
+                else:
+                    if head.sequence!=self.buffers['head'][-1].sequence:
+                        self.selection_counts['aligned_older_head']+=1
+                    state=np.concatenate([selected[k].value for k in ('arm','gripper','head_state')]).astype(np.float32)
+                    return selected,state
+            raise ObservationError(newest_reason or 'no_fresh_aligned_head')
     def stats(self):
         with self.lock:
-            return dict(counts=dict(self.counts),invalid=dict(self.rejections),overwrites=dict(self.overwrites),high_water=dict(self.high_water),occupancy={k:len(b) for k,b in self.buffers.items()},capacity=self.capacity)
+            return dict(selection_counts=dict(self.selection_counts),counts=dict(self.counts),invalid=dict(self.rejections),overwrites=dict(self.overwrites),high_water=dict(self.high_water),occupancy={k:len(b) for k,b in self.buffers.items()},capacity=self.capacity,latest={k:dict(sequence=b[-1].sequence,mapped_ns=b[-1].mapped_ns,receipt_ns=b[-1].receipt_ns) for k,b in self.buffers.items() if b})

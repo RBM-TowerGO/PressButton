@@ -129,3 +129,16 @@ def test_camera_preprocess_matches_training_without_head_override():
     policy.predict_prepared=predict
     action,_=policy.predict(head,right,state)
     np.testing.assert_array_equal(action,expected)
+
+
+def test_mixed_config_has_distinct_models_and_task():
+    from pressb.s1b_deployment.contract import MIXED_TASK, TASK
+    mixed = read_config(ROOT/'configs/s1b_deployment_mixed_v2.yaml')
+    old = read_config(ROOT/'configs/s1b_deployment_v1.yaml')
+    identity = json.loads(Path(mixed['model']['identity']).read_text())
+    assert mixed['model']['task'] == identity['task'] == MIXED_TASK
+    assert old['model']['task'] == TASK
+    assert mixed['model']['run'] != old['model']['run']
+    assert set(identity['models']) == {'4500', '8000'}
+    old_identity = json.loads((ROOT/old['model']['identity']).read_text())
+    assert identity['models']['8000'] != old_identity['models']['8000']

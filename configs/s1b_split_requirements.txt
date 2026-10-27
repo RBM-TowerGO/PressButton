@@ -1,0 +1,2 @@
+# Install in workstation inference venv; robot uses --target deps/split.
+pyzmq==27.2.0
