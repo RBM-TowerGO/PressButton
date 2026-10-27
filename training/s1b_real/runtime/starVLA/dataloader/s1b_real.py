@@ -16,7 +16,11 @@ class S1BRealDataset(PiperLeRobotDataset):
     camera_keys=tuple(SEMANTICS['camera_keys'])
     state_dim=action_dim=10
     def __init__(self,root,contract_path,split='train',split_manifest=None,action_horizon=7,video_horizon=8,
-                 resolution=224,seed=42,sample_stride=1,frame_cache_size=256,decoder_cache_size=4):
+                 resolution=224,seed=42,sample_stride=1,frame_cache_size=256,decoder_cache_size=4,image_mode='resize'):
+        _require(image_mode in ('resize','native'),'image_mode must be resize or native')
+        _require(type(resolution) is int and resolution > 0,'resolution must be a positive integer')
+        _require(type(frame_cache_size) is int and frame_cache_size >= 0,'Invalid frame cache size')
+        self.image_mode=image_mode
         self.root=Path(root);self.contract=json.loads(Path(contract_path).read_text());c=self.contract
         _require(c['schema']==SEMANTICS,'Wrong real joint10 schema')
         _require(split in ('train','val') and (action_horizon,video_horizon)==(7,8),'Wrong split/horizons')

@@ -23,6 +23,17 @@ class Policy:
         torch.cuda.set_device(self.device)
         torch.cuda.reset_peak_memory_stats(self.device)
         cfg = OmegaConf.load(run / 'config.local.yaml')
+        self.image_mode = cfg.datasets.vla_data.get('image_mode', 'resize')
+        self.resolution = int(cfg.datasets.vla_data.resolution_size)
+        if self.image_mode not in ('resize', 'native'):
+            raise ValueError('image_mode must be resize or native')
+        if self.image_mode == 'native' and cfg.datasets.vla_data.get('image_size') is not None:
+            raise ValueError('native image_mode conflicts with image_size; remove image_size')
+        import json
+        training_data = json.loads((run / 'training_contract.json').read_text())['contract']['data']
+        if (self.image_mode != training_data.get('image_mode', 'resize')
+                or self.resolution != training_data['resolution_size']):
+            raise ValueError('Image preprocessing differs from saved training contract')
         cfg.framework.qwenvl.device_map = str(self.device)
         self.model = VLA_JEPA(config=cfg)
         install_saved_processor(self.model, AutoProcessor.from_pretrained(run / 'processor', local_files_only=True))
@@ -59,7 +70,10 @@ class Policy:
         images = []
         for value, shape in zip((head, right), ((720, 1280, 3), (360, 640, 3))):
             if value.shape != shape or value.dtype != np.uint8: raise ValueError('Expected raw RGB uint8 camera dimensions')
-            images.append(Image.fromarray(value, mode='RGB').resize((224, 224), Image.Resampling.BILINEAR))
+            image = Image.fromarray(value, mode='RGB')
+            if self.image_mode == 'resize':
+                image = image.resize((self.resolution, self.resolution), Image.Resampling.BILINEAR)
+            images.append(image)
         normalized = self.normalize_state(state)
         preprocessing = time.perf_counter() - started
         raw, elapsed = self.predict_prepared(images, normalized, seed)

@@ -363,8 +363,9 @@ class PiperLeRobotDataset:
                 _require(abs(time-index/self.fps) <= .5/self.fps, "Video timestamp error exceeds half a frame")
                 rgb = frame.to_ndarray(format="rgb24")
                 _require(rgb.shape == (stream.height, stream.width, 3), "Invalid decoded RGB shape")
-                h, w = self.resolution
-                rgb = np.asarray(Image.fromarray(rgb).resize((w, h), Image.Resampling.BILINEAR)).copy()
+                if getattr(self, 'image_mode', 'resize') == 'resize':
+                    h, w = self.resolution
+                    rgb = np.asarray(Image.fromarray(rgb).resize((w, h), Image.Resampling.BILINEAR)).copy()
                 rgb.flags.writeable = False
                 found[index] = rgb
                 if self.frame_cache_size:
@@ -393,8 +394,14 @@ class PiperLeRobotDataset:
         for key in self.camera_keys:
             path, offset = e["videos"][key]
             views.append(self._video_frames(path, offset + v_indices))
+        images = [Image.fromarray(view[0].copy()) for view in views]
+        if getattr(self, 'image_mode', 'resize') == 'native':
+            # Qwen keeps decoded current frames; JEPA retains its exact legacy input.
+            h, w = self.resolution
+            views = [np.stack([np.asarray(Image.fromarray(frame).resize(
+                (w, h), Image.Resampling.BILINEAR)) for frame in view]) for view in views]
         video = np.stack(views)
-        return dict(image=[Image.fromarray(view[0].copy()) for view in views], video=video,
+        return dict(image=images, video=video,
                     state=self._states[e["dataset_from_index"] + i:i + e["dataset_from_index"] + 1].copy(),
                     action=self._actions[a_indices].copy(), lang=e["task"],
                     action_is_pad=(action_requests > final), video_is_pad=(video_requests > final),

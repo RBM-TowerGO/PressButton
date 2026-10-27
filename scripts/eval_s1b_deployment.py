@@ -40,7 +40,9 @@ def main():
     from starVLA.training.train_s1b_real import validation_anchors
     from omegaconf import OmegaConf
     cfg=OmegaConf.load(Path(c['model']['run'])/'config.local.yaml')
-    ds=S1BRealDataset(root=cfg.datasets.vla_data.data_root_dir,contract_path=cfg.datasets.vla_data.contract_path,split='val',split_manifest=Path(c['model']['run'])/'split.json')
+    ds=S1BRealDataset(root=cfg.datasets.vla_data.data_root_dir,contract_path=cfg.datasets.vla_data.contract_path,split='val',split_manifest=Path(c['model']['run'])/'split.json',
+                     resolution=policy.resolution, image_mode=policy.image_mode,
+                     frame_cache_size=int(cfg.datasets.vla_data.frame_cache_size))
     anchors=validation_anchors(ds,3)
     if len(anchors)!=48: raise ValueError('Expected exactly 48 anchors')
     torch.cuda.reset_peak_memory_stats()
@@ -54,7 +56,7 @@ def main():
         rows.append(dict(ordinal=ordinal,episode=sid,frame=frame,seed=seed,seconds=elapsed,action_raw=raw.tolist(),target=target.tolist(),error=np.abs(raw-target).tolist(),sdk_gripper=sdk_gripper(raw).tolist()))
         print(json.dumps(dict(event='anchor',ordinal=ordinal,seconds=elapsed)),flush=True)
     write(out/'anchors.json',rows)
-    # Decode original-sized RGB through the same reader; compare resize bit-for-bit.
+    # Decode independently and compare the saved training preprocessing bit-for-bit.
     sid,frame=anchors[0]; episode=ds._episodes[sid]
     import av
     images=[]
@@ -66,7 +68,10 @@ def main():
     sample=ds.get_frame(sid,frame);state=ds.state_raw(sample['state'])[0].astype(np.float32)
     from PIL import Image
     for raw_image,prepared in zip(images,sample['image']):
-        if not np.array_equal(np.asarray(Image.fromarray(raw_image).resize((224,224),Image.Resampling.BILINEAR)),np.asarray(prepared)): raise ValueError('Resize differs from training')
+        expected=Image.fromarray(raw_image)
+        if policy.image_mode == 'resize':
+            expected=expected.resize((policy.resolution,policy.resolution),Image.Resampling.BILINEAR)
+        if not np.array_equal(np.asarray(expected),np.asarray(prepared)): raise ValueError('Image preprocessing differs from training')
     direct,_=policy.predict(*images,state,42)
     server=make_server(policy,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
     conn=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=60)

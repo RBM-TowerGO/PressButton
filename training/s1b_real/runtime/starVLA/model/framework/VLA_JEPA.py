@@ -96,6 +96,11 @@ class VLA_JEPA(baseframework):
         """
         super().__init__()
         self.config = config
+        image_mode = config.datasets.vla_data.get('image_mode', 'resize')
+        if image_mode not in ('resize', 'native'):
+            raise ValueError('image_mode must be resize or native')
+        if image_mode == 'native' and config.datasets.vla_data.get('image_size') is not None:
+            raise ValueError('native image_mode conflicts with image_size; remove image_size')
         self.qwen_vl_interface = get_vlm_model(config=self.config)
         embodied_action_token = self.config.framework.vj2_model.get("embodied_action_token", "<|embodied_action|>")
         action_tokens, self.action_token_ids, self.embodied_action_token_id = self.expand_tokenizer(
@@ -344,6 +349,8 @@ class VLA_JEPA(baseframework):
                     [B, action_horizon, action_dim]; native training units.
         """
         train_obs_image_size = getattr(self.config.datasets.vla_data, "image_size", None)
+        if self.config.datasets.vla_data.get('image_mode', 'resize') == 'native' and train_obs_image_size is not None:
+            raise ValueError('native image_mode conflicts with image_size; remove image_size')
         if train_obs_image_size:
             batch_images = resize_images(batch_images, target_size=train_obs_image_size)
     

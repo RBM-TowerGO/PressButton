@@ -1,4 +1,4 @@
-run_id: s1b_real_joint10_qwen3_5_4b_v1
+run_id: s1b_real_joint10_qwen3_5_4b_native_v1
 run_root_dir: /hpc2hdd/home/jluo628/robot/VLA/PressButton/runs
 seed: 42
 framework:
@@ -53,11 +53,12 @@ datasets:
     contract_path: /hpc2hdd/home/jluo628/robot/VLA/PressButton/training/s1b_real/dataset_contract.json
     CoT_prompt: Your task is {instruction}. Infer the temporal dynamics from frames
       {actions} and produce the corresponding policy actions {e_actions}.
-    resolution_size: 224
+    image_mode: native  # Qwen receives decoded rectangular RGB without project resizing.
+    resolution_size: 224  # JEPA video preprocessing; also used by legacy resize mode.
     per_device_batch_size: 2
     num_workers: 2
     sample_stride: 1
-    frame_cache_size: 256
+    frame_cache_size: 32
     decoder_cache_size: 4
 trainer:
   pretrained_initialization: qwen3_5_from_qwen3_vl_joint8
