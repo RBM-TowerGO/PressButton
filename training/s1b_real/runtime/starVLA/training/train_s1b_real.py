@@ -301,7 +301,11 @@ def build_optimizer(groups, trainer):
                    weight_decay=float(trainer.weight_decay), foreach=False)
     if trainer.get("optimizer_sharding", False):
         from torch.distributed.optim import ZeroRedundancyOptimizer
-        return ZeroRedundancyOptimizer(groups, optimizer_class=torch.optim.AdamW, **options)
+        # All trainable weights are FP32 (configure_parameters). Reuse flat
+        # parameter storage so synchronization launches one broadcast per shard,
+        # rather than thousands of outstanding per-parameter NCCL operations.
+        return ZeroRedundancyOptimizer(groups, optimizer_class=torch.optim.AdamW,
+                                       parameters_as_bucket_view=True, **options)
     return torch.optim.AdamW(groups, **options)
 
 
