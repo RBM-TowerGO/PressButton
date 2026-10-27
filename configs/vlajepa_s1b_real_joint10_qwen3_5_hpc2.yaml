@@ -54,7 +54,7 @@ datasets:
     CoT_prompt: Your task is {instruction}. Infer the temporal dynamics from frames
       {actions} and produce the corresponding policy actions {e_actions}.
     resolution_size: 224
-    per_device_batch_size: 1
+    per_device_batch_size: 2
     num_workers: 2
     sample_stride: 1
     frame_cache_size: 256

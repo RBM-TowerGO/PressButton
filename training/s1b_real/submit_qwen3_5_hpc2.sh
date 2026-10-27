@@ -4,9 +4,9 @@
 #SBATCH --qos=i64m1tga800u8ka
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=64
-#SBATCH --gres=gpu:8
-#SBATCH --mem=512G
+#SBATCH --cpus-per-task=32
+#SBATCH --gres=gpu:4
+#SBATCH --mem=256G
 #SBATCH --time=24:00:00
 #SBATCH --output=/hpc2hdd/home/jluo628/robot/VLA/PressButton/logs/s1b-qwen35-%j.log
 set -euo pipefail
@@ -51,12 +51,12 @@ p=Path(sys.argv[1]);hashes={str(f.relative_to(p)):hashlib.sha256(f.read_bytes())
 (p/'source_manifest.json').write_text(json.dumps(hashes,indent=2)+'\n')
 PY
 printf 'PHASE: smoke fresh 2 steps\n'
-python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=8 \
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 \
     -m starVLA.training.train_s1b_real --config "$CONFIG" --run-id "$SMOKE" --stop-after-step 2
 # Preserve the backbone/conditioning migration report before resume.
 cp "$PROJECT/runs/$SMOKE/pretrained_loading.json" "$PROJECT/runs/$SMOKE/transfer_loading.json"
 printf 'PHASE: smoke resume to step 3\n'
-python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=8 \
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 \
     -m starVLA.training.train_s1b_real --config "$CONFIG" --run-id "$SMOKE" \
     --resume "$PROJECT/runs/$SMOKE/checkpoints/last" --stop-after-step 3
 python "$SNAPSHOT/code/check_smoke.py" "$PROJECT/runs/$SMOKE"
@@ -65,6 +65,6 @@ if [[ "${S1B_SMOKE_ONLY:-1}" == "1" ]]; then
     exit 0
 fi
 printf 'PHASE: formal training 8000 steps\n'
-python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=8 \
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=4 \
     -m starVLA.training.train_s1b_real --config "$CONFIG" --run-id "$RUN"
 printf 'PHASE: completed\n'
