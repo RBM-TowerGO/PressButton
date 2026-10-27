@@ -15,6 +15,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT/'docs/plan/astribot_s1b_real_finetune/data_contract.json'
 REPO_ID = 'local/astribot_s1b_real_joint10_v1'
+DEFAULT_TASK = 'Press the down button while maintaining the demonstrated head posture.'
 CAMERAS = {'head': (720, 1280, 3), 'right': (360, 640, 3)}
 
 def write_json(path, value):
@@ -116,9 +117,11 @@ def normalization(arrays):
         np.testing.assert_allclose(restored,values,rtol=0,atol=1e-10)
     return result
 
-def audit(root, source, records, expected, splits):
+def audit(root, source, records, expected, splits, repo_id=REPO_ID, task=DEFAULT_TASK):
     from lerobot.datasets.lerobot_dataset import LeRobotDataset
-    ds=LeRobotDataset(REPO_ID,root=root,video_backend='pyav')
+    ds=LeRobotDataset(repo_id,root=root,video_backend='pyav')
+    if list(ds.meta.tasks.index) != [task]:
+        raise ValueError('Dataset task differs from requested instruction')
     if ds.num_episodes != len(records):raise ValueError('Episode count mismatch')
     offset=0;image_checks=[];anchor_indices={'train':[],'validation':[]}
     for episode,(record, arrays) in enumerate(zip(records,expected)):
@@ -154,8 +157,9 @@ def audit(root, source, records, expected, splits):
     write_json(root/'meta/reader_audit.json',report)
     return report
 
-def publish_readme(staging):
-    (staging/'README.md').write_text('# S1B real joint10 v1\n\n96 reviewed demonstrations. Record-time proxy, 30 Hz, binary gripper.\n'
+def publish_readme(staging, count=96, task=DEFAULT_TASK):
+    (staging/'README.md').write_text(f'# S1B real joint10\n\n{count} reviewed demonstrations. Record-time proxy, 30 Hz, binary gripper.\n'
+        f'Instruction: {task}\n'
         'Use meta/splits.json and meta/training_anchors.json; never sample all rows as 7-step anchors.\n'
         'action[k] already targets t[k]+1/30; read action[k:k+7], with no extra shift.\n'
         'Use meta/training_normalization.json, NOT all-data meta/stats.json, for training.\n'
@@ -166,13 +170,24 @@ def main():
     p.add_argument('--finish-staging',action='store_true',help='Revalidate a fully written staging dataset and publish it')
     p.add_argument('--source',type=Path,default=ROOT/'data/astribot_reviewed_v1')
     p.add_argument('--output',type=Path,default=ROOT/'data/astribot_s1b_real_joint10_v1')
+    p.add_argument('--contract',type=Path,default=CONTRACT)
+    p.add_argument('--split-manifest',type=Path)
+    p.add_argument('--task',default=DEFAULT_TASK)
+    p.add_argument('--repo-id',default=REPO_ID)
     args=p.parse_args();source=args.source.resolve();output=args.output.resolve()
     staging=output.with_name(output.name+'.inprogress')
     if output.exists() or (staging.exists() and not args.finish_staging):
         raise FileExistsError('Output/staging exists; preserve it or validate complete staging with --finish-staging')
-    contract=json.loads(CONTRACT.read_text())
-    if contract['version']!='s1b-real-joint10-record-time-v1':raise ValueError('Unrecognized contract version')
-    records=json.loads((source/'episode_mapping.json').read_text());splits=split_episodes(len(records))
+    contract=json.loads(args.contract.read_text())
+    if contract['version'] not in ('s1b-real-joint10-record-time-v1','s1b-real-joint10-record-time-v2'):
+        raise ValueError('Unrecognized contract version')
+    records=json.loads((source/'episode_mapping.json').read_text())
+    splits=json.loads(args.split_manifest.read_text()) if args.split_manifest else split_episodes(len(records))
+    train, val = splits['train'], splits['validation']
+    if (not train or not val or len(set(train)) != len(train) or len(set(val)) != len(val)
+            or set(train) & set(val) or set(train) | set(val) != set(range(len(records)))):
+        raise ValueError('Split must partition every reviewed episode exactly once')
+    if not args.task.strip():raise ValueError('Instruction must not be empty')
     expected=[]
     for record in records:
         path=source/'episodes'/record['output_file']
@@ -185,14 +200,14 @@ def main():
         saved=json.loads((staging/'meta/data_contract.json').read_text())
         checked=dict(contract,status='converted_pending_model_training_adapter',model_ready=False)
         if saved!=checked:raise ValueError('Staging contract differs')
-        report=audit(staging,source,records,expected,splits)
+        report=audit(staging,source,records,expected,splits,args.repo_id,args.task)
         for record in records:
             if sha256(source/'episodes'/record['output_file'])!=record['output_sha256']:
                 raise ValueError('Source changed during validation')
         provenance=json.loads((staging/'meta/export_provenance.json').read_text())
         provenance['validation_script_sha256']=sha256(Path(__file__))
         write_json(staging/'meta/export_provenance.json',provenance)
-        publish_readme(staging)
+        publish_readme(staging,len(records),args.task)
         os.rename(staging,output)
         print(json.dumps({k:v for k,v in report.items() if k!='image_checks'},indent=2))
         print(f'Published: {output}')
@@ -201,7 +216,7 @@ def main():
     from lerobot.configs.video import RGBEncoderConfig
     encoder=RGBEncoderConfig(vcodec='h264',pix_fmt='yuv420p',g=30,crf=18,preset='fast')
     started=time.time()
-    ds=LeRobotDataset.create(REPO_ID,30,features(contract['names']),root=staging,robot_type='astribot_s1b',
+    ds=LeRobotDataset.create(args.repo_id,30,features(contract['names']),root=staging,robot_type='astribot_s1b',
         use_videos=True,video_backend='pyav',rgb_encoder=encoder,streaming_encoding=True,
         encoder_threads=4,encoder_queue_maxsize=16,metadata_buffer_size=1)
     try:
@@ -212,7 +227,7 @@ def main():
                     frame={key:value[index] for key,value in arrays.items()}
                     frame.update({f'observation.images.{c}':s.get(int(src)) for c,s in streams.items()})
                     frame['source_original_id']=np.array([record['original_id']],dtype=np.int64)
-                    frame['task']='Press the down button while maintaining the demonstrated head posture.'
+                    frame['task']=args.task
                     ds.add_frame(frame)
                 ds.save_episode()
             print(f'Exported {episode+1}/{len(records)}: {len(arrays["action"])} frames',flush=True)
@@ -222,17 +237,18 @@ def main():
     write_json(staging/'meta/training_normalization.json',stats)
     contract['status']='converted_pending_model_training_adapter';contract['model_ready']=False
     write_json(staging/'meta/data_contract.json',contract)
-    write_json(staging/'meta/export_provenance.json',dict(script_sha256=sha256(Path(__file__)),contract_sha256=sha256(CONTRACT),
+    write_json(staging/'meta/export_provenance.json',dict(script_sha256=sha256(Path(__file__)),contract_sha256=sha256(args.contract),
+        task=args.task,repo_id=args.repo_id,
         source=str(source),lerobot='0.6.1',h5py=h5py.__version__,numpy=np.__version__,
         codec='h264',crf=18,preset='fast',source_hashes_verified=True))
     print('Running official reader audit...',flush=True)
-    report=audit(staging,source,records,expected,splits)
+    report=audit(staging,source,records,expected,splits,args.repo_id,args.task)
     # Verify source files again before publishing.
     for record in records:
         if sha256(source/'episodes'/record['output_file'])!=record['output_sha256']:raise ValueError('Source changed during export')
     report['elapsed_seconds']=time.time()-started
     write_json(staging/'meta/reader_audit.json',report)
-    publish_readme(staging)
+    publish_readme(staging,len(records),args.task)
     os.rename(staging,output)
     print(json.dumps({k:v for k,v in report.items() if k!='image_checks'},indent=2))
     print(f'Published: {output}')

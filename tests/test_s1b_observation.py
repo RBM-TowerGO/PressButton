@@ -51,13 +51,13 @@ def test_bounded_buffer_and_latest_head():
     assert all(x==2 for x in b.stats()['occupancy'].values())
     assert all(x==7 for x in b.stats()['overwrites'].values())
 
-def test_bridge_execute_fails_before_loading_ros(tmp_path):
+def test_bridge_execute_requires_operator_flags_before_loading_ros(tmp_path):
     import subprocess,sys
     from pathlib import Path
     root=Path(__file__).resolve().parents[1]
     result=subprocess.run([sys.executable,str(root/'scripts/s1b_robot_bridge.py'),'--config',str(root/'configs/s1b_deployment_v1.yaml'),'--mode','execute','--output',str(tmp_path/'unused')],capture_output=True,text=True)
     assert result.returncode!=0
-    assert 'Unverified execute fields' in result.stderr
+    assert 'execute requires scheduling, --operator-present and --estop-ready' in result.stderr
     assert 'rclpy' not in result.stderr
     assert not (tmp_path/'unused').exists()
 
@@ -97,3 +97,30 @@ def test_camera_runtime_isolates_config_and_preserves_vendor_slots(tmp_path):
     assert (output/'config/camera_config/head.yaml').read_text()=='CameraType: 3\n'
     assert (output/'lib/astribot_camera/astribot_camera_main').read_bytes()==b'original binary'
     with pytest.raises(ValueError,match='must not exist'):module.prepare(source,output)
+
+
+def test_latest_head_in_state_gap_uses_newest_unused_aligned_frame():
+    b=populated()
+    # Frame 2 aligns; frame 3 falls in a gap in arm feedback. All streams are live.
+    for key in b.buffers:b.add(key,sample(key,1_033_000_000,2))
+    for key in ('head','right','gripper','head_state'):
+        b.add(key,sample(key,1_066_000_000,3))
+    selected,_=b.snapshot(1_070_000_000,after_sequence=1)
+    assert selected['head'].sequence==2
+    assert selected['arm'].sequence==2
+    assert b.stats()['selection_counts']['aligned_older_head']==1
+    # Never reuse an already submitted frame, nor relax the 10 ms state skew.
+    with pytest.raises(ObservationError,match='skew_arm'):
+        b.snapshot(1_070_000_000,after_sequence=2)
+    b.add('arm',sample('arm',1_068_000_000,3))
+    selected,_=b.snapshot(1_071_000_000,after_sequence=2)
+    assert selected['head'].sequence==3
+
+
+def test_alignment_fallback_never_uses_expired_head():
+    b=populated()
+    b.add('head',sample('head',1_090_000_000,2))
+    for key in ('right','arm','gripper','head_state'):
+        b.add(key,sample(key,1_060_000_000,2))
+    with pytest.raises(ObservationError,match='skew_arm'):
+        b.snapshot(1_095_000_000)

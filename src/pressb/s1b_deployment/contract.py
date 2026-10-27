@@ -7,6 +7,7 @@ import numpy as np
 import yaml
 
 TASK = 'Press the down button while maintaining the demonstrated head posture.'
+MIXED_TASK = 'Use the right gripper to press the circular button on the elevator panel.'
 VERSION = 's1b-joint10-v1'
 JOINTS = [f'astribot_arm_right_joint_{i}' for i in range(1, 8)] + ['astribot_gripper_right/closure', 'astribot_head_joint_1', 'astribot_head_joint_2']
 OFFSETS = np.rint(np.arange(1, 8) * 1e9 / 30).astype(np.int64)
@@ -23,11 +24,16 @@ def tree(path):
 def canonical(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
-def read_config(path, mode='shadow'):
+def read_config(path, mode='shadow', execution_config=None):
     c = yaml.safe_load(Path(path).read_text())
-    if c['protocol'] != VERSION or c['model']['state_dim'] != 10 or c['model']['action_dim'] != 10 or c['model']['horizon'] != 7 or c['model']['task'] != TASK:
+    if c['protocol'] != VERSION or c['model']['state_dim'] != 10 or c['model']['action_dim'] != 10 or c['model']['horizon'] != 7 or c['model']['task'] not in (TASK, MIXED_TASK):
         raise ValueError('Wrong joint10 deployment contract')
     if mode not in ('shadow', 'execute'): raise ValueError('Unknown mode')
+    if mode == 'execute' and execution_config is not None:
+        from .live_execution import validate_execution_config
+        validate_execution_config(execution_config)
+        c = dict(c, mode='execute', execution=execution_config)
+        return c
     if mode == 'execute':
         missing = []
         def visit(v, prefix):
@@ -41,7 +47,7 @@ def read_config(path, mode='shadow'):
 
 def verify(run, step, lock):
     run = Path(run)
-    if step not in (2000, 8000): raise ValueError('Explicit checkpoint 2000 or 8000 required')
+    if step not in (2000, 4500, 8000): raise ValueError('Explicit checkpoint 2000, 4500 or 8000 required')
     identity = json.loads(Path(lock).read_text())
     actual = {k: sha(run / k) for k in identity['files']}
     if actual != identity['files'] or tree(run / 'processor') != identity['processor']:
@@ -67,4 +73,6 @@ def verify(run, step, lock):
         raise ValueError('Split identity mismatch')
     for key in ('dataset_sha256', 'data_contract_sha256', 'split_sha256', 'training_fingerprint'):
         if schema[key] != m[key]: raise ValueError('Schema provenance mismatch: ' + key)
-    return dict(step=step, model_sha256=m['model_sha256'], data_contract_sha256=m['data_contract_sha256'], processor=identity['processor'], normalization=contract['normalization'])
+    task = identity.get('task', TASK)
+    if task not in (TASK, MIXED_TASK): raise ValueError('Unsupported task')
+    return dict(task=task, step=step, model_sha256=m['model_sha256'], data_contract_sha256=m['data_contract_sha256'], processor=identity['processor'], normalization=contract['normalization'])

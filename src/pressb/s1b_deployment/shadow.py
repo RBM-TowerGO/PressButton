@@ -26,7 +26,7 @@ class ShadowRunner:
                 if remaining > 0 and self.stop_event.wait(remaining):
                     break
                 now = time.monotonic_ns()
-                row = self.scheduler.tick(now, planned)
+                row = self.tick(now, planned)
                 row['tick_ordinal'] = ordinal
                 self.emit(row)
                 ordinal += 1
@@ -38,6 +38,9 @@ class ShadowRunner:
         except BaseException as exc:
             self.error = repr(exc)
             self.scheduler.fault('shadow_thread_failure')
+
+    def tick(self, now, planned):
+        return self.scheduler.tick(now, planned)
 
     def close(self):
         self.stop_event.set()

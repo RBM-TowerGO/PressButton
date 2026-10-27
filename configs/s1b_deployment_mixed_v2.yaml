@@ -1,0 +1,55 @@
+protocol: s1b-joint10-v1
+mode: shadow
+model:
+  run: /home/js/robot/VLA/PressButton/runs/s1b_real_joint10_mixed_8000_v2
+  identity: /home/js/robot/VLA/PressButton/configs/s1b_deployment_assets_mixed_v2.json
+  state_dim: 10
+  action_dim: 10
+  horizon: 7
+  task: Use the right gripper to press the circular button on the elevator panel.
+  seed: 42
+  device: cuda:0
+network:
+  host: 127.0.0.1
+  port: 8796
+  max_request_bytes: 8388608
+  timeout_seconds: 1
+  tcp_nodelay: true
+observation:
+  head_shape:
+  - 720
+  - 1280
+  - 3
+  right_shape:
+  - 360
+  - 640
+  - 3
+  color: RGB
+  time_mapping_evidence: null
+  topic_mapping_evidence: null
+scheduler:
+  policy_hz: 30
+  horizon: 7
+sdk:
+  version: null
+  control_way: null
+  use_wbc: null
+  add_default_torso: null
+  servo_hz: null
+  stop_sequence: null
+  release_control: null
+  noncontrolled_parts_hold: null
+  verification_evidence: null
+constraints:
+  joint_position_lower: null
+  joint_position_upper: null
+  max_velocity: null
+  max_target_delta: null
+  max_measured_deviation: null
+  head_allowed_region: null
+  state_feedback_range: null
+  observation_max_age_ns: null
+  verification_evidence: null
+logging:
+  root: outputs/s1b_deployment
+  schema: s1b-deployment-log-v1

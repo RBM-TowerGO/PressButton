@@ -313,10 +313,27 @@ def validation_anchors(dataset, anchors_per_episode, max_samples=0):
     return anchors
 
 
+def validation_batch_metrics(rows):
+    result = {}
+    for batch in sorted({r['source_batch'] for r in rows}):
+        selected = [r for r in rows if r['source_batch'] == batch]
+        errors = np.mean([r['error'] for r in selected], axis=0)
+        result[batch] = dict(anchors=len(selected), arm_mae_rad=float(errors[:, :7].mean()),
+            head_mae_rad=errors[:, 8:].mean(0).tolist(),
+            first_arm_mae_rad=float(errors[0, :7].mean()),
+            state_copy_first_arm_mae_rad=float(np.mean([r['baseline'][:7] for r in selected])),
+            gripper_accuracy=float(np.mean([r['gripper_correct'] for r in selected])))
+    return result
+
+
 @torch.no_grad()
 def evaluate(model,dataset,anchors,rank,world,device,seed,step,output):
     """Per-joint physical errors and binary accuracy; never average mixed units."""
     model.eval();started=time.monotonic();records=[]
+    mapping_path=dataset.root/'meta/source_mapping.json'
+    source_batches={}
+    if mapping_path.exists():
+        source_batches={r['new_id']:r.get('source_batch','original') for r in json.loads(mapping_path.read_text())}
     if rank==0: print(json.dumps(dict(event="validation_started",step=step,global_anchors=len(anchors))),flush=True)
     for ordinal in range(rank,len(anchors),world):
         sid,frame=anchors[ordinal];example=dataset.get_frame(sid,frame)
@@ -332,6 +349,7 @@ def evaluate(model,dataset,anchors,rank,world,device,seed,step,output):
             baseline=np.abs(state-target[0]).tolist(),gripper_correct=((predicted[:,7]>=.5)==(target[:,7]>=.5)).astype(float).tolist(),
             action_loss=float(losses["action_loss"]),wm_loss=float(losses["wm_loss"]))
         if not all(np.isfinite(np.asarray(v)).all() for v in values.values()):raise RuntimeError("Nonfinite validation")
+        values['source_batch']=source_batches.get(sid,'original')
         records.append(values)
     gathered=[None]*world;dist.all_gather_object(gathered,records);rows=[r for part in gathered for r in part]
     if len(rows)!=len(anchors):raise RuntimeError("Distributed validation coverage mismatch")
@@ -344,6 +362,7 @@ def evaluate(model,dataset,anchors,rank,world,device,seed,step,output):
         state_copy_first_head_mae_rad=baseline[8:].tolist(),selection_score_normalized=float(norm[0].mean()),
         flow_loss=float(np.mean([r['action_loss'] for r in rows])),wm_loss_weighted_0_1=float(np.mean([r['wm_loss'] for r in rows])))
     result=dict(step=step,evaluation_seed=seed,seconds=time.monotonic()-started,overall=overall)
+    result['by_source_batch']=validation_batch_metrics(rows)
     if rank==0:
         write_json(output/f"validation_{step:06d}.json",result)
         print(json.dumps(dict(event="validation",step=step,**overall)),flush=True)

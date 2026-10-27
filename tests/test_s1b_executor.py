@@ -135,3 +135,35 @@ def test_stop_observer_rejects_motion_that_never_settles():
         return {p:dict(receipt_ns=now,position=[0.]*n,velocity=[100.]*n) for p,n in zip(PARTS,[7,1,2])}
     observer=StopObserver(e,snapshot);observer.start()
     with pytest.raises(ExecutionError,match='settle'):observer.wait()
+    assert observer.diagnostics['velocity_violations']==list(range(10))
+    assert observer.diagnostics['sample_count']>1 and not observer.diagnostics['settled']
+
+
+def test_stop_observer_cannot_pass_using_feedback_returned_after_deadline():
+    from types import SimpleNamespace
+    from pressb.s1b_deployment.executor import StopObserver,PARTS
+    c=config();c['stop_stability_window_ns']=5_000_000;c['max_stop_delay_ns']=30_000_000
+    e=SimpleNamespace(c=c,stop_requested_ns=time.monotonic_ns());calls=[]
+    def snapshot():
+        if calls:time.sleep(.04)
+        calls.append(True);now=time.monotonic_ns()
+        return {p:dict(receipt_ns=now,position=[0.]*n,velocity=[0.]*n) for p,n in zip(PARTS,[7,1,2])}
+    observer=StopObserver(e,snapshot);observer.start()
+    with pytest.raises(ExecutionError,match='settle'):observer.wait()
+    assert not observer.diagnostics['settled']
+    assert observer.diagnostics['last_feedback_ns']>e.stop_requested_ns+c['max_stop_delay_ns']
+
+
+def test_stop_logger_failure_preserves_original_fault_and_releases():
+    c=config();q=initial(c);b=Backend(q);e=GuardedExecutor(c,b,lambda row:None)
+    e.acquire(q,time.monotonic_ns(),operator_present=True,estop_ready=True)
+    def failed_logger(row):raise OSError('log_queue_full')
+    e.emit=failed_logger
+    try:
+        with pytest.raises(OSError,match='^log_queue_full$'):
+            e.send(q,q,time.monotonic_ns())
+        assert e.fault_reason=='command_rejected:log_queue_full'
+        assert e.stop_log_error=="OSError('log_queue_full')"
+        assert b.stop_calls==1 and not b.calls
+    finally:e.close()
+    assert b.releases==1 and e.state=='FAULT'

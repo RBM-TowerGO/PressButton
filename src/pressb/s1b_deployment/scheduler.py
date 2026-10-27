@@ -20,7 +20,10 @@ class FakeExecutor:
         self.stops.append(reason)
 
 class Scheduler:
-    def __init__(self, session_id, model_sha256, contract_sha256, executor=None):
+    def __init__(self, session_id, model_sha256, contract_sha256, executor=None, starvation_action='stop'):
+        if starvation_action not in ('stop', 'hold'):
+            raise ValueError('invalid_starvation_action')
+        self.starvation_action = starvation_action
         self.session_id = session_id
         self.model_sha256 = model_sha256
         self.contract_sha256 = contract_sha256
@@ -132,6 +135,49 @@ class Scheduler:
                     raise
             return row
 
+    def sample(self, now_ns, planned_tick_ns=None):
+        """Select a live policy target for a servo tick, without consuming it.
+
+        A 30 Hz target can feed multiple 250 Hz SDK calls only before its original
+        deadline. Never rebase a prediction or hold the final point past expiry.
+        Sending happens outside this lock so inference admission is independent.
+
+        ``starvation_action='hold'`` (explicitly requested for the current VLA
+        run) returns an uncovered row instead of latching a stop, so the caller
+        keeps the last guarded target until a fresh prediction arrives. The
+        default remains 'stop'; every other fault path is unaffected.
+        """
+        with self.lock:
+            if now_ns <= self.last_tick_ns:
+                raise ScheduleError('tick_out_of_order')
+            self.last_tick_ns = now_ns
+            self.counts['servo_ticks'] += 1
+            if self.state != 'EXECUTING':
+                raise ScheduleError('session_not_active')
+            while self.queue and self.queue[0]['deadline_ns'] <= now_ns:
+                self.queue.popleft()
+                self.counts['expired_on_servo_tick'] += 1
+            if not self.queue or self.queue[0]['deadline_ns'] > now_ns + PERIOD_NS:
+                reason = 'queue_exhausted' if not self.queue else 'no_point_in_tick_window'
+                if self.starvation_action == 'hold':
+                    self.counts['starved_servo_ticks'] += 1
+                    return dict(event='servo_tick', state=self.state, tick_ns=now_ns,
+                        planned_tick_ns=planned_tick_ns, covered=False, reason=reason,
+                        queue_length=len(self.queue))
+                self._fault(reason)
+                raise ScheduleError(reason)
+            item = self.queue[0]
+            self.counts['covered_servo_ticks'] += 1
+            return dict(event='servo_tick', state=self.state, tick_ns=now_ns,
+                planned_tick_ns=planned_tick_ns, covered=True,
+                **{k:v for k,v in item.items() if k!='action_raw'},
+                action_raw=item['action_raw'].tolist(), sdk_target=None,
+                actual_send_ns=None, queue_length=len(self.queue))
+
+    def discard_pending(self):
+        with self.lock:
+            self.queue.clear()
+
     def _fault(self, reason):
         self.queue.clear()
         self.state = 'FAULT'
@@ -152,6 +198,20 @@ class Scheduler:
             self.session_id = session_id
             self.last_observation_id = self.last_observation_ns = -1
             self.state = 'SHADOW'
+
+    def enable_execution(self, executor, now_ns):
+        """Attach an acquired real adapter only to a fresh, covered queue."""
+        from .live_execution import LiveExecution
+        with self.lock:
+            if (not isinstance(executor, LiveExecution) or not executor.active
+                    or self.executor is not None or self.state != 'SHADOW'):
+                raise ScheduleError('execution_not_armed')
+            while self.queue and self.queue[0]['deadline_ns'] < now_ns:
+                self.queue.popleft()
+            if not self.queue or self.queue[0]['deadline_ns'] > now_ns + PERIOD_NS:
+                raise ScheduleError('no_fresh_target_to_arm')
+            self.executor = executor
+            self.state = 'EXECUTING'
 
     def enable_fake_execution(self, *, session_id, model_sha256, explicit=False):
         with self.lock:

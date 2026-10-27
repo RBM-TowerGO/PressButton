@@ -46,7 +46,7 @@ class Policy:
         with torch.random.fork_rng(devices=[self.device.index]), torch.inference_mode(), torch.autocast('cuda', dtype=torch.bfloat16):
             torch.manual_seed(seed)
             torch.cuda.manual_seed(seed)
-            result = self.model.predict_action(batch_images=[images], instructions=[TASK], state=normalized_state)['normalized_actions']
+            result = self.model.predict_action(batch_images=[images], instructions=[self.identity.get('task', TASK)], state=normalized_state)['normalized_actions']
         torch.cuda.synchronize(self.device)
         elapsed = time.perf_counter() - started
         if result.shape != (1, 7, 10) or not np.isfinite(result).all(): raise ValueError('Invalid model output')
