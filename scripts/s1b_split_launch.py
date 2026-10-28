@@ -15,6 +15,27 @@ ROOT=shared.ROOT
 REMOTE=shared.REMOTE
 
 
+def load_execution_config(path, *, clip_all_targets=False):
+    from pressb.s1b_deployment.live_execution import validate_execution_config
+    execution=json.loads(Path(path).read_text())
+    # This mode is a per-launch opt-in, never inherited from a previous run.
+    execution['clip_all_targets']=clip_all_targets
+    validate_execution_config(execution)
+    return execution
+
+
+def wait_control_exit(proc):
+    """Allow bounded SDK/ROS teardown after the workstation has requested stop."""
+    for attempt in range(3):
+        try:
+            return proc.wait(timeout=10)
+        except subprocess.TimeoutExpired as exc:
+            elapsed=(attempt+1)*10
+            if attempt==2:
+                raise RuntimeError('control_shutdown_timeout_after_30s; check control.log shutdown_stage events') from exc
+            print(f'等待控制服务释放资源并退出：已等待 {elapsed}s（最长 30s）',flush=True)
+
+
 def tunnel_command(host,ports):
     # Explicitly disable SSH multiplexing: image traffic must not share the
     # control channel's TCP connection through an existing ControlMaster.
@@ -33,14 +54,19 @@ def main():
     p.add_argument('--duration',type=float,default=600)
     p.add_argument('--mode',choices=['shadow','execute'],default='shadow')
     p.add_argument('--execution-config',default=str(ROOT/'configs/s1b_execution_model_v1.json'))
+    p.add_argument('--clip-all-targets',action='store_true',
+                   help='explicitly clip every finite model target to configured position bounds, regardless of overshoot')
     p.add_argument('--operator-present',action='store_true')
     p.add_argument('--estop-ready',action='store_true')
     p.add_argument('--request-control-handover',action='store_true')
+    p.add_argument('--torso-only',action='store_true',help='execute torso alignment and hold only; never execute model actions')
     p.add_argument('--auto-start',action='store_true',help='noninteractive SHADOW validation only')
     for name,port in [('head',55555),('right',55557),('state',55558),('control',6200),('policy',8796)]:
         p.add_argument('--'+name+'-port',type=int,default=port)
     p.add_argument('--execution-strategy',choices=['synchronous','continuous'],default='synchronous')
     a=p.parse_args()
+    if a.clip_all_targets and a.mode!='execute':p.error('--clip-all-targets requires execute')
+    if a.torso_only and a.mode!='execute':p.error('--torso-only requires execute')
     if a.mode=='execute' and (not a.operator_present or not a.estop_ready):
         p.error('execute requires --operator-present and --estop-ready')
     if a.auto_start and a.mode!='shadow':p.error('--auto-start is restricted to shadow mode')
@@ -52,8 +78,8 @@ def main():
     from pressb.s1b_deployment.cameras import missing_camera_drivers
     execution=None
     if a.mode=='execute':
-        from pressb.s1b_deployment.live_execution import validate_execution_config
-        execution=json.loads(Path(a.execution_config).read_text());validate_execution_config(execution)
+        execution=load_execution_config(a.execution_config,clip_all_targets=a.clip_all_targets)
+        if a.torso_only and not execution.get('torso_alignment',{}).get('enabled'):p.error('--torso-only requires torso_alignment.enabled')
     import zmq
     os.chdir(ROOT)
     from pressb.s1b_deployment.contract import read_config
@@ -64,6 +90,10 @@ def main():
     token='split_'+str(time.time_ns());out=ROOT/'outputs/s1b_deployment'/f'live_{a.checkpoint}_{token}'
     out.mkdir(parents=True);remote_out=REMOTE+'/outputs/'+token
     (out/'launch.json').write_text(json.dumps(dict(vars(a),session_id=token,remote_output=remote_out,pyzmq=zmq.__version__),indent=2)+'\n')
+    if execution:
+        (out/'execution.json').write_text(json.dumps(execution,indent=2)+'\n')
+        if a.clip_all_targets:
+            print('已开启全部目标裁剪：模型所有关节预测按配置位置上下限裁剪，记录原值与裁剪量。',flush=True)
     ssh=['ssh','-o','BatchMode=yes','-o','ConnectTimeout=10',a.host]
     processes={};files=[];pidfiles=[];worker=None;cleanup_errors=[];service_errors=[];summary=None;remote_prepared=False
     warning_position=0
@@ -79,7 +109,12 @@ def main():
                 warning_position=stream.tell()
                 try:row=json.loads(line)
                 except ValueError:continue
-                if not isinstance(row,dict) or row.get('event')!='warning':continue
+                if not isinstance(row,dict):continue
+                if row.get('event') in ('torso_progress','torso_aligned'):
+                    label='躯干已到位' if row['event']=='torso_aligned' else ('躯干恢复' if row['phase']=='ALIGNING_TORSO' else '等待躯干稳定')
+                    print(f"{label}：{row.get('progress',1)*100:.0f}%；耗时 {row['elapsed_seconds']:.1f}s；最大误差 {row['max_error_rad']:.4f} rad",flush=True)
+                    continue
+                if row.get('event')!='warning':continue
                 message=row['check']
                 if row.get('part'):message+=':'+row['part']
                 if row.get('reason'):message+=' '+str(row['reason'])
@@ -154,7 +189,7 @@ print(json.dumps(found))
             raise RuntimeError('camera_streams_not_ready:'+json.dumps(camera_status['streams'])+'; '+str(out))
         print('双相机图像预检通过（实际 JPEG、尺寸、时间戳与连续帧）。',flush=True)
         if execution:
-            copy([Path(a.execution_config).resolve()],REMOTE+'/configs/execution_'+token+'.json')
+            copy([out/'execution.json'],REMOTE+'/configs/execution_'+token+'.json')
             probe='from astribot_sdk.core.astribot_api.astribot_client import Astribot; print("SDK_IMPORT_OK_NO_CLIENT_CREATED")'
             with (out/'sdk_preflight.log').open('w') as log:
                 remote(shared.ENV+'; '+shared.sdk_environment(execution)+'; python3 -c '+shlex.quote(probe),stdout=log,stderr=subprocess.STDOUT,timeout=30)
@@ -202,6 +237,7 @@ print(json.dumps(found))
         else:print('自动开始 shadow 验证（无 SDK 控制）。',flush=True)
         command=(f'python3 scripts/s1b_control_service.py --session-id {token} --mode {a.mode} --checkpoint {a.checkpoint}'
             f' --execution-strategy {a.execution_strategy} --identity {shlex.quote(remote_identity)} --port {a.control_port} --duration {a.duration+120} --output '+shlex.quote(remote_out+'/control'))
+        if a.torso_only:command+=' --torso-only'
         if execution:
             command+=' --execution-config '+shlex.quote(REMOTE+'/configs/execution_'+token+'.json')+' --operator-present --estop-ready'
             if a.request_control_handover:command+=' --request-control-handover'
@@ -236,7 +272,7 @@ print(json.dumps(found))
             try:processes['control'].wait(timeout=3)
             except subprocess.TimeoutExpired:pass
             raise RuntimeError(shared.bridge_failure(out/'inference.log')+'\n'+shared.bridge_failure(out/'control.log'))
-        processes['control'].wait(timeout=10)
+        wait_control_exit(processes['control'])
         if processes['control'].returncode:raise RuntimeError(shared.bridge_failure(out/'control.log'))
         summary=json.loads((out/'workstation/summary.json').read_text())
         (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')

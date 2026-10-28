@@ -29,6 +29,12 @@ def tiny_config():
 @pytest.mark.parametrize('rectangular_views', [False, True])
 def test_multimodal_feature_path_backward_and_no_lm_logits(monkeypatch, rectangular_views):
     torch.set_num_threads(2)
+    # This is a CPU gradient test. Optional CUDA kernels installed for deployment
+    # must not change its execution device or require a GPU.
+    from transformers.models.qwen3_5 import modeling_qwen3_5 as kernels
+    for name in ('causal_conv1d_fn', 'causal_conv1d_update', 'chunk_gated_delta_rule',
+                 'fused_recurrent_gated_delta_rule', 'FusedRMSNormGated'):
+        monkeypatch.setattr(kernels, name, None)
     monkeypatch.setattr(QWen3_5.AutoConfig, "from_pretrained", lambda *_: tiny_config())
     processor = SimpleNamespace(tokenizer=SimpleNamespace(padding_side="right"))
     monkeypatch.setattr(QWen3_5.AutoProcessor, "from_pretrained", lambda *_: processor)

@@ -19,6 +19,8 @@ import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, DistributedSampler
+from .gripper_sampling import (validate_options, GripperDistributedSampler, transition_anchors,
+                               gripper_record, diagnostics_report, gripper_candidate)
 
 
 ADAPTED_KEYS = frozenset({
@@ -73,11 +75,12 @@ def training_contract(config):
     result = dict(seed=config["seed"], framework=framework,
                   data={key: config["datasets"]["vla_data"][key] for key in data_keys},
                   trainer={key: config["trainer"][key] for key in trainer_keys})
+    validate_options(config["trainer"].get("gripper_sampling"), config["trainer"].get("gripper_diagnostics"))
     # Preserve legacy fingerprints while binding new runs to their image preprocessing.
     if 'image_mode' in config['datasets']['vla_data']:
         result['data']['image_mode'] = config['datasets']['vla_data']['image_mode']
     # Preserve the original run's fingerprint when these options are absent.
-    for key in ("target_epochs", "continuation_schedule", "pretrained_initialization", "optimizer_sharding"):
+    for key in ("target_epochs", "continuation_schedule", "pretrained_initialization", "optimizer_sharding", "gripper_sampling", "gripper_diagnostics"):
         if key in config["trainer"]:
             result["trainer"][key] = copy.deepcopy(config["trainer"][key])
     fingerprint = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -134,6 +137,13 @@ def validate_continuation_contract(parent, current):
     """A new segment may extend its horizon/schedule, but not reinterpret data."""
     import copy
     parent, current = copy.deepcopy(parent), copy.deepcopy(current)
+    for contract in (parent, current):
+        validate_options(contract['trainer'].get('gripper_sampling'), contract['trainer'].get('gripper_diagnostics'))
+    # Only the explicit supported gripper continuation permits these changes.
+    if current['trainer'].get('gripper_sampling') and current['trainer'].get('gripper_diagnostics'):
+        for contract in (parent, current):
+            for key in ('gripper_sampling', 'gripper_diagnostics', 'eval_interval'):
+                contract['trainer'].pop(key, None)
     for contract in (parent, current):
         for key in ("max_train_steps", "num_warmup_steps", "target_epochs", "continuation_schedule"):
             contract["trainer"].pop(key, None)
@@ -375,9 +385,14 @@ def validation_batch_metrics(rows):
 
 
 @torch.no_grad()
-def evaluate(model,dataset,anchors,rank,world,device,seed,step,output):
+def evaluate(model,dataset,anchors,rank,world,device,seed,step,output,diagnostics=None):
     """Per-joint physical errors and binary accuracy; never average mixed units."""
     model.eval();started=time.monotonic();records=[]
+    base_anchors = set(map(tuple, anchors))
+    extra, onsets = transition_anchors(dataset) if diagnostics else ([], set())
+    extra = set(extra)
+    if diagnostics:
+        anchors = sorted(base_anchors | extra)
     mapping_path=dataset.root/'meta/source_mapping.json'
     source_batches={}
     if mapping_path.exists():
@@ -398,9 +413,16 @@ def evaluate(model,dataset,anchors,rank,world,device,seed,step,output):
             action_loss=float(losses["action_loss"]),wm_loss=float(losses["wm_loss"]))
         if not all(np.isfinite(np.asarray(v)).all() for v in values.values()):raise RuntimeError("Nonfinite validation")
         values['source_batch']=source_batches.get(sid,'original')
+        if diagnostics:
+            values.update(episode=int(sid), frame=int(frame), is_base=(sid,frame) in base_anchors,
+                          is_transition=(sid,frame) in extra,
+                          gripper=gripper_record(predicted[:,7], target[:,7], state[7] < .5, (sid,frame) in onsets))
         records.append(values)
     gathered=[None]*world;dist.all_gather_object(gathered,records);rows=[r for part in gathered for r in part]
     if len(rows)!=len(anchors):raise RuntimeError("Distributed validation coverage mismatch")
+    gripper = diagnostics_report(rows) if diagnostics else None
+    if diagnostics:
+        rows = [r for r in rows if r['is_base']]
     errors=np.mean([r['error'] for r in rows],axis=0);norm=np.mean([r['normalized_error'] for r in rows],axis=0)
     baseline=np.mean([r['baseline'] for r in rows],axis=0)
     overall=dict(anchors=len(rows),arm_mae_rad=float(errors[:,:7].mean()),head_mae_rad=errors[:,8:].mean(0).tolist(),
@@ -411,6 +433,7 @@ def evaluate(model,dataset,anchors,rank,world,device,seed,step,output):
         flow_loss=float(np.mean([r['action_loss'] for r in rows])),wm_loss_weighted_0_1=float(np.mean([r['wm_loss'] for r in rows])))
     result=dict(step=step,evaluation_seed=seed,seconds=time.monotonic()-started,overall=overall)
     result['by_source_batch']=validation_batch_metrics(rows)
+    if diagnostics: result['gripper'] = gripper
     if rank==0:
         write_json(output/f"validation_{step:06d}.json",result)
         print(json.dumps(dict(event="validation",step=step,**overall)),flush=True)
@@ -455,7 +478,7 @@ def parameter_probes(model):
 
 def prune_checkpoints(root):
     """Keep best/last and every 1000-step milestone; ignore incomplete saves."""
-    keep = {(root / alias).resolve() for alias in ("best", "last") if (root / alias).exists()}
+    keep = {(root / alias).resolve() for alias in ("best", "last", "best_gripper") if (root / alias).exists()}
     for path in root.glob("step_*"):
         suffix = path.name.removeprefix("step_")
         if not suffix.isdigit() or not path.is_dir() or path.is_symlink():
@@ -465,7 +488,7 @@ def prune_checkpoints(root):
         shutil.rmtree(path)
 
 
-def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance):
+def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance, gripper_state=None, is_best_gripper=False):
     from starVLA.training.optimizer_checkpoint import consolidate_optimizer_state
     started = time.monotonic()
     if rank == 0:
@@ -486,14 +509,15 @@ def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank
         # Plain upstream-compatible keys; no wrapper/module prefix.
         torch.save(model.state_dict(), staging / "model.pt")
         torch.save(dict(optimizer=optimizer.state_dict(), scheduler=scheduler.state_dict(),
-                        rng_by_rank=states, world_size=world, **progress,
+                        rng_by_rank=states, world_size=world, gripper_state=gripper_state, **progress,
                         **provenance),
                    staging / "training.pt")
         write_json(staging / "manifest.json", dict(complete=True, **progress,
                    **provenance,
                    model_sha256=sha256(staging / "model.pt"), training_sha256=sha256(staging / "training.pt")))
         os.replace(staging, destination)
-        for alias in ("last", "best") if is_best else ("last",):
+        aliases = ['last'] + (['best'] if is_best else []) + (['best_gripper'] if is_best_gripper else [])
+        for alias in aliases:
             temporary = root / (alias + ".tmp")
             temporary.symlink_to(name, target_is_directory=True)
             os.replace(temporary, root / alias)
@@ -577,6 +601,8 @@ def main():
     maximum, warmup = int(cfg.trainer.max_train_steps), int(cfg.trainer.num_warmup_steps)
     restart = args.resume or args.continue_from
     progress = dict(step=0, epoch=0, batch_in_epoch=0, best_score=None)
+    gripper_state = None
+    diagnostics = cfg.trainer.get('gripper_diagnostics')
     lineage = None
     if restart:
         checkpoint_dir = restart.resolve(strict=True)
@@ -597,6 +623,10 @@ def main():
             if training.get(key) != metadata.get(key):
                 raise ValueError(f"Restart manifest/training state mismatch: {key}")
         progress = {key: training[key] for key in progress}
+        if args.resume:
+            gripper_state = training.get('gripper_state')
+            if diagnostics and not gripper_state:
+                raise ValueError('Missing gripper baseline/selection state in resumed checkpoint')
         normalize_epoch_cursor(progress, geometry["batches_per_epoch"])
         expected_step = progress["epoch"] * geometry["steps_per_epoch"] + math.ceil(progress["batch_in_epoch"] / accumulation)
         if (progress["step"] != expected_step
@@ -623,6 +653,11 @@ def main():
                        restored=["all_model_weights", "AdamW_parameter_groups_and_moments", "rank_RNG", "sampler_cursor"],
                        learning_rate_schedule=OmegaConf.to_container(cfg.trainer.continuation_schedule, resolve=True),
                        best_selection="best validation score within continuation segment; parent kept in its original run")
+        if cfg.trainer.get('gripper_sampling'):
+            lineage['sampling_change'] = dict(parent=source_contract['contract']['trainer'].get('gripper_sampling'),
+                current=OmegaConf.to_container(cfg.trainer.gripper_sampling, resolve=True),
+                semantics='Parent progress restored; replacement sampling begins at this rank cursor, not the parent sample sequence')
+            lineage['restored'][-1] = 'sampler_cursor_with_explicit_distribution_change'
         progress["best_score"] = None
     elif args.resume:
         if training.get("training_fingerprint") != fingerprint:
@@ -711,7 +746,10 @@ def main():
     ddp = DDP(model, device_ids=[local_rank], output_device=local_rank, find_unused_parameters=False, broadcast_buffers=False, gradient_as_bucket_view=True)
     if rank == 0:
         print(json.dumps(dict(event="ddp_ready", world_size=world, trainable_numel=parameter_report["trainable_numel"])), flush=True)
-    sampler = OffsetDistributedSampler(train_data, num_replicas=world, rank=rank, shuffle=True, seed=int(cfg.seed), drop_last=False)
+    if cfg.trainer.get('gripper_sampling'):
+        sampler = GripperDistributedSampler(train_data, num_replicas=world, rank=rank, seed=int(cfg.seed))
+    else:
+        sampler = OffsetDistributedSampler(train_data, num_replicas=world, rank=rank, shuffle=True, seed=int(cfg.seed), drop_last=False)
     generator = torch.Generator().manual_seed(int(cfg.seed) + rank * 1009)
     num_workers = int(cfg.datasets.vla_data.num_workers)
     loader = DataLoader(train_data, batch_size=batch_size, sampler=sampler,
@@ -721,8 +759,18 @@ def main():
     seed_all(int(cfg.seed) + rank * 1009)
     if restart:
         restore_rng(resume_rng)
-    else:
-        evaluate(model, val_data, anchors, rank, world, device, int(cfg.seed) + 500000, 0, output)
+    if diagnostics and (args.continue_from or not restart):
+        before_evaluation = get_rng()
+        baseline = evaluate(model, val_data, anchors, rank, world, device, int(cfg.seed)+500000,
+                            progress['step'], output, diagnostics)
+        restore_rng(before_evaluation)
+        gripper_state = dict(baseline=baseline, best_key=None, best_step=None)
+        if rank == 0:
+            write_json(output/'gripper_baseline.json', baseline)
+            extra, onset = transition_anchors(val_data)
+            write_json(output/'gripper_validation_anchors.json', dict(anchors=extra, onsets=sorted(onset)))
+    elif not restart:
+        evaluate(model, val_data, anchors, rank, world, device, int(cfg.seed) + 500000, 0, output, diagnostics)
     epoch_batches = geometry["batches_per_epoch"]
     if rank == 0:
         ready = dict(event="training_ready", **progress, **geometry,
@@ -744,6 +792,10 @@ def main():
     while progress["step"] < stop_at:
         sampler.set_epoch(progress["epoch"])
         sampler.set_start_index(progress["batch_in_epoch"] * batch_size)
+        if isinstance(sampler, GripperDistributedSampler) and rank == 0:
+            report = sampler.report()
+            write_json(output/f"sampling_epoch_{progress['epoch']:04d}_offset_{sampler.start_index}.json", report)
+            print(json.dumps(dict(event='sampling', **report)), flush=True)
         model.train()
         for module in frozen:
             module.eval()
@@ -794,13 +846,23 @@ def main():
                     stream.write(json.dumps(record) + "\n")
                 print(json.dumps(record), flush=True)
             if progress["step"] % int(cfg.trainer.eval_interval) == 0 or progress["step"] == stop_at:
-                metrics = evaluate(model, val_data, anchors, rank, world, device, int(cfg.seed)+500000, progress["step"], output)
+                metrics = evaluate(model, val_data, anchors, rank, world, device, int(cfg.seed)+500000, progress["step"], output, diagnostics)
                 # Fixed explicit score; physical metrics remain separate in reports.
                 score = metrics["overall"]["selection_score_normalized"]
                 is_best = progress["best_score"] is None or score < progress["best_score"]
                 if is_best:
                     progress["best_score"] = score
-                save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance)
+                is_best_gripper = False
+                if diagnostics:
+                    key = gripper_candidate(metrics, gripper_state['baseline'])
+                    if key is not None and (gripper_state['best_key'] is None or tuple(key) > tuple(gripper_state['best_key'])):
+                        gripper_state.update(best_key=key, best_step=progress['step'])
+                        is_best_gripper = True
+                    if rank == 0:
+                        write_json(output/'gripper_selection.json', dict(step=progress['step'], candidate=key,
+                            best_key=gripper_state['best_key'], best_step=gripper_state['best_step']))
+                save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance,
+                                gripper_state, is_best_gripper)
                 model.train()
                 for module in frozen:
                     module.eval()

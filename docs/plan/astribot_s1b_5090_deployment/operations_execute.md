@@ -174,3 +174,92 @@ SDK 自带 `error_mapping.yaml` 未定义 `13243026`；已查的部署配置也�
 残留风险（明确记录，不声称已消除）：保持会以 250 Hz 刷新 100 ms 命令看门狗，因此**预测流/网络长时间中断时机械臂不会自动停，而是停在最后一个已接受目标上等待**；机械臂仍可能继续走完到该目标的有限行程。现场急停、操作员与 `Ctrl-C` 仍是唯一的人工兜底。要恢复原行为，把该配置改回 `stop` 即可。
 
 回归：`pytest tests/test_s1b*.py -q` 210 项通过，新增 `test_shipped_model_config_holds_on_starvation`、`test_starvation_holds_last_target_until_fresh_prediction`、`test_hold_mode_keeps_execution_alive_past_horizon_and_watchdog`；原 stop 语义测试通过显式传 `make_live('stop')` 保留。未做真机运动验证。
+
+## 示范躯干恢复（2026-10-28）
+
+`configs/s1b_execution_model_v1.json` 默认启用 `torso_alignment`。按S并取得控制权后，程序保持已有手臂关节目标，恢复第二批审核示范 episode_000096 第0帧的躯干控制目标，等待实测到位稳定后重新采图并开始模型执行。SDK默认home的躯干角度不是示范姿态；这里不会自动执行全身home。
+
+过渡采用250Hz、五次平滑插值，至少8秒；到位条件为四关节误差≤0.060rad、速度≤0.02rad/s，持续500ms，总初始化运动预算30秒。显示实际过渡百分比、耗时和实测误差。推理期间每次SDK命令都附带固定躯干目标。模型10维契约不变，旧配置无此字段时保持旧行为，shadow不控制躯干。停止后不自动回到默认home。
+
+无需双臂处于默认home姿态；确认夹爪离开面板和运动空间后，可启动仅躯干验收：
+
+```bash
+.venv-qwen3-5/bin/python scripts/start_s1b_inference.py \
+  --config configs/s1b_deployment_qwen35_native_v2.yaml \
+  --checkpoint 4500 --duration 20 --mode execute \
+  --operator-present --estop-ready --request-control-handover --torso-only
+```
+
+`--torso-only`仍加载模型并做不执行的预检，但到位后仅保持原10维关节目标及示范躯干目标，绝不执行模型动作；20秒从初始化完成后计算。第一次可在过渡中按Ctrl-C验证停止，再重新启动、运行到保持结束。该模式也会控制原10维部件以保持已有目标，并非仅对躯干建立控制权。
+
+上述检查通过后，移除`--torso-only`运行短时间按键对照。现有机器人限位保持不变。本次实现仅经假SDK/本地HTTP测试，真机过渡、物理停止效果和按键高度改善须现场验收。
+
+日志新增 `torso_reference`（源文件、帧号、SHA256、SDK限位）、`torso_progress`、`torso_aligned`；停止报告追加躯干四关节。状态机增加 `ALIGNING_TORSO`、`SETTLING_TORSO`，`/health`提供`torso_progress`及`torso_only`。到位前的相机和状态样本不能用于后续动作。
+
+## 第 6 关节边界预测裁剪（2026-10-28）
+
+### 显式开启所有模型目标裁剪
+
+在启动命令上加 `--clip-all-targets`，本次执行接受所有形状正确、数值有限的模型预测，
+对 joint10 的每个关节按 `max(hardware_lower, position_lower)` 和
+`min(hardware_upper, position_upper)` 裁剪，不再因预测越界幅度大而停止。
+夹爪仍按既有 0.5 阈值解码为 0/100；躯干使用独立的固定恢复目标，不属于模型 joint10。
+NaN/Inf、错误维度仍拒绝；最终 SDK 目标位置检查、速度限制等保持有效。
+
+```bash
+.venv-qwen3-5/bin/python scripts/start_s1b_inference.py \
+  --config configs/s1b_deployment_qwen35_native_v2.yaml \
+  --checkpoint 4500 --duration 600 \
+  --mode execute --operator-present --estop-ready \
+  --request-control-handover --clip-all-targets
+```
+
+模式默认关闭，每次启动必须显式传参。启动器打印启用提示，在 launch.json 记录开关，
+将本次有效配置保存为 execution.json 并将该文件同步到机器人，原始配置不改写。
+原值、裁剪后的值与差值仍写入 prediction_position_clipped、command.source 和 ticks。
+以下第 6 关节小幅裁剪规则只在未开启 `--clip-all-targets` 时适用。
+
+按用户要求保留右臂第 6 关节目标下限 -0.78 rad。模型执行配置的
+`prediction_lower_clip_tolerance` 第 6 维为 0.02 rad，
+`prediction_upper_clip_tolerance` 第 6 维为 0.04 rad，其余维均为 0。
+允许裁剪的预测区间对称为 [-0.80, +0.80] rad，实际指令区间仍为 [-0.78, +0.76] rad。
+该关节预测在 [-0.80, -0.78) rad 时，先裁剪到 -0.78 rad，再经过启动过渡、
+速度限制和 SDK 指令检查；低于 -0.80 rad 仍触发 `target_position_limit` 停止。
+正向预测在 (+0.76, +0.80] rad 时裁剪到 +0.76 rad；高于 +0.80 rad 仍停止。
+其他关节越界、NaN、状态过期等仍按原规则处理；省略对应方向配置字段时不裁剪。
+该容差只用于模型预测，不放宽最终 SDK 目标或 hold/startup 的位置检查。
+
+每次发生裁剪，在机器人 `control/events.jsonl` 记录 `prediction_position_clipped`：
+包含 `action_raw`、夹爪解码后的 `decoded_target`、裁剪后的 `bounded_target`、
+`clip_delta`（裁剪后减裁剪前）、`joint_names`、`observation_id`、`step_index`。
+成功发送的 `command.source` 和 `ticks.jsonl` 同样保留裁剪前后值与差值。
+裁剪事件表示已处理预测，实际发送应以对应 command/servo_tick 为准。
+
+此策略能处理小幅边界误差，不保证持续边界饱和时任务仍能完成；超过容差仍停止。
+已使用假 SDK 验证边界、原始日志、严格指令检查及大幅越界停止，没有启动真机运动。
+
+## 控制服务退出等待（2026-10-28）
+
+`live_4500_split_1793173499203959459` 的 torso-only 20 秒验收记录为
+inference complete=true；控制端 STOPPED、fatal=[]、stop_feedback.settled=true，
+但启动器等待 SSH 控制进程退出 10 秒超时，随后清理记录 control_exit_255。
+这次失败发生在退出等待阶段，不是模型限位或躯干到位失败。
+现将正常结束后的控制服务退出预算改为 30 秒，每 10 秒显示等待进度，
+仍检查进程非零退出码；30 秒后仍未退出则报告明确的 shutdown timeout 并执行原清理流程。
+控制日志新增 shutdown_stage 和累计耗时，以定位 core/SDK、HTTP、ROS、日志关闭阶段。
+未通过真机重跑确认此次慢退出的具体阻塞位置或新预算是否充分。
+
+后续 `live_4500_split_1793173871971968471` 证实：`control_closed` 为 0.392s，
+`http_closed` 为 0.393s，`ros_closed` 为 0.393s，`writer_closed` 为 0.400s，
+随后已打印 `finished`，但进程未退出。因此延长等待不是修复：阻塞发生在显式清理之后。
+机器人 SDK 的 `Astribot.__del__()` 直接再调用 `astribot_interface.__del__()`，
+即使先前已调用 `shutdown()`；SDK 还包含持有后台线程的原生对象。
+未取得原生栈，不能将具体阻塞函数断言为其中某一个析构函数。
+
+独立控制脚本现使用显式进程结束路径：原有 core/SDK、HTTP、ROS、日志清理照常执行，
+写入 summary 并刷新 stdout/stderr 后，已加载 SDK 的独立工作进程调用 `os._exit`，
+避免 Python 再次隐式析构 SDK。正常为退出码 0；fatal 或传播中的异常为退出码 1，
+异常 traceback 仍输出。摘要记录 `process_exit_method` 和 `process_exit_code`。
+shadow 和作为模块调用 main() 均保持普通 Python 退出，不结束调用方进程。
+此路径不会从尚未完成的 core.close 中提前退出，也不会将清理失败标为成功。
+子进程回归覆盖阻塞析构、非 daemon 线程、成功/失败返回码及日志落盘，未启动实机运动。

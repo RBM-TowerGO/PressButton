@@ -9,6 +9,9 @@ from .executor import GuardedExecutor, SDKBackend, StopObserver, ExecutionError,
 
 
 def validate_execution_config(c):
+    if 'torso_alignment' in c:
+        from .torso import validate_config
+        validate_config(c['torso_alignment'])
     if c['schema'] != 's1b-execution-p4-v1' or c['parts'] != PARTS or c['joint_names'] != JOINTS:
         raise ExecutionError('execution_contract_mismatch')
     if c['sdk_frequency'] != 250 or c['head_follow_effector'] is not False:
@@ -19,6 +22,16 @@ def validate_execution_config(c):
     if c.get('queue_exhausted_action','stop') not in ('stop','hold'):
         raise ExecutionError('invalid_execution_config:queue_exhausted_action')
     if profile not in ('probe','model_hardware'):raise ExecutionError('unknown_command_guard_profile')
+    if (type(c.get('clip_all_targets',False)) is not bool
+            or (c.get('clip_all_targets',False) and profile!='model_hardware')):
+        raise ExecutionError('invalid_execution_config:clip_all_targets')
+    for name in ('prediction_lower_clip_tolerance', 'prediction_upper_clip_tolerance'):
+        if name in c:
+            tolerance = np.asarray(c[name], dtype=float)
+            if (profile != 'model_hardware' or tolerance.shape != (10,)
+                    or not np.isfinite(tolerance).all() or (tolerance < 0).any()
+                    or tolerance[7] != 0):
+                raise ExecutionError('invalid_execution_config:' + name)
     if profile=='model_hardware':
         if c.get('control_way')!='filter':raise ExecutionError('model_requires_sdk_filter')
         for name in ('startup_blend_seconds','first_prediction_timeout_seconds'):
@@ -63,6 +76,10 @@ class LiveExecution:
         self.monitor = monitor
         self.backend = backend or SDKBackend(config['sdk_root'], config['sdk_frequency'],control_way=config.get('control_way','direct'))
         self.executor = GuardedExecutor(config, self.backend, emit)
+        self.torso = None
+        if config.get('torso_alignment',{}).get('enabled',False):
+            from .torso import TorsoAlignment
+            self.torso=TorsoAlignment(config['torso_alignment'],self)
         self.observer = None
         self.baseline = None
         self.stop_result = None
@@ -142,6 +159,9 @@ class LiveExecution:
                 raise ExecutionError('invalid_component_state:' + part)
             if not 0 <= now - row['receipt_ns'] <= self.c['state_max_age_ns']:
                 raise ExecutionError('stale_component_state:' + part)
+            if self.torso and part=='astribot_torso':
+                self.torso.check(snapshot,now)
+                continue
             if part not in PARTS:
                 drift=float(np.max(np.abs(q-baseline['position'])))
                 limit=self.c['uncontrolled_max_position_drift'][part]
@@ -157,10 +177,24 @@ class LiveExecution:
             raise ExecutionError('control_rights_already_owned')
         measured, stamp = self.check_state()
         self.executor.acquire(measured, stamp, operator_present=True, estop_ready=True,
-                              initial_command=self.monitor.command10)
+                              initial_command=self.monitor.command10,
+                              on_acquired=self.torso.prepare if self.torso else None)
         self.startup = StartupBlend(self.executor.guard.last, self.c.get('startup_blend_seconds',0.))
-        self.observer = StopObserver(self.executor, self.monitor.snapshot)
+        self.observer = StopObserver(self.executor, self.monitor.snapshot,extra=(dict(
+            joint_names=[f'astribot_torso_joint_{i}' for i in range(1,5)],
+            stop_position_spread=[.0002]*4,stop_velocity_threshold=[.003]*4) if self.torso else None))
         self.observer.start()
+
+    def align_torso(self,phase):
+        if not self.torso:return
+        try:
+            self.torso.run(phase)
+            self.baseline=self.monitor.snapshot()
+            self.startup=StartupBlend(self.executor.guard.last,self.c.get('startup_blend_seconds',0.))
+        except BaseException as exc:
+            self.executor.fault('torso_alignment:'+str(exc))
+            # close() collects stop feedback and joins the monitor before SDK teardown.
+            raise
 
     def hold(self):
         """Re-send the already accepted guarded target with fresh state.
@@ -177,11 +211,19 @@ class LiveExecution:
             if time.monotonic_ns() >= row['deadline_ns']:
                 raise TargetExpired('target_expired_before_send')
             measured, stamp = self.check_state()
-            # Reject invalid raw targets before blending; blending must not hide
-            # a prediction outside hardware bounds.
-            decoded = self.executor.guard.validate_target(row['action_raw'],binary_gripper=True)
-            transition,alpha = self.startup.target(decoded,time.monotonic_ns())
+            # Bound explicitly tolerated prediction overshoot before blending.
+            # Larger violations still fail before any SDK command is dispatched.
+            decoded,bounded = self.executor.guard.prepare_prediction(row['action_raw'])
+            clip_delta = bounded - decoded
+            if np.any(clip_delta):
+                self.emit(dict(event='prediction_position_clipped',monotonic_ns=time.monotonic_ns(),
+                    observation_id=row.get('observation_id'),step_index=row.get('step_index'),
+                    action_raw=np.asarray(row['action_raw']).tolist(),decoded_target=decoded.tolist(),
+                    bounded_target=bounded.tolist(),clip_delta=clip_delta.tolist(),
+                    joint_names=[JOINTS[i] for i in np.flatnonzero(clip_delta)]))
+            transition,alpha = self.startup.target(bounded,time.monotonic_ns())
             source=dict(action_raw=row['action_raw'],decoded_target=decoded.tolist(),
+                bounded_target=bounded.tolist(),clip_delta=clip_delta.tolist(),
                 observation_id=row.get('observation_id'),step_index=row.get('step_index'),
                 deadline_ns=row['deadline_ns'],startup_alpha=alpha)
             target = self.executor.send(transition, measured, stamp, deadline_ns=row['deadline_ns'],source=source)
@@ -190,6 +232,7 @@ class LiveExecution:
             if key!=self.last_policy_key:
                 self.policy_targets+=1;self.last_policy_key=key
             row.update(sdk_target=target.tolist(), actual_send_ns=time.monotonic_ns(), simulated_send_ns=None,
+                bounded_target=bounded.tolist(),clip_delta=clip_delta.tolist(),
                 decoded_target=decoded.tolist(),transition_target=transition.tolist(),startup_alpha=alpha,
                 execution_phase='startup_transition' if alpha<1 else 'model_tracking',
                 control_way=self.c.get('control_way','direct'))
@@ -219,10 +262,12 @@ class LiveExecution:
                     except Exception as exc:errors.append('stop_feedback_log:'+str(exc))
         finally:
             try:
-                self.executor.close()
-            finally:
+                # SDK shutdown owns the shared ROS context. Our subscriptions
+                # and spin thread must be gone before that context is destroyed.
                 if self.monitor:
                     self.monitor.close()
+            finally:
+                self.executor.close()
         if errors:
             raise ExecutionError(';'.join(errors))
 
@@ -278,6 +323,9 @@ class ExecutionRunner:
 
     def tick(self, now, planned):
         self.live.ensure_active()
+        if self.live.c.get('torso_only',False):
+            self.live.hold()
+            return dict(event='torso_only_hold',tick_ns=now,control_hz=self.frequency)
         if getattr(self.scheduler,'strategy',None)=='synchronous':
             row=self.scheduler.sample(now,planned)
             if row['covered']:

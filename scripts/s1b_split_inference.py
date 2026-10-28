@@ -94,7 +94,7 @@ def wait_initialized(connection,clock,session,model,boot_id,timeout=90):
             if received-sent<=50_000_000:
                 clock.update(sent,received,health['robot_monotonic_ns'])
                 if health['phase']=='AWAITING_PREDICTION':return health
-            if health['phase'] not in ('INITIALIZING','AWAITING_PREDICTION'):
+            if health['phase'] not in ('INITIALIZING','ALIGNING_TORSO','SETTLING_TORSO','AWAITING_PREDICTION'):
                 raise ValueError('unexpected_startup_phase:'+health['phase'])
             time.sleep(.01)
         raise TimeoutError('control_initialization_timeout')
@@ -195,6 +195,9 @@ def main():
         while started is None or time.monotonic()-started<a.duration:
             writer.check();receiver.check()
             if clock_monitor:clock_monitor.check()
+            if started is not None and health.get('torso_only',False):
+                time.sleep(.05)
+                continue
             if started is None and time.monotonic()-preflight_started>5:
                 raise RuntimeError('client_preflight_timeout:'+str(rejects))
             if last_prediction_local_ns is not None and time.monotonic_ns()-last_prediction_local_ns>mapping['max_request_gap_seconds']*1e9:
@@ -207,7 +210,7 @@ def main():
             if a.execution_strategy=='synchronous':
                 if not observation_after(selected,accept_after):
                     rejects['observation_predates_chunk_boundary']+=1;continue
-            elif accept_after is not None and head.receipt_ns<accept_after:
+            elif accept_after is not None and not observation_after(selected,accept_after):
                 rejects['observation_predates_initialization']+=1;continue
             decode_started=time.monotonic_ns()
             try:images=selected_rgb(selected)
@@ -234,9 +237,8 @@ def main():
                 raise ValueError('invalid_prediction')
             result['robot_boot_id']=np.asarray(boot_id)
             result['execution_strategy']=np.asarray(a.execution_strategy)
-            if a.execution_strategy=='synchronous':
-                result['observation_receipt_ns']=np.asarray([selected[k].receipt_ns for k in
-                    ('head','right','arm','gripper','head_state')],dtype=np.int64)
+            result['observation_receipt_ns']=np.asarray([selected[k].receipt_ns for k in
+                ('head','right','arm','gripper','head_state')],dtype=np.int64)
             action=encode(result)
             if started is None:
                 status,data=control_exchange(control,'POST','/start',action,{'Content-Type':'application/octet-stream'})
@@ -294,7 +296,7 @@ def main():
                     **(dict(completed_chunks=health['completed_chunks']) if a.execution_strategy=='synchronous' else
                        dict(horizon_remaining_ms=row['control_reply']['horizon_remaining_ns']/1e6)))),flush=True)
                 next_status=time.monotonic()+5
-        if not requests:raise RuntimeError('no_predictions')
+        if not requests and not health.get('torso_only',False):raise RuntimeError('no_predictions')
     except DurationElapsed:
         pass
     except KeyboardInterrupt:
@@ -332,7 +334,8 @@ def main():
             horizon_remaining_ms_p0_p50_p95_p99_max=pct([r['control_reply']['horizon_remaining_ns']/1e6 for r in requests
                 if 'horizon_remaining_ns' in r['control_reply']]),
             sdk_imported=any(n.startswith('astribot_sdk') for n in sys.modules),
-            complete=bool(requests) and not fatal and not stop_requested and elapsed>=a.duration)
+            torso_only=bool(health and health.get('torso_only',False)),
+            complete=(bool(requests) or bool(health and health.get('torso_only',False))) and not fatal and not stop_requested and elapsed>=a.duration)
         (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
         print(json.dumps(dict(event='finished',**summary)),flush=True)
         if fatal and sys.exc_info()[0] is None:raise RuntimeError(';'.join(fatal))

@@ -72,6 +72,30 @@ class CommandGuard:
             raise ExecutionError('target_rate_limit')
         return x
 
+    def prepare_prediction(self, target):
+        """Decode model output and project only explicitly tolerated overshoot.
+
+        validate_target remains strict for SDK commands and startup/hold paths.
+        """
+        decoded = np.asarray(target, dtype=np.float64).copy()
+        if decoded.shape != (10,) or not np.isfinite(decoded).all():
+            raise ExecutionError('invalid_target')
+        decoded[7] = 100. if decoded[7] >= .5 else 0.
+        lower = np.maximum(self.c['hardware_lower'], self.c['position_lower'])
+        upper = np.minimum(self.c['hardware_upper'], self.c['position_upper'])
+        if self.c.get('clip_all_targets',False):
+            return decoded, self.validate_target(np.clip(decoded,lower,upper))
+        tolerance = np.asarray(self.c.get('prediction_lower_clip_tolerance', [0.] * 10))
+        excess = lower - decoded
+        # A tiny arithmetic allowance applies only to explicitly enabled axes.
+        eligible = (tolerance > 0) & (excess > 0) & (excess <= tolerance + 1e-12)
+        bounded = np.where(eligible, lower, decoded)
+        tolerance = np.asarray(self.c.get('prediction_upper_clip_tolerance', [0.] * 10))
+        excess = decoded - upper
+        eligible = (tolerance > 0) & (excess > 0) & (excess <= tolerance + 1e-12)
+        bounded = np.where(eligible, upper, bounded)
+        return decoded, self.validate_target(bounded)
+
     def commit(self, target, now_ns):
         self.last = np.asarray(target, dtype=np.float64).copy()
         self.last_ns = now_ns
@@ -85,6 +109,9 @@ class SDKBackend:
         self.frequency = frequency
         self.client = None
         self.released = False
+        self.torso_target = None
+        self.motion_lock = threading.RLock()
+        self.motion_stopped = threading.Event()
 
     def acquire(self):
         from astribot_sdk.core.astribot_api.astribot_client import Astribot
@@ -108,16 +135,27 @@ class SDKBackend:
         rows = self.client.get_current_joints_position(names=PARTS)
         return np.concatenate([np.asarray(x, np.float64) for x in rows])
 
+    def torso_limits(self):
+        names=['astribot_torso']
+        lower,upper=self.client.get_joints_position_limit(names)
+        velocity=self.client.get_joints_velocity_limit(names)
+        return lower[0],upper[0],velocity[0]
+
     def send(self, target):
-        if not self.rights():
-            raise ExecutionError('control_rights_lost')
-        self.client.set_joints_position(PARTS,
-            [target[:7].tolist(), target[7:8].tolist(), target[8:].tolist()],
-            control_way=self.control_way, use_wbc=False, add_default_torso=False)
+        with self.motion_lock:
+            if self.motion_stopped.is_set():raise ExecutionError('backend_stopped')
+            if not self.rights():raise ExecutionError('control_rights_lost')
+            names=list(PARTS)
+            values=[target[:7].tolist(),target[7:8].tolist(),target[8:].tolist()]
+            if self.torso_target is not None:
+                names.append('astribot_torso');values.append(self.torso_target.tolist())
+            self.client.set_joints_position(names,values,
+                control_way=self.control_way,use_wbc=False,add_default_torso=False)
 
     def stop(self):
-        if self.rights():
-            self.client.stop_robot()
+        self.motion_stopped.set()
+        with self.motion_lock:
+            if self.rights():self.client.stop_robot()
 
     def stopped(self):
         if self.client is None:return True
@@ -133,6 +171,16 @@ class SDKBackend:
         # avoids destroying the node ahead of its 50 ms transfer timer.
         if self.rights():
             interface.shutdown_control_rights_srv()
+        # The SDK shutdown() destroys its node/context but does not join its
+        # executor thread. Quiesce callbacks before destroying ROS entities.
+        interface.executor.shutdown(timeout_sec=2.)
+        # SDK wraps spin() in `while rclpy.ok()`: executor shutdown alone
+        # cannot terminate that loop. The monitor has already been closed.
+        import rclpy
+        if rclpy.ok():rclpy.shutdown()
+        interface.spin_thread.join(timeout=2.)
+        if interface.spin_thread.is_alive():
+            raise ExecutionError('sdk_spin_shutdown_timeout')
         interface.shutdown()
 
 class GuardedExecutor:
@@ -154,7 +202,7 @@ class GuardedExecutor:
         self.acquired_once = False
         self.sent_commands = 0
 
-    def acquire(self, measured, state_ns, *, operator_present, estop_ready, initial_command=None):
+    def acquire(self, measured, state_ns, *, operator_present, estop_ready, initial_command=None, on_acquired=None):
         if self.state != 'DISCONNECTED':raise ExecutionError('new_executor_instance_required')
         if not operator_present or not estop_ready:
             raise ExecutionError('local_operator_and_estop_required')
@@ -177,6 +225,8 @@ class GuardedExecutor:
                 if guard.profile=='probe' and (np.abs(command-actual)>np.asarray(self.c['max_tracking_error'])).any():raise ExecutionError('initial_command_tracking_error')
                 guard.last=command.copy()
                 guard.last_ns=time.monotonic_ns()
+            if on_acquired is not None:on_acquired()
+            if self.stop_event.is_set() or self.state != 'READY':raise ExecutionError('acquisition_cancelled')
             self.guard = guard
             self.last_refresh_ns = time.monotonic_ns()
             self.state = 'EXECUTING'
@@ -270,7 +320,8 @@ class GuardedExecutor:
 
 class StopObserver:
     """Measure feedback settling on a separate thread while callers may block."""
-    def __init__(self, executor, snapshot):
+    def __init__(self, executor, snapshot, extra=None):
+        self.extra=extra
         self.executor=executor;self.snapshot=snapshot;self.done=threading.Event()
         self.settled_ns=None;self.error=None;self.thread=threading.Thread(target=self.run,daemon=True,name='s1b-stop-feedback')
         self.diagnostics=dict(sample_count=0,settled=False)
@@ -279,14 +330,19 @@ class StopObserver:
         try:
             while self.executor.stop_requested_ns is None:
                 if self.done.wait(.002):return
-            start=self.executor.stop_requested_ns;c=self.executor.c;samples=[];last=-1;max_gap=0
+            start=self.executor.stop_requested_ns;c=dict(self.executor.c);samples=[];last=-1;max_gap=0
+            parts=list(PARTS)
+            if self.extra:
+                parts.append('astribot_torso')
+                for key in ('joint_names','stop_position_spread','stop_velocity_threshold'):
+                    c[key]=list(c[key])+list(self.extra[key])
             self.diagnostics.update(requested_ns=start,budget_ns=c['max_stop_delay_ns'],
                 stability_window_ns=c['stop_stability_window_ns'],joint_names=c['joint_names'])
             while time.monotonic_ns()-start<=c['max_stop_delay_ns']:
-                rows=self.snapshot();stamp=min(rows[p]['receipt_ns'] for p in PARTS)
+                rows=self.snapshot();stamp=min(rows[p]['receipt_ns'] for p in parts)
                 if stamp>last and stamp>=start:
                     max_gap=max(max_gap,stamp-(last if last>=start else start))
-                    q=np.concatenate([rows[p]['position'] for p in PARTS]);v=np.concatenate([rows[p]['velocity'] for p in PARTS]);last=stamp;samples.append((stamp,q,v))
+                    q=np.concatenate([rows[p]['position'] for p in parts]);v=np.concatenate([rows[p]['velocity'] for p in parts]);last=stamp;samples.append((stamp,q,v))
                     while len(samples)>1 and samples[1][0]<=stamp-c['stop_stability_window_ns']:samples.pop(0)
                     spread=np.ptp(np.stack([s[1] for s in samples]),axis=0)
                     speeds=np.max(np.abs(np.stack([s[2] for s in samples])),axis=0)

@@ -79,6 +79,7 @@ def make_live(starvation_action='stop'):
     config is checked separately in test_shipped_model_config_holds_on_starvation.
     """
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     c['stop_stability_window_ns']=5_000_000
     c['queue_exhausted_action']=starvation_action
     q=np.zeros(10);q[9]=.05343
@@ -126,6 +127,7 @@ def test_250hz_thread_continues_during_network_wait_and_stops_at_horizon():
 
 def test_shipped_model_config_holds_on_starvation():
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     assert c['queue_exhausted_action']=='hold'
     validate_execution_config(c)
     c['queue_exhausted_action']='ignore'
@@ -184,6 +186,7 @@ def test_hold_mode_keeps_execution_alive_past_horizon_and_watchdog():
 
 def test_model_configuration_rejects_direct_or_bad_transition():
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     c['control_way']='direct'
     with pytest.raises(ExecutionError,match='filter'):validate_execution_config(c)
     c['control_way']='filter';c['startup_blend_seconds']=float('nan')

@@ -27,6 +27,7 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def live_backend(delay=0):
     config=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    config.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     config['stop_stability_window_ns']=5_000_000
     q=np.zeros(10);q[9]=.05343
     monitor=Monitor(q)
@@ -174,13 +175,14 @@ def test_first_prediction_timeout_still_stops_when_client_disappears_after_start
     finally:core.close()
 
 
-@pytest.mark.parametrize('sdk_delay,slow_health,strategy',[(1.3,False,'continuous'),(10.2,False,'continuous'),(0,True,'continuous'),(0,False,'synchronous')])
-def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,sdk_delay,slow_health,strategy):
+@pytest.mark.parametrize('sdk_delay,slow_health,strategy,torso_only',[(1.3,False,'continuous',False),(10.2,False,'continuous',False),(0,True,'continuous',False),(0,False,'synchronous',False),(0,False,'synchronous',True)])
+def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,sdk_delay,slow_health,strategy,torso_only):
     """Run the shipped workstation script, not a hand-written handshake client."""
     cv2=pytest.importorskip('cv2')
     identity=json.loads((ROOT/'configs/s1b_deployment_assets_v1.json').read_text())
     model=identity['models']['2000'];contract=identity['files']['data_contract.json']
     live,events=live_backend(delay=sdk_delay)
+    live.c['torso_only']=torso_only
     ticks=[]
     core=ControlSession('test','boot',2000,model,contract,events.append,ticks.append,live,execution_strategy=strategy)
     slow_remaining=[3]
@@ -232,6 +234,10 @@ def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,
             cwd=ROOT,capture_output=True,text=True,timeout=sdk_delay+15)
         assert result.returncode==0,result.stdout+'\n'+result.stderr
         summary=json.loads((output/'summary.json').read_text())
+        if torso_only:
+            assert summary['complete'] and summary['torso_only'] and summary['valid_requests']==0
+            assert live.model_commands==0 and live.backend.calls and not core.runner.error
+            return
         assert summary['complete'] and summary['valid_requests']>=(3 if strategy=='synchronous' else 6)
         assert live.model_commands>0 and not core.runner.error
         preflight=next(r for r in events if r['event']=='client_preflight_ready')
