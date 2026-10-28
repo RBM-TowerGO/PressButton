@@ -51,7 +51,7 @@ def response(oid=1,observed=None,model='model',contract='contract'):
 
 
 def session(live,events):
-    return ControlSession('test','boot',2000,'model','contract',events.append,lambda r:None,live)
+    return ControlSession('test','boot',2000,'model','contract',events.append,lambda r:None,live,execution_strategy='continuous')
 
 
 def test_client_preflight_wait_does_not_acquire_or_start_one_second_timer():
@@ -174,14 +174,15 @@ def test_first_prediction_timeout_still_stops_when_client_disappears_after_start
     finally:core.close()
 
 
-@pytest.mark.parametrize('sdk_delay,slow_health',[(1.3,False),(10.2,False),(0,True)])
-def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,sdk_delay,slow_health):
+@pytest.mark.parametrize('sdk_delay,slow_health,strategy',[(1.3,False,'continuous'),(10.2,False,'continuous'),(0,True,'continuous'),(0,False,'synchronous')])
+def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,sdk_delay,slow_health,strategy):
     """Run the shipped workstation script, not a hand-written handshake client."""
     cv2=pytest.importorskip('cv2')
     identity=json.loads((ROOT/'configs/s1b_deployment_assets_v1.json').read_text())
     model=identity['models']['2000'];contract=identity['files']['data_contract.json']
     live,events=live_backend(delay=sdk_delay)
-    core=ControlSession('test','boot',2000,model,contract,events.append,lambda r:None,live)
+    ticks=[]
+    core=ControlSession('test','boot',2000,model,contract,events.append,ticks.append,live,execution_strategy=strategy)
     slow_remaining=[3]
     health=core.health
     def delayed_health():
@@ -191,8 +192,11 @@ def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,
     core.health=delayed_health
     control=make_control_server(core,0)
     http_thread=threading.Thread(target=control.serve_forever,daemon=True);http_thread.start()
+    def predict(*args):
+        if strategy=='synchronous':time.sleep(.2699)
+        return prediction(1,1)['action_raw'],dict(preprocess_seconds=0.,inference_seconds=.2699 if strategy=='synchronous' else .001)
     policy=SimpleNamespace(device='fake',identity=dict(step=2000,model_sha256=model,data_contract_sha256=contract),
-        predict=lambda *args:(prediction(1,1)['action_raw'],dict(preprocess_seconds=0.,inference_seconds=.001)))
+        predict=predict)
     policy_server=make_server(policy,0)
     model_thread=threading.Thread(target=policy_server.serve_forever,daemon=True);model_thread.start()
     ports={k:free_port() for k in ('head','right','states')}
@@ -220,22 +224,33 @@ def test_actual_worker_with_native_blocking_sdk_start_and_real_streams(tmp_path,
     output=tmp_path/'worker'
     try:
         result=subprocess.run([sys.executable,str(ROOT/'scripts/s1b_split_inference.py'),
-            '--session-id','test','--checkpoint','2000','--mode','execute','--duration','5' if slow_health else '1',
+            '--execution-strategy',strategy,
+            '--session-id','test','--checkpoint','2000','--mode','execute','--duration','5' if slow_health else ('2.5' if strategy=='synchronous' else '1'),
             '--head-port',str(ports['head']),'--right-port',str(ports['right']),
             '--state-port',str(ports['states']),'--control-port',str(control.server_port),
             '--policy-port',str(policy_server.server_port),'--output',str(output)],
             cwd=ROOT,capture_output=True,text=True,timeout=sdk_delay+15)
         assert result.returncode==0,result.stdout+'\n'+result.stderr
         summary=json.loads((output/'summary.json').read_text())
-        assert summary['complete'] and summary['valid_requests']>5
+        assert summary['complete'] and summary['valid_requests']>=(3 if strategy=='synchronous' else 6)
         assert live.model_commands>0 and not core.runner.error
         preflight=next(r for r in events if r['event']=='client_preflight_ready')
         acquired=next(r for r in events if r['event']=='acquired')
-        first=next(r for r in events if r['event']=='prediction_received')
+        first=next(r for r in events if r['event']==('chunk_received' if strategy=='synchronous' else 'prediction_received'))
         assert acquired['monotonic_ns']-preflight['monotonic_ns']>=int(sdk_delay*1e9)
         assert first['observation_monotonic_ns']>=core.accept_observations_after_ns
         assert first['received_ns']-core.runner.started_ns<1_000_000_000
         assert not source_errors
+        if strategy=='synchronous':
+            completed=[r for r in ticks if r['event']=='chunk_completed']
+            assert len(completed)>=3
+            for done in completed:
+                steps=[r['step_index'] for r in ticks if r['event']=='chunk_step_started' and r['chunk_id']==done['chunk_id']]
+                assert steps==list(range(7))
+            received=[r for r in events if r['event']=='chunk_received']
+            for previous,current in zip(completed,received[1:]):
+                assert current['observation_monotonic_ns']>previous['completed_ns']
+            assert core.scheduler.counts['expired_on_receive']==0
         if slow_health:
             probes=[json.loads(line) for line in (output/'events.jsonl').read_text().splitlines() if json.loads(line)['event']=='clock_probe']
             assert any(not row['accepted'] for row in probes)

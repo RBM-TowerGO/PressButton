@@ -10,6 +10,7 @@ class ShadowRunner:
         self.thread = None
         self.error = None
         self.started_ns = None
+        self.frequency = 250 if getattr(scheduler, "strategy", None)=="synchronous" else 30
         self.skipped_ticks = 0
 
     def start(self):
@@ -21,7 +22,7 @@ class ShadowRunner:
         ordinal = 0
         try:
             while not self.stop_event.is_set():
-                planned = self.started_ns + round(ordinal * 1e9 / 30)
+                planned = self.started_ns + round(ordinal * 1e9 / self.frequency)
                 remaining = (planned - time.monotonic_ns()) / 1e9
                 if remaining > 0 and self.stop_event.wait(remaining):
                     break
@@ -31,7 +32,7 @@ class ShadowRunner:
                 self.emit(row)
                 ordinal += 1
                 # Do not replay a burst of historical ticks after a stall.
-                earliest = (time.monotonic_ns() - self.started_ns) * 30 // 1_000_000_000
+                earliest = (time.monotonic_ns() - self.started_ns) * self.frequency // 1_000_000_000
                 if earliest > ordinal:
                     self.skipped_ticks += earliest - ordinal
                     ordinal = earliest

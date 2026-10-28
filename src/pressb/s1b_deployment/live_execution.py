@@ -278,6 +278,16 @@ class ExecutionRunner:
 
     def tick(self, now, planned):
         self.live.ensure_active()
+        if getattr(self.scheduler,'strategy',None)=='synchronous':
+            row=self.scheduler.sample(now,planned)
+            if row['covered']:
+                # A failed or late dispatch faults the run; never skip a step.
+                self.live.send(row)
+                self.scheduler.sent(row,time.monotonic_ns())
+            else:
+                target=self.live.hold()
+                row.update(held=True,sdk_target=target.tolist(),actual_send_ns=time.monotonic_ns())
+            return row
         if self.scheduler.state=='SHADOW':
             timeout=self.live.c.get('first_prediction_timeout_seconds',1.)
             if now-self.started_ns>timeout*1e9:

@@ -8,7 +8,7 @@ flowchart LR
     Cameras[已有相机驱动]
     Images[独立图像服务\n原始 JPEG + 时间戳]
     States[独立状态服务\n三个关节流的短历史]
-    Control[独立 joint10 控制服务\n截止检查 + 250 Hz SDK]
+    Control[独立 joint10 控制服务\n同步整段 / 连续截止调度 + 250 Hz SDK]
     Cameras --> Images
     ROS[ROS 关节反馈] --> States
     ROS --> Control
@@ -22,6 +22,20 @@ flowchart LR
   States -->|55558| Receiver
   Inference -->|6200 小型预测包| Control
 ```
+
+## 默认同步整段执行（2026-10-28）
+
+默认 `--execution-strategy synchronous`。原启动命令无需增加参数：获取新观测 → 等待推理 → 从第 1 步开始顺序执行 7 步 → 获取下一轮观测。需要复现旧行为时，显式追加 `--execution-strategy continuous`。启动器、工作站和机器人端必须使用同一策略；健康检查及动作请求会校验策略一致性。
+
+同步模式保持原始观测时间戳，但动作时间轴从第一步实际成功下发开始，按 30 Hz 的相对时间网格运行，整段名义长度 233.3 ms，边界有 250 Hz 控制循环的约 4 ms 量化误差。269.9 ms 的推理不会因此丢弃动作。每步都必须成功下发后才能进入下一步；一次只接收一段，执行期间的新段会被拒绝并停止会话。超出正常伺服量化误差但不足一个策略周期的延迟会顺延后续时间网格，并记录 `schedule_slip_ns`，不压缩后续步骤来追赶。控制循环卡顿超过一个策略周期、发送超期或其它安全检查失败仍会停止，不跳过动作补进度。
+
+第七步下发时段结束即视为完成，不额外等待物理停稳，也不保证已精确到达目标。推理期间以 250 Hz 持续发送最后一个经过 guard 的位置目标，保留限位、速度约束、反馈新鲜度、控制权及看门狗。初始化后等待首段、每段结束等待下一段均限 1 秒；计时由机器人端执行，客户端断联不会无限保持。Ctrl-C 或运行时长到达会中断当前推理/等待，并请求停止，可中断当前动作段。
+
+`/prediction` 立即返回 `chunk_id`（该段的观测编号）。工作站每 10 ms 轮询 `/health` 中的 `completed_chunk_id`、`completed_ns`、`completed_chunks`、`chunk_phase` 和 `chunk_started_ns`，完成前不发起下一轮推理。下一轮头部、右腕、arm/gripper/head_state 的机器人接收时间均须严格晚于该完成时间；仍执行原有新鲜度与同步匹配检查。同步动作包额外携带 `execution_strategy` 和按上述五个流排序的 int64 `observation_receipt_ns`，供控制端再次核验。
+
+预检仍在 SDK 获取控制权前完成身份、形状及有限值验证，结果不执行；同步预检不应用旧的观测截止时间。SDK 初始化后重新取图。Shadow 使用相同同步状态机与完成握手，不获取控制权或下发 SDK 命令。
+
+`robot/control/ticks.jsonl` 记录 `chunk_step_started`、`chunk_completed`、`synchronous_wait` 及实际下发时刻；请求日志保存推理耗时及完成状态。同步进度显示完成段数，原始 horizon 的供给空档指标只用于 continuous 模式。后文带日期的历史验收数据对应当时的连续调度，不代表同步模式的真机验收。
 
 ## 运行
 
@@ -73,9 +87,9 @@ ssh S1B 'python3 -m pip install --target /home/astribot/pressb_readonly_p2/deps/
 - 状态进程约每 20 ms 发布最近 128 条/流的历史，250 Hz 时覆盖约 512 ms。每个包同时携带三个流；即使旧包被替换，工作站仍能匹配延迟到达图像的历史关节状态。状态形状、有限值、序号和时间单调性均检查。
 - 工作站通过控制服务单调时钟建立跨主机偏移区间，使用偏移上界保守计算图像年龄；定期校准运行在独立线程和连接上。校时 RTT 超过 50 ms 的采样不接纳；运行中保留上一次仍有效的校准并重试健康检查。时钟跳变、校准超过 10 s、boot/service 身份变化仍会报错。跨主机时间估计仅用于观测筛选，执行期限最终在机器人本地核验。
 - 80 ms 图像接收新鲜度、10 ms 关节源时间匹配、40 ms 右相机源时间匹配保持不变；解码与编码后再次检查新鲜度。拒绝后不会复用已提交的头部帧。
-- 模型推理仍使用原尺寸 RGB、原预处理、固定 joint10、7 点和原 30 Hz 偏移。动作包包含原机器人观测时间，截止时间始终是该时间加偏移，不从预测抵达时间重新计时。
+- 模型推理仍使用原尺寸 RGB、原预处理、固定 joint10、7 点和原 30 Hz 偏移。动作包包含原机器人观测时间，continuous 模式截止时间是该时间加偏移；synchronous 模式使用独立的段执行时间轴。
 - 图像和状态走 ZMQ，动作走小型 NPZ/HTTP。动作连接在 0.5 s 空闲后主动重建，服务端空闲超时 2 s；不自动重试不确定的动作提交。控制服务先响应身份与校时请求；SDK 初始化由独立的 `/start` 握手触发，必须先完整发送 HTTP 确认。初始化期间的慢健康响应不会用于校时，初始化完成后取得快速响应再恢复新观测推理。
-- execute 复用现有 `LiveExecution`、`ExecutionRunner`、guard、看门狗与停止核验。预测供给耗尽时的行为由执行配置的 `queue_exhausted_action` 决定：默认 `stop` 锁存停止；当前 VLA 配置按用户 2026-10-26 要求设为 `hold`，保持最后一个已校验目标并等待新预测，不重发或续期已过期预测点。状态过期、驱动错误、控制权丢失、命令看门狗、Ctrl-C 与急停等故障路径仍锁存停止。第一次新预测超时仍会停止；重连不能自动恢复同一执行会话。
+- 两种模式的 execute 均复用现有 `LiveExecution`、`ExecutionRunner`、guard、看门狗与停止核验。continuous 模式预测供给耗尽时的行为由执行配置的 `queue_exhausted_action` 决定：默认 `stop` 锁存停止；当前 VLA 配置按用户 2026-10-26 要求设为 `hold`，保持最后一个已校验目标并等待新预测，不重发或续期已过期预测点。状态过期、驱动错误、控制权丢失、命令看门狗、Ctrl-C 与急停等故障路径仍锁存停止。第一次新预测超时仍会停止；重连不能自动恢复同一执行会话。
 
 ## 日志和验收
 
@@ -85,8 +99,8 @@ ssh S1B 'python3 -m pip install --target /home/astribot/pressb_readonly_p2/deps/
 - `images.log` / `states.log`：来源计数、发布计数、错误。
 - `inference.log` / `workstation/requests.jsonl`：解码、模型耗时、状态和帧对应关系、动作确认。
 - `workstation/observation_*.npz`：按原配置每 10 秒保存用于推理的完整 RGB/状态观测，异步写入，遵守原图像存储预算。
-- `robot/control/events.jsonl` / `ticks.jsonl`：机器人接收预测时刻、原始截止时间和实际/模拟控制事件。
-- `workstation/summary.json`：输入字节量、有效预测率、剩余 horizon 分位数、完整性。
+- `robot/control/events.jsonl` / `ticks.jsonl`：机器人接收预测时刻、段执行事件（同步）或原始截止时间（连续），以及实际/模拟控制事件。
+- `workstation/summary.json`：输入字节量、执行策略、有效预测率、完成段数（同步）、剩余 horizon 分位数（连续）、完整性。
 - `robot/control/summary.json`：`coverage_gaps` 和 `max_coverage_gap_ms` 衡量相邻预测之间原始 horizon 的供给空档；还包括最大预测到达间隔、执行/停止结果。
 - `robot/images/summary.json` / `robot/states/summary.json`：来源错误、发布情况和 `sdk_imported`。
 

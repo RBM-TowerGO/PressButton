@@ -27,6 +27,7 @@ def main():
     p.add_argument('--port',type=int,default=6200)
     p.add_argument('--duration',type=float,default=720)
     p.add_argument('--output',required=True)
+    p.add_argument('--execution-strategy',choices=['synchronous','continuous'],default='synchronous')
     a=p.parse_args()
     if not 0<a.duration<=86520:p.error('invalid_duration')
     if a.mode=='execute' and (not a.operator_present or not a.estop_ready):
@@ -50,7 +51,7 @@ def main():
         live=LiveExecution(json.loads(Path(a.execution_config).read_text()),emit,
             operator_present=a.operator_present,estop_ready=a.estop_ready,request_handover=a.request_control_handover)
     core=ControlSession(a.session_id,boot_id,a.checkpoint,identity['models'][str(a.checkpoint)],
-        identity['files']['data_contract.json'],lambda row:writer.log('events',row),lambda row:writer.log('ticks',row),live)
+        identity['files']['data_contract.json'],lambda row:writer.log('events',row),lambda row:writer.log('ticks',row),live,execution_strategy=a.execution_strategy)
     def stop(*_):core.stop()
     for sig in (signal.SIGINT,signal.SIGTERM):signal.signal(sig,stop)
     server=None;http_thread=None;fatal=[];started=time.monotonic()

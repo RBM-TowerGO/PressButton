@@ -20,11 +20,37 @@ from pressb.s1b_deployment.async_log import AsyncLog
 
 
 def checked_health(value, session, model):
+    if model.get('execution_strategy') is not None and value.get('execution_strategy')!=model['execution_strategy']:
+        raise ValueError('control_execution_strategy_mismatch')
     if value.get('fault'):raise ValueError('control_fault:'+str(value['fault']))
     if (not value['ready'] or value['session_id']!=session
             or value.get('startup_protocol')!=1
             or any(value[k]!=model[k] for k in ('protocol_version','step','model_sha256','data_contract_sha256','action_dim','horizon'))):
         raise ValueError('control_health_identity_or_fault:'+str(value))
+
+
+class DurationElapsed(Exception):
+    """Normal run deadline, including time spent in blocking inference/HTTP."""
+
+
+def observation_after(selected, threshold):
+    return threshold is None or all(sample.receipt_ns > threshold for sample in selected.values())
+
+
+def wait_chunk(connection, session, model, boot_id, chunk_id, check=lambda:None):
+    """No action retries: poll idempotent health until this exact chunk finishes."""
+    until=time.monotonic()+2
+    while time.monotonic()<until:
+        check()
+        status,data=control_exchange(connection,'GET','/health')
+        if status!=200:raise ValueError('control_health_http')
+        health=json.loads(data);checked_health(health,session,model)
+        if health['boot_id']!=boot_id:raise ValueError('robot_rebooted')
+        if health['completed_chunk_id']==chunk_id:return health
+        if health['chunk_id']!=chunk_id:raise ValueError('control_chunk_identity_mismatch')
+        if health['phase'] in ('STOPPED','FAULT'):raise ValueError('control_stopped_during_chunk')
+        time.sleep(.01)
+    raise TimeoutError('chunk_completion_timeout')
 
 
 class SlowClockProbe(ValueError):
@@ -123,6 +149,7 @@ def main():
     p.add_argument('--policy-port',type=int,default=8796)
     p.add_argument('--duration',type=float,default=600)
     p.add_argument('--output',required=True)
+    p.add_argument('--execution-strategy',choices=['synchronous','continuous'],default='synchronous')
     a=p.parse_args()
     if not 0<a.duration<=86400:p.error('invalid_duration')
     import cv2
@@ -144,6 +171,7 @@ def main():
                 or model['model_sha256']!=identity['models'][str(a.checkpoint)]
                 or model['data_contract_sha256']!=identity['files']['data_contract.json']):
             raise ValueError('policy_identity_mismatch')
+        model['execution_strategy']=a.execution_strategy
         until=time.monotonic()+90
         while True:
             try:
@@ -176,7 +204,10 @@ def main():
                 rejects[str(exc)]+=1
                 time.sleep(.002);continue
             head=selected['head'];last_sequence=head.sequence
-            if accept_after is not None and head.receipt_ns<accept_after:
+            if a.execution_strategy=='synchronous':
+                if not observation_after(selected,accept_after):
+                    rejects['observation_predates_chunk_boundary']+=1;continue
+            elif accept_after is not None and head.receipt_ns<accept_after:
                 rejects['observation_predates_initialization']+=1;continue
             decode_started=time.monotonic_ns()
             try:images=selected_rgb(selected)
@@ -202,6 +233,10 @@ def main():
                     or not np.isfinite(result['action_raw']).all() or not np.array_equal(result['target_offsets_ns'],OFFSETS)):
                 raise ValueError('invalid_prediction')
             result['robot_boot_id']=np.asarray(boot_id)
+            result['execution_strategy']=np.asarray(a.execution_strategy)
+            if a.execution_strategy=='synchronous':
+                result['observation_receipt_ns']=np.asarray([selected[k].receipt_ns for k in
+                    ('head','right','arm','gripper','head_state')],dtype=np.int64)
             action=encode(result)
             if started is None:
                 status,data=control_exchange(control,'POST','/start',action,{'Content-Type':'application/octet-stream'})
@@ -211,6 +246,9 @@ def main():
                 health=wait_initialized(control,clock,a.session_id,model,boot_id)
                 accept_after=health['accept_observations_after_ns']
                 started=time.monotonic();next_status=started+5
+                def duration_elapsed(*_):raise DurationElapsed()
+                signal.signal(signal.SIGALRM,duration_elapsed)
+                signal.setitimer(signal.ITIMER_REAL,a.duration)
                 clock_monitor=ClockMonitor(a.control_port,clock,a.session_id,model,boot_id,
                     lambda row:writer.log('events',row));clock_monitor.start()
                 writer.log('events',dict(event='control_initialized',control=health,clock_rtt_ns=clock.rtt_ns))
@@ -228,10 +266,23 @@ def main():
                 status,data=control_exchange(control,'POST','/prediction',action,{'Content-Type':'application/octet-stream'})
                 row.update(action_response_local_ns=time.monotonic_ns(),control_reply=json.loads(data))
                 if status!=200:raise ValueError('control_rejected:'+str(row['control_reply']))
+            except DurationElapsed:raise
             except BaseException as exc:
                 row['error']=repr(exc);writer.log('requests',row);raise
             last_prediction_local_ns=time.monotonic_ns()
-            requests.append(row);writer.log('requests',row)
+            requests.append(row)
+            if a.execution_strategy=='synchronous':
+                def check_wait():
+                    writer.check();receiver.check()
+                    if clock_monitor:clock_monitor.check()
+                try:
+                    health=wait_chunk(control,a.session_id,model,boot_id,row['control_reply']['chunk_id'],check_wait)
+                    accept_after=health['completed_ns']
+                    row['chunk_completion']=health
+                finally:
+                    # Preserve admission evidence even if the run ends mid-chunk.
+                    writer.log('requests',row)
+            else:writer.log('requests',row)
             if time.monotonic()-last_archive>=mapping['image_save_interval_seconds']:
                 if image_bytes+len(body)<=mapping['image_disk_limit_bytes']:
                     writer.archive(out/f'observation_{head.sequence:08d}.npz',body);image_bytes+=len(body)
@@ -239,21 +290,26 @@ def main():
                 last_archive=time.monotonic()
             if time.monotonic()>=next_status:
                 print(json.dumps(dict(event='progress',requests=len(requests),
-                    rtt_ms=row['policy_rtt_ns']/1e6,horizon_remaining_ms=row['control_reply']['horizon_remaining_ns']/1e6)),flush=True)
+                    rtt_ms=row['policy_rtt_ns']/1e6,execution_strategy=a.execution_strategy,
+                    **(dict(completed_chunks=health['completed_chunks']) if a.execution_strategy=='synchronous' else
+                       dict(horizon_remaining_ms=row['control_reply']['horizon_remaining_ns']/1e6)))),flush=True)
                 next_status=time.monotonic()+5
         if not requests:raise RuntimeError('no_predictions')
+    except DurationElapsed:
+        pass
     except KeyboardInterrupt:
         stop_requested=True
     except BaseException as exc:
         fatal.append(repr(exc));raise
     finally:
-        if clock_monitor:
-            try:clock_monitor.close()
-            except Exception as exc:fatal.append('clock_close_failed:'+repr(exc))
+        signal.setitimer(signal.ITIMER_REAL,0)
         try:
             status,data=control_exchange(control,'POST','/stop',json.dumps(dict(session_id=a.session_id)).encode())
             if status!=200:raise ValueError('stop_http_'+str(status))
         except Exception as exc:fatal.append('stop_request_failed:'+repr(exc))
+        if clock_monitor:
+            try:clock_monitor.close()
+            except Exception as exc:fatal.append('clock_close_failed:'+repr(exc))
         if receiver:
             try:receiver.close()
             except Exception as exc:fatal.append('receiver_close_failed:'+repr(exc))
@@ -271,7 +327,10 @@ def main():
             buffer=receiver.store.buffer.stats() if receiver else {},
             decode_ms_p0_p50_p95_p99_max=pct([r['decode_ns']/1e6 for r in requests]),
             policy_rtt_ms_p0_p50_p95_p99_max=pct([r['policy_rtt_ns']/1e6 for r in requests]),
-            horizon_remaining_ms_p0_p50_p95_p99_max=pct([r['control_reply']['horizon_remaining_ns']/1e6 for r in requests]),
+            execution_strategy=a.execution_strategy,
+            completed_chunks=sum('chunk_completion' in r for r in requests),
+            horizon_remaining_ms_p0_p50_p95_p99_max=pct([r['control_reply']['horizon_remaining_ns']/1e6 for r in requests
+                if 'horizon_remaining_ns' in r['control_reply']]),
             sdk_imported=any(n.startswith('astribot_sdk') for n in sys.modules),
             complete=bool(requests) and not fatal and not stop_requested and elapsed>=a.duration)
         (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')

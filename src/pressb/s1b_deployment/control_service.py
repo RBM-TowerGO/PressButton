@@ -7,19 +7,24 @@ import numpy as np
 from .contract import VERSION
 from .protocol import decode
 from .scheduler import Scheduler
+from .synchronous import SynchronousScheduler
 from .shadow import ShadowRunner
 from .live_execution import ExecutionRunner
 
 
 class ControlSession:
-    def __init__(self, session_id, boot_id, step, model_sha, contract_sha, emit, tick_emit, live=None):
+    def __init__(self, session_id, boot_id, step, model_sha, contract_sha, emit, tick_emit, live=None, execution_strategy="synchronous"):
         self.session_id,self.boot_id,self.step=session_id,boot_id,step
         self.model_sha,self.contract_sha=model_sha,contract_sha
+        if execution_strategy not in ("synchronous", "continuous"):
+            raise ValueError("invalid_execution_strategy")
+        self.execution_strategy=execution_strategy
         self.live=live;self.emit=emit
         # Starvation policy belongs to the execution config: 'stop' keeps the
         # original latch, 'hold' keeps the last guarded target and waits.
         starvation=live.c.get('queue_exhausted_action','stop') if live else 'stop'
-        self.scheduler=Scheduler(session_id,model_sha,contract_sha,starvation_action=starvation)
+        self.scheduler=(SynchronousScheduler if execution_strategy=="synchronous" else Scheduler)(
+            session_id,model_sha,contract_sha,starvation_action=starvation)
         self.runner=ExecutionRunner(self.scheduler,live,tick_emit) if live else ShadowRunner(self.scheduler,tick_emit)
         self.stopping=threading.Event();self.lock=threading.Lock()
         self.received=0;self.accepted=0;self.error=None
@@ -36,7 +41,8 @@ class ControlSession:
             if self.phase!='WAITING_FOR_CLIENT' or self.stopping.is_set() or self.error:
                 raise ValueError('start_not_allowed')
             self.validate_boot(response)
-            check=Scheduler(self.session_id,self.model_sha,self.contract_sha)
+            check=(SynchronousScheduler if self.execution_strategy=="synchronous" else Scheduler)(
+                self.session_id,self.model_sha,self.contract_sha)
             if not check.accept(response,time.monotonic_ns()):
                 raise ValueError('preflight_prediction_expired')
             self.preflight_observation_id=int(response['observation_id'])
@@ -54,6 +60,11 @@ class ControlSession:
             self.start_requested.set()
 
     def validate_boot(self,response):
+        strategy=response.get('execution_strategy')
+        if strategy is not None and np.asarray(strategy).item()!=self.execution_strategy:
+            raise ValueError('execution_strategy_mismatch')
+        if self.execution_strategy=='synchronous' and strategy is None:
+            raise ValueError('execution_strategy_missing')
         boot=np.asarray(response.get('robot_boot_id'))
         if boot.shape!=() or boot.dtype.kind not in 'US' or boot.item()!=self.boot_id:
             raise ValueError('robot_boot_identity_mismatch')
@@ -68,6 +79,8 @@ class ControlSession:
             self.live.acquire()
         if self.stopping.is_set():return
         self.accept_observations_after_ns=time.monotonic_ns()
+        if self.execution_strategy=="synchronous":
+            self.scheduler.begin_wait(self.accept_observations_after_ns)
         self.runner.start()
         self.phase='AWAITING_PREDICTION'
         self.emit(dict(event='control_initialized',monotonic_ns=time.monotonic_ns(),
@@ -78,6 +91,8 @@ class ControlSession:
         fault=self.error or self.runner.error or (self.live.executor.fault_reason if self.live else None)
         return dict(ready=not self.stopping.is_set() and not fault,protocol_version=VERSION,
             startup_protocol=1,
+            **(self.scheduler.progress() if self.execution_strategy=='synchronous' else
+               dict(execution_strategy=self.execution_strategy)),
             session_id=self.session_id,boot_id=self.boot_id,step=self.step,model_sha256=self.model_sha,
             data_contract_sha256=self.contract_sha,action_dim=10,horizon=7,
             phase=self.phase,accept_observations_after_ns=self.accept_observations_after_ns,
@@ -104,11 +119,28 @@ class ControlSession:
                         or int(response['observation_monotonic_ns'])<self.accept_observations_after_ns):
                     raise ValueError('observation_predates_initialization')
                 received=time.monotonic_ns()
+                if self.execution_strategy=='synchronous':
+                    receipts=np.asarray(response.get('observation_receipt_ns'))
+                    boundary=self.scheduler.progress()['completed_ns']
+                    if boundary is None:boundary=self.accept_observations_after_ns
+                    if (receipts.shape!=(5,) or receipts.dtype!=np.int64
+                            or np.any(receipts<=boundary) or np.any(receipts>received)
+                            or int(receipts[0])!=int(response['observation_monotonic_ns'])):
+                        raise ValueError('observation_predates_chunk_boundary_or_invalid')
                 accepted=self.scheduler.accept(response,received)
                 self.received+=1;self.accepted+=int(accepted)
                 if self.last_received_ns is not None:
                     self.max_gap_ns=max(self.max_gap_ns,received-self.last_received_ns)
                 self.last_received_ns=received
+                if self.execution_strategy=='synchronous':
+                    if accepted and self.live and self.scheduler.state=='SHADOW':
+                        self.scheduler.enable_execution(self.live,received)
+                    self.phase='RUNNING'
+                    progress=self.scheduler.progress()
+                    self.emit(dict(event='chunk_received',received_ns=received,
+                        observation_monotonic_ns=int(response['observation_monotonic_ns']),
+                        action_raw=response['action_raw'].tolist(),**progress))
+                    return dict(ok=True,accepted=accepted,received_ns=received,**progress)
                 margin=int(response['observation_monotonic_ns'])+int(response['target_offsets_ns'][-1])-received
                 self.margins.append(margin)
                 if self.last_deadline_ns is not None and received>self.last_deadline_ns:
@@ -142,6 +174,7 @@ class ControlSession:
 
     def stats(self):
         return dict(mode='execute' if self.live else 'shadow',session_id=self.session_id,
+            execution_strategy=self.execution_strategy,
             phase=self.phase,preflight_observation_id=self.preflight_observation_id,
             accept_observations_after_ns=self.accept_observations_after_ns,
             received_predictions=self.received,accepted_predictions=self.accepted,

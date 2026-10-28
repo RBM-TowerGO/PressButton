@@ -14,7 +14,7 @@ worker=importlib.util.module_from_spec(spec);spec.loader.exec_module(worker)
 
 @pytest.fixture
 def monitor():
-    core=ControlSession('test','boot',2000,'model','contract',lambda r:None,lambda r:None)
+    core=ControlSession('test','boot',2000,'model','contract',lambda r:None,lambda r:None,execution_strategy='continuous')
     health=core.health;model=health();settings=dict(delay=.06,boot='boot',offset=0)
     def delayed_health():
         time.sleep(settings['delay'])

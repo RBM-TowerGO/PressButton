@@ -114,7 +114,7 @@ def test_real_zmq_latest_packets_and_state_alignment():
 
 
 def core(live=None):
-    c=ControlSession('test','boot',2000,'model','contract',lambda row:None,lambda row:None,live)
+    c=ControlSession('test','boot',2000,'model','contract',lambda row:None,lambda row:None,live,execution_strategy='continuous')
     c.request_start(response(0));c.confirm_start()
     if live:
         # make_live already acquires this fake backend; slow real acquisition

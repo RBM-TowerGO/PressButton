@@ -39,6 +39,7 @@ def main():
     p.add_argument('--auto-start',action='store_true',help='noninteractive SHADOW validation only')
     for name,port in [('head',55555),('right',55557),('state',55558),('control',6200),('policy',8796)]:
         p.add_argument('--'+name+'-port',type=int,default=port)
+    p.add_argument('--execution-strategy',choices=['synchronous','continuous'],default='synchronous')
     a=p.parse_args()
     if a.mode=='execute' and (not a.operator_present or not a.estop_ready):
         p.error('execute requires --operator-present and --estop-ready')
@@ -104,7 +105,7 @@ def main():
             if proc.poll() is not None:raise RuntimeError(name+' exited; '+shared.bridge_failure(out/(name+'.log')))
     def stop(*_):raise KeyboardInterrupt
     for sig in (signal.SIGINT,signal.SIGTERM):signal.signal(sig,stop)
-    print('分离式链路；日志：'+str(out),flush=True)
+    print('分离式链路；执行策略：'+a.execution_strategy+'；日志：'+str(out),flush=True)
     try:
         for port in ports:
             shared.check_port_available(port)
@@ -179,13 +180,13 @@ print(json.dumps(found))
         if not a.auto_start:shared.wait_for_start(healthy)
         else:print('自动开始 shadow 验证（无 SDK 控制）。',flush=True)
         command=(f'python3 scripts/s1b_control_service.py --session-id {token} --mode {a.mode} --checkpoint {a.checkpoint}'
-            f' --identity {shlex.quote(remote_identity)} --port {a.control_port} --duration {a.duration+120} --output '+shlex.quote(remote_out+'/control'))
+            f' --execution-strategy {a.execution_strategy} --identity {shlex.quote(remote_identity)} --port {a.control_port} --duration {a.duration+120} --output '+shlex.quote(remote_out+'/control'))
         if execution:
             command+=' --execution-config '+shlex.quote(REMOTE+'/configs/execution_'+token+'.json')+' --operator-present --estop-ready'
             if a.request_control_handover:command+=' --request-control-handover'
         start_remote('control',command,shared.sdk_environment(execution) if execution else '')
         args=[sys.executable,str(ROOT/'scripts/s1b_split_inference.py'),'--session-id',token,
-            '--identity',str(identity_path),'--checkpoint',str(a.checkpoint),'--mode',a.mode,'--duration',str(a.duration),'--output',str(out/'workstation')]
+            '--execution-strategy',a.execution_strategy,'--identity',str(identity_path),'--checkpoint',str(a.checkpoint),'--mode',a.mode,'--duration',str(a.duration),'--output',str(out/'workstation')]
         for name in ('head','right','state','control','policy'):args+=['--'+name+'-port',str(getattr(a,name+'_port'))]
         worker=launch('inference',args);last=None;startup_reported=False
         while worker.poll() is None:
@@ -204,7 +205,10 @@ print(json.dumps(found))
                     startup_reported=True
                 row=json.loads(rows[-1]) if rows else {}
                 if row.get('event')=='progress' and row['requests']!=last:
-                    last=row['requests'];print(f"实时推理：{last} 次，预测剩余 {row['horizon_remaining_ms']:.1f} ms",flush=True)
+                    last=row['requests']
+                    if a.execution_strategy=='synchronous':
+                        print(f"同步推理：{last} 次，已完成 {row['completed_chunks']} 段",flush=True)
+                    else:print(f"实时推理：{last} 次，预测剩余 {row['horizon_remaining_ms']:.1f} ms",flush=True)
             except (ValueError,OSError):pass
             time.sleep(.5)
         if worker.returncode:
@@ -261,8 +265,11 @@ for name in %r:
             try:
                 robot_summary=json.loads((out/'robot/control/summary.json').read_text())
                 summary['robot_control']=robot_summary
-                summary['shadow_coverage_verified']=(a.mode=='shadow' and robot_summary['accepted_predictions']>0
+                summary['shadow_coverage_verified']=(a.mode=='shadow' and a.execution_strategy=='continuous'
+                    and robot_summary['accepted_predictions']>0
                     and robot_summary['coverage_gaps']==0 and not robot_summary['fatal'])
+                summary['shadow_synchronous_chunks_verified']=(a.mode=='shadow' and a.execution_strategy=='synchronous'
+                    and robot_summary['scheduler'].get('completed_chunks',0)>0 and not robot_summary['fatal'])
                 if robot_summary['fatal']:service_errors.append('control_fatal:'+str(robot_summary['fatal']))
                 for kind in ('images','states'):
                     source_summary=json.loads((out/'robot'/kind/'summary.json').read_text())
