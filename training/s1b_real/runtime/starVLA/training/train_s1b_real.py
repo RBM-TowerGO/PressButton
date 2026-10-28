@@ -453,6 +453,18 @@ def parameter_probes(model):
     return probes
 
 
+def prune_checkpoints(root):
+    """Keep best/last and every 1000-step milestone; ignore incomplete saves."""
+    keep = {(root / alias).resolve() for alias in ("best", "last") if (root / alias).exists()}
+    for path in root.glob("step_*"):
+        suffix = path.name.removeprefix("step_")
+        if not suffix.isdigit() or not path.is_dir() or path.is_symlink():
+            continue
+        if int(suffix) % 1000 == 0 or path.resolve() in keep:
+            continue
+        shutil.rmtree(path)
+
+
 def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank, world, provenance):
     from starVLA.training.optimizer_checkpoint import consolidate_optimizer_state
     started = time.monotonic()
@@ -485,10 +497,7 @@ def save_checkpoint(model, optimizer, scheduler, output, progress, is_best, rank
             temporary = root / (alias + ".tmp")
             temporary.symlink_to(name, target_is_directory=True)
             os.replace(temporary, root / alias)
-        keep = {(root / alias).resolve() for alias in ("best", "last") if (root / alias).exists()}
-        for path in root.glob("step_*"):
-            if path.is_dir() and path.resolve() not in keep and not path.name.endswith(".tmp"):
-                shutil.rmtree(path)
+        prune_checkpoints(root)
     dist.barrier()
     if rank == 0:
         print(json.dumps(dict(event="checkpoint_completed", step=progress["step"],
