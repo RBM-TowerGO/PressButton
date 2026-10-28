@@ -158,6 +158,8 @@ print(json.dumps(found))
             probe='from astribot_sdk.core.astribot_api.astribot_client import Astribot; print("SDK_IMPORT_OK_NO_CLIENT_CREATED")'
             with (out/'sdk_preflight.log').open('w') as log:
                 remote(shared.ENV+'; '+shared.sdk_environment(execution)+'; python3 -c '+shlex.quote(probe),stdout=log,stderr=subprocess.STDOUT,timeout=30)
+        loading_started=time.monotonic()
+        print('模型准备中：加载模型 → 预热 3 次 → 服务就绪（下方显示实际阶段及耗时）',flush=True)
         launch('policy',[sys.executable,str(ROOT/'scripts/s1b_policy_server.py'),'--checkpoint',str(a.checkpoint),'--port',str(a.policy_port),'--warmup','--config',str(Path(a.config).resolve())])
         common=' --service-id '+shlex.quote(token)+' --mapping configs/s1b_observation_v1.json'
         start_remote('images','python3 scripts/s1b_observation_service.py --kind images'+common+
@@ -167,7 +169,24 @@ print(json.dumps(found))
         for name,group in [('image_tunnel',[a.head_port,a.right_port]),('state_tunnel',[a.state_port]),('control_tunnel',[a.control_port])]:
             launch(name,tunnel_command(a.host,group))
         until=time.monotonic()+180;model=None
+        progress_position=0;loading_stage='启动 Python / 导入依赖';last_progress=0;frame=0
         while time.monotonic()<until:
+            with (out/'policy.log').open(errors='replace') as stream:
+                stream.seek(progress_position)
+                while True:
+                    line=stream.readline()
+                    if not line or not line.endswith('\n'):break
+                    progress_position=stream.tell()
+                    try:status=json.loads(line)
+                    except ValueError:continue
+                    if isinstance(status,dict) and status.get('event')=='loading_progress':
+                        loading_stage=status['stage']
+            now=time.monotonic()
+            if now-last_progress >= (1 if sys.stdout.isatty() else 10):
+                bar=''.join('●' if i==frame%12 else '─' for i in range(12))
+                message=f'[{bar}] {loading_stage} ｜ 已等待 {now-loading_started:.0f}s'
+                print(('\r\033[2K' if sys.stdout.isatty() else '')+message,end='' if sys.stdout.isatty() else '\n',flush=True)
+                last_progress=now;frame+=1
             healthy();conn=http.client.HTTPConnection('127.0.0.1',a.policy_port,timeout=1)
             try:
                 conn.request('GET','/health');response=conn.getresponse()
@@ -175,7 +194,9 @@ print(json.dumps(found))
             except OSError:pass
             finally:conn.close()
             time.sleep(.2)
+        if sys.stdout.isatty():print(flush=True)
         if not model or model['step']!=a.checkpoint:raise RuntimeError('model_not_ready')
+        print(f'[✓] 模型加载、3 次预热及服务启动完成，用时 {time.monotonic()-loading_started:.1f}s',flush=True)
         (out/'health.json').write_text(json.dumps(model,indent=2)+'\n')
         if not a.auto_start:shared.wait_for_start(healthy)
         else:print('自动开始 shadow 验证（无 SDK 控制）。',flush=True)
