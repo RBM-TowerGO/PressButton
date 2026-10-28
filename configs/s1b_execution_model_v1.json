@@ -26,7 +26,7 @@
     -3.1,
     -0.06,
     -2.56,
-    -0.76,
+    -0.78,
     -1.53,
     0.0,
     -1.57,
@@ -62,7 +62,7 @@
     -3.1,
     -0.06,
     -2.56,
-    -0.76,
+    -0.78,
     -1.53,
     0.0,
     -1.57,
@@ -86,7 +86,7 @@
     -3.12,
     -0.08,
     -2.58,
-    -0.78,
+    -0.828163,
     -1.55,
     -5.0,
     -1.59,
@@ -162,5 +162,82 @@
   "first_prediction_timeout_seconds": 1.0,
   "uncontrolled_drift_action": "warn",
   "stop_feedback_action": "warn",
-  "queue_exhausted_action": "hold"
+  "queue_exhausted_action": "hold",
+  "torso_alignment": {
+    "enabled": true,
+    "target": [
+      0.5994443446294124,
+      -1.1992709264178194,
+      0.5997870373551677,
+      -6.31099365115018e-06
+    ],
+    "source": {
+      "file": "data/astribot_reviewed_mixed_v2/episodes/episode_000096.hdf5",
+      "frame": 0,
+      "field": "joints_dict/joints_position_command[0,3:7]",
+      "sha256": "4b4592ad16823c43167610454d52a1d4b42bb7f1b03269e73430860d32308974"
+    },
+    "initial_tracking_tolerance": 0.05,
+    "minimum_duration_seconds": 8.0,
+    "max_velocity": 0.15,
+    "max_acceleration": 0.1,
+    "timeout_seconds": 30.0,
+    "position_tolerance": 0.06,
+    "velocity_tolerance": 0.02,
+    "stable_seconds": 0.5,
+    "tracking_tolerance": 0.03,
+    "tracking_seconds": 0.2
+  },
+  "position_limit_provenance": {
+    "basis": "union_of_existing_bounds_and_demonstration_dataset_extrema",
+    "authorization": "2026-10-28 user confirmed demonstration range is reachable and requested software bounds follow training data",
+    "dataset": "data/astribot_s1b_real_joint10_mixed_v2/data/chunk-000/file-000.parquet",
+    "dataset_sha256": "60aafa6199d16e879f3866e9d6ce63a424d9f18eea3f874b152efdac79767892",
+    "rows": 46086,
+    "rounding": "outward to 0.000001 rad; gripper action decoded to 0 or 100",
+    "action_source": "action",
+    "feedback_source": "observation.state",
+    "hardware_field_semantics": "Legacy software guard envelope; expanded from demonstrations per user instruction, not a newly verified manufacturer hardware specification",
+    "changes": {
+      "hardware_lower": {
+        "joint": "astribot_arm_right_joint_6",
+        "before": -0.76,
+        "after": -0.78
+      },
+      "position_lower": {
+        "joint": "astribot_arm_right_joint_6",
+        "before": -0.76,
+        "after": -0.78
+      },
+      "feedback_lower": {
+        "joint": "astribot_arm_right_joint_6",
+        "before": -0.78,
+        "after": -0.828163
+      }
+    }
+  },
+  "prediction_lower_clip_tolerance": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.02,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "prediction_upper_clip_tolerance": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.04,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ]
 }

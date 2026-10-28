@@ -77,6 +77,12 @@ class ControlSession:
             self.live.prepare()
             if self.stopping.is_set():return
             self.live.acquire()
+            if self.stopping.is_set():return
+            try:
+                self.live.align_torso(lambda phase: setattr(self,'phase',phase))
+            except Exception:
+                if self.stopping.is_set() and self.live.executor.fault_reason=='operator_stop':return
+                raise
         if self.stopping.is_set():return
         self.accept_observations_after_ns=time.monotonic_ns()
         if self.execution_strategy=="synchronous":
@@ -95,6 +101,8 @@ class ControlSession:
                dict(execution_strategy=self.execution_strategy)),
             session_id=self.session_id,boot_id=self.boot_id,step=self.step,model_sha256=self.model_sha,
             data_contract_sha256=self.contract_sha,action_dim=10,horizon=7,
+            torso_only=bool(self.live and self.live.c.get('torso_only',False)),
+            torso_progress=(self.live.torso.progress if self.live and self.live.torso else None),
             phase=self.phase,accept_observations_after_ns=self.accept_observations_after_ns,
             mode='execute' if self.live else 'shadow',fault=fault,
             robot_monotonic_ns=time.monotonic_ns())
@@ -113,6 +121,7 @@ class ControlSession:
                     raise ValueError('control_session_inactive')
                 if self.phase not in ('AWAITING_PREDICTION','RUNNING'):
                     raise ValueError('control_not_initialized')
+                if self.live and self.live.c.get('torso_only'):raise ValueError('torso_only_rejects_predictions')
                 if self.live:self.live.ensure_active()
                 self.validate_boot(response)
                 if (int(response['observation_id'])<=self.preflight_observation_id
@@ -127,6 +136,11 @@ class ControlSession:
                             or np.any(receipts<=boundary) or np.any(receipts>received)
                             or int(receipts[0])!=int(response['observation_monotonic_ns'])):
                         raise ValueError('observation_predates_chunk_boundary_or_invalid')
+                if self.live and self.live.torso and self.execution_strategy!='synchronous':
+                    receipts=np.asarray(response.get('observation_receipt_ns'))
+                    if (receipts.shape!=(5,) or receipts.dtype!=np.int64 or
+                            np.any(receipts<=self.accept_observations_after_ns) or np.any(receipts>received)):
+                        raise ValueError('observation_predates_initialization')
                 accepted=self.scheduler.accept(response,received)
                 self.received+=1;self.accepted+=int(accepted)
                 if self.last_received_ns is not None:

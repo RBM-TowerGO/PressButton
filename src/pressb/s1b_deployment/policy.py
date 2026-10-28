@@ -9,7 +9,8 @@ from .contract import TASK, verify
 class Policy:
     def __init__(self, run, step, lock, device='cuda:0'):
         started = time.perf_counter()
-        self.identity = verify(run, step, lock)
+        # Startup skips the full checkpoint byte scan; explicit audits still hash it.
+        self.identity = verify(run, step, lock, hash_checkpoint=False)
         run = Path(run).resolve()
         sys.path.insert(0, str(run / 'runtime'))
         import torch

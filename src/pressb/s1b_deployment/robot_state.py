@@ -27,7 +27,7 @@ class RobotState:
             self.node.create_subscription(RobotJointState,'/'+part+'/joint_space_states',lambda m,p=part:self.callback(p,m,False),qos)
             if not control_only:
                 self.node.create_subscription(RobotJointController,'/'+part+'/joint_space_command',lambda m,p=part:self.callback(p,m,True),qos)
-            if not control_only or part in PARTS:
+            if not control_only or part in PARTS or part=='astribot_torso':
                 self.node.create_subscription(RobotJointState,'/'+part+'/joint_space_command_recv',lambda m,p=part:self.accepted_callback(p,m),qos)
         self.node.create_subscription(Int32MultiArray,'/astribot_error_code/control_driver',self.driver_callback,qos_profile_sensor_data)
         self.ros_executor.add_node(self.node)
@@ -57,6 +57,14 @@ class RobotState:
         with self.lock:self.accepted[part]=row
         try:self.emit(row)
         except BaseException as exc:self.error=repr(exc)
+
+    def torso_command(self):
+        with self.lock:
+            row=self.accepted.get('astribot_torso')
+            if (row is None or row['mode']!=1 or len(row['position'])!=4 or
+                    not 0<=time.monotonic_ns()-row['receipt_ns']<=80_000_000):
+                raise ExecutionError('torso_accepted_command_unavailable')
+            return np.asarray(row['position'],dtype=np.float64).copy()
 
     def command10(self):
         with self.lock:

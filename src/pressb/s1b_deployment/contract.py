@@ -45,7 +45,7 @@ def read_config(path, mode='shadow', execution_config=None):
         raise ValueError('P4 execution is not implemented or validated')
     return c
 
-def verify(run, step, lock):
+def verify(run, step, lock, *, hash_checkpoint=True):
     run = Path(run)
     if step not in (2000, 4500, 8000): raise ValueError('Explicit checkpoint 2000, 4500 or 8000 required')
     identity = json.loads(Path(lock).read_text())
@@ -54,7 +54,9 @@ def verify(run, step, lock):
         raise ValueError('Processor/data/config/runtime identity mismatch')
     m = json.loads((run / f'checkpoints/step_{step:06d}/manifest.json').read_text())
     checkpoint = run / f'checkpoints/step_{step:06d}/model.pt'
-    if not m['complete'] or m['step'] != step or sha(checkpoint) != m['model_sha256'] or m['model_sha256'] != identity['models'][str(step)]:
+    if (not m['complete'] or m['step'] != step or not checkpoint.is_file()
+            or (hash_checkpoint and sha(checkpoint) != m['model_sha256'])
+            or m['model_sha256'] != identity['models'][str(step)]):
         raise ValueError('Checkpoint hash/manifest mismatch')
     contract = json.loads((run / 'data_contract.json').read_text())
     if m['data_contract_sha256'] != sha(run / 'data_contract.json'): raise ValueError('Contract mismatch')

@@ -15,6 +15,119 @@ from pressb.s1b_deployment.scheduler import Scheduler, ScheduleError
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.parametrize('sign',[-1,1])
+def test_clip_all_targets_accepts_large_overshoot_on_every_model_axis(sign):
+    from pressb.s1b_deployment.executor import CommandGuard
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c['clip_all_targets']=True
+    validate_execution_config(c)
+    g=CommandGuard(c,np.zeros(10),0)
+    raw=np.full(10,sign*1000.)
+    decoded,bounded=g.prepare_prediction(raw)
+    expected=np.array(c['position_lower' if sign<0 else 'position_upper'])
+    np.testing.assert_array_equal(bounded,expected)
+    np.testing.assert_array_equal(raw,np.full(10,sign*1000.))
+    assert decoded[7]==(0 if sign<0 else 100)
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.validate_target(decoded)
+    c['clip_all_targets']=False
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.prepare_prediction(raw)
+
+
+@pytest.mark.parametrize('raw',[[float('nan')]*10,[float('inf')]*10,[-float('inf')]*10,[0.]*9])
+def test_clip_all_targets_still_rejects_invalid_predictions(raw):
+    from pressb.s1b_deployment.executor import CommandGuard
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text());c['clip_all_targets']=True
+    g=CommandGuard(c,np.zeros(10),0)
+    with pytest.raises(ExecutionError,match='invalid_target'):g.prepare_prediction(raw)
+
+
+def test_clip_all_targets_records_and_sends_bounded_prediction():
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None);c['clip_all_targets']=True
+    q=np.array(c['position_upper']);monitor=Monitor(q);backend=Backend(q);rows=[]
+    obj=LiveExecution(c,rows.append,operator_present=True,estop_ready=True,monitor=monitor,backend=backend)
+    obj.baseline=monitor.snapshot()
+    raw=[1000.]*10
+    row=dict(action_raw=raw,observation_id=1,step_index=0,deadline_ns=time.monotonic_ns()+1_000_000_000)
+    try:
+        obj.acquire();obj.send(row)
+        np.testing.assert_array_equal(backend.calls[-1],q)
+        assert row['action_raw']==raw
+        clipped=next(r for r in rows if r['event']=='prediction_position_clipped')
+        assert len(clipped['joint_names'])==9  # Gripper retains binary decoding.
+        assert clipped['bounded_target']==q.tolist()
+        assert clipped['clip_delta']==row['clip_delta']
+        assert obj.executor.state=='EXECUTING'
+    finally:obj.close()
+
+
+@pytest.mark.parametrize('target,accepted',[
+    (-.78,True), (-.7814302444458008,True), (-.7968653440475464,True), (-.80,True),
+    (-.800001,False), (-.8009642362594604,False), (.76,True), (.760001,True), (.78,True), (.80,True), (.800001,False), (float('nan'),False),
+])
+def test_prediction_overshoot_is_bounded_before_sdk(target,accepted):
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)
+    bound=.76 if target>0 else -.78
+    q=np.zeros(10);q[5]=bound
+    backend=Backend(q);rows=[];monitor=Monitor(q)
+    obj=LiveExecution(c,rows.append,operator_present=True,estop_ready=True,
+                      monitor=monitor,backend=backend)
+    obj.baseline=monitor.snapshot()
+    raw=q.copy();raw[5]=target
+    row=dict(action_raw=raw.tolist(),observation_id=4949,step_index=1,
+             deadline_ns=time.monotonic_ns()+1_000_000_000)
+    try:
+        obj.acquire()
+        if not accepted:
+            with pytest.raises(ExecutionError):obj.send(row)
+            assert not backend.calls and obj.executor.state=='FAULT' and backend.stops==1
+            assert not any(r['event']=='prediction_position_clipped' for r in rows)
+            return
+        obj.send(row)
+        assert backend.calls[-1][5]==bound
+        assert row['action_raw'][5]==target and row['decoded_target'][5]==target
+        assert row['bounded_target'][5]==bound
+        assert row['clip_delta'][5]==pytest.approx(bound-target)
+        clipped=[r for r in rows if r['event']=='prediction_position_clipped']
+        assert len(clipped)==int(target!=bound)
+        if clipped:
+            assert clipped[0]['joint_names']==['astribot_arm_right_joint_6']
+            assert clipped[0]['observation_id']==4949 and clipped[0]['step_index']==1
+            assert clipped[0]['action_raw'][5]==target
+            assert clipped[0]['clip_delta'][5]==pytest.approx(bound-target)
+            command=next(r for r in rows if r['event']=='command')
+            assert command['source']['bounded_target'][5]==bound
+            assert command['source']['clip_delta']==row['clip_delta']
+    finally:obj.close()
+
+
+def test_prediction_clipping_does_not_relax_other_axes_or_strict_command_guard():
+    from pressb.s1b_deployment.executor import CommandGuard
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    q=np.zeros(10);g=CommandGuard(c,q,0);q[5]=-.78143
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.validate_target(q)
+    q[0]=c['position_lower'][0]-.000001
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.prepare_prediction(q)
+    q[0]=0;c.pop('prediction_lower_clip_tolerance')
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.prepare_prediction(q)
+    q[5]=.79
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.validate_target(q)
+    q[0]=c['position_upper'][0]+.000001
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.prepare_prediction(q)
+    q[0]=0;c.pop('prediction_upper_clip_tolerance')
+    with pytest.raises(ExecutionError,match='target_position_limit'):g.prepare_prediction(q)
+
+
+@pytest.mark.parametrize('field',['prediction_lower_clip_tolerance','prediction_upper_clip_tolerance'])
+@pytest.mark.parametrize('value',[[0.]*9,[-.001]*10,[float('nan')]*10,[.001]*10])
+def test_invalid_prediction_clip_configuration_rejected(value,field):
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c[field]=value
+    with pytest.raises(ExecutionError,match=field):
+        validate_execution_config(c)
+
+
 class Backend:
     def __init__(self, q):
         self.q=q.copy(); self.calls=[]; self.acquired=False; self.stops=0; self.released=False
@@ -167,6 +280,7 @@ def test_cli_rejects_incomplete_execution_before_connections(script,extra,tmp_pa
 def test_model_position_bounds_use_hardware_not_probe_window():
     from pressb.s1b_deployment.executor import CommandGuard
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     validate_execution_config(c)
     assert c['position_lower']==c['hardware_lower']
     assert c['position_upper']==c['hardware_upper']
@@ -233,6 +347,7 @@ def test_model_startup_reproduces_real_head_offset_and_refreshes_command():
     """Regression for live_1793000653899948050: head command 0, feedback .05343."""
     from pressb.s1b_deployment.executor import GuardedExecutor
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     q=np.array([-.16112,-.02306,1.41910,1.65911,.34378,.11477,-.12457,-.09607,-.00599,.05343])
     accepted=np.array([-.159,-.022,1.420,1.660,.345,.115,-.125,0.,0.,0.])
     backend=Backend(q);rows=[];e=GuardedExecutor(c,backend,rows.append);calls=[]
@@ -256,6 +371,7 @@ def test_model_startup_reproduces_real_head_offset_and_refreshes_command():
 def test_model_transitions_to_demonstrated_head_and_gripper_with_hardware_rate():
     from pressb.s1b_deployment.executor import CommandGuard
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     q=np.zeros(10);q[9]=.05343
     g=CommandGuard(c,q,1_000_000_000);g.last[9]=0
     raw=np.zeros(10);raw[8:]=[-.04289121356201172,.2740719752807617];raw[7]=1
@@ -274,6 +390,7 @@ def test_model_transitions_to_demonstrated_head_and_gripper_with_hardware_rate()
 def test_model_profile_still_rejects_invalid_targets_and_stale_feedback(fault):
     from pressb.s1b_deployment.executor import CommandGuard
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     q=np.zeros(10);g=CommandGuard(c,q,1_000_000_000);target=q.copy();stamp=1_033_333_333
     if fault=='position':target[9]=1.3
     if fault=='nan':target[0]=np.nan
@@ -284,6 +401,7 @@ def test_model_profile_still_rejects_invalid_targets_and_stale_feedback(fault):
 
 def test_live_model_profile_holds_then_sends_fresh_head_prediction():
     c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None)  # Legacy joint10-only fixture; torso tested separately.
     c['stop_stability_window_ns']=5_000_000
     q=np.zeros(10);q[9]=.05343
     monitor=Monitor(q);monitor.command10=lambda:np.zeros(10)
@@ -336,3 +454,13 @@ def test_driver_fault_stops_before_logging(live):
     monitor.emit=log
     monitor.driver_callback(SimpleNamespace(data=[13000000,13243026]))
     assert obj.backend.stops==1 and 'disk_full' in monitor.error
+
+
+def test_monitor_closed_before_sdk_release(live):
+    obj,_=live;events=[]
+    close=obj.monitor.close;release=obj.backend.release
+    def monitor_close():events.append('monitor');close()
+    def sdk_release():events.append('sdk');release()
+    obj.monitor.close=monitor_close;obj.backend.release=sdk_release
+    obj.acquire();obj.close()
+    assert events[:2]==['monitor','sdk']

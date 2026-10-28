@@ -167,3 +167,43 @@ def test_stop_logger_failure_preserves_original_fault_and_releases():
         assert b.stop_calls==1 and not b.calls
     finally:e.close()
     assert b.releases==1 and e.state=='FAULT'
+
+
+def test_sdk_release_joins_callbacks_before_node_shutdown(monkeypatch):
+    from types import SimpleNamespace
+    from pressb.s1b_deployment.executor import SDKBackend
+    events=[]
+    import sys
+    monkeypatch.setitem(sys.modules,'rclpy',SimpleNamespace(ok=lambda:True,shutdown=lambda:events.append('context')))
+    interface=SimpleNamespace(
+        shutdown_control_rights_srv=lambda:events.append('rights'),
+        executor=SimpleNamespace(shutdown=lambda **kw:events.append('executor')),
+        spin_thread=SimpleNamespace(join=lambda **kw:events.append('join'),is_alive=lambda:False),
+        shutdown=lambda:events.append('destroy'))
+    b=SDKBackend('/unused',250)
+    b.client=SimpleNamespace(astribot_interface=interface,get_control_rights_status=lambda:True)
+    b.release();b.release()
+    assert events==['rights','executor','context','join','destroy']
+
+
+def test_sdk_outer_spin_loop_requires_context_shutdown(monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    from pressb.s1b_deployment.executor import SDKBackend
+    context_alive=threading.Event();context_alive.set()
+    executor_stopped=threading.Event();destroyed=[]
+    def spin():
+        while context_alive.is_set():
+            executor_stopped.wait(.005)
+            time.sleep(.001)
+    thread=threading.Thread(target=spin,daemon=True);thread.start()
+    monkeypatch.setitem(sys.modules,'rclpy',SimpleNamespace(ok=context_alive.is_set,shutdown=context_alive.clear))
+    interface=SimpleNamespace(shutdown_control_rights_srv=lambda:None,
+        executor=SimpleNamespace(shutdown=lambda **kw:executor_stopped.set()),
+        spin_thread=thread,shutdown=lambda:destroyed.append(not thread.is_alive()))
+    b=SDKBackend('/unused',250)
+    b.client=SimpleNamespace(astribot_interface=interface,get_control_rights_status=lambda:True)
+    try:
+        b.release()
+        assert destroyed==[True] and not context_alive.is_set()
+    finally:context_alive.clear();thread.join(1)
