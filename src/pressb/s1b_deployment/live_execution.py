@@ -25,6 +25,10 @@ def validate_execution_config(c):
     if (type(c.get('clip_all_targets',False)) is not bool
             or (c.get('clip_all_targets',False) and profile!='model_hardware')):
         raise ExecutionError('invalid_execution_config:clip_all_targets')
+    if c.get('gripper_override') not in (None,'open','close'):
+        raise ExecutionError('invalid_execution_config:gripper_override')
+    if c.get('gripper_override') and profile!='model_hardware':
+        raise ExecutionError('gripper_override_requires_model_hardware')
     for name in ('prediction_lower_clip_tolerance', 'prediction_upper_clip_tolerance'):
         if name in c:
             tolerance = np.asarray(c[name], dtype=float)

@@ -263,3 +263,13 @@ inference complete=true；控制端 STOPPED、fatal=[]、stop_feedback.settled=t
 shadow 和作为模块调用 main() 均保持普通 Python 退出，不结束调用方进程。
 此路径不会从尚未完成的 core.close 中提前退出，也不会将清理失败标为成功。
 子进程回归覆盖阻塞析构、非 daemon 线程、成功/失败返回码及日志落盘，未启动实机运动。
+
+## 固定右夹爪开合
+
+在 execute 启动命令追加 `--gripper open`（全开，SDK 0）或 `--gripper close`
+（全闭，SDK 100）。不传参数时沿用模型控制；每次启动必须显式指定，复用日志中的
+execution.json 不会隐式启用。参数仅支持 execute。
+
+按 S 获取控制权后，初始化保持、躯干恢复、模型执行和推理间保持均使用指定的
+右夹爪目标。夹爪通过现有速度限制逐步到位，SDK filter 仍然生效；其余关节不受
+该参数影响。原始模型预测、固定状态和实际 SDK 目标保留在日志中。

@@ -26,6 +26,8 @@ def canonical(value):
 
 def read_config(path, mode='shadow', execution_config=None):
     c = yaml.safe_load(Path(path).read_text())
+    if c['model'].get('backend', 'vlajepa') not in ('vlajepa', 'openpi_pi05'):
+        raise ValueError('Unknown policy backend')
     if c['protocol'] != VERSION or c['model']['state_dim'] != 10 or c['model']['action_dim'] != 10 or c['model']['horizon'] != 7 or c['model']['task'] not in (TASK, MIXED_TASK):
         raise ValueError('Wrong joint10 deployment contract')
     if mode not in ('shadow', 'execute'): raise ValueError('Unknown mode')
@@ -44,6 +46,21 @@ def read_config(path, mode='shadow', execution_config=None):
         if missing: raise ValueError('Unverified execute fields: ' + ', '.join(missing))
         raise ValueError('P4 execution is not implemented or validated')
     return c
+
+def validate_checkpoint(identity, step, backend=None):
+    """Transport-side validation without importing either model framework."""
+    selected = identity.get('backend', 'vlajepa')
+    if selected not in ('vlajepa', 'openpi_pi05') or (backend is not None and selected != backend):
+        raise ValueError('Policy backend identity mismatch')
+    if type(step) is not int or step < 0:
+        raise ValueError('Invalid checkpoint step')
+    if selected == 'vlajepa' and step not in (2000, 4500, 8000):
+        raise ValueError('Explicit checkpoint 2000, 4500 or 8000 required')
+    if selected == 'openpi_pi05' and identity.get('schema') != 's1b-openpi-artifacts-v1':
+        raise ValueError('Wrong OpenPI artifact schema')
+    if str(step) not in identity['models']:
+        raise ValueError('Checkpoint is not in selected model identity')
+    return selected
 
 def verify(run, step, lock, *, hash_checkpoint=True):
     run = Path(run)

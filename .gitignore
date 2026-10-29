@@ -3,6 +3,8 @@
 /.venv-astribot-inference/
 /.venv-qwen3-5/
 /.venv-data-review/
+/.venv-openpi/
+/.deps/
 /data/
 /.cache/
 /vendor/

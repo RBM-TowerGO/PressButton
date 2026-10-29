@@ -10,7 +10,7 @@ import threading
 import time
 import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
-from pressb.s1b_deployment.observation import Sample, JpegFrame, TimeMapper, ObservationBuffer, ObservationError
+from pressb.s1b_deployment.observation import Sample, JpegFrame, TimeMapper, ObservationBuffer, ObservationError, sample_clock_pair
 from pressb.s1b_deployment.streams import LatestPublisher, camera_packet, state_packet, HISTORY
 
 
@@ -30,7 +30,8 @@ def main():
     out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
     routes=({'head':a.head_port,'right':a.right_port} if a.kind=='images' else {'states':a.state_port})
     publisher=LatestPublisher({k:f'tcp://{a.bind}:{port}' for k,port in routes.items()})
-    mapper=TimeMapper(time.time_ns(),time.monotonic_ns(),mapping['clock']['max_offset_jump_ns'])
+    wall,receipt=sample_clock_pair()
+    mapper=TimeMapper(wall,receipt,mapping['clock']['max_offset_jump_ns'])
     buffer=ObservationBuffer(capacity=HISTORY)
     counts=Counter();errors=Counter();fatal=[];stop=threading.Event()
     for sig in (signal.SIGINT,signal.SIGTERM):signal.signal(sig,lambda *_:stop.set())
@@ -44,10 +45,12 @@ def main():
     rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
     node=rclpy.create_node('pressb_split_'+a.kind)
     def receive(key,msg):
-        receipt=time.monotonic_ns();wall=time.time_ns();counts[key]+=1
+        if stop.is_set() or fatal:return
+        counts[key]+=1
         source=msg.header.stamp.sec*10**9+msg.header.stamp.nanosec
         header=dict(sec=msg.header.stamp.sec,nanosec=msg.header.stamp.nanosec,frame_id=msg.header.frame_id)
         try:
+            wall,receipt=sample_clock_pair()
             mapped=mapper.map(source,wall,receipt)
             if a.kind=='images':
                 if 'jpeg' not in msg.format.lower():raise ObservationError('unsupported_camera_format')
@@ -62,7 +65,9 @@ def main():
             if a.kind=='images':publisher.put(key,camera_packet(key,sample,a.service_id,boot_id))
         except ObservationError as exc:
             errors[str(exc)]+=1
-            if mapper.failed:fatal.append(str(exc))
+            if mapper.failed and not fatal:
+                fatal.append(str(exc))
+                print(json.dumps(dict(event='clock_jump',stream=key,**mapper.jump_details)),flush=True)
         except BaseException as exc:fatal.append(repr(exc))
     streams=mapping['cameras'] if a.kind=='images' else mapping['states']
     for key,spec in streams.items():
@@ -97,7 +102,7 @@ def main():
         try:publisher.close()
         finally:
             summary=dict(kind=a.kind,service_id=a.service_id,boot_id=boot_id,elapsed_seconds=time.monotonic()-started,
-                callbacks=dict(counts),errors=dict(errors),fatal=fatal,publisher=dict(publisher.counts),
+                callbacks=dict(counts),errors=dict(errors),fatal=fatal,clock_jump=mapper.jump_details,publisher=dict(publisher.counts),
                 sdk_imported=any(n.startswith('astribot_sdk') for n in sys.modules),buffer=buffer.stats())
             (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 

@@ -15,11 +15,12 @@ ROOT=shared.ROOT
 REMOTE=shared.REMOTE
 
 
-def load_execution_config(path, *, clip_all_targets=False):
+def load_execution_config(path, *, clip_all_targets=False, gripper=None):
     from pressb.s1b_deployment.live_execution import validate_execution_config
     execution=json.loads(Path(path).read_text())
     # This mode is a per-launch opt-in, never inherited from a previous run.
     execution['clip_all_targets']=clip_all_targets
+    execution['gripper_override']=gripper
     validate_execution_config(execution)
     return execution
 
@@ -48,14 +49,16 @@ def tunnel_command(host,ports):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--checkpoint',type=int,choices=[2000,4500,8000],default=2000)
+    p.add_argument('--checkpoint',type=int,default=2000)
     p.add_argument('--config',default=str(ROOT/'configs/s1b_deployment_v1.yaml'))
+    p.add_argument('--policy-python', help='Isolated policy interpreter; config model.python or current Python by default')
     p.add_argument('--host',default='S1B')
     p.add_argument('--duration',type=float,default=600)
     p.add_argument('--mode',choices=['shadow','execute'],default='shadow')
     p.add_argument('--execution-config',default=str(ROOT/'configs/s1b_execution_model_v1.json'))
     p.add_argument('--clip-all-targets',action='store_true',
                    help='explicitly clip every finite model target to configured position bounds, regardless of overshoot')
+    p.add_argument('--gripper',choices=['open','close'],help='hold right gripper open or closed throughout execution')
     p.add_argument('--operator-present',action='store_true')
     p.add_argument('--estop-ready',action='store_true')
     p.add_argument('--request-control-handover',action='store_true')
@@ -65,6 +68,7 @@ def main():
         p.add_argument('--'+name+'-port',type=int,default=port)
     p.add_argument('--execution-strategy',choices=['synchronous','continuous'],default='synchronous')
     a=p.parse_args()
+    if a.gripper and a.mode!='execute':p.error('--gripper requires execute')
     if a.clip_all_targets and a.mode!='execute':p.error('--clip-all-targets requires execute')
     if a.torso_only and a.mode!='execute':p.error('--torso-only requires execute')
     if a.mode=='execute' and (not a.operator_present or not a.estop_ready):
@@ -78,19 +82,24 @@ def main():
     from pressb.s1b_deployment.cameras import missing_camera_drivers
     execution=None
     if a.mode=='execute':
-        execution=load_execution_config(a.execution_config,clip_all_targets=a.clip_all_targets)
+        execution=load_execution_config(a.execution_config,clip_all_targets=a.clip_all_targets,gripper=a.gripper)
         if a.torso_only and not execution.get('torso_alignment',{}).get('enabled'):p.error('--torso-only requires torso_alignment.enabled')
     import zmq
     os.chdir(ROOT)
-    from pressb.s1b_deployment.contract import read_config
+    from pressb.s1b_deployment.contract import read_config, validate_checkpoint
     deployment=read_config(a.config)
     identity_path=Path(deployment['model']['identity']).resolve()
     identity=json.loads(identity_path.read_text())
-    if str(a.checkpoint) not in identity['models']:p.error('checkpoint is not in selected model identity')
+    validate_checkpoint(identity, a.checkpoint, backend=deployment['model'].get('backend', 'vlajepa'))
+    policy_python = a.policy_python or deployment['model'].get('python') or sys.executable
+    if deployment['model'].get('backend') == 'openpi_pi05':
+        from pressb.openpi_s1b.artifacts import verify
+        verify(deployment['model']['run'], a.checkpoint, identity_path)
     token='split_'+str(time.time_ns());out=ROOT/'outputs/s1b_deployment'/f'live_{a.checkpoint}_{token}'
     out.mkdir(parents=True);remote_out=REMOTE+'/outputs/'+token
     (out/'launch.json').write_text(json.dumps(dict(vars(a),session_id=token,remote_output=remote_out,pyzmq=zmq.__version__),indent=2)+'\n')
     if execution:
+        if a.gripper:print(f'右夹爪固定模式：{a.gripper}（按 S 获取控制权后生效）',flush=True)
         (out/'execution.json').write_text(json.dumps(execution,indent=2)+'\n')
         if a.clip_all_targets:
             print('已开启全部目标裁剪：模型所有关节预测按配置位置上下限裁剪，记录原值与裁剪量。',flush=True)
@@ -195,7 +204,7 @@ print(json.dumps(found))
                 remote(shared.ENV+'; '+shared.sdk_environment(execution)+'; python3 -c '+shlex.quote(probe),stdout=log,stderr=subprocess.STDOUT,timeout=30)
         loading_started=time.monotonic()
         print('模型准备中：加载模型 → 预热 3 次 → 服务就绪（下方显示实际阶段及耗时）',flush=True)
-        launch('policy',[sys.executable,str(ROOT/'scripts/s1b_policy_server.py'),'--checkpoint',str(a.checkpoint),'--port',str(a.policy_port),'--warmup','--config',str(Path(a.config).resolve())])
+        launch('policy',[policy_python,str(ROOT/'scripts/s1b_policy_server.py'),'--checkpoint',str(a.checkpoint),'--port',str(a.policy_port),'--warmup','--config',str(Path(a.config).resolve())])
         common=' --service-id '+shlex.quote(token)+' --mapping configs/s1b_observation_v1.json'
         start_remote('images','python3 scripts/s1b_observation_service.py --kind images'+common+
             f' --head-port {a.head_port} --right-port {a.right_port} --output '+shlex.quote(remote_out+'/images'))

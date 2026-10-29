@@ -7,8 +7,7 @@ import time
 import subprocess
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
-from pressb.s1b_deployment.contract import read_config
-from pressb.s1b_deployment.policy import Policy
+from pressb.s1b_deployment.contract import read_config, validate_checkpoint
 from pressb.s1b_deployment.server import make_server
 from pressb.s1b_deployment.recorder import Recorder
 
@@ -16,7 +15,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--config',default='configs/s1b_deployment_v1.yaml')
     p.add_argument('--run')
-    p.add_argument('--checkpoint',type=int,choices=(2000,4500,8000),required=True)
+    p.add_argument('--checkpoint',type=int,required=True)
     p.add_argument('--device',default='cuda:0')
     p.add_argument('--port',type=int,default=8796)
     p.add_argument('--warmup',action='store_true',help='discard three synthetic predictions before readiness')
@@ -24,6 +23,12 @@ def main():
     def progress(stage):
         print(json.dumps({'event':'loading_progress','stage':stage},ensure_ascii=False),flush=True)
     progress('加载模型与 checkpoint')
+    backend = validate_checkpoint(json.loads(Path(c['model']['identity']).read_text()), a.checkpoint,
+                                  backend=c['model'].get('backend', 'vlajepa'))
+    if backend == 'openpi_pi05':
+        from pressb.openpi_s1b.policy import Policy
+    else:
+        from pressb.s1b_deployment.policy import Policy
     policy=Policy(a.run or c['model']['run'],a.checkpoint,c['model']['identity'],a.device)
     if policy.identity['task'] != c['model']['task']: raise ValueError('Deployment task mismatch')
     if a.warmup:

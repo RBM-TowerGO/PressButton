@@ -28,3 +28,14 @@ def test_clip_mode_public_entrypoint_help_and_wrong_mode():
     assert result.returncode==0 and '--clip-all-targets' in result.stdout
     result=subprocess.run([sys.executable,script,'--clip-all-targets','--mode','shadow'],capture_output=True,text=True)
     assert result.returncode==2 and '--clip-all-targets requires execute' in result.stderr
+
+
+def test_gripper_override_is_per_launch(monkeypatch,tmp_path):
+    monkeypatch.syspath_prepend(str(ROOT/'scripts'))
+    launcher=importlib.import_module('s1b_split_launch')
+    config=launcher.load_execution_config(ROOT/'configs/s1b_execution_model_v1.json',gripper='open')
+    saved=tmp_path/'execution.json';saved.write_text(json.dumps(config))
+    assert config['gripper_override']=='open'
+    assert launcher.load_execution_config(saved)['gripper_override'] is None
+    result=subprocess.run([sys.executable,str(ROOT/'scripts/start_s1b_inference.py'),'--gripper','close','--mode','shadow'],capture_output=True,text=True)
+    assert result.returncode==2 and '--gripper requires execute' in result.stderr

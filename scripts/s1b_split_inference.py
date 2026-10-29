@@ -138,7 +138,7 @@ class ClockMonitor:
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--session-id',required=True)
-    p.add_argument('--checkpoint',type=int,choices=[2000,4500,8000],required=True)
+    p.add_argument('--checkpoint',type=int,required=True)
     p.add_argument('--mode',choices=['shadow','execute'],default='shadow')
     p.add_argument('--mapping',default='configs/s1b_observation_v1.json')
     p.add_argument('--identity',default='configs/s1b_deployment_assets_v1.json')
@@ -155,6 +155,8 @@ def main():
     import cv2
     cv2.setNumThreads(1)
     mapping=json.loads(Path(a.mapping).read_text());identity=json.loads(Path(a.identity).read_text())
+    from pressb.s1b_deployment.contract import validate_checkpoint
+    validate_checkpoint(identity, a.checkpoint)
     out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
     writer=AsyncLog({k:(out/(k+'.jsonl')).open('w',buffering=65536) for k in ('requests','events')},mapping['log_disk_limit_bytes'])
     policy=http.client.HTTPConnection('127.0.0.1',a.policy_port,timeout=2)

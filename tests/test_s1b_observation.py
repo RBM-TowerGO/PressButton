@@ -124,3 +124,34 @@ def test_alignment_fallback_never_uses_expired_head():
         b.add(key,sample(key,1_060_000_000,2))
     with pytest.raises(ObservationError,match='skew_arm'):
         b.snapshot(1_095_000_000)
+
+
+def test_clock_sampling_retries_scheduler_pause_without_latching(monkeypatch):
+    from pressb.s1b_deployment import observation as module
+    mono=iter([10_000_000,20_000_000,21_000_000,21_000_100])
+    wall=iter([1_020_000_000,1_021_000_000])
+    monkeypatch.setattr(module.time,'monotonic_ns',lambda:next(mono))
+    monkeypatch.setattr(module.time,'time_ns',lambda:next(wall))
+    mapper=TimeMapper(1_000_000_000,0)
+    epoch,receipt=module.sample_clock_pair()
+    assert mapper.map(epoch,epoch,receipt)==21_000_000
+    assert not mapper.failed
+
+
+def test_clock_sampling_repeated_pauses_reject_sample(monkeypatch):
+    from pressb.s1b_deployment import observation as module
+    mono=iter(range(0,60_000_000,10_000_000))
+    monkeypatch.setattr(module.time,'monotonic_ns',lambda:next(mono))
+    monkeypatch.setattr(module.time,'time_ns',lambda:1_000_000_000)
+    with pytest.raises(ObservationError,match='clock_sample_delayed'):module.sample_clock_pair()
+
+
+def test_precise_clock_sample_still_detects_real_jump(monkeypatch):
+    from pressb.s1b_deployment import observation as module
+    mono=iter([10_000_000,10_000_100])
+    monkeypatch.setattr(module.time,'monotonic_ns',lambda:next(mono))
+    monkeypatch.setattr(module.time,'time_ns',lambda:1_020_000_000)
+    mapper=TimeMapper(1_000_000_000,0)
+    wall,receipt=module.sample_clock_pair()
+    with pytest.raises(ObservationError,match='clock_jump'):mapper.map(wall,wall,receipt)
+    assert mapper.failed and mapper.jump_details['delta_ns']==-10_000_000

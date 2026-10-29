@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-29",
+  "branch": "feat/openpi-pi05-s1b",
+  "openpi_commit": "215abfb217dbac7d5f1273282331b9b1866c0479",
+  "scope": "software integration and offline acceptance only",
+  "tests": {
+    "existing_s1b": {
+      "command": ".venv-astribot-inference/bin/python -m pytest tests/test_s1b*.py -q",
+      "passed": 294
+    },
+    "openpi_adapter": {
+      "command": ".venv-astribot-inference/bin/python -m pytest tests/test_openpi_s1b.py -q",
+      "passed": 13
+    }
+  },
+  "dependency_check": {
+    "python": "3.11.17",
+    "torch": "2.7.1+cu126",
+    "transformers": "4.53.2",
+    "source": "official frozen uv.lock export; mirror wheels checked against exported hashes",
+    "official_transformers_patch": true,
+    "official_pytorch_imports": true,
+    "s1b_train_config_serialization": true,
+    "official_image_resize_and_padding": true,
+    "tokenizer": "test stand-in; real tokenizer not downloaded"
+  },
+  "read_only_real_data_audit": {
+    "dataset": "data/astribot_s1b_real_joint10_mixed_v2",
+    "train_windows": 37533,
+    "validation_windows": 7267,
+    "decoded_observations": 3,
+    "cameras_per_observation": 2,
+    "source_files_modified": false
+  },
+  "offline_transport": {
+    "real_http_npz": true,
+    "test_only_policy": true,
+    "local_shadow_control": true,
+    "ordered_steps": 7,
+    "sdk_imported": false
+  },
+  "gpu_boundary": {
+    "device": "NVIDIA GeForce RTX 5090",
+    "compute_capability": "12.0",
+    "installed_torch_arches": [
+      "sm_50",
+      "sm_60",
+      "sm_70",
+      "sm_75",
+      "sm_80",
+      "sm_86",
+      "sm_90"
+    ],
+    "blackwell_supported_by_installed_build": false,
+    "next_step": "Install a compatible Blackwell/CUDA 12.8+ PyTorch build in the isolated environment before actual GPU training or inference, then revalidate."
+  },
+  "model_weights_downloaded": false,
+  "training_executed": false,
+  "real_model_inference_verified": false,
+  "robot_connected": false,
+  "robot_commands_sent": false,
+  "git_commit_created": false,
+  "branch_pushed": false,
+  "base_commit": "d23adf65714a978f1c2970b2d8fe95590e19abf2"
+}
