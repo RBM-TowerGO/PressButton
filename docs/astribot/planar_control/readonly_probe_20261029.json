@@ -1,0 +1,23 @@
+{
+  "date_local": "2026-10-29",
+  "host": "S1B (orin)",
+  "mode": "read-only SSH, file inspection and ROS subscriptions",
+  "control_acquired": false,
+  "motion_sent": false,
+  "camera_driver_started": false,
+  "ros_domain_id": 25,
+  "right_wrist_camera": {"model_in_vendor_config": "realsense_D405", "serial_from_system_mapping": "408623070739", "depth_config_id": 7, "depth_format": "Z16", "depth_resolution": [640, 360], "depth_fps": 30},
+  "image_or_depth_topics_discovered": [],
+  "wrench_topic": "/ft_data",
+  "wrench_publishers": [],
+  "wrench_samples": 0,
+  "right_joint_state_topic": "/astribot_arm_right/joint_space_states",
+  "sampling_duration_s": 5,
+  "samples": 1021,
+  "torque_shape": [1021, 7],
+  "torque_mean_raw": [-0.37473440996402724, 0.3462962252635449, -0.5150247045437217, 0.6001000239417371, -0.1634725248861558, 0.1126111411373929, 0.07003884508206198],
+  "torque_std_raw": [0.011035046921747815, 0.011084348278319731, 0.005777363520046671, 0.005097662034093141, 0.002760044008703094, 0.002057502011054214, 0.001718943260532163],
+  "position_spread_rad": [0.0000286102294921875, 0.0000476837158203125, 0.0000286102294921875, 0.00003814697265625, 0.0000286102294921875, 0.00003814697265625, 0.0000286102294921875],
+  "max_abs_velocity_rad_s": [0.001007080078125, 0.0022430419921875, 0.0013885498046875, 0.00177001953125, 0.001861572265625, 0.0015716552734375, 0.0015716552734375],
+  "limitations": ["Torque physical interpretation and light-contact sensitivity are not calibrated", "Camera configuration is not evidence of active depth publication", "No TCP, hand-eye, live SDK FK/IK or motion validation performed"]
+}
