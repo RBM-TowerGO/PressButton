@@ -1,0 +1,261 @@
+{
+  "schema": "s1b-planar-v1",
+  "calibration": {
+    "coordinates_verified": false,
+    "tcp_verified": false,
+    "sdk_fk_ik_verified": false,
+    "workspace_verified": false,
+    "fixed_parts_verified": false,
+    "evidence": null
+  },
+  "plane": {
+    "origin_m": [
+      0.4,
+      -0.2,
+      1.0
+    ],
+    "right": [
+      0,
+      -1,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "forward": [
+      1,
+      0,
+      0
+    ],
+    "tcp_orientation": [
+      [
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "uv_bounds_m": [
+      [
+        -0.02,
+        0.02
+      ],
+      [
+        -0.02,
+        0.02
+      ]
+    ]
+  },
+  "tcp_in_wrist": [
+    [
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1
+    ]
+  ],
+  "fixed": {
+    "positions": {},
+    "max_drift": 0.003
+  },
+  "control": {
+    "initial_uv_m": [
+      0,
+      0
+    ],
+    "frequency_hz": 100,
+    "position_tolerance_m": 0.002,
+    "rotation_tolerance_rad": 0.02,
+    "joint_lower": [
+      -3.1,
+      -1.53,
+      -3.1,
+      -0.06,
+      -2.56,
+      -0.76,
+      -1.53
+    ],
+    "joint_upper": [
+      3.1,
+      0.46,
+      3.1,
+      2.61,
+      2.56,
+      0.76,
+      1.53
+    ],
+    "joint_velocity_rad_s": [
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ],
+    "max_joint_step_rad": 0.01,
+    "minimum_self_clearance_m": 0.02,
+    "max_path_points": 20000,
+    "move_speed_m_s": 0.005,
+    "max_move_m": 0.01,
+    "observation_max_age_ns": 5000000000,
+    "settle_timeout_s": 3,
+    "settle_duration_s": 0.2,
+    "settle_joint_error_rad": 0.005,
+    "settle_velocity_rad_s": 0.01,
+    "max_servo_lateness_s": 0.05,
+    "max_commands_per_session": 10000,
+    "press": {
+      "verified": false,
+      "evidence": null,
+      "minimum_gap_m": 0.003,
+      "maximum_gap_m": 0.08,
+      "contact_margin_m": 0.005,
+      "overtravel_m": 0.001,
+      "maximum_extension_m": 0.085,
+      "approach_speed_m_s": 0.005,
+      "contact_speed_m_s": 0.001,
+      "retract_speed_m_s": 0.005,
+      "dwell_s": 0.2,
+      "range_change_tolerance_m": 0.002
+    },
+    "air_probe_max_m": 0.01,
+    "keyboard_forward": {
+      "verified": false,
+      "evidence": null,
+      "max_distance_m": 0.1,
+      "speed_m_s": 0.005
+    }
+  },
+  "torque": {
+    "verified": false,
+    "baseline_nm": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "max_deviation_nm": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "manual_range": {
+    "verified": false,
+    "evidence": null,
+    "gap_m": null,
+    "uv_bounds_m": [
+      [
+        -0.01,
+        0.01
+      ],
+      [
+        -0.01,
+        0.01
+      ]
+    ]
+  },
+  "depth": {
+    "verified": false,
+    "frame_id": null,
+    "camera_in_wrist": [
+      [
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "exclude_rectangles": [],
+    "depth_min_m": 0.07,
+    "depth_max_m": 0.5,
+    "minimum_gap_m": 0.002,
+    "maximum_gap_m": 0.1,
+    "ray_radius_m": 0.015,
+    "min_points": 30,
+    "surface_band_m": 0.003,
+    "min_inlier_ratio": 0.8,
+    "minimum_surface_span_m": 0.002,
+    "max_panel_tilt_rad": 0.05,
+    "max_surface_residual_m": 0.001
+  },
+  "sensors": {
+    "rgb_topics": {
+      "head": "/astribot_camera/head_rgbd/color_compress/compressed",
+      "right": "/astribot_camera/right_wrist_rgbd/color_compress/compressed"
+    },
+    "depth_topic": null,
+    "depth_info_topic": null,
+    "depth_scale_m": {
+      "16UC1": null,
+      "32FC1": 1.0
+    },
+    "max_source_age_ns": 300000000,
+    "max_age_ns": 200000000,
+    "max_skew_ns": 50000000
+  }
+}

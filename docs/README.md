@@ -18,6 +18,7 @@
 
 ## Astribot 真机数据整理
 
+- [S1B 右手平面控制工具、标定与真机核查](astribot/planar_control/README.md)
 - [官方 OpenPI π0.5：S1B 双相机、joint10 与离线接线](../training/openpi_s1b/README.md)
 - [Qwen3.5-4B 接线与 HPC 训练](plan/qwen3_5_4b_migration/README.md)
 - [S1B 真机部署实现计划 v1.0：5090 推理、有线桥接与阶段验收](plan/astribot_s1b_5090_deployment/README.md)
