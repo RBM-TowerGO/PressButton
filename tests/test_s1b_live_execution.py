@@ -464,3 +464,33 @@ def test_monitor_closed_before_sdk_release(live):
     obj.monitor.close=monitor_close;obj.backend.release=sdk_release
     obj.acquire();obj.close()
     assert events[:2]==['monitor','sdk']
+
+
+@pytest.mark.parametrize('mode,value,raw_value',[('open',0.,1.),('close',100.,0.)])
+def test_fixed_gripper_overrides_predictions_and_hold(mode,value,raw_value):
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text())
+    c.pop('torso_alignment',None);c['gripper_override']=mode
+    q=np.zeros(10);q[7]=value
+    backend=Backend(q);monitor=Monitor(q);events=[]
+    live=LiveExecution(c,events.append,operator_present=True,estop_ready=True,monitor=monitor,backend=backend)
+    live.baseline=monitor.snapshot()
+    try:
+        live.acquire()
+        raw=q.copy();raw[7]=raw_value
+        row=dict(action_raw=raw.tolist(),observation_id=1,step_index=0,deadline_ns=time.monotonic_ns()+1_000_000_000)
+        live.send(row);live.hold()
+        assert all(call[7]==value for call in backend.calls)
+        assert row['action_raw'][7]==raw_value
+        assert row['decoded_target'][7]==value
+        assert all(e['gripper_override']==mode for e in events if e['event']=='command')
+        # Initial/torso hold targets also pass through the override and rate guard.
+        opposite=q.copy();opposite[7]=100.-value
+        live.executor.send(opposite,q,time.monotonic_ns())
+        assert backend.calls[-1][7]==value
+    finally:live.close()
+
+
+@pytest.mark.parametrize('value',['invalid',True,1])
+def test_invalid_gripper_override_rejected(value):
+    c=json.loads((ROOT/'configs/s1b_execution_model_v1.json').read_text());c['gripper_override']=value
+    with pytest.raises(ExecutionError,match='gripper_override'):validate_execution_config(c)

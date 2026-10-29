@@ -46,7 +46,7 @@ def main(*, exit_sdk_process=False):
     p.add_argument('--torso-only',action='store_true')
     p.add_argument('--session-id',required=True)
     p.add_argument('--mode',choices=['shadow','execute'],default='shadow')
-    p.add_argument('--checkpoint',type=int,choices=[2000,4500,8000],required=True)
+    p.add_argument('--checkpoint',type=int,required=True)
     p.add_argument('--identity',default='configs/s1b_deployment_assets_v1.json')
     p.add_argument('--execution-config',default='configs/s1b_execution_model_v1.json')
     p.add_argument('--operator-present',action='store_true')
@@ -62,6 +62,8 @@ def main(*, exit_sdk_process=False):
     if a.mode=='execute' and (not a.operator_present or not a.estop_ready):
         p.error('execute requires --operator-present and --estop-ready')
     identity=json.loads(Path(a.identity).read_text())
+    from pressb.s1b_deployment.contract import validate_checkpoint
+    validate_checkpoint(identity, a.checkpoint)
     boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     out=Path(a.output);out.mkdir(parents=True,exist_ok=False)
     writer=AsyncLog({k:(out/(k+'.jsonl')).open('w',buffering=65536) for k in ('events','ticks')},512*1024**2)

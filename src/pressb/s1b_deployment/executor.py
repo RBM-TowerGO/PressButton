@@ -81,6 +81,8 @@ class CommandGuard:
         if decoded.shape != (10,) or not np.isfinite(decoded).all():
             raise ExecutionError('invalid_target')
         decoded[7] = 100. if decoded[7] >= .5 else 0.
+        if self.c.get('gripper_override'):
+            decoded[7] = 0. if self.c['gripper_override']=='open' else 100.
         lower = np.maximum(self.c['hardware_lower'], self.c['position_lower'])
         upper = np.minimum(self.c['hardware_upper'], self.c['position_upper'])
         if self.c.get('clip_all_targets',False):
@@ -251,12 +253,17 @@ class GuardedExecutor:
             try:
                 if not self.backend.rights():
                     raise ExecutionError('control_rights_lost')
-                x = self.guard.check(target,measured,state_ns,now,binary_gripper=binary_gripper)
                 decoded=np.asarray(target,dtype=np.float64).copy()
+                if decoded.shape != (10,) or not np.isfinite(decoded).all():
+                    raise ExecutionError('invalid_target')
                 if binary_gripper:decoded[7]=100. if decoded[7]>=.5 else 0.
+                if self.c.get('gripper_override'):
+                    decoded[7]=0. if self.c['gripper_override']=='open' else 100.
+                x = self.guard.check(decoded,measured,state_ns,now)
                 # Evidence admission failure stops before dispatch. The bridge
                 # writer reports asynchronous disk failures on subsequent emits.
                 self.emit(dict(event='command',monotonic_ns=now,raw_target=np.asarray(target).tolist(),
+                    gripper_override=self.c.get('gripper_override'),
                     decoded_target=decoded.tolist(),rate_limited=bool(np.any(x!=decoded)),
                     sdk_target=x.tolist(),measured=np.asarray(measured).tolist(),guard_profile=self.guard.profile,
                     tracking_error=(x-np.asarray(measured)).tolist(),

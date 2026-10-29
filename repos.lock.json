@@ -19,6 +19,13 @@
       "publication_commit": "4bd52f695bad813406a2327cdb2e448565c8abe9",
       "algorithm_reference_commit": "a34a1cba029702af82c0fed873be9e0e6bd274b3",
       "required_for": "Optional method reference; PressB runs its own adapted implementation"
+    },
+    "openpi": {
+      "url": "https://github.com/Physical-Intelligence/openpi.git",
+      "path": ".deps/openpi",
+      "runtime_commit": "215abfb217dbac7d5f1273282331b9b1866c0479",
+      "required_for": "Optional S1B pi05 PyTorch training and inference",
+      "pin_reason": "S1B adapter binds the official training, transform and checkpoint APIs."
     }
   }
 }

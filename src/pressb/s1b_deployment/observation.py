@@ -2,6 +2,7 @@
 from collections import Counter, deque
 from dataclasses import dataclass
 import threading
+import time
 import numpy as np
 
 class ObservationError(ValueError):
@@ -51,14 +52,32 @@ class Sample:
     header: dict
     value: np.ndarray | JpegFrame
 
+def sample_clock_pair(*, max_span_ns=500_000, attempts=3):
+    """Reject clock pairs interrupted by scheduling; never infer a clock jump from them."""
+    for _ in range(attempts):
+        before = time.monotonic_ns()
+        wall = time.time_ns()
+        after = time.monotonic_ns()
+        if 0 <= after-before <= max_span_ns:
+            # Use the earlier bound so sampling cannot make old observations fresher.
+            return wall, before
+    raise ObservationError('clock_sample_delayed')
+
+
 class TimeMapper:
     """Map epoch header stamps into local monotonic, retaining proxy limitations."""
     def __init__(self, wall_ns, monotonic_ns, max_jump_ns=5_000_000):
         self.offset = monotonic_ns - wall_ns
         self.max_jump_ns = max_jump_ns
         self.failed = False
+        self.jump_details = None
     def map(self, source_ns, wall_ns, receipt_ns):
         if self.failed or abs((receipt_ns-wall_ns)-self.offset)>self.max_jump_ns:
+            if not self.failed:
+                self.jump_details = dict(offset_ns=self.offset,
+                    sampled_offset_ns=receipt_ns-wall_ns,
+                    delta_ns=(receipt_ns-wall_ns)-self.offset,
+                    max_jump_ns=self.max_jump_ns)
             self.failed = True
             raise ObservationError('clock_jump')
         if not -5_000_000 <= wall_ns-source_ns <= 2_000_000_000:
