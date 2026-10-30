@@ -56,17 +56,41 @@ def test_sdk_constructor_failure_restores_input(monkeypatch):
 def test_gripper_commands_preserve_arm_and_only_target_right_gripper():
     from s1b_keyboard_direct import GRIPPER_KEYS, send_targets
     class SDK:
-        def __init__(self):self.cartesian=[];self.joints=[]
+        def __init__(self):self.cartesian=[];self.mixed=[]
         def set_cartesian_pose(self,*args,**kwargs):self.cartesian.append((args,kwargs))
-        def set_joints_position(self,*args,**kwargs):self.joints.append((args,kwargs))
+        def set_different_type_command(self,*args,**kwargs):self.mixed.append((args,kwargs))
     sdk=SDK()
     names=['astribot_arm_right','astribot_torso']
     arm=[.4,-.2,1.,0,0,0,1];torso=[0,0,.5,0,0,0,1]
     send_targets(sdk,names,arm,torso,None)
-    assert not sdk.joints
+    assert not sdk.mixed
     for key,expected in [('c',100.),('o',0.)]:
         send_targets(sdk,names,arm,torso,GRIPPER_KEYS[key])
-        args,options=sdk.joints[-1]
-        assert args==(['astribot_gripper_right'],[[expected]])
-        assert options==dict(control_way='filter',use_wbc=False,add_default_torso=False)
-    assert all(call==sdk.cartesian[0] for call in sdk.cartesian)
+        args,options=sdk.mixed[-1]
+        assert args==(names+['astribot_gripper_right'],['cartesian','cartesian','joints'],[arm,torso,[expected]])
+        assert options==dict(control_way='filter',use_wbc=False)
+    assert len(sdk.cartesian)==1
+    assert len(sdk.mixed)==2  # exactly one native set per tick, including gripper changes
+
+
+def test_native_frequency_warning_is_folded_but_other_errors_survive():
+    import os
+    from pathlib import Path
+    import subprocess
+    import sys
+    code = """
+import os
+from s1b_keyboard_direct import SDKOutput
+output=SDKOutput()
+for _ in range(100):
+    os.write(2,b'WARNING: The calling frequency of the set function does not match.\\n')
+os.write(1,b'RIGHT GRIPPER OPEN\\n')
+os.write(2,b'ERROR: lost control rights\\n')
+output.close()
+"""
+    result=subprocess.run([sys.executable,'-c',code],env=dict(os.environ,PYTHONPATH=str(Path('scripts').resolve())),capture_output=True,text=True,timeout=5)
+    assert result.returncode==0,result.stderr
+    assert result.stdout.count('calling frequency of the set function')==1
+    assert 'RIGHT GRIPPER OPEN' in result.stdout
+    assert 'ERROR: lost control rights' in result.stdout
+    assert '99' in result.stdout

@@ -60,7 +60,6 @@ def run_keyboard(controller, step_mm=2., check=lambda: None):
                 continue
             key = actionable[-1]
             if state['phase'] != 'READY' or (worker and worker.is_alive()):
-                print('\r\n正在执行，忽略移动键；空格可停止。', flush=True)
                 continue
             # Observation/FK can take time; keep the terminal stop key responsive.
             worker = threading.Thread(target=action, args=(key,), daemon=True)
