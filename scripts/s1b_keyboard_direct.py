@@ -26,6 +26,47 @@ import uuid
 _SDK_KEEPALIVE = []
 
 
+class SDKOutput:
+    """Fold only the known repeated native warning, including C++ fd writes."""
+    marker = b'calling frequency of the set function'
+
+    def __init__(self):
+        self.count = 0
+        sys.stdout.flush()
+        sys.stderr.flush()
+        self.out = os.dup(1)
+        self.err = os.dup(2)
+        reader, writer = os.pipe()
+        os.dup2(writer, 1)
+        os.dup2(writer, 2)
+        os.close(writer)
+        self.reader = reader
+        self.thread = threading.Thread(target=self.drain, daemon=True)
+        self.thread.start()
+
+    def drain(self):
+        with os.fdopen(self.reader, 'rb') as source:
+            for line in source:
+                if self.marker in line:
+                    self.count += 1
+                    if self.count > 1:
+                        continue
+                    line += '重复的 SDK 频率警告将折叠，其他日志正常显示。\n'.encode()
+                os.write(self.out, line)
+
+    def close(self):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.dup2(self.out, 1)
+        os.dup2(self.err, 2)
+        self.thread.join(timeout=2)
+        if self.count > 1:
+            os.write(self.out, f'本次折叠 {self.count-1} 条重复频率警告。\n'.encode())
+        if not self.thread.is_alive():
+            os.close(self.out)
+            os.close(self.err)
+
+
 def connect_robot(factory, frequency):
     original_input = builtins.input
 
@@ -60,11 +101,14 @@ GRIPPER_KEYS = {'c': 100., 'o': 0.}
 
 
 def send_targets(robot, names, current, torso, gripper_target):
-    robot.set_cartesian_pose(names, [list(current), torso], control_way='filter',
-        use_wbc=False, add_default_torso=False, remote_wbc_option=False)
-    if gripper_target is not None:
-        robot.set_joints_position(['astribot_gripper_right'], [[gripper_target]],
-            control_way='filter', use_wbc=False, add_default_torso=False)
+    if gripper_target is None:
+        robot.set_cartesian_pose(names, [list(current), torso], control_way='filter',
+            use_wbc=False, add_default_torso=False, remote_wbc_option=False)
+    else:
+        # SDK example 110: mixed Cartesian/joint targets in ONE periodic set.
+        robot.set_different_type_command(list(names)+['astribot_gripper_right'],
+            ['cartesian', 'cartesian', 'joints'], [list(current), torso, [gripper_target]],
+            control_way='filter', use_wbc=False)
 
 
 def launch_remote(args):
@@ -74,13 +118,14 @@ def launch_remote(args):
     sdk_env = sdk_environment(dict(sdk_root=args.sdk_root))
     command = ('trap '+shlex.quote('rm -f '+shlex.quote(remote))+' EXIT; '+ENV+'; '+sdk_env+'; '+
                'python3 '+shlex.quote(remote)+' --step-mm '+shlex.quote(str(args.step_mm))+
-               ' --speed-mm-s '+shlex.quote(str(args.speed_mm_s)))
+               ' --speed-mm-s '+shlex.quote(str(args.speed_mm_s))+
+               ' --control-hz '+shlex.quote(str(args.control_hz)))
     return subprocess.call(['ssh','-t',args.host,'bash -lc '+shlex.quote(command)])
 
 
 def run_robot(args):
     from astribot_sdk.core.astribot_api.astribot_client import Astribot
-    frequency = 250.
+    frequency = args.control_hz
     robot = connect_robot(Astribot, frequency)
     _SDK_KEEPALIVE.append(robot)
     stop = threading.Event()
@@ -128,7 +173,7 @@ def run_robot(args):
                         send_targets(robot, names, current, torso, gripper_target)
                     deadline += 1/frequency
                     # Skip missed clock ticks rather than burst-send old targets.
-                    if deadline < time.monotonic():deadline = time.monotonic()
+                    if deadline < time.monotonic():deadline = time.monotonic()+1/frequency
                     stop.wait(max(0., deadline-time.monotonic()))
             except BaseException as exc:
                 errors.append(str(exc))
@@ -160,7 +205,6 @@ def run_robot(args):
                     print('\r\n右夹爪：'+('闭合' if key == 'c' else '打开'),flush=True)
                     continue
                 if busy:
-                    print('\r\n正在移动；空格停止。',flush=True)
                     continue
                 # Lateral jogging belongs to the initial plane, never the extended plane.
                 if key in 'wasd' and abs(current[0]-initial_x) > 1e-6:
@@ -200,13 +244,15 @@ def main():
     parser.add_argument('--sdk-root', default='/home/astribot/astribot_sdk_aarch64')
     parser.add_argument('--step-mm', type=float, default=2.)
     parser.add_argument('--speed-mm-s', type=float, default=20.)
+    parser.add_argument('--control-hz', type=float, default=250., help='SDK and command loop frequency; independent of movement speed')
     args = parser.parse_args()
     if not sys.stdin.isatty():parser.error('需要交互终端')
-    if any(not math.isfinite(v) or v<=0 for v in (args.step_mm,args.speed_mm_s)):
-        parser.error('step and speed must be positive finite values')
+    if any(not math.isfinite(v) or v<=0 for v in (args.step_mm,args.speed_mm_s,args.control_hz)):
+        parser.error('step, speed and frequency must be positive finite values')
     if args.host:
         raise SystemExit(launch_remote(args))
     code = 0
+    output = SDKOutput()
     try:
         run_robot(args)
     except KeyboardInterrupt:
@@ -214,6 +260,8 @@ def main():
     except Exception as exc:
         print('键盘控制退出：'+str(exc), file=sys.stderr, flush=True)
         code = 1
+    finally:
+        output.close()
     # run_robot has stopped/released control and shut down ROS. Avoid the
     # vendor's second destruction of already-destroyed nodes/native threads.
     sys.stdout.flush()
