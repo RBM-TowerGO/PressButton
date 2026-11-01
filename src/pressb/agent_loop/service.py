@@ -4,7 +4,6 @@ import copy
 import fcntl
 import io
 import json
-import math
 import os
 import shutil
 import threading
@@ -14,7 +13,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from .common import atomic_json, depth_estimate, json_bytes, number, request, sha256
+from .common import atomic_json, json_bytes, request, sha256, SESSION_SCHEMA
+from s1b_keyboard_control import validate_command
+
 
 
 class Camera:
@@ -41,42 +42,8 @@ class Camera:
         raise ValueError('fresh_capture_unavailable:'+reason)
 
 
-class ApexRecorder:
-    """Bounded independent sampler; never holds up the forward/retract transition."""
-    def __init__(self, camera):
-        self.camera=camera;self.done=threading.Event();self.lock=threading.Lock()
-        self.apex_ns=None;self.best=None;self.previous=None
-        self.thread=threading.Thread(target=self.run,daemon=True);self.thread.start()
-
-    def mark(self):
-        with self.lock:
-            self.apex_ns=time.monotonic_ns()
-            self.best=self.previous
-
-    def run(self):
-        while not self.done.is_set():
-            try:
-                bundle=self.camera.capture_now()
-                with self.lock:
-                    self.previous=bundle
-                    stamp=bundle['frames']['right']['receipt_ns']
-                    if self.apex_ns is not None:
-                        old=self.best['frames']['right']['receipt_ns'] if self.best else 0
-                        if abs(stamp-self.apex_ns)<abs(old-self.apex_ns):self.best=bundle
-            except (OSError,ValueError):pass
-            self.done.wait(.1)
-
-    def close(self):
-        self.done.set();self.thread.join(3)
-        with self.lock:
-            if self.best and self.apex_ns is not None:
-                delta=abs(self.best['frames']['right']['receipt_ns']-self.apex_ns)
-                if delta<=300_000_000:return self.best,delta/1e6
-        return None,None
-
-
 class Service:
-    def __init__(self, backend, camera, root, max_move_mm=20., max_forward_mm=100.):
+    def __init__(self, backend, camera, root):
         self.backend, self.camera = backend, camera
         self.cancel = threading.Event()
         # Motion cancellation is also used for faults. Only an explicit stop
@@ -96,13 +63,16 @@ class Service:
         self.root = Path(root)/self.session_id
         self.root.mkdir(parents=True, exist_ok=False)
         self.initial_pose = backend.snapshot()['pose_m_xyzw']
-        self.session = dict(schema='pressb-agent-v2', session_id=self.session_id,
-            speed_mm_s=20., max_move_mm=number(max_move_mm), max_forward_mm=number(max_forward_mm),
-            reference_point='sdk_end_effector', frame_id='chassis', gripper_length_mm=150.,
-            initial_pose_m_xyzw=self.initial_pose, completion_basis='command_interpolation',
-            confirmation_depth_tolerance_mm=2.,
-            coordinates=dict(right='chassis -Y', up='chassis +Z', forward='chassis +X'))
-        if min(self.session['max_move_mm'], self.session['max_forward_mm'])<=0:raise ValueError('invalid_limits')
+        controller = getattr(backend, 'controller', None)
+        self.session = dict(schema=SESSION_SCHEMA, session_id=self.session_id,
+            speed_mm_s=getattr(controller, 'speed_mm_s', 20.),
+            head_speed_deg_s=getattr(controller, 'head_speed_deg_s', 20.),
+            control_hz=getattr(controller, 'frequency', 250.),
+            reference_point='sdk_end_effector', frame_id='chassis',
+            initial_pose_m_xyzw=self.initial_pose, completion_basis='command_interpolation_or_first_gripper_send',
+            commands=['move', 'head', 'gripper'], execution_mode='shared_keyboard_executor',
+            coordinates=dict(x='chassis +X forward', y='chassis +Y left', z='chassis +Z up'),
+            motion_units='mm', head_units='degrees_absolute')
         atomic_json(self.root/'session.json', self.session)
         # Previous processes are never resumed. Mark incomplete journals explicitly.
         for p in Path(root).glob('*/tasks/*.json'):
@@ -143,11 +113,16 @@ class Service:
         with self.lock:return copy.deepcopy(self.tasks[tid])
 
     def submit(self, data, observe=False):
+        if not isinstance(data, dict):raise ValueError('invalid_arguments')
         common = {'session_id','command_id'}
         kind = 'observe' if observe else data.get('type')
-        expected = common if observe else common|{'type','observation_id'}|(
-            {'right_mm','up_mm'} if kind=='move' else {'forward_mm'})
-        if set(data)!=expected or kind not in ('move','press','observe'):raise ValueError('invalid_arguments')
+        if observe:
+            if set(data) != common:
+                raise ValueError('invalid_arguments')
+        else:
+            if not (common | {'type', 'observation_id'}) <= set(data):
+                raise ValueError('invalid_arguments')
+            validate_command({k: v for k, v in data.items() if k not in common | {'observation_id'}})
         if data['session_id']!=self.session_id:raise ValueError('session_mismatch')
         cid = data['command_id']
         if not isinstance(cid,str) or not 1<=len(cid)<=128:raise ValueError('invalid_command_id')
@@ -161,25 +136,11 @@ class Service:
             if self.phase not in (('READY','NEEDS_OBSERVATION') if observe else ('READY',)):
                 raise ValueError('controller_not_ready')
             if not observe:
-                if data['observation_id']!=self.latest:raise ValueError('old_observation')
-                obs=self.observations[self.latest]
-                if self.camera.selection()['revision']!=obs['selection']['revision']:
-                    raise ValueError('measurement_point_changed')
-                if kind=='move':
-                    distance=math.hypot(number(data['right_mm']),number(data['up_mm']))
-                    if not 0<distance<=self.session['max_move_mm']:raise ValueError('move_out_of_range')
-                else:
-                    forward=number(data['forward_mm'])
-                    if not 0<forward<=self.session['max_forward_mm']:raise ValueError('forward_out_of_range')
-                    expected_forward=depth_estimate(obs)['forward_mm']
-                    if expected_forward is None or abs(forward-expected_forward)>self.session['confirmation_depth_tolerance_mm']:
-                        raise ValueError('forward_depth_formula_mismatch')
-                    if time.monotonic_ns()-obs['captured_monotonic_ns']>2_000_000_000:
-                        raise ValueError('press_observation_expired')
+                if self.latest is None or data['observation_id']!=self.latest:raise ValueError('old_observation')
             tid=uuid.uuid4().hex
             task=dict(task_id=tid,session_id=self.session_id,command_id=cid,request=data,
                 status='running',phase='ACCEPTED',motion=dict(action_completed=False,
-                returned_to_start=None,contact_evidence=None,button_trigger_evidence=None,speed_mm_s=20.),
+                returned_to_start=None,contact_evidence=None,button_trigger_evidence=None,speed_mm_s=self.session['speed_mm_s']),
                 capture=dict(status='pending'),storage=dict(status='pending'),error=None)
             atomic_json(self.root/'tasks'/f'{tid}.json',task)  # Durable admission before motion.
             self.tasks[tid]=task;self.commands[cid]=(signature,tid)
@@ -195,17 +156,11 @@ class Service:
 
     def _run(self, tid, kind, data):
         task=self.tasks[tid]
-        recorder=ApexRecorder(self.camera) if kind=='press' and hasattr(self.camera,'capture_now') else None
-        apex_bundle=None;apex_skew=None
         try:
             if kind!='observe':
-                def phase(value):
-                    if value=='RETRACTING' and recorder:recorder.mark()
-                    self._phase(task,value)
-                task['motion'].update(self.backend.move(kind,data,self.cancel,
-                    phase))
-                task['motion']['action_completed']=True
-                if recorder:apex_bundle,apex_skew=recorder.close()
+                task['motion'].update(self.backend.move(kind, data, self.cancel,
+                    lambda value: self._phase(task, value)))
+                task['motion']['action_completed'] = True
             self._phase(task,'CAPTURING')
             after=time.monotonic_ns()
             bundle=self.camera.capture(after,self.cancel)
@@ -213,7 +168,7 @@ class Service:
                    else self.backend.snapshot())
             if self.cancel.is_set():raise RuntimeError('stopped')
             self._phase(task,'SAVING')
-            obs=self._save_observation(bundle,state,tid,apex_bundle,apex_skew)
+            obs=self._save_observation(bundle,state,tid)
             task['capture']=dict(status='complete',observation_id=obs['observation_id'])
             task['storage']=dict(status='committed')
             task['observation_url']='/v2/observations/'+obs['observation_id']
@@ -239,10 +194,8 @@ class Service:
                 self.fault=str(exc)
             try:atomic_json(self.root/'tasks'/f'{tid}.json',task)
             except OSError:self.cancel.set();self.backend.stop()
-        finally:
-            if recorder:recorder.close()
 
-    def _save_observation(self, bundle, state, tid, apex=None, apex_skew=None):
+    def _save_observation(self, bundle, state, tid):
         import numpy as np
         oid=uuid.uuid4().hex
         parent=self.root/'observations';parent.mkdir(exist_ok=True)
@@ -256,15 +209,6 @@ class Service:
             files['right_depth_raw.npy']=buf.getvalue()
             files['depth_metadata.json']=json_bytes(meta)
             files['state.json']=json_bytes(state)
-            if apex:
-                for key in ('head','right'):
-                    files['apex_'+key+'.jpg']=base64.b64decode(apex['frames'][key]['data_base64'],validate=True)
-                raw=base64.b64decode(apex['frames']['depth']['data_base64'],validate=True)
-                apbuf=io.BytesIO();np.save(apbuf,np.frombuffer(raw,dtype='<u2').reshape(shape),allow_pickle=False)
-                files['apex_depth_raw.npy']=apbuf.getvalue()
-                files['apex_metadata.json']=json_bytes(dict(
-                    **{k:v for k,v in apex.items() if k!='frames'},
-                    frames={k:{a:v for a,v in f.items() if a!='data_base64'} for k,f in apex['frames'].items()}))
             for name,content in files.items():
                 path=tmp/name
                 with path.open('wb') as f:f.write(content);f.flush();os.fsync(f.fileno())
@@ -275,8 +219,6 @@ class Service:
                 state=state,depth=bundle['depth'],selection=bundle['selection'],
                 frames={k:{a:v for a,v in row.items() if a!='data_base64'} for k,row in bundle['frames'].items()},
                 artifacts=artifacts,tcp_pose=None,tcp_surface_gap_mm=None)
-            obs['apex_capture']=dict(available=apex is not None,skew_ms=apex_skew)
-            obs['forward_estimate']=depth_estimate(obs)
             atomic_json(tmp/'manifest.json',obs)
             os.replace(tmp,parent/oid)
             with self.lock:

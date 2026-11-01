@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shlex
 import signal
+import select
 import subprocess
 import sys
 import tarfile
@@ -25,15 +26,15 @@ def launch(args):
         archive=Path(tmp)/'agent.tar.gz'
         with tarfile.open(archive,'w:gz') as tar:
             tar.add(root/'src/pressb',arcname='src/pressb',filter=lambda info:None if '__pycache__' in info.name else info)
-            for name in ('s1b_agent_service.py','s1b_keyboard_direct.py','s1b_camera_view.py','s1b_depth_metadata.cpp'):
+            for name in ('s1b_agent_service.py','s1b_keyboard_direct.py','s1b_keyboard_control.py','s1b_camera_view.py','s1b_depth_metadata.cpp'):
                 tar.add(root/'scripts'/name,arcname='scripts/'+name)
         subprocess.run(['ssh',args.host,'mkdir -p '+shlex.quote(remote)],check=True)
         try:
             subprocess.run(['scp','-q',str(archive),args.host+':'+remote+'/agent.tar.gz'],check=True)
             subprocess.run(['ssh',args.host,'tar -xzf '+shlex.quote(remote+'/agent.tar.gz')+' -C '+shlex.quote(remote)],check=True)
             argv=['python3',remote+'/scripts/s1b_agent_service.py','--port',str(args.port),'--view-port',str(args.view_port),
-                '--output',args.output,'--control-hz',str(args.control_hz),'--max-move-mm',str(args.max_move_mm),
-                '--max-forward-mm',str(args.max_forward_mm)]
+                '--output',args.output,'--control-hz',str(args.control_hz),'--speed-mm-s',str(args.speed_mm_s),
+                '--head-speed-deg-s',str(args.head_speed_deg_s)]
             command=ENV+'; '+CAMERA_ENV+'; '+sdk_environment(dict(sdk_root=args.sdk_root))+'; '+shlex.join(argv)
             result=run_ssh(['ssh','-t','-o','ExitOnForwardFailure=yes',
                 '-L',f'127.0.0.1:{args.port}:127.0.0.1:{args.port}',
@@ -67,7 +68,7 @@ def run(args):
         from pressb.s1b_deployment.robot_state import RobotState
         robot=connect_robot(Astribot,args.control_hz);_SDK_KEEPALIVE.append(robot)
         if not robot.get_control_rights_status():raise RuntimeError('未取得 SDK 控制权')
-        print('运动模式：与键盘相同的连续 Cartesian 发送；等待和到位后不切换关节控制。',flush=True)
+        print('运动模式：共用键盘执行器，XYZ / h / c / o；q 回车或 Ctrl-C 停止。',flush=True)
         robot.set_head_follow_effector(False)
         monitor=RobotState(lambda row:None,shared_context=True,control_only=True)
         deadline=time.monotonic()+5
@@ -76,11 +77,10 @@ def run(args):
             except Exception:
                 if time.monotonic()>deadline:raise
                 time.sleep(.05)
-        # Finish the gripper-only command before starting the arm stream.
-        # No competing joint set calls may run during Cartesian control.
-        robot.close_effector(['astribot_gripper_right'],duration=1.0)
-        backend=SDKBackend(robot,monitor,args.control_hz)
-        service=Service(backend,Camera(f'http://127.0.0.1:{args.view_port}'),out,args.max_move_mm,args.max_forward_mm)
+        if done:
+            raise InterruptedError('startup_stopped')
+        backend=SDKBackend(robot,monitor,args.control_hz,args.speed_mm_s,args.head_speed_deg_s)
+        service=Service(backend,Camera(f'http://127.0.0.1:{args.view_port}'),out)
         server=make_server(service,args.port);server.timeout=.1
         print(f'Agent API 已就绪：http://127.0.0.1:{args.port}/v2/session\n默认 20 mm/s；在另一终端启动 s1b_agent.py。',flush=True)
         fault_saved=False
@@ -95,6 +95,10 @@ def run(args):
                 atomic_json(path,diagnostic);fault_saved=True
                 print('运动已停止：'+str(diagnostic['error'])+'\n完整故障记录：'+str(path)+
                       '\nAPI 保留故障查询；客户端停止或 Ctrl-C 后退出。',file=sys.stderr,flush=True)
+            if sys.stdin.isatty() and select.select([sys.stdin], [], [], 0)[0]:
+                line=sys.stdin.readline()
+                if not line or line.strip().lower()=='q':
+                    stop();break
             server.handle_request()
     except Exception as exc:
         from pressb.agent_loop.common import atomic_json
@@ -142,11 +146,12 @@ def main():
     p.add_argument('--port',type=int,default=6210);p.add_argument('--view-port',type=int,default=8765)
     p.add_argument('--output',default='~/.local/share/pressb/agent_sessions')
     p.add_argument('--control-hz',type=float,default=250)
-    p.add_argument('--max-move-mm',type=float,default=20);p.add_argument('--max-forward-mm',type=float,default=100)
+    p.add_argument('--speed-mm-s',type=float,default=20.)
+    p.add_argument('--head-speed-deg-s',type=float,default=20.)
     args=p.parse_args()
     import math
-    if any(not math.isfinite(v) or v<=0 for v in (args.control_hz,args.max_move_mm,args.max_forward_mm)):
-        p.error('频率和行程必须为正有限数')
+    if any(not math.isfinite(v) or v<=0 for v in (args.control_hz,args.speed_mm_s,args.head_speed_deg_s)):
+        p.error('频率和速度必须为正有限数')
     if args.port==args.view_port or any(not 1<=v<=65535 for v in (args.port,args.view_port)):p.error('端口无效或重复')
     if args.host:return launch(args)
     from s1b_keyboard_direct import SDKOutput

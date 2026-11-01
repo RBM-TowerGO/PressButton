@@ -108,6 +108,7 @@ def test_web_option_uploads_sidecar_and_forwards_loopback(monkeypatch):
     args=SimpleNamespace(host='S1B',sdk_root='/sdk',step_mm=5,speed_mm_s=50,control_hz=250,
                          view_cameras=True,view_port=8765)
     assert module.launch_remote(args)==0
+    assert any(str(x).endswith('s1b_keyboard_control.py') for x in calls[1])
     assert any(str(x).endswith('s1b_camera_view.py') for x in calls[1])
     assert any(str(x).endswith('s1b_depth_metadata.cpp') for x in calls[1])
     assert '127.0.0.1:8765:127.0.0.1:8765' in calls[-1]
@@ -150,20 +151,33 @@ def test_forward_requires_valid_distance(distance):
         target_for_key('f',[.4,-.2,1.,0,0,0,1],.4,.002,distance)
 
 
-def test_keyboard_input_loop_wasd_and_forward_prompt(monkeypatch,capsys):
-    """Exercise run_robot's actual input/servo loops, with hardware calls stubbed."""
+@pytest.mark.parametrize('scenario',['normal','stop_input','stop_motion','discard_input','q_motion','sdk_error','head'])
+@pytest.mark.parametrize('recording',[False,True])
+def test_xyz_input_and_servo_loop(monkeypatch,capsys,scenario,recording,tmp_path):
     import sys
     import time
     from types import SimpleNamespace
     import s1b_keyboard_direct as module
     pose=[.4,-.2,1.,0.,0.,0.,1.]
+    stopped=[];sent=[];grippers=[];heads=[]
     robot=SimpleNamespace(
         get_control_rights_status=lambda:True,
         set_head_follow_effector=lambda value:None,
         get_current_cartesian_pose=lambda *a,**kw:[list(pose),list(pose)],
-        stop_robot=lambda:None)
-    sent=[]
-    robot.set_cartesian_pose=lambda names,poses,**kw:sent.append(list(poses[0]))
+        stop_robot=lambda:stopped.append(True))
+    def cartesian(names,poses,**kw):
+        if scenario=='sdk_error' and poses[0][2]>1.:raise RuntimeError('native_send_failed')
+        sent.append(list(poses[0]))
+    robot.set_cartesian_pose=cartesian
+    robot.get_current_joints_position=lambda names:[[0.,0.]]
+    def head_set(names,values,**kw):
+        assert names==['astribot_head']
+        assert kw==dict(control_way='filter',use_wbc=False,add_default_torso=False)
+        heads.append(list(values[0]))
+    robot.set_joints_position=head_set
+    def mixed(names,types,poses,**kw):
+        sent.append(list(poses[0]));grippers.append(poses[2][0])
+    robot.set_different_type_command=mixed
     robot.astribot_interface=SimpleNamespace(
         shutdown_control_rights_srv=lambda:None,
         executor=SimpleNamespace(shutdown=lambda **kw:None),
@@ -173,47 +187,149 @@ def test_keyboard_input_loop_wasd_and_forward_prompt(monkeypatch,capsys):
     monkeypatch.setitem(sys.modules,'rclpy',SimpleNamespace(ok=lambda:False))
     monkeypatch.setattr(module,'connect_robot',lambda *a:robot)
     monkeypatch.setattr(module.sys,'stdin',SimpleNamespace(fileno=lambda:12345))
-    monkeypatch.setattr(module.signal,'signal',lambda *a:None)
+    handlers={}
+    monkeypatch.setattr(module.signal,'signal',lambda sig,fn:handlers.update({sig:fn}))
     monkeypatch.setattr(module.termios,'tcgetattr',lambda *a:[])
     monkeypatch.setattr(module.termios,'tcsetattr',lambda *a:None)
-    monkeypatch.setattr(module.termios,'tcflush',lambda *a:None)
-    monkeypatch.setattr(module.tty,'setcbreak',lambda *a:None)
-    monkeypatch.setattr(module.select,'select',lambda *a:([12345],[],[]))
-    keys=iter([b'w',b's',b'a',b'd',b'f',b'\n',b'w',b'f',b'35\n',b'r',b'd',b'q'])
-    def read(fd,n):
-        time.sleep(.28)
-        return next(keys)
-    monkeypatch.setattr(module.os,'read',read)
-    module.run_robot(SimpleNamespace(control_hz=100,step_mm=2,speed_mm_s=1000))
+    flushes=[]
+    monkeypatch.setattr(module.termios,'tcflush',lambda *a:flushes.append(True))
+    discarded=[]
+    def select(*args):
+        time.sleep(.01)
+        if scenario=='stop_motion':handlers[module.signal.SIGINT]()
+        if scenario in ('discard_input','q_motion') and not discarded:return [12345],[],[]
+        return [],[],[]
+    def during_motion(*args):
+        discarded.append(True)
+        return b'q\n' if scenario=='q_motion' else b'999\n'
+    monkeypatch.setattr(module.os,'read',during_motion)
+    monkeypatch.setattr(module.select,'select',select)
+    entries=iter((['h','15','-10'] if scenario=='head' else [])+['20','-5','10','c','-20','5','-10','o','0','0','0','q'])
+    count=[0]
+    def read(fd,stop,on_input=None):
+        time.sleep(.03)
+        if scenario=='stop_input':
+            handlers[module.signal.SIGINT]()
+            return 'q'
+        index=max(0,count[0]-3) if scenario=='head' else count[0]
+        if index<3:
+            assert all(p==pose for p in sent)  # Even X+Y do not start motion.
+        if index==3:assert sent[-1][:3]==pytest.approx([.42,-.205,1.01])
+        if index==7:assert sent[-1]==pytest.approx(pose)
+        count[0]+=1
+        value=next(entries)
+        if on_input:on_input(value+'\n')
+        return value
+    monkeypatch.setattr(module,'read_line',read)
+    rec=None
+    if recording:
+        from s1b_keyboard_record import Recorder
+        from test_s1b_keyboard_record import make_bundle
+        rec=Recorder(tmp_path/'record','http://unused',{},capture_timeout=.03)
+        def fetch(timeout):
+            if rec.active:
+                op=rec.active
+                expected=op['start_command_pose_m_xyzw'] if op['status']=='prepared' else op['target_command_pose_m_xyzw']
+                if op['status'] in ('prepared','completed'):assert sent[-1]==pytest.approx(expected)
+            return make_bundle()
+        monkeypatch.setattr(rec,'_fetch',fetch)
+    args=SimpleNamespace(control_hz=100,step_mm=999,speed_mm_s=1000,recorder=rec)
+    if scenario=='sdk_error':
+        with pytest.raises(RuntimeError,match='native_send_failed'):module.run_robot(args)
+    else:module.run_robot(args)
+    if rec:rec.close()
     output=capsys.readouterr().out
-    targets=[line.split('目标 XYZ（mm）：')[1] for line in output.splitlines() if '目标 XYZ（mm）：' in line]
-    assert targets==[
-        '[400.0, -200.0, 1002.0]', '[400.0, -200.0, 1000.0]',
-        '[400.0, -198.0, 1000.0]', '[400.0, -200.0, 1000.0]',
-        '[400.0, -200.0, 1002.0]',  # W works after cancelling F with an empty line.
-        '[435.0, -200.0, 1002.0]', '[400.0, -200.0, 1002.0]',
-        '[400.0, -202.0, 1002.0]']
+    if scenario in ('stop_input','stop_motion','q_motion','sdk_error'):
+        assert stopped
+        assert '本轮插值指令发送完成' not in output
+        assert count[0]==(0 if scenario=='stop_input' else 3)
+        if rec and rec.operations:assert rec.operations[0]['status']=='interrupted'
+        return
+    if scenario=='discard_input':assert discarded
+    assert output.count('本轮位移 XYZ（mm）')==3
+    assert output.count('本轮插值指令发送完成')==(4 if scenario=='head' else 3)
+    if scenario=='head':
+        import math
+        assert heads[-1]==pytest.approx([math.radians(15),math.radians(-10)])
+        assert all(-math.radians(10)-1e-8<=p[1]<=0 for p in heads)
+    assert set(grippers)=={0.,100.}
+    assert stopped and len(flushes)==(6 if recording else 4)+(1 if scenario=='head' else 0)
+    if rec:
+        assert len(rec.operations)==(6 if scenario=='head' else 5)
+        if scenario=='head':
+            assert rec.operations[0]['kind']=='head'
+            assert rec.operations[0]['command']['head_deg']==[15.,-10.]
+            assert rec.operations[0]['completion_basis']=='command_interpolation'
+        assert all(op['status']=='completed' for op in rec.operations)
+        assert all(op['before']['status']==op['after']['status']=='complete' for op in rec.operations)
+    # Every command stays on one combined XYZ line, preserving orientation.
+    for p in sent:
+        fraction=(p[0]-.4)/.02
+        assert p[1]==pytest.approx(-.2-.005*fraction)
+        assert p[2]==pytest.approx(1.+.01*fraction)
+        assert p[3:]==pose[3:]
 
-    import ast
-    for target in targets:
-        xyz=[v/1000 for v in ast.literal_eval(target)]
-        assert any(command[:3]==pytest.approx(xyz) for command in sent)
 
-
-@pytest.mark.parametrize('typed,expected',[(b'35\n',35.),(b'2.5\n',2.5),(b'\n',None)])
-def test_forward_normal_terminal_input(typed,expected):
-    import os
-    import termios
+@pytest.mark.parametrize('lines,expected',[
+    (['20','-5','10'],[20.,-5.,10.]),
+    (['1000000','-.5','0'],[1000000.,-.5,0.]),
+    (['bad','nan','inf','1','oops','2','-inf','3'],[1.,2.,3.]),
+    ([''],None),(['1',''],None),(['1','2',''],None),
+    (['q'],'q'),(['1','q'],'q'),(['1','2','q'],'q'),
+    (['c'],'c'),(['o'],'o'),
+])
+def test_xyz_prompt_validation_and_cancellation(monkeypatch,lines,expected):
     import threading
-    import tty
-    from s1b_keyboard_direct import read_forward_distance
+    import s1b_keyboard_direct as module
+    values=iter(lines)
+    monkeypatch.setattr(module,'read_line',lambda *a:next(values))
+    assert module.read_xyz(0,threading.Event())==expected
+
+
+def test_xyz_unbounded_mm_conversion():
+    from s1b_keyboard_direct import target_for_xyz
+    pose=[.4,-.2,1.,0,0,0,1]
+    assert target_for_xyz(pose,[1000000,-500000,0])==pytest.approx([1000.4,-500.2,1.,0,0,0,1])
+    assert pose==[.4,-.2,1.,0,0,0,1]
+
+
+@pytest.mark.parametrize('typed,expected',[(b'35\n-5\n2.5\n',[35.,-5.,2.5]),
+                                         (b'3x\x7f5\n0\n0\n',[35.,0.,0.]),
+                                         (b'20\n\n',None)])
+def test_xyz_normal_terminal_input(typed,expected):
+    import os
+    import threading
+    from s1b_keyboard_direct import read_xyz
     master,slave=os.openpty()
-    original=termios.tcgetattr(slave)
-    tty.setcbreak(slave)
     writer=threading.Timer(.05,lambda:os.write(master,typed))
     try:
         writer.start()
-        assert read_forward_distance(slave,original,threading.Event())==expected
-        assert not termios.tcgetattr(slave)[3]&termios.ICANON
+        assert read_xyz(slave,threading.Event())==expected
     finally:
         writer.join();os.close(master);os.close(slave)
+
+
+def test_line_wait_responds_to_stop():
+    import os
+    import threading
+    from s1b_keyboard_direct import read_line
+    master,slave=os.openpty();stop=threading.Event()
+    timer=threading.Timer(.05,stop.set)
+    try:
+        timer.start()
+        assert read_line(slave,stop)=='q'
+    finally:
+        timer.join();os.close(master);os.close(slave)
+
+
+@pytest.mark.parametrize('lines,expected',[
+    (['h','0','-15'],{'head_deg':[0.,-15.]}),
+    (['h','nan','10','inf','-5'],{'head_deg':[10.,-5.]}),
+    (['h',''],None),(['h','10',''],None),(['h','10','q'],'q'),
+])
+def test_head_prompt(monkeypatch,lines,expected):
+    import threading
+    import s1b_keyboard_direct as module
+    values=iter(lines)
+    monkeypatch.setattr(module,'read_line',lambda *a:next(values))
+    assert module.read_xyz(0,threading.Event())==expected

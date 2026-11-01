@@ -2,7 +2,7 @@
 """Direct SDK Cartesian keyboard control, optionally launched on S1B over SSH.
 
 No offline calibration file or planar-service verification flags are consumed.
-The startup SDK end-effector pose defines the plane; orientation stays fixed.
+Each round accepts XYZ displacements in mm; orientation stays fixed.
 """
 import argparse
 import builtins
@@ -18,7 +18,6 @@ import sys
 import termios
 import threading
 import time
-import tty
 import uuid
 import json
 from http.client import HTTPConnection, HTTPException
@@ -109,49 +108,21 @@ def target_for_key(key, pose, initial_x, step_m, forward_mm=None):
     return target
 
 
-GRIPPER_KEYS = {'c': 100., 'o': 0.}
-
-
-def interpolate_pose(start, goal, elapsed, duration):
-    fraction = min(1., max(0., elapsed/duration))
-    blend = 10*fraction**3-15*fraction**4+6*fraction**5
-    return [start[i]+blend*(goal[i]-start[i]) for i in range(3)]+start[3:], fraction >= 1.
-
-
-def send_targets(robot, names, current, torso, gripper_target):
-    if gripper_target is None:
-        robot.set_cartesian_pose(names, [list(current), torso], control_way='filter',
-            use_wbc=False, add_default_torso=False, remote_wbc_option=False)
-    else:
-        # SDK example 110: mixed Cartesian/joint targets in ONE periodic set.
-        robot.set_different_type_command(list(names)+['astribot_gripper_right'],
-            ['cartesian', 'cartesian', 'joints'], [list(current), torso, [gripper_target]],
-            control_way='filter', use_wbc=False)
-
-
-def run_cartesian_loop(robot, frequency, stop, lock, targets, on_error, on_sent=None):
-    """The keyboard command loop; callers only supply the current targets."""
-    deadline = time.monotonic()
-    try:
-        while not stop.is_set():
-            with lock:
-                if stop.is_set():break
-                if not robot.get_control_rights_status():
-                    raise RuntimeError('SDK control rights lost')
-                send_targets(robot, *targets())
-                if on_sent:on_sent()
-            deadline += 1/frequency
-            if deadline < time.monotonic():deadline = time.monotonic()+1/frequency
-            stop.wait(max(0., deadline-time.monotonic()))
-    except BaseException as exc:
-        on_error(exc)
+from s1b_keyboard_control import (
+    GRIPPER_KEYS, interpolate_pose, interpolate_head, target_for_xyz,
+    send_targets, run_cartesian_loop, CommandExecutor, keyboard_command,
+)
 
 
 def launch_remote(args):
     from start_s1b_inference import ENV, sdk_environment, check_port_available
     remote_dir = '/tmp/pressb_keyboard_'+uuid.uuid4().hex
     remote = remote_dir+'/s1b_keyboard_direct.py'
-    sources = [str(Path(__file__).resolve())]
+    sources = [str(Path(__file__).resolve()), str(Path(__file__).with_name("s1b_keyboard_control.py"))]
+    recording=getattr(args,'record',False)
+    if recording:
+        args.view_cameras=True
+        sources.append(str(Path(__file__).with_name('s1b_keyboard_record.py')))
     forwarding = []
     if args.view_cameras:
         check_port_available(args.view_port)
@@ -163,11 +134,34 @@ def launch_remote(args):
     command = ('trap '+shlex.quote('rm -rf '+shlex.quote(remote_dir))+' EXIT; '+ENV+'; '+sdk_env+'; '+
                'python3 '+shlex.quote(remote)+' --step-mm '+shlex.quote(str(args.step_mm))+
                ' --speed-mm-s '+shlex.quote(str(args.speed_mm_s))+
-               ' --control-hz '+shlex.quote(str(args.control_hz)))
+               ' --control-hz '+shlex.quote(str(args.control_hz))+
+               ' --head-speed-deg-s '+shlex.quote(str(getattr(args,'head_speed_deg_s',20.))))
     if args.view_cameras:
         command += ' --view-cameras --view-port '+str(args.view_port)
         print('正在启动相机网页，请等待“网页已就绪”提示。',flush=True)
-    return run_ssh(['ssh','-t',*forwarding,args.host,'bash -lc '+shlex.quote(command)])
+    if recording:
+        remote_record='~/.local/share/pressb/keyboard_sessions/'+uuid.uuid4().hex
+        command += ' --record --record-dir '+shlex.quote(remote_record)
+        local_record=Path(args.record_dir).expanduser()
+        if local_record.exists():raise FileExistsError('记录目录已存在：'+str(local_record))
+        try:local_record.mkdir(parents=True)
+        except OSError as exc:print('本地记录目录暂不可写：'+str(exc),file=sys.stderr,flush=True)
+        print('机器人持久记录目录：'+args.host+':'+remote_record,flush=True)
+    try:
+        return run_ssh(['ssh','-t',*forwarding,args.host,'bash -lc '+shlex.quote(command)])
+    finally:
+        if recording:
+            try:
+                local_record.mkdir(parents=True,exist_ok=True)
+                # scp rejects a remote basename of '.' ("unexpected filename").
+                # Recording artifacts have non-hidden names; copy their contents.
+                result=subprocess.run(['scp','-rq',args.host+':'+remote_record+'/*',str(local_record)+'/'],check=False)
+                if result.returncode:raise RuntimeError('scp exit '+str(result.returncode))
+                print('记录已复制到：'+str(local_record),flush=True)
+            except Exception as exc:
+                print('记录复制失败：'+str(exc)+'；机器人原件保留在 '+args.host+':'+remote_record+
+                      '，可用 scp -r 手动复制。',file=sys.stderr,flush=True)
+
 
 
 def run_ssh(command):
@@ -210,169 +204,238 @@ def wait_for_viewer(viewer, port, timeout=20.):
     raise RuntimeError('相机网页启动超时，端口尚未就绪')
 
 
-def read_forward_distance(fd, terminal_settings, stop):
-    """Temporarily use normal terminal line editing; never hold the servo lock."""
-    termios.tcsetattr(fd,termios.TCSANOW,terminal_settings)
-    try:
+def read_line(fd, stop, on_input=None):
+    """Canonical terminal input, interruptible by the existing stop handler."""
+    line=b''
+    while not stop.is_set():
+        if not select.select([fd],[],[],.05)[0]:continue
+        chunk=os.read(fd,4096)
+        if not chunk:
+            if on_input:on_input('')
+            return 'q'
+        line+=chunk
+        if b'\n' in line or b'\r' in line:
+            raw=line.decode(errors='replace')
+            if on_input:on_input(raw)
+            return raw.strip().lower()
+    return 'q'
+
+
+def read_xyz(fd, stop, recorder=None):
+    values=[]
+    for axis,direction in (('X','前'),('Y','左'),('Z','上')):
         while not stop.is_set():
-            print('\n前伸距离（mm，相对初始平面；回车执行，直接回车取消）：',end='',flush=True)
-            line=b''
-            while not stop.is_set():
-                if not select.select([fd],[],[],.05)[0]:continue
-                chunk=os.read(fd,4096)
-                if not chunk:return None
-                line+=chunk
-                if b'\n' in line or b'\r' in line:break
-            if stop.is_set():return None
-            value=line.decode(errors='replace').strip()
+            # SDKOutput forwards complete lines, so prompts must end in newline.
+            print(f'{axis} 位移（mm，正数向{direction}）：',flush=True)
+            value=(read_line(fd,stop,lambda raw:recorder.event('input' if raw else 'input_eof',axis=axis,raw=raw))
+                   if recorder else read_line(fd,stop))
+            if value=='q':return 'q'
+            if not values and value in GRIPPER_KEYS:return value
+            if not values and value=='h':return read_head_angles(fd,stop,recorder)
             if not value:
-                print('已取消。',flush=True)
+                if recorder:recorder.event('input_cancelled',partial_xyz_mm=list(values))
+                print('已取消本轮。',flush=True)
                 return None
             try:
                 distance=float(value)
-                if math.isfinite(distance) and distance>0:return distance
+                if math.isfinite(distance):
+                    values.append(distance);break
             except ValueError:pass
-            print('请输入大于 0 的数字，单位 mm，例如 35。',flush=True)
-    finally:
-        tty.setcbreak(fd)
+            if recorder:recorder.event('invalid_input',axis=axis,value=value)
+            print('请输入有限数字，单位 mm；支持正数、负数和 0。',flush=True)
+        if stop.is_set():return 'q'
+    return values
+
+
+def read_head_angles(fd, stop, recorder=None):
+    angles=[]
+    for axis in ('头部左右转角 yaw','头部俯仰角 pitch'):
+        while not stop.is_set():
+            print(f'{axis}（度，绝对角度；空输入取消）：',flush=True)
+            value=(read_line(fd,stop,lambda raw:recorder.event('input',axis=axis,raw=raw))
+                   if recorder else read_line(fd,stop))
+            if value=='q':return 'q'
+            if not value:
+                if recorder:recorder.event('input_cancelled',partial_head_deg=angles)
+                print('已取消头部设置。',flush=True)
+                return None
+            try:
+                angle=float(value)
+                if math.isfinite(angle):
+                    angles.append(angle);break
+            except ValueError:pass
+            if recorder:recorder.event('invalid_input',axis=axis,value=value)
+            print('请输入有限数字，单位为度。',flush=True)
+        if stop.is_set():return 'q'
+    return dict(head_deg=angles)
+
 
 
 def run_robot(args, viewer=None):
     from astribot_sdk.core.astribot_api.astribot_client import Astribot
-    frequency = args.control_hz
-    robot = connect_robot(Astribot, frequency)
+    robot = connect_robot(Astribot, args.control_hz)
     _SDK_KEEPALIVE.append(robot)
     stop = threading.Event()
-    lock = threading.RLock()
-    errors = []
-    current = goal = start = None
-    started = duration = 0.
-    busy = False
-    gripper_target = None  # Preserve the existing opening until C or O is pressed.
-    thread = None
+    executor = None
     saved = None
     fd = sys.stdin.fileno()
+    recorder = getattr(args, 'recorder', None)
+    task = None
+    stop_reasons = []
 
     def stop_robot(*unused):
+        if not stop.is_set():
+            stop_reasons.append('signal_'+str(unused[0]) if unused else 'operator_stop')
         stop.set()
-        with lock:
-            if robot.get_control_rights_status():
-                robot.stop_robot()
+        if executor:
+            executor.stop()
+        elif robot.get_control_rights_status():
+            robot.stop_robot()
+
+    def drain_input(timeout=0.):
+        if select.select([fd], [], [], timeout)[0]:
+            value = os.read(fd, 4096)
+            quitting = not value or value.strip().lower() == b'q'
+            if quitting:
+                stop_robot()
+            if recorder:
+                recorder.event('stop_input' if quitting else 'ignored_input', raw=value.decode(errors='replace'))
+            return True
+        return False
 
     try:
         if not robot.get_control_rights_status():
             raise RuntimeError('未取得控制权。重新运行后，可在 SDK 接管提示中输入 yes；或先退出原控制程序。')
         robot.set_head_follow_effector(False)
-        names = ['astribot_arm_right', 'astribot_torso']
-        poses = robot.get_current_cartesian_pose(names, frame='chassis')
-        current, torso = copy.deepcopy(poses)
-        initial_x = current[0]
-        goal = list(current)
-        start = list(current)
-
-        def targets():
-            nonlocal current, busy
-            if busy:
-                current, complete = interpolate_pose(start, goal, time.monotonic()-started, duration)
-                if complete:busy = False
-            return names, current, torso, gripper_target
-
-        def failed(exc):
-            errors.append(str(exc));stop_robot()
-
-        def servo():
-            run_cartesian_loop(robot, frequency, stop, lock, targets, failed)
-
         signal.signal(signal.SIGINT, stop_robot)
         signal.signal(signal.SIGTERM, stop_robot)
         signal.signal(signal.SIGHUP, stop_robot)
         saved = termios.tcgetattr(fd)
         termios.tcflush(fd, termios.TCIFLUSH)
-        tty.setcbreak(fd)
-        print(f'\r\n直连 SDK：W/S 上下，A/D 左右，每次 {args.step_mm:g} mm。',flush=True)
-        print('F 输入前伸距离（mm，相对初始平面），回车执行；R 返回初始平面。空格/Q/Ctrl-C 停止退出。',flush=True)
-        print('C 闭合右夹爪；O 打开右夹爪（移动时也可操作）。',flush=True)
-        print('采用机器人底盘坐标：+X 前、+Y 左、+Z 上。末端朝向保持原状。',flush=True)
-        thread = threading.Thread(target=servo,daemon=True)
-        thread.start()
+        executor = CommandExecutor(robot, args.control_hz, args.speed_mm_s,
+                                   getattr(args, 'head_speed_deg_s', 20.), stop_event=stop)
+        # The terminal and recorder use the executor's cancellation event.
+        stop = executor.stop_event
+        print('每轮依次输入 X、Y、Z 位移（mm），Z 回车后一次执行。', flush=True)
+        print('空输入取消本轮；q 回车或 Ctrl-C 停止退出；X 提示处 h 设置头部角度，c/o 回车闭合/打开夹爪。', flush=True)
+        print('底盘坐标：+X 前、+Y 左、+Z 上；位移从上一命令目标累加，朝向不变。', flush=True)
+        if recorder:
+            recorder.session['initial'] = recorder.capture('initial', cancel=stop)
         while not stop.is_set():
             if viewer is not None and viewer.poll() is not None:
-                print('\r\n相机网页进程已退出，键盘控制继续；请检查 camera_view.log。',flush=True)
+                print('相机网页进程已退出，键盘控制继续；请检查 camera_view.log。', flush=True)
                 viewer = None
-            if not select.select([fd],[],[],.05)[0]:continue
-            keys = os.read(fd,1).decode(errors='ignore').lower()
-            if not keys or any(k in keys for k in (' ', 'q', '\x03')):
-                stop_robot();break
-            for key in keys:
-                if key not in 'wasdfrco':continue
-                forward_mm = None
-                if key == 'f':
-                    with lock:
-                        if busy:
-                            print('\r\n正在移动，请稍后按 F。',flush=True)
-                            continue
-                    forward_mm=read_forward_distance(fd,saved,stop)
-                    if forward_mm is None or stop.is_set():continue
-                with lock:
-                    if key in GRIPPER_KEYS:
-                        gripper_target = GRIPPER_KEYS[key]
-                        print('\r\n右夹爪：'+('闭合' if key == 'c' else '打开'),flush=True)
-                        continue
-                    if busy:
-                        print('\r\n正在移动，请稍后按键。',flush=True)
-                        continue
-                    # Lateral jogging belongs to the initial plane, never the extended plane.
-                    if key in 'wasd' and abs(current[0]-initial_x) > 1e-6:
-                        print('\r\n先按 R 返回平面，再上下左右移动。',flush=True)
-                        continue
-                    target = target_for_key(key,current,initial_x,args.step_mm/1000,forward_mm)
-                    start, goal = list(current), target
-                    distance = math.dist(start[:3],goal[:3])
-                    duration = max(.2,1.875*distance/(args.speed_mm_s/1000))
-                    started = time.monotonic()
-                    busy = True
-                    print('\r\n目标 XYZ（mm）：'+str([round(x*1000,1) for x in goal[:3]]),flush=True)
+            value = read_xyz(fd, stop, recorder) if recorder else read_xyz(fd, stop)
+            if value == 'q' or stop.is_set():
+                stop_robot()
+                break
+            if value is None:
+                continue
+            command = keyboard_command(value)
+            kind = command['type']
+            prepared = executor.prepare(command)
+            task = None
+            if recorder:
+                detail = {k: v for k, v in command.items() if k != 'type'}
+                if kind == 'head':
+                    detail.update(start_head_deg=[math.degrees(v) for v in prepared['head_start']],
+                                  head_speed_deg_s=executor.head_speed_deg_s)
+                elif kind == 'gripper':
+                    detail['target'] = GRIPPER_KEYS[command['key']]
+                recorder.begin(kind, detail, prepared['start'], prepared['goal'],
+                               None if kind == 'head' else args.speed_mm_s, stop)
+                while not stop.is_set() and drain_input():
+                    pass
+                if stop.is_set():
+                    break
+            task = executor.start(prepared)
+            if recorder:
+                recorder.started(task['started'])
+            if kind == 'gripper':
+                print('右夹爪：'+('闭合' if command['key'] == 'c' else '打开'), flush=True)
+            elif kind == 'head':
+                print('头部目标 yaw/pitch（度）：'+str(command['head_deg']), flush=True)
+            else:
+                print('本轮位移 XYZ（mm）：'+str(command['xyz_mm']), flush=True)
+            while not stop.is_set() and not task['done'].is_set():
+                drain_input(.02)
+            if recorder:
+                recorder.event('pending_input_discarded')
+                recorder.finish('completed' if task['ended'] else 'interrupted', task['ended'],
+                                reason=executor.error or ('operator_stop' if stop.is_set() else None), cancel=stop)
+                while not stop.is_set() and drain_input():
+                    pass
+            if kind == 'gripper' and not recorder:
+                continue
+            termios.tcflush(fd, termios.TCIFLUSH)
+            if not stop.is_set():
+                print('本轮指令发送完成。' if kind == 'gripper' else '本轮插值指令发送完成。', flush=True)
     finally:
-        # Restore the terminal even if the native SDK stop raises.
-        if saved is not None:termios.tcsetattr(fd,termios.TCSADRAIN,saved)
+        if saved is not None:
+            termios.tcsetattr(fd, termios.TCSADRAIN, saved)
         try:
             stop_robot()
         finally:
-            if thread:thread.join(timeout=2)
-            if thread and thread.is_alive():
-                raise RuntimeError('SDK call did not return after stop')
+            if executor:
+                executor.close()
+            if recorder:
+                recorder.event('control_stopped', reasons=stop_reasons,
+                               errors=[executor.error] if executor and executor.error else [])
+                if recorder.active:
+                    ended = task['ended'] if task else None
+                    recorder.finish('completed' if ended else 'interrupted', ended,
+                                    reason=executor.error if executor and executor.error else 'operator_stop')
             interface = robot.astribot_interface
-            if robot.get_control_rights_status():interface.shutdown_control_rights_srv()
+            if robot.get_control_rights_status():
+                interface.shutdown_control_rights_srv()
             interface.executor.shutdown(timeout_sec=2.)
             import rclpy
-            if rclpy.ok():rclpy.shutdown()
+            if rclpy.ok():
+                rclpy.shutdown()
             interface.spin_thread.join(timeout=2.)
             if interface.spin_thread.is_alive():
                 raise RuntimeError('SDK ROS spin thread did not stop')
             interface.shutdown()
-    if errors:raise RuntimeError(errors[0])
+    if executor and executor.error:
+        raise RuntimeError(executor.error)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', help='copy this standalone script and open a remote TTY, e.g. S1B')
     parser.add_argument('--sdk-root', default='/home/astribot/astribot_sdk_aarch64')
-    parser.add_argument('--step-mm', type=float, default=2.)
+    parser.add_argument('--step-mm', type=float, default=2., help='compatibility only; ignored by XYZ input')
     parser.add_argument('--speed-mm-s', type=float, default=20.)
+    parser.add_argument('--head-speed-deg-s',type=float,default=20.,help='head interpolation peak speed in degrees/s')
     parser.add_argument('--control-hz', type=float, default=250., help='SDK and command loop frequency; independent of movement speed')
+    parser.add_argument('--record',action='store_true',help='save operations and before/after camera captures')
+    parser.add_argument('--record-dir',help='new recording directory; implies --record')
     parser.add_argument('--view-cameras', action='store_true', help='show head/right RGB and aligned right centre depth on a local webpage')
     parser.add_argument('--view-port', type=int, default=8765, help='local webpage/SSH tunnel port')
     args = parser.parse_args()
     if not sys.stdin.isatty():parser.error('需要交互终端')
-    if any(not math.isfinite(v) or v<=0 for v in (args.step_mm,args.speed_mm_s,args.control_hz)):
-        parser.error('step, speed and frequency must be positive finite values')
+    if any(not math.isfinite(v) or v<=0 for v in (args.speed_mm_s,args.control_hz,args.head_speed_deg_s)):
+        parser.error('speed and frequency must be positive finite values')
     if not 1<=args.view_port<=65535:parser.error('invalid view port')
+    args.record=args.record or args.record_dir is not None
+    if args.record:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        args.view_cameras=True
+        args.record_dir=args.record_dir or str(Path('outputs/keyboard_sessions')/(
+            datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%Y%m%d_%H%M%S')+'_'+uuid.uuid4().hex[:8]))
+        if Path(args.record_dir).expanduser().exists():parser.error('记录目录已存在：'+args.record_dir)
     if args.host:
         raise SystemExit(launch_remote(args))
     code = 0
     output = SDKOutput()
     viewer = viewer_log = None
+    args.recorder=None;exit_reason='operator_exit'
     try:
+        if args.record:
+            from s1b_keyboard_record import Recorder
+            args.recorder=Recorder(args.record_dir,f'http://127.0.0.1:{args.view_port}',
+                dict(speed_mm_s=args.speed_mm_s,head_speed_deg_s=args.head_speed_deg_s,control_hz=args.control_hz,frame='chassis',units='mm'))
         if args.view_cameras:
             viewer_script=Path(__file__).with_name('s1b_camera_view.py')
             viewer_log=Path(__file__).with_name('camera_view.log').open('w')
@@ -382,11 +445,12 @@ def main():
             print(f'网页已就绪：http://127.0.0.1:{args.view_port}',flush=True)
         run_robot(args, viewer)
     except KeyboardInterrupt:
-        code = 130
+        code = 130;exit_reason='KeyboardInterrupt'
     except Exception as exc:
         print('键盘控制退出：'+str(exc), file=sys.stderr, flush=True)
-        code = 1
+        code = 1;exit_reason=str(exc)
     finally:
+        if args.recorder:args.recorder.close(exit_reason)
         if viewer is not None:
             viewer.terminate()
             try:viewer.wait(timeout=4)

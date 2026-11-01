@@ -30,6 +30,7 @@ def test_stationary_feedback_does_not_block_keyboard_commands():
         def get_control_rights_status(self):return True
         def get_current_cartesian_pose(self,*a,**kw):return [list(self.pose),list(self.pose)]
         def set_cartesian_pose(self,names,poses,**kw):self.commands.append(list(poses[0]))
+        def get_current_joints_position(self,*a):return [[0,0]]
         def stop_robot(self):self.stopped=True
     robot=Robot()
     def rows():
@@ -39,7 +40,7 @@ def test_stationary_feedback_does_not_block_keyboard_commands():
     backend=SDKBackend(robot,SimpleNamespace(snapshot=rows),100)
     try:
         for z in (1.020,1.040):
-            result=backend.move('move',dict(right_mm=0,up_mm=20),threading.Event(),lambda p:None)
+            result=backend.move('move',dict(xyz_mm=[0,0,20]),threading.Event(),lambda p:None)
             assert robot.commands[-1][2]==pytest.approx(z)
             assert result['completion_basis']=='command_interpolation'
             assert result['final_state']['pose_m_xyzw']==robot.pose
@@ -54,7 +55,7 @@ def test_backend_fault_remains_queryable_and_rejects_new_motion(setup,tmp_path):
         backend.error='SDK send failed'
         raise RuntimeError(backend.error)
     backend.move=fail
-    receipt=service.submit(action(service,obs,type='move',right_mm=0,up_mm=20))
+    receipt=service.submit(action(service,obs,type='move',xyz_mm=[0,0,20]))
     result=wait(service,receipt)
     service.backend_failed()
     assert service.cancel.is_set() and backend.stopped
@@ -68,7 +69,7 @@ def test_backend_fault_remains_queryable_and_rejects_new_motion(setup,tmp_path):
             client.wait(receipt)
         assert request(client.base,'/v2/state')['phase']=='FAULT'
         with pytest.raises(ValueError,match='controller_stopped'):
-            service.submit(action(service,obs,cid='new',type='move',right_mm=1,up_mm=0))
+            service.submit(action(service,obs,cid='new',type='move',xyz_mm=[0,-1,0]))
         assert client.stop()['phase']=='STOPPED'
         assert service.shutdown_requested.is_set()
     finally:
@@ -89,7 +90,9 @@ def test_feedback_error_is_recorded_without_motion_gate(delta,angle):
             header=dict(sec=stamp//10**9,nanosec=stamp%10**9))
             for name in ('astribot_arm_right','astribot_torso','astribot_gripper_right')}
     backend.monitor=SimpleNamespace(snapshot=rows,error=None,driver_fault=None)
-    backend.robot=SimpleNamespace(get_current_cartesian_pose=lambda *a,**kw:[pose,torso])
+    backend.robot=SimpleNamespace(get_current_cartesian_pose=lambda *a,**kw:[pose,torso],
+                                  get_current_joints_position=lambda *a:[[0,0]])
+    backend.controller=SimpleNamespace(command_pose=lambda:start,gripper_target=None)
     backend.names=['astribot_arm_right','astribot_torso'];backend.torso=torso;backend.torso_joints=[0]*4
     backend.lock=threading.RLock();backend.cartesian_active=True
     backend.constraint=('move',start);backend.command_pose=start

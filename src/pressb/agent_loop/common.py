@@ -48,16 +48,8 @@ def pose_error(a, b):
     return distance, math.degrees(2*math.acos(min(1., dot)))
 
 
-def depth_estimate(observation):
-    depth = observation['depth']
-    value = depth.get('median_m')
-    source = 'median_m'
-    if value is None:
-        value = depth.get('center_m'); source = 'center_m'
-    if value is None: return dict(source=None, depth_mm=None, forward_mm=None)
-    mm = number(value)*1000
-    return dict(source=source, depth_mm=mm, forward_mm=mm-150.)
-
-
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
+
+
+SESSION_SCHEMA = "pressb-agent-keyboard-v1"
