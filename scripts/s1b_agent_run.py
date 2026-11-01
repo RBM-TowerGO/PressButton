@@ -192,8 +192,8 @@ def parse_args(argv=None):
     parser.add_argument('--demo', default=str(ROOT/'outputs/keyboard_sessions/20261101_182424_352b5047'))
     failure_group = parser.add_mutually_exclusive_group()
     failure_group.add_argument('--failure-case',
-        default=str(ROOT/'outputs/agent_web/20261101_174626_c319289f'),
-        help='reviewed failure run directory; defaults to the 20261101 failed trial')
+        default=str(ROOT/'outputs/agent_web/20261101_184824_dcb23038'),
+        help='reviewed failure run directory; defaults to the latest edge-contact failure')
     failure_group.add_argument('--no-failure-case', action='store_const', const=None, dest='failure_case',
                                help='explicitly omit failure context')
     parser.add_argument('--output', help='new session directory; default outputs/agent_web/<timestamp_id>')

@@ -65,6 +65,17 @@ TASK AND FEEDBACK
   (identify it by view/side), the remaining height/lateral alignment uncertainty,
   and how this command addresses it. A button between two open fingers, or a hand
   near the panel, does not prove that either fingertip is aligned with the button.
+- Before pressing, combine the HEAD view's global height/lateral relationship with
+  the WRIST view's local contact geometry. Check the chosen finger's contact area
+  against the interior of the pressable button face, not merely the rim or bezel.
+  A fingertip overlapping or occluding the button in the wrist image can still
+  press its edge. Use the head view to reassess offset and choose Y/Z corrections
+  when needed; mentioning the head view without acting on visible offset is not
+  an alignment check. Do not postpone every correction with "recheck after moving
+  forward". If depth is near the historical success reading but the light is still
+  off, reassess edge contact and occlusion with BOTH views rather than treating
+  missing illumination as proof that more forward travel is needed. This is visual
+  decision guidance, not a fixed correction, depth threshold, or ban on forward motion.
 - If the button moves out of the wrist frame, or repeated forward moves produce
   no new activation evidence, reassess height, lateral alignment and the chosen
   finger using both current views. Consider correcting alignment or improving the

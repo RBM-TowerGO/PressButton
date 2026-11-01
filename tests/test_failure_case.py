@@ -137,7 +137,7 @@ def test_corrupt_image_is_rejected(case):
 
 def test_launcher_defaults_and_explicit_optout():
     assert s1b_agent_run.parse_args([]).demo.endswith('20261101_182424_352b5047')
-    assert s1b_agent_run.parse_args([]).failure_case.endswith('20261101_174626_c319289f')
+    assert s1b_agent_run.parse_args([]).failure_case.endswith('20261101_184824_dcb23038')
     assert s1b_agent_run.parse_args(['--no-failure-case']).failure_case is None
     assert s1b_agent_run.parse_args(['--failure-case','custom']).failure_case == 'custom'
     with pytest.raises(SystemExit):
