@@ -1,0 +1,36 @@
+{
+  "native_instance_binding_verified": true,
+  "broken_error": "index 1 is out of bounds for axis 0 with size 1",
+  "broken_traceback": "Traceback (most recent call last):\n  File \"<string>\", line 84, in probe\n  File \"astribot_function.py\", line 833, in astribot_function.AstribotFunction.set_different_type_command\n  File \"<string>\", line 61, in cartesian_pose_control\n  File \"util.py\", line 574, in util.BaseFunction.cartesian_pose_control\n  File \"<string>\", line 64, in execute_ik_and_set_position\n  File \"util.py\", line 528, in util.BaseFunction.execute_ik_and_set_position\n  File \"<string>\", line 65, in calculate_twist_from_poses\n  File \"util.py\", line 644, in util.BaseFunction.calculate_twist_from_poses\n  File \"/home/astribot/.local/lib/python3.10/site-packages/tf_transformations/__init__.py\", line 849, in quaternion_inverse\n    return quaternion_conjugate(quaternion) / numpy.dot(quaternion, quaternion)\n  File \"/home/astribot/.local/lib/python3.10/site-packages/tf_transformations/__init__.py\", line 835, in quaternion_conjugate\n    return numpy.array((-quaternion[0], -quaternion[1],\nIndexError: index 1 is out of bounds for axis 0 with size 1\n",
+  "broken_remote_calls": 1,
+  "fixed_remote_calls": 0,
+  "fixed_local_ik_calls": 3,
+  "fixed_cartesian_keys": [
+    [
+      "astribot_arm_right"
+    ],
+    [
+      "astribot_arm_right"
+    ],
+    [
+      "astribot_arm_right"
+    ]
+  ],
+  "fixed_joint_command": {
+    "astribot_torso": [
+      0.29,
+      -0.58,
+      0.29,
+      0.0
+    ],
+    "astribot_gripper_right": [
+      100.0
+    ]
+  },
+  "hardware_commands_sent": 0,
+  "scope": "Native routing/math; IK, robot interfaces and publishers are stubs",
+  "sdk_sha256": {
+    "astribot_function.so": "b9f90140e7a88680de1a56b2d1269ac1dc8a366518ed4a30e7adcf407075a248",
+    "util.so": "83bf1ee682d8c45a6af7146bf0237c1ed4287e098d3ac0343cff25ba1d28fec1"
+  }
+}
