@@ -1,0 +1,45 @@
+{
+  "name": "A_crop2x_relation",
+  "mode": "relation",
+  "stimulus": "A_crop2x",
+  "frame": "A",
+  "scale": 2,
+  "image_size": [
+    490,
+    550
+  ],
+  "transform": {
+    "scale": 2,
+    "crop": [
+      345,
+      75,
+      590,
+      350
+    ]
+  },
+  "expected": {
+    "vertical": "above",
+    "horizontal": "left"
+  },
+  "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+  "request_sent": true,
+  "elapsed_s": 4.088782866019756,
+  "usage": {
+    "prompt_tokens": 777,
+    "total_tokens": 817,
+    "completion_tokens": 40,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "vertical": "above",
+    "horizontal": "left"
+  },
+  "format_valid": true,
+  "vertical_correct": true,
+  "horizontal_correct": true,
+  "relation_correct": true
+}

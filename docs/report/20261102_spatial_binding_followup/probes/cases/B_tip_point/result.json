@@ -1,0 +1,55 @@
+{
+  "name": "B_tip_point",
+  "mode": "point",
+  "stimulus": "B_full1x",
+  "frame": "B",
+  "scale": 1,
+  "image_size": [
+    640,
+    360
+  ],
+  "transform": "none",
+  "expected": {
+    "point": [
+      470,
+      280
+    ],
+    "point_box": [
+      460,
+      260,
+      490,
+      297
+    ]
+  },
+  "prompt": "Locate the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Return only its normalized point, or null if uncertain.",
+  "request_sent": true,
+  "elapsed_s": 4.393020974006504,
+  "usage": {
+    "prompt_tokens": 755,
+    "total_tokens": 798,
+    "completion_tokens": 43,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "point": {
+      "x": 735,
+      "y": 833
+    }
+  },
+  "format_valid": true,
+  "point_pixel_xy": [
+    469.66499999999996,
+    299.04699999999997
+  ],
+  "point_signed_error_xy_px": [
+    -0.3350000000000364,
+    19.04699999999997
+  ],
+  "point_error_px": 19.049945774201007,
+  "point_source_error_px": 19.049945774201007,
+  "point_in_assistant_annotation_box": false
+}

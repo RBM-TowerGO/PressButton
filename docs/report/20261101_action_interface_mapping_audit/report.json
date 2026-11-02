@@ -1,0 +1,752 @@
+{
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "sources": [
+    {
+      "path": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261101_211122_639d06d8/agent/rounds/0011/request.json",
+      "sha256": "51c09804ec80979063c4b0ac5e2cb9c7b0f436b543fb0bc62bfc7aa866d74ddd",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "current_image_hashes": [
+        "a49a9fbc56fd104e1d392ccd110f538eec99191b881660a015b4389296cc6179",
+        "06e35614d63c6d6885b2613d2b448ad0de4d9dbc302bcce7f4c645687789f182"
+      ]
+    },
+    {
+      "path": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261101_211122_639d06d8/agent/rounds/0012/request.json",
+      "sha256": "2e5ccca8a0d2f57e7ae334e2e09fdf1cae711a183e74476b75a06a2baec14106",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "current_image_hashes": [
+        "0e5915c86f1cfc06614a0305b5d92629ef7e2095a7e6ec9ef4ab5f09ffc463e3",
+        "8270fbded7d01bc7c6c9447115bf902d0c620e6265f262b028b3bb2e79d2c431"
+      ]
+    },
+    {
+      "path": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261101_211122_639d06d8/agent/rounds/0013/request.json",
+      "sha256": "1586da99ab25392db80b01cba99f214d90ce0b6023472e89caa6f1c08b2082b6",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "current_image_hashes": [
+        "25975d3ff2c212e697535d59027099024a994a51da2f7ea2b99c48e27c90fc34",
+        "0eefc6012664d7e5a228002317f341a97b3bae9e37fa256d041c6a423620fd1a"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "name": "0011_A_original",
+      "kind": "visual_action",
+      "condition": "A_original",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 50053,
+        "total_tokens": 50184,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.94908588193357,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0011_B_coordinates",
+      "kind": "visual_action",
+      "condition": "B_coordinates",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 50146,
+        "total_tokens": 50277,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.930833083111793,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0011_C_visual_facts",
+      "kind": "visual_action",
+      "condition": "C_visual_facts",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger projected left of the down-call button center; wrist view does not clearly show the button. Move -Y 10 mm to laterally align the contacting finger with the button center before forward press, following the demo's lateral fine adjustment. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 50140,
+        "total_tokens": 50272,
+        "completion_tokens": 132,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.93481626920402,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0011_D_facts_and_coordinates",
+      "kind": "visual_action",
+      "condition": "D_facts_and_coordinates",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ],
+            "reason": "Offline assessment: head shows button to the right of the gripper and alignment is misaligned; wrist does not see the button. Move -Y 10 mm (robot right) to bring the contacting finger laterally toward the button center before forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 50233,
+        "total_tokens": 50360,
+        "completion_tokens": 127,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.718221973162144,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0011_E_tool_description",
+      "kind": "visual_action",
+      "condition": "E_tool_description",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 50146,
+        "total_tokens": 50277,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 43.757977393921465,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0012_B_coordinates",
+      "kind": "visual_action",
+      "condition": "B_coordinates",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 51821,
+        "total_tokens": 51952,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 15.416124973911792,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0012_C_visual_facts",
+      "kind": "visual_action",
+      "condition": "C_visual_facts",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger projected left of the down-call button center; offline assessment confirms misaligned with button to the right. Move -Y 10 mm to laterally align the contacting finger with the button center before forward press, following the demo's lateral fine adjustment. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 51817,
+        "total_tokens": 51951,
+        "completion_tokens": 134,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 15.480952870100737,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0012_D_facts_and_coordinates",
+      "kind": "visual_action",
+      "condition": "D_facts_and_coordinates",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ],
+            "reason": "Offline assessment of current LIVE images shows the down-call button is to the right of the open gripper and misaligned; wrist view does not show the button. Move -Y 10 mm to shift the contacting finger right toward the button center before forward press, following the failure lesson to correct lateral alignment rather than repeat forward. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 51910,
+        "total_tokens": 52051,
+        "completion_tokens": 141,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 15.707303739152849,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0012_E_tool_description",
+      "kind": "visual_action",
+      "condition": "E_tool_description",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 51821,
+        "total_tokens": 51952,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 16.40353843709454,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0012_A_original",
+      "kind": "visual_action",
+      "condition": "A_original",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 51728,
+        "total_tokens": 51859,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 15.060782701708376,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0013_C_visual_facts",
+      "kind": "visual_action",
+      "condition": "C_visual_facts",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger projected left of the down-call button center; wrist view does not clearly show the button. Move -Y 10 mm to laterally align the contacting finger with the button center before forward press, following the failure lesson to use head view for lateral correction. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 53500,
+        "total_tokens": 53636,
+        "completion_tokens": 136,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 15.161361826118082,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0013_D_facts_and_coordinates",
+      "kind": "visual_action",
+      "condition": "D_facts_and_coordinates",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ],
+            "reason": "Offline assessment of current LIVE images: head shows the down-call button to the right of the open gripper and alignment is misaligned; wrist does not clearly show the button. Move -Y 10 mm to shift the contacting finger right toward the button center before forward press, following the failure lesson to use head-view lateral correction rather than repeated forward push. No activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 53593,
+        "total_tokens": 53727,
+        "completion_tokens": 134,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.973857821896672,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0013_E_tool_description",
+      "kind": "visual_action",
+      "condition": "E_tool_description",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 53503,
+        "total_tokens": 53634,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 15.93125238083303,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0013_A_original",
+      "kind": "visual_action",
+      "condition": "A_original",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 53410,
+        "total_tokens": 53541,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.690881757996976,
+      "argument_field_errors": []
+    },
+    {
+      "name": "0013_B_coordinates",
+      "kind": "visual_action",
+      "condition": "B_coordinates",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5.0,
+              0.0,
+              0.0
+            ],
+            "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 53503,
+        "total_tokens": 53634,
+        "completion_tokens": 131,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "elapsed_s": 14.724511143285781,
+      "argument_field_errors": []
+    },
+    {
+      "name": "coordinate_right",
+      "kind": "coordinate_translation",
+      "direction": "right",
+      "expected_xyz_mm": [
+        0,
+        -10,
+        0
+      ],
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              0
+            ],
+            "reason": "Move 10 mm toward robot's right, which is -Y in chassis frame."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1680,
+        "total_tokens": 1747,
+        "completion_tokens": 67,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "correct": true,
+      "single_tool_without_prose": true,
+      "elapsed_s": 6.507936845999211,
+      "argument_field_errors": []
+    },
+    {
+      "name": "coordinate_left",
+      "kind": "coordinate_translation",
+      "direction": "left",
+      "expected_xyz_mm": [
+        0,
+        10,
+        0
+      ],
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              10,
+              0
+            ],
+            "reason": "Move hand 10 mm toward robot left (+Y), no other axis."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1680,
+        "total_tokens": 1745,
+        "completion_tokens": 65,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "correct": true,
+      "single_tool_without_prose": true,
+      "elapsed_s": 6.320030953269452,
+      "argument_field_errors": []
+    },
+    {
+      "name": "coordinate_forward",
+      "kind": "coordinate_translation",
+      "direction": "forward",
+      "expected_xyz_mm": [
+        10,
+        0,
+        0
+      ],
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              0,
+              0
+            ],
+            "reason": "Move hand 10 mm toward robot forward (+X), no other axis."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1680,
+        "total_tokens": 1745,
+        "completion_tokens": 65,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "correct": true,
+      "single_tool_without_prose": true,
+      "elapsed_s": 6.337768758647144,
+      "argument_field_errors": []
+    },
+    {
+      "name": "coordinate_backward",
+      "kind": "coordinate_translation",
+      "direction": "backward",
+      "expected_xyz_mm": [
+        -10,
+        0,
+        0
+      ],
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              -10,
+              0,
+              0
+            ],
+            "reason": "Move hand 10 mm backward along -X axis only, as specified."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1680,
+        "total_tokens": 1745,
+        "completion_tokens": 65,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "correct": true,
+      "single_tool_without_prose": true,
+      "elapsed_s": 6.3216003202833235,
+      "argument_field_errors": []
+    },
+    {
+      "name": "coordinate_up",
+      "kind": "coordinate_translation",
+      "direction": "up",
+      "expected_xyz_mm": [
+        0,
+        0,
+        10
+      ],
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              0,
+              10
+            ],
+            "reason": "Move hand 10 mm toward robot up (+Z), no other axis."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1680,
+        "total_tokens": 1745,
+        "completion_tokens": 65,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "correct": true,
+      "single_tool_without_prose": true,
+      "elapsed_s": 6.315819478128105,
+      "argument_field_errors": []
+    },
+    {
+      "name": "coordinate_down",
+      "kind": "coordinate_translation",
+      "direction": "down",
+      "expected_xyz_mm": [
+        0,
+        0,
+        -10
+      ],
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              0,
+              -10
+            ],
+            "reason": "Move hand 10 mm toward robot down along -Z only, no other axis."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1680,
+        "total_tokens": 1747,
+        "completion_tokens": 67,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "correct": true,
+      "single_tool_without_prose": true,
+      "elapsed_s": 6.540422854945064,
+      "argument_field_errors": []
+    }
+  ],
+  "caveats": [
+    "One deterministic sample per condition and observation; no cache reset.",
+    "Consecutive frames from one failed run are correlated, not independent trials.",
+    "Analyst image facts are injected only in factorial C/D, never in interface probes; this is not an end-to-end perception test.",
+    "Action proposals are unexecuted; pixel offsets do not establish millimeter distances."
+  ],
+  "validation": {
+    "source_unchanged": true,
+    "request_archives_roundtrip": true,
+    "current_image_hashes_identical_within_observation": true,
+    "calls": 21,
+    "errors": 0,
+    "calls_with_argument_field_errors": 0
+  },
+  "suite": "factorial"
+}

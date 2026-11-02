@@ -1,0 +1,42 @@
+{
+  "id": "chatcmpl-9aaec490598814d7",
+  "object": "chat.completion",
+  "created": 1793601265,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"image_available\": true,\n  \"main_subject\": \"电梯内部环境，包含白色墙面、金属面板及底部的机械臂夹爪\",\n  \"button\": \"可见，位于左上方金属面板中央，带有向下箭头图标\",\n  \"gripper\": \"可见，位于画面底部左右两侧，呈黑色机械结构\",\n  \"marker\": \"不可见\",\n  \"positions\": {\n    \"button\": \"左上\",\n    \"gripper\": \"底部左右两侧\"\n  }\n}\n```",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "stop",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 304,
+    "total_tokens": 422,
+    "completion_tokens": 118,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

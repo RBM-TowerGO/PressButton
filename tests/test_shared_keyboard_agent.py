@@ -140,13 +140,13 @@ def test_demo_loads_raw_boundaries_and_keeps_missing_final(tmp_path):
     image = (root/'operations/000001/before/head.jpg').read_bytes()
     obs = dict(observation_id='live', state={}, selection={}, depth={})
     body = build_request('press', obs, image, dict(schema=SESSION_SCHEMA), [], 'prompt', image, demo)
-    content = body['messages'][1]['content']
+    content = [item for message in body['messages'][1:] for item in message['content']]
     assert len([x for x in content if x['type'] == 'image_url']) == 12
-    assert 'HISTORICAL_DEMONSTRATION_NOT_LIVE' in content[0]['text']
+    assert 'HISTORICAL_DEMONSTRATION_NOT_LIVE' in content[1]['text']
     assert 'LIVE HEAD' in content[-4]['text']
     assert 'LIVE RIGHT WRIST' in content[-2]['text']
     before = demo.content[2]['image_url']['url']
-    assert before == build_request('press', obs, image, dict(schema=SESSION_SCHEMA), [], 'p', image, demo)['messages'][1]['content'][2]['image_url']['url']
+    assert before == build_request('press', obs, image, dict(schema=SESSION_SCHEMA), [], 'p', image, demo)['messages'][1]['content'][3]['image_url']['url']
 
     # A successful press can coexist with an interrupted withdrawal. Preserve
     # that boundary explicitly rather than turning its target into a success.
@@ -165,7 +165,8 @@ def test_demo_loads_raw_boundaries_and_keeps_missing_final(tmp_path):
     assert json.loads((interrupted/'operation.json').read_text()) == operation
 
 
-def test_cancel_during_model_wait_discards_late_action(tmp_path, monkeypatch):
+@pytest.mark.parametrize('cancel_stage', ['action', 'view'])
+def test_cancel_during_model_wait_discards_late_action(tmp_path, monkeypatch, cancel_stage):
     import s1b_agent
     service = Service(FakeBackend(), FakeCamera(), tmp_path/'robot')
     server = make_server(service, 0)
@@ -179,16 +180,26 @@ def test_cancel_during_model_wait_discards_late_action(tmp_path, monkeypatch):
         controls.append(control)
         return control
     monkeypatch.setattr(s1b_agent, 'StopControl', factory)
+    from pressb.agent_loop import view_acquisition
+    from test_view_acquisition import reply, located
+    def inspect_view(base, body, oid, directory, cancel=None):
+        if cancel_stage == 'view':
+            controls[0].cancel.set()
+            release.wait(2)
+        return view_acquisition.validate(reply(oid=oid, head=located()), oid)
+    monkeypatch.setattr(view_acquisition, 'inspect', inspect_view)
     def propose(*args, **kwargs):
+        assert cancel_stage == 'action', 'cancelled view must not start an action request'
         controls[0].cancel.set()
         release.wait(2)
         return dict(name='propose_move', arguments=dict(xyz_mm=[10,0,0], reason='late'))
     monkeypatch.setattr(s1b_agent, 'propose', propose)
+    monkeypatch.setattr('pressb.agent_loop.conversation.tokenize', lambda *a:1000)
     prompt = tmp_path/'prompt'
     prompt.write_text('test')
     args = SimpleNamespace(output=str(tmp_path/'client'), prompt=str(prompt), model_base='http://unused/v1',
         replay=None, thor_port=18000, thor_host='unused', robot_base='http://127.0.0.1:'+str(server.server_port),
-        max_rounds=20, goal='test')
+        max_rounds=20, goal='test',decision_mode='direct')
     try:
         with pytest.raises(InterruptedError):
             s1b_agent.run(args)
@@ -256,14 +267,35 @@ def test_model_network_failure_is_logged_without_retry(tmp_path, monkeypatch):
     assert len(calls) == 1
 
 
-def test_invalid_model_output_gets_only_one_format_repair(tmp_path, monkeypatch):
+def test_invalid_model_output_keeps_repairing_until_valid(tmp_path, monkeypatch):
     from pressb.agent_loop import client
+    from test_conversation import response
     calls = []
     def invalid(*args, **kwargs):
-        calls.append(True)
-        return dict(choices=[])
+        calls.append(copy.deepcopy(args[2]))
+        return (dict(choices=[]) if len(calls) <= 4 else
+                response('propose_head', dict(head_deg=[0,30],reason='obtain view')))
     monkeypatch.setattr(client, 'request', invalid)
-    with pytest.raises(ValueError, match='invalid_model_proposal'):
-        client.propose('http://unused', dict(messages=[]), {}, dict(schema=SESSION_SCHEMA), tmp_path)
-    assert len(calls) == 2 and (tmp_path/'repair-request.json').exists()
-    assert json.loads((tmp_path/'error.json').read_text())['stage'] == 'parse_proposal'
+    proposal = client.propose('http://unused', dict(messages=[]), dict(observation_id='now'),
+                              dict(schema=SESSION_SCHEMA), tmp_path)
+    assert len(calls) == 5 and proposal['arguments']['head_deg'] == [0,30]
+    assert all(len(body['messages']) == 1 for body in calls[1:])
+    assert len(list(tmp_path.glob('response-*.json'))) == 5
+    assert len(list(tmp_path.glob('repair-request-*.json'))) == 4
+    assert len(list(tmp_path.glob('validation-*.json'))) == 4
+    assert json.loads((tmp_path/'correction.json').read_text())['status'] == 'accepted'
+    assert not (tmp_path/'error.json').exists()
+
+
+def test_repeated_invalid_action_remains_cancellable(tmp_path, monkeypatch):
+    from pressb.agent_loop import client
+    cancel=threading.Event();calls=[]
+    def invalid(*args, **kwargs):
+        calls.append(True)
+        if len(calls)==4:cancel.set()
+        return dict(choices=[])
+    monkeypatch.setattr(client,'request',invalid)
+    with pytest.raises(InterruptedError,match='operator_stopped'):
+        client.propose('fake',dict(messages=[]),dict(observation_id='now'),
+                       dict(schema=SESSION_SCHEMA),tmp_path,cancel=cancel)
+    assert len(calls)==4 and not (tmp_path/'proposal.json').exists()

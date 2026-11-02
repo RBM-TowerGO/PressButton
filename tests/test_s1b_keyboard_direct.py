@@ -43,15 +43,32 @@ def test_sdk_eof_declines_instead_of_triggering_takeover_fallback(monkeypatch):
     assert builtins.input is eof
 
 
-def test_sdk_constructor_failure_restores_input(monkeypatch):
+@pytest.mark.parametrize('auto_confirm', [False, True])
+def test_sdk_constructor_failure_restores_input(monkeypatch, auto_confirm):
     import builtins
     from s1b_keyboard_direct import connect_robot
     reader=lambda:'yes'
     monkeypatch.setattr(builtins,'input',reader)
     def fail(**kw):raise RuntimeError('init failure')
     with pytest.raises(RuntimeError,match='init failure'):
-        connect_robot(fail,250)
+        connect_robot(fail,250,auto_confirm=auto_confirm)
     assert builtins.input is reader
+
+
+def test_sdk_auto_confirmation_does_not_consume_terminal_input(monkeypatch, capsys):
+    import builtins
+    import s1b_keyboard_direct as keyboard
+    reader=lambda *a, **k:pytest.fail('auto confirmation must not read stdin')
+    monkeypatch.setattr(builtins, 'input', reader)
+    monkeypatch.setattr(keyboard.termios, 'tcflush',
+                        lambda *a:pytest.fail('auto confirmation must preserve queued stop input'))
+    def factory(**kwargs):
+        assert kwargs['high_control_rights'] is False
+        assert kwargs['freq'] == 250
+        return builtins.input('SDK takeover? ')
+    assert keyboard.connect_robot(factory, 250, auto_confirm=True) == 'yes'
+    assert builtins.input is reader
+    assert 'SDK takeover? yes' in capsys.readouterr().out
 
 
 def test_gripper_commands_preserve_arm_and_only_target_right_gripper():

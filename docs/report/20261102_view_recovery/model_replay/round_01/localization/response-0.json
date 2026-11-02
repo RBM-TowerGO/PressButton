@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-8d5ec733cf97f311",
+    "object": "chat.completion",
+    "created": 1793596499,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-955c457276787038",
+              "type": "function",
+              "function": {
+                "name": "inspect_view",
+                "arguments": "{\"observation_id\": \"8edf67ed93b0460293861f758919f6a5\", \"head\": \"\", \"panel_visible\": \"no\", \"button_visibility\": \"not_visible\", \"contact_visibility\": \"not_visible\", \"button_box\": \"null\", \"arrow_box\": \"null\", \"contact_tip\": \"null\", \"note\": \"Head view shows a reflective wall and robot reflection; no clear elevator down-call button face or white arrow marker is visible.\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 2766,
+      "total_tokens": 2943,
+      "completion_tokens": 177,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 17.786255201790482
+}

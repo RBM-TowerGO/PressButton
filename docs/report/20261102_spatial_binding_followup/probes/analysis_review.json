@@ -1,0 +1,252 @@
+{
+  "reviewer": "spatial_followup_design_audit independent read-only audit",
+  "robot_or_model_requests_sent": 0,
+  "summary_sha256": "29c62192d0f4f3d197e7672ea7b48581fc74ae877039853ebe360a3b7410c13c",
+  "checks": [
+    {
+      "name": "A_button_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_tip_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "B_button_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "B_tip_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_reverse_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_combined_points_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "B_combined_points_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_full2x_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_crop1x_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_crop2x_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_gray_outside_ROI_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "large_photo_ocr",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "large_photo_T_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "large_photo_P_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "large_photo_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "large_photo_reverse",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": false
+    },
+    {
+      "name": "swapped_photo_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "blank_large_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "numeric_from_A_predicted_points",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "swapped_photo_ocr",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "swapped_photo_T_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "swapped_photo_P_point",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "prior_small_TP_ocr",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": true
+    },
+    {
+      "name": "A_translated_ROI_relation",
+      "raw_matches_saved_scoring": true,
+      "strict_format_valid": false
+    }
+  ],
+  "totals_verified": {
+    "requests": 25,
+    "strict_format_valid": 23,
+    "prompt_tokens": 19167,
+    "completion_tokens": 1656
+  },
+  "findings": [
+    {
+      "id": "A_localization_does_not_explain_reversal",
+      "evidence": [
+        "A_button_point",
+        "A_tip_point",
+        "A_relation",
+        "A_reverse_relation",
+        "numeric_from_A_predicted_points"
+      ],
+      "single_point_pixels": {
+        "button": [
+          416.62800000000004,
+          114.162
+        ],
+        "tip": [
+          469.66499999999996,
+          287.2
+        ]
+      },
+      "horizontal_difference_button_minus_tip_px": -53.03699999999992,
+      "conclusion": "A 单点预测位置仍明确为按钮在指端左上；直接关系上/右，反问下/右，不满足左右反向。给定其预测坐标后比较正确。单点定位误差不足以解释单独关系调用的左右反转。",
+      "limit": "这些是不同独立调用，不能证明关系调用内部也使用了已正确定位的两点。"
+    },
+    {
+      "id": "combined_consistent",
+      "evidence": [
+        "A_combined_points_relation",
+        "B_combined_points_relation"
+      ],
+      "conclusion": "两个联合输出均为上/左，均与自身输出的两点一致，没有发现同一响应中坐标和关系自相矛盾；A 联合输出相较直接关系发生改善。",
+      "limit": "两张选定图片各一次，不能声称坐标先行方法普遍可靠；联合提示、schema与输出序列同时改变。"
+    },
+    {
+      "id": "swapped_roles_failure",
+      "evidence": [
+        "large_photo_ocr",
+        "large_photo_T_point",
+        "large_photo_P_point",
+        "large_photo_relation",
+        "swapped_photo_relation",
+        "swapped_photo_ocr",
+        "swapped_photo_T_point",
+        "swapped_photo_P_point"
+      ],
+      "swapped_relation_prompt_has_color_mapping": false,
+      "swapped_relation_history_messages": 2,
+      "swapped_point_errors_px": {
+        "T": 1.8008445241052609,
+        "P": 3.201896000809521
+      },
+      "conclusion": "交换字母后，独立 OCR 能正确对应颜色与字母，单点定位也跟随字母变化；直接关系却仍输出原来的上/左，应为下/右。支持指定角色与关系输出的组合过程不可靠，而非该刺激的标签根本不可读或点根本不可定位。",
+      "limit": "不能唯一归因于颜色先验、角色绑定模块、视觉编码或数字比较层；不同调用可能使用不同判断过程。"
+    },
+    {
+      "id": "old_small_label_readable_in_separate_task",
+      "evidence": [
+        "prior_small_TP_ocr"
+      ],
+      "conclusion": "上轮小标签的颜色与字母本轮独立 OCR 均答对，说明图中文字在此任务下可以读出。",
+      "limit": "不能反推上一轮关系回答内部也正确读出；不能排除阅读难度或任务敏感性。"
+    },
+    {
+      "id": "context_vs_scale",
+      "evidence": [
+        "A_relation",
+        "A_full2x_relation",
+        "A_crop1x_relation",
+        "A_crop2x_relation",
+        "A_gray_outside_ROI_relation"
+      ],
+      "conclusion": "原图和整图2倍仍错；原尺寸裁剪、2倍裁剪、同尺寸保留ROI/灰化其他区域均正确。灰化对保持目标像素、坐标、尺寸和输入token不变，提供周边内容/显著性改变影响结果的证据；单纯放大不足以修复。",
+      "limit": "灰化同时改变显著性与场景分布，不能确定具体干扰对象或网络机制；服务内部预处理未直接观察。"
+    },
+    {
+      "id": "center_heuristic_unresolved",
+      "evidence": [
+        "A_gray_outside_ROI_relation",
+        "A_translated_ROI_relation"
+      ],
+      "conclusion": "原位灰底已正确；左移条件又没有有效工具输出。因此未形成原位错/平移对的对照，不能声称证实画面中心替代参照假说。"
+    },
+    {
+      "id": "natural_tip_precision_limit",
+      "evidence": [
+        "B_tip_point",
+        "B_combined_points_relation"
+      ],
+      "conclusion": "B 单独指端定位约(469.7,299.0)，对近似标注约19.0px，略超预设框；联合指端约(469.7,287.2)。这支持定位也会随任务变化，尚不适合视作精确接触标定。"
+    }
+  ],
+  "format_failures": [
+    {
+      "name": "large_photo_reverse",
+      "strict_format_valid": false,
+      "finish_reason": "tool_calls",
+      "extra_prose": true,
+      "tool_arguments": {
+        "horizontal": "right",
+        "vertical": "below"
+      },
+      "tool_relation_semantically_correct": true,
+      "interpretation": "工具参数方向正确，但违反不输出正文约定；保留严格失败，不应记成视觉关系判断错。"
+    },
+    {
+      "name": "A_translated_ROI_relation",
+      "strict_format_valid": false,
+      "finish_reason": "length",
+      "completion_tokens": 384,
+      "tool_calls_present": false,
+      "interpretation": "正文曾明确比较为上/左，但响应在反复核对中截断，没有工具结果，不能算有效答对。"
+    }
+  ],
+  "scope": "Only two selected natural images and derived stimuli; no model-wide accuracy, robot success, training-data cause or neural-module conclusion."
+}

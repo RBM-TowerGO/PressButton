@@ -1,0 +1,33 @@
+{
+  "name": "A_flip_sticker",
+  "frame": "A",
+  "kind": "sticker",
+  "transform": "vertical_flip_offline_only",
+  "expected": {
+    "vertical": "below",
+    "horizontal": "left"
+  },
+  "elapsed_s": 6.255885418038815,
+  "usage": {
+    "prompt_tokens": 737,
+    "total_tokens": 801,
+    "completion_tokens": 64,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "target_visible": "no",
+    "reference_visible": "no",
+    "vertical": "unknown",
+    "horizontal": "unknown"
+  },
+  "format_valid": true,
+  "relation_correct": false,
+  "vertical_correct": false,
+  "horizontal_correct": false,
+  "relation_unknown": true,
+  "presence_report_correct": false
+}

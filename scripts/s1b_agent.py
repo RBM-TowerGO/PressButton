@@ -13,7 +13,10 @@ import threading
 import sys
 import time
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'))
-from pressb.agent_loop.client import RobotClient,build_request,propose
+from pressb.agent_loop.client import RobotClient,propose
+from pressb.agent_loop.conversation import Conversation, image_count as count_images
+from pressb.agent_loop.short_loop import ShortConversation
+from pressb.agent_loop.model_context import FORMAT
 from pressb.agent_loop.common import atomic_json,request,SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
 from pressb.agent_loop.failure_case import FailureCase
@@ -128,11 +131,19 @@ def run(args):
     output = Path(args.output).expanduser()
     output.mkdir(parents=True, exist_ok=False)
     client = None
+    active_rd = None
+    decision_mode = getattr(args, 'decision_mode', 'grounded')
+    conversation_type = ShortConversation if decision_mode == 'grounded' else Conversation
     outcome = dict(status='error', model_reported_done=False, human_verified_success=None,
                    human_verified_retracted=None, completed_motion_commands=0)
     try:
         prompt = Path(args.prompt).read_text()
         demo = Demonstration(args.demo) if getattr(args, 'demo', None) else None
+        tail = getattr(args, 'demo_last_steps', None)
+        if tail is None and decision_mode == 'grounded':
+            tail = 3
+        if tail is not None and demo:
+            demo.select_activation_tail(tail)
         if demo:
             demo.save(output)
         failure = FailureCase(args.failure_case) if getattr(args, 'failure_case', None) else None
@@ -140,13 +151,28 @@ def run(args):
             failure.save(output)
         image_count = (len(demo.images) if demo else 0) + (len(failure.images) if failure else 0) + 2
         print(f'上下文：成功/历史示范 {len(demo.images) if demo else 0} 张，'
-              f'失败案例 {len(failure.images) if failure else 0} 张，当前双视角 2 张；共 {image_count} 张。', flush=True)
+              f'失败案例 {len(failure.images) if failure else 0} 张，当前双视角 2 张；首轮共 {image_count} 张，'
+              + ('后续保留当前双图和短运行记忆。' if decision_mode == 'grounded' else '后续追加。'), flush=True)
         model_base = args.model_base or f'http://127.0.0.1:{args.thor_port}/v1'
         atomic_json(output/'task.json', dict(goal=args.goal, model_base=model_base, prompt=prompt,
-            demo=str(demo.root) if demo else None, expected_images_per_request=image_count,
+            demo=str(demo.root) if demo else None, initial_image_count=image_count,
             failure_case=str(failure.root) if failure else None,
+            input_format=('pressb-conversation-v3' if decision_mode == 'grounded' else
+                          'pressb-conversation-v2' if decision_mode == 'separated' else FORMAT),
+            demo_selection=getattr(demo,'selection',None),
+            decision_mode=decision_mode, forward_guard_policy='wrist_horizontal',
+            progress_monitor_format='pressb-progress-v1' if decision_mode == 'direct' else None,
+            view_acquisition_format='pressb-view-acquisition-v1' if decision_mode == 'direct' else None,
+            perception_format='pressb-grounding-v2' if decision_mode == 'grounded' else None,
+            control_policy_version='pressb-control-plan-v1' if decision_mode == 'grounded' else None,
+            context_budget_tokens=getattr(args, 'context_budget_tokens', 65536),
             failure_analysis_version=failure.review['analysis_version'] if failure else None,
             execution='automatic_one_command_at_a_time'))
+        print('决策模式：'+decision_mode+('；当前双图定位按钮/指尖→计算图像偏差与阶段建议→动作决策；撤回后按需核验。thinking关闭。'
+              if decision_mode == 'grounded' else '；每轮先独立判读再选择动作，增加一次串行模型请求。'
+              if decision_mode == 'separated' else '；先检查头部取景，再直接决策；异常时复核，判断冲突时恢复取景。thinking关闭。'), flush=True)
+        print('前推限制：正X发送前仅检查当前腕图横向，按钮须位于可辨认的两指之间；'
+              '未知不放行。不检查高度，候选前推增加一次独立腕图请求。', flush=True)
         with tunnel(None if args.model_base else args.thor_host, args.thor_port), StopControl() as control:
             try:
                 if args.replay:
@@ -154,9 +180,14 @@ def run(args):
                     obs = json.loads((folder/'manifest.json').read_text())
                     session = json.loads(Path(args.session).read_text()) if args.session else dict(schema=SESSION_SCHEMA,
                         speed_mm_s=20., head_speed_deg_s=20., control_hz=250.)
-                    body = build_request(args.goal, obs, (folder/'right.jpg').read_bytes(), session, [], prompt,
-                                         (folder/'head.jpg').read_bytes(), demo, failure)
-                    proposal = control.call(propose, model_base, body, obs, session, output/'replay', cancel=control.cancel)
+                    conversation = conversation_type(args.goal, obs, (folder/'head.jpg').read_bytes(),
+                        (folder/'right.jpg').read_bytes(), session, prompt, demo, failure,
+                        getattr(args, 'context_budget_tokens', 65536), decision_mode=decision_mode,
+                        **(dict(monitor_progress=True, acquire_view=True) if decision_mode == 'direct' else {}))
+                    active_rd = output/'replay'
+                    body = control.call(conversation.prepare_decision, model_base, active_rd, control.cancel)
+                    proposal = control.call(propose, model_base, body, obs, session, output/'replay',
+                                            cancel=control.cancel, conversation=conversation)
                     print(json.dumps(proposal, ensure_ascii=False, indent=2))
                     outcome.update(status='replay_only', proposal=proposal)
                     return
@@ -164,15 +195,26 @@ def run(args):
                 control.client = client
                 atomic_json(output/'session.json', client.session)
                 obs, folder = control.call(client.observe)
-                history = []
+                conversation = conversation_type(args.goal, obs, (folder/'head.jpg').read_bytes(),
+                    (folder/'right.jpg').read_bytes(), client.session, prompt, demo, failure,
+                    getattr(args, 'context_budget_tokens', 65536), decision_mode=decision_mode,
+                    **(dict(monitor_progress=True, acquire_view=True) if decision_mode == 'direct' else {}))
                 print('自动闭环已启动；q 回车或 Ctrl-C 随时停止。', flush=True)
                 for index in range(args.max_rounds):
                     rd = output/'rounds'/f'{index:04d}'
-                    body = build_request(args.goal, obs, (folder/'right.jpg').read_bytes(), client.session,
-                                         history, prompt, (folder/'head.jpg').read_bytes(), demo, failure)
-                    print(f'第 {index+1} 轮：请求 Qwen；当前双视角 {folder}', flush=True)
-                    proposal = control.call(propose, model_base, body, obs, client.session, rd, cancel=control.cancel)
+                    active_rd = rd
+                    print(f'第 {index+1} 轮：'+('独立判读画面中' if decision_mode in ('separated','grounded') else '整理动作上下文'), flush=True)
+                    body = control.call(conversation.prepare_decision, model_base, rd, control.cancel)
+                    print(f'第 {index+1} 轮：请求 Qwen；{count_images(body["messages"])} 张图，'
+                          + ('短运行记忆' if decision_mode == 'grounded' else f'压缩代次 {conversation.generation}')
+                          + f'；当前双视角 {folder}', flush=True)
+                    proposal = control.call(propose, model_base, body, obs, client.session, rd,
+                                            cancel=control.cancel, conversation=conversation)
                     print(json.dumps(proposal, ensure_ascii=False, indent=2), flush=True)
+                    client.check_running()
+                    conversation.check_observation(obs['observation_id'])
+                    if hasattr(conversation, 'check_execution'):
+                        conversation.check_execution(proposal, obs['observation_id'])
                     name = proposal['name']
                     if name == 'report_done':
                         outcome.update(status='model_reported_done', model_reported_done=True,
@@ -182,15 +224,19 @@ def run(args):
                         outcome.update(status='model_unable', reason=proposal['arguments']['reason'])
                         break
                     if name == 'request_observation':
-                        history.append(dict(proposal=proposal))
                         obs, folder = control.call(client.observe)
+                        conversation.append_result(proposal, None, obs, (folder/'head.jpg').read_bytes(),
+                                                   (folder/'right.jpg').read_bytes())
+                        atomic_json(rd/'observation_result.json', dict(observation_id=obs['observation_id']))
                         continue
                     atomic_json(rd/'execution.json', dict(decision_observation_id=obs['observation_id'],
                                 execution_observation_id=obs['observation_id'], mode='automatic'))
-                    result, (obs, folder) = control.call(client.execute, proposal, obs)
+                    result, (obs, folder) = control.call(client.execute, proposal, obs,
+                        forward_check=getattr(conversation, 'forward_guard_decision', None))
                     atomic_json(rd/'result.json', result)
                     outcome['completed_motion_commands'] += 1
-                    history.append(dict(proposal=proposal, result={k:v for k,v in result['motion'].items() if k!='state_trace'}))
+                    conversation.append_result(proposal, result, obs, (folder/'head.jpg').read_bytes(),
+                                               (folder/'right.jpg').read_bytes())
                     print('命令发送完成，新观测已保存：'+str(folder), flush=True)
                 else:
                     outcome.update(status='max_rounds', reason='round_budget_exhausted')
@@ -204,6 +250,14 @@ def run(args):
     except (Exception, KeyboardInterrupt) as exc:
         outcome.update(status='operator_stopped' if isinstance(exc, (InterruptedError, KeyboardInterrupt)) else 'error',
                        error=str(exc))
+        if active_rd is not None:
+            if not (active_rd/'error.json').exists():
+                atomic_json(active_rd/'error.json', dict(stage='round', error_type=type(exc).__name__, error=str(exc)))
+            context_path = active_rd/'decision_context.json'
+            if context_path.exists():
+                context = json.loads(context_path.read_text())
+                context['stage'] = 'interrupted' if outcome['status'] == 'operator_stopped' else 'failed'
+                atomic_json(context_path, context)
         raise
     finally:
         atomic_json(output/'result.json', outcome)
@@ -217,8 +271,11 @@ def main():
     p.add_argument('--model-base',help='existing /v1 URL; disables automatic Thor tunnel')
     p.add_argument('--robot-base',default='http://127.0.0.1:6210')
     p.add_argument('--prompt',default=str(root/'docs/astribot/planar_control/agent_system_prompt.txt'))
+    p.add_argument('--context-budget-tokens', type=int, default=65536)
+    p.add_argument('--decision-mode', choices=('grounded', 'separated', 'direct'), default='grounded')
     p.add_argument('--max-rounds',type=int,default=20)
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')
+    p.add_argument('--demo-last-steps',type=int,help='last N completed actions through reviewed activation; grounded defaults to 3')
     failure_group = p.add_mutually_exclusive_group()
     failure_group.add_argument('--failure-case', help='reviewed failure run directory (case_review.json and agent/)')
     failure_group.add_argument('--no-failure-case', action='store_const', const=None, dest='failure_case',
@@ -226,7 +283,9 @@ def main():
     p.add_argument('--replay',help='saved observation directory; never connects to robot')
     p.add_argument('--session',help='keyboard-agent session.json for replay')
     args=p.parse_args()
+    if args.context_budget_tokens<=0:p.error('--context-budget-tokens must be positive')
     if args.max_rounds<=0:p.error('--max-rounds must be positive')
+    if args.demo_last_steps is not None and args.demo_last_steps<=0:p.error('--demo-last-steps must be positive')
     try:run(args)
     except (Exception,KeyboardInterrupt) as exc:
         print('Agent 退出：'+str(exc),file=sys.stderr);return 1

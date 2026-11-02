@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-8ad01507be652dba",
+  "object": "chat.completion",
+  "created": 1793541296,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-b81f0391bcafc9d0",
+            "type": "function",
+            "function": {
+              "name": "inspect_scene",
+              "arguments": "{\"head_button_visible\": \"yes\", \"head_button_relative_to_gripper\": \"right\", \"head_button_bbox_0_1000\": [860, 670, 920, 740], \"wrist_button_visible\": \"no\", \"wrist_button_location\": \"not visible in wrist view\", \"alignment\": \"misaligned\", \"robot_hand_direction\": \"right\", \"visual_evidence\": \"Head view shows a round down-call button on the right-side panel, clearly to the right of the open gripper; wrist view shows only a white wall with no button visible. The gripper is centered on the wall, not aligned with the button, so a rightward (robot +Y? actually button is image-right which corresponds to robot right, i.e. -Y) lateral correction is needed.\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 3286,
+    "total_tokens": 3523,
+    "completion_tokens": 237,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

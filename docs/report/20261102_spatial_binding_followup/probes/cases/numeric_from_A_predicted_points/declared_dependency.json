@@ -1,0 +1,14 @@
+{
+  "name": "numeric_from_A_predicted_points",
+  "mode": "relation",
+  "frame": "A",
+  "stimulus": null,
+  "expected": {},
+  "dependencies": [
+    "A_button_point",
+    "A_tip_point"
+  ],
+  "adaptive_rule": "Use the exact first-response normalized points from the two dependencies; skip without a request if either is null or invalid.",
+  "prompt_template": "TARGET T={A_button_point}; REFERENCE P={A_tip_point}; coordinates x right, y down. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+  "transform": "text_only_declared_dependency"
+}

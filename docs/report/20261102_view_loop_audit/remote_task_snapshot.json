@@ -1,0 +1,183 @@
+{
+  "root": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8",
+  "exists": true,
+  "tasks": [
+    {
+      "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/1a0ab76337a04bc4a997481c492ef512.json",
+      "task_id": "1a0ab76337a04bc4a997481c492ef512",
+      "command_id": "e8e33ff31be443a18622c3ae6558eb35",
+      "request": {
+        "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+        "command_id": "e8e33ff31be443a18622c3ae6558eb35",
+        "observation_id": "981630409f1349a2a93a53a23eb19399",
+        "type": "head",
+        "head_deg": [
+          -0.7,
+          55
+        ]
+      },
+      "status": "completed",
+      "phase": "READY",
+      "error": null,
+      "capture": {
+        "status": "complete",
+        "observation_id": "4438ad63a1d14eb4b00f800aa279eadc"
+      },
+      "motion": {
+        "action_completed": true,
+        "head_deg": [
+          -1.4438854424676575,
+          46.46087533680289
+        ],
+        "started_monotonic_ns": 269169430725334,
+        "completed_monotonic_ns": 269170757366893
+      }
+    },
+    {
+      "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/207e36d4bb974e138ee187050e0c2bdc.json",
+      "task_id": "207e36d4bb974e138ee187050e0c2bdc",
+      "command_id": "158633ccbc46499fba15405e06672b30",
+      "request": {
+        "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+        "command_id": "158633ccbc46499fba15405e06672b30"
+      },
+      "status": "completed",
+      "phase": "READY",
+      "error": null,
+      "capture": {
+        "status": "complete",
+        "observation_id": "a713792e553f49b68cd2c647f5191a2a"
+      },
+      "motion": {
+        "action_completed": false,
+        "head_deg": null,
+        "started_monotonic_ns": null,
+        "completed_monotonic_ns": null
+      }
+    },
+    {
+      "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/24d324d880ec4f3592dcb9a57c92d1f2.json",
+      "task_id": "24d324d880ec4f3592dcb9a57c92d1f2",
+      "command_id": "c1a1ca42e45e45499a5c4dafc3ca1a08",
+      "request": {
+        "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+        "command_id": "c1a1ca42e45e45499a5c4dafc3ca1a08",
+        "observation_id": "982596cf3b094fcbb1d7e3d57835feb9",
+        "type": "head",
+        "head_deg": [
+          -0.7,
+          42
+        ]
+      },
+      "status": "completed",
+      "phase": "READY",
+      "error": null,
+      "capture": {
+        "status": "complete",
+        "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74"
+      },
+      "motion": {
+        "action_completed": true,
+        "head_deg": [
+          -1.3138386406706146,
+          33.51575440666113
+        ],
+        "started_monotonic_ns": 269056849057467,
+        "completed_monotonic_ns": 269058085314074
+      }
+    },
+    {
+      "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/48d0ae850761444ba859304a69a6eacb.json",
+      "task_id": "48d0ae850761444ba859304a69a6eacb",
+      "command_id": "20091ff291e348efb807bb32a0132ec5",
+      "request": {
+        "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+        "command_id": "20091ff291e348efb807bb32a0132ec5",
+        "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2",
+        "type": "head",
+        "head_deg": [
+          -0.7,
+          35
+        ]
+      },
+      "status": "completed",
+      "phase": "READY",
+      "error": null,
+      "capture": {
+        "status": "complete",
+        "observation_id": "982596cf3b094fcbb1d7e3d57835feb9"
+      },
+      "motion": {
+        "action_completed": true,
+        "head_deg": [
+          -1.237340521966472,
+          27.482238501438662
+        ],
+        "started_monotonic_ns": 269008464172696,
+        "completed_monotonic_ns": 269009391535853
+      }
+    },
+    {
+      "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/4a77ce8d49b64e17a912ce13877def5f.json",
+      "task_id": "4a77ce8d49b64e17a912ce13877def5f",
+      "command_id": "6425dfb8834d420fbfae0b170ea5c9ad",
+      "request": {
+        "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+        "command_id": "6425dfb8834d420fbfae0b170ea5c9ad",
+        "observation_id": "a713792e553f49b68cd2c647f5191a2a",
+        "type": "head",
+        "head_deg": [
+          -0.7,
+          30
+        ]
+      },
+      "status": "completed",
+      "phase": "READY",
+      "error": null,
+      "capture": {
+        "status": "complete",
+        "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2"
+      },
+      "motion": {
+        "action_completed": true,
+        "head_deg": [
+          -0.9564831432955476,
+          24.57913489661644
+        ],
+        "started_monotonic_ns": 268943237077409,
+        "completed_monotonic_ns": 268943719051314
+      }
+    },
+    {
+      "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/dd510410fda54672b76bc743c98ff5ef.json",
+      "task_id": "dd510410fda54672b76bc743c98ff5ef",
+      "command_id": "36a505fbfcaa424fb978316c67358614",
+      "request": {
+        "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+        "command_id": "36a505fbfcaa424fb978316c67358614",
+        "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+        "type": "head",
+        "head_deg": [
+          -0.7,
+          48
+        ]
+      },
+      "status": "completed",
+      "phase": "READY",
+      "error": null,
+      "capture": {
+        "status": "complete",
+        "observation_id": "981630409f1349a2a93a53a23eb19399"
+      },
+      "motion": {
+        "action_completed": true,
+        "head_deg": [
+          -1.4504424240708698,
+          39.35474652432163
+        ],
+        "started_monotonic_ns": 269121498990417,
+        "completed_monotonic_ns": 269122749751707
+      }
+    }
+  ]
+}

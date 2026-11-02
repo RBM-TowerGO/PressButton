@@ -1,0 +1,55 @@
+{
+  "elapsed_s": 14.611216157209128,
+  "response": {
+    "id": "chatcmpl-85f9aa1da44f4f35",
+    "object": "chat.completion",
+    "created": 1793539375,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-9996e56d4635eff0",
+              "type": "function",
+              "function": {
+                "name": "propose_move",
+                "arguments": "{\"xyz_mm\": [5.0, 0.0, 0.0], \"reason\": \"HEAD shows the down-call button on the right panel with the open gripper finger just left of it; WRIST shows the button face between the open fingers but no light yet. Intended contacting finger is the right open finger, still slightly short of the button face; move forward +5 mm to press the button center. No activation light visible yet.\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 50244,
+      "total_tokens": 50369,
+      "completion_tokens": 125,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

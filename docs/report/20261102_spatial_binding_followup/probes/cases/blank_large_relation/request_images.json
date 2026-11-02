@@ -1,0 +1,11 @@
+{
+  "images": [
+    {
+      "path": "../../images/fcba18c7d9bf831593a5d85842293995b1458005e982e23885c93fb3a36b99a8.png",
+      "prefix": "data:image/png;base64",
+      "sha256": "fcba18c7d9bf831593a5d85842293995b1458005e982e23885c93fb3a36b99a8",
+      "bytes": 2573
+    }
+  ],
+  "exact_payload_restoration_checked": true
+}

@@ -1,0 +1,8 @@
+{
+  "phase": "finished",
+  "goal": "按下电梯外呼向下按钮并撤回",
+  "output": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261101_211122_639d06d8",
+  "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+  "reason": "operator_stopped",
+  "agent_exit_code": 1
+}

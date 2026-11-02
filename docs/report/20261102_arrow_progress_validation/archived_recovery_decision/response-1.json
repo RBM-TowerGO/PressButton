@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-877276a6c2b6bfed",
+    "object": "chat.completion",
+    "created": 1793591842,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-b851d6ffc995a2ef",
+              "type": "function",
+              "function": {
+                "name": "propose_move",
+                "arguments": "{\"xyz_mm\": [0, 0, 5], \"reason\": \"上次+10mm后按钮与标记仍接近同高但略偏上，小幅+5mm微调使按钮中心与红色标记同高，便于水平对齐。\", \"progress\": {\"observation_id\": \"02bbfd18cc3b45e091c3d6d9e2971c79\", \"subgoal\": \"align_vertical\", \"view\": \"wrist\", \"button_vertical\": \"above\", \"button_horizontal\": \"center\", \"last_effect\": \"unchanged\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 10737,
+      "total_tokens": 10904,
+      "completion_tokens": 167,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 16.4309201692231
+}

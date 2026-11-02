@@ -1,0 +1,9 @@
+{
+  "round": 1,
+  "observation_id": "8edf67ed93b0460293861f758919f6a5",
+  "source_directory": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_120741_0ca36af5/agent/observations/8edf67ed93b0460293861f758919f6a5",
+  "sha256": {
+    "head.jpg": "ccba91b56901e37363e335995f4e93cdd44f26fe4c9a3311e20836d51fac929e",
+    "right.jpg": "74e80062db7379d01baa4931259f78057e3a0a045e7d469a743ede594edafa2c"
+  }
+}

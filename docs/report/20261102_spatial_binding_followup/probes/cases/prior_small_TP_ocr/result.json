@@ -1,0 +1,39 @@
+{
+  "name": "prior_small_TP_ocr",
+  "mode": "ocr",
+  "stimulus": "prior_small_TP",
+  "frame": "A",
+  "image_size": [
+    640,
+    360
+  ],
+  "scale": 1,
+  "transform": "exact_previous_stimulus_bytes",
+  "source": "/home/js/robot/VLA/PressButton/docs/report/20261102_capability_bottleneck/probes/images/28a42c509c9a8b312532aa80fc6b2ea36089892a9fd0ee7b71634a3933b35783.jpg",
+  "sha256": "28a42c509c9a8b312532aa80fc6b2ea36089892a9fd0ee7b71634a3933b35783",
+  "expected": {
+    "magenta_label": "T",
+    "cyan_label": "P"
+  },
+  "prompt": "Read the letter next to the MAGENTA dot and the letter next to the CYAN dot. Return magenta_label and cyan_label. Do not report positions or object names. If unreadable, use null.",
+  "request_sent": true,
+  "elapsed_s": 4.143412941135466,
+  "usage": {
+    "prompt_tokens": 717,
+    "total_tokens": 759,
+    "completion_tokens": 42,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "cyan_label": "P",
+    "magenta_label": "T"
+  },
+  "format_valid": true,
+  "magenta_label_correct": true,
+  "cyan_label_correct": true,
+  "labels_correct": true
+}

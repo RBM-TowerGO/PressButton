@@ -68,10 +68,15 @@ class SDKOutput:
             os.close(self.err)
 
 
-def connect_robot(factory, frequency):
+def connect_robot(factory, frequency, *, auto_confirm=False):
+    """Answer SDK initialization prompts; restore normal input after connecting."""
     original_input = builtins.input
 
     def interactive_answer(*args, **kwargs):
+        if auto_confirm:
+            prompt = args[0] if args else kwargs.get('prompt', '')
+            print(f'{prompt}yes [自动确认 SDK 控制权接管]', flush=True)
+            return 'yes'
         try:
             if sys.stdin.isatty():
                 termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)

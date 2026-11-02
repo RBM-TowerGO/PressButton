@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-b8d13142a44202c4",
+    "object": "chat.completion",
+    "created": 1793596571,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-85a50f2d2fa839f4",
+              "type": "function",
+              "function": {
+                "name": "inspect_view",
+                "arguments": "{\"observation_id\": \"f31cc38545bf422b980a9196c7a4ebbd\", \"head\": {\"panel_visible\": \"no\", \"button_visibility\": \"not_visible\", \"contact_visibility\": \"not_visible\", \"button_box\": null, \"arrow_box\": null, \"contact_tip\": null, \"note\": \"Head view shows a reflective wall and robot reflection; no clear elevator down-call button or white arrow marker is visible.\"}, \"wrist\": {\"panel_visible\": \"yes\", \"button_visibility\": \"full\", \"contact_visibility\": \"partial\", \"button_box\": [0.585, 0.235, 0.665, 0.375], \"arrow_box\": [0.735, 0.735, 0.865, 0.875], \"contact_tip\": [0.735, 0.785], \"note\": \"Wrist view shows a round elevator down-call button on the metal panel and a white/cream arrow marker on the right finger; the physical finger front end is partly visible near the marker.\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 2764,
+      "total_tokens": 3055,
+      "completion_tokens": 291,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 27.846373608801514
+}

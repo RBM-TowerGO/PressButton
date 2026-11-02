@@ -1,0 +1,314 @@
+{
+  "snapshot_time": "2026-11-01T23:45:59.111740+08:00",
+  "run": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261101_234200_c94a9727",
+  "status_at_review": "in_progress",
+  "review_scope": "completed_rounds_1_to_5",
+  "robot_commands_sent_by_reviewer": 0,
+  "rows": [
+    {
+      "round": 1,
+      "observation_id": "e9e0d18646004f66b0afa6e093f293b1",
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "e9e0d18646004f66b0afa6e093f293b1",
+        "head_visible": "no",
+        "wrist_visible": "no",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "not_visible",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            0.0,
+            30.0
+          ],
+          "reason": "当前头部画面看不到完整面板与目标按钮，需下视以看清面板、按钮和右侧手指。"
+        }
+      },
+      "decision_basis": {
+        "observation_id": "e9e0d18646004f66b0afa6e093f293b1",
+        "visual_basis": {
+          "head_visible": "no",
+          "wrist_visible": "no",
+          "contact_finger": "unknown",
+          "head_horizontal": "unknown",
+          "head_vertical": "unknown"
+        },
+        "expected_effect": "improve_head_view",
+        "source": "model_decision_checked_against_current_assessment",
+        "check_scope": "Exact structured agreement and selected explicit prose conflicts; not general semantic proof."
+      },
+      "execution_status": "completed",
+      "after_observation_id": "b3279cd77c8245409581f4712a5c3887"
+    },
+    {
+      "round": 2,
+      "observation_id": "b3279cd77c8245409581f4712a5c3887",
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "b3279cd77c8245409581f4712a5c3887",
+        "head_visible": "yes",
+        "wrist_visible": "no",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "not_visible",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0.0,
+            -20.0,
+            0.0
+          ],
+          "reason": "头部画面中目标按钮在右侧、高于手指；先向机器人右侧(-Y)接近面板，使右手指与按钮横向对齐。"
+        }
+      },
+      "decision_basis": {
+        "observation_id": "b3279cd77c8245409581f4712a5c3887",
+        "visual_basis": {
+          "head_visible": "yes",
+          "wrist_visible": "no",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above"
+        },
+        "expected_effect": "reduce_horizontal_error",
+        "source": "model_decision_checked_against_current_assessment",
+        "check_scope": "Exact structured agreement and selected explicit prose conflicts; not general semantic proof."
+      },
+      "execution_status": "completed",
+      "after_observation_id": "98cb4d56ce0c44b9a426e0f1c08f39e1"
+    },
+    {
+      "round": 3,
+      "observation_id": "98cb4d56ce0c44b9a426e0f1c08f39e1",
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "98cb4d56ce0c44b9a426e0f1c08f39e1",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "head_visible": "yes",
+        "lamp": "unknown",
+        "lamp_view": "unknown",
+        "wrist_relation": "right",
+        "wrist_visible": "yes"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            30,
+            0,
+            0
+          ],
+          "reason": "前进接近面板，使右手指与向下按钮在头部画面中更清晰对齐，便于后续按压。"
+        }
+      },
+      "decision_basis": {
+        "observation_id": "98cb4d56ce0c44b9a426e0f1c08f39e1",
+        "visual_basis": {
+          "contact_finger": "unknown",
+          "head_horizontal": "unknown",
+          "head_vertical": "unknown",
+          "head_visible": "yes",
+          "wrist_visible": "yes"
+        },
+        "expected_effect": "approach",
+        "source": "model_decision_checked_against_current_assessment",
+        "check_scope": "Exact structured agreement and selected explicit prose conflicts; not general semantic proof."
+      },
+      "execution_status": "completed",
+      "after_observation_id": "a33df54bf29748988bf1151cf4528f32"
+    },
+    {
+      "round": 4,
+      "observation_id": "a33df54bf29748988bf1151cf4528f32",
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "a33df54bf29748988bf1151cf4528f32",
+        "head_visible": "yes",
+        "wrist_visible": "no",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "not_visible",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            -10,
+            -10
+          ],
+          "reason": "HEAD sees the down button at right/below the open right finger; move right and down to align the right finger with the button face before pressing."
+        }
+      },
+      "decision_basis": {
+        "observation_id": "a33df54bf29748988bf1151cf4528f32",
+        "visual_basis": {
+          "head_visible": "yes",
+          "wrist_visible": "no",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above"
+        },
+        "expected_effect": "reduce_horizontal_error",
+        "source": "model_decision_checked_against_current_assessment",
+        "check_scope": "Exact structured agreement and selected explicit prose conflicts; not general semantic proof."
+      },
+      "execution_status": "completed",
+      "after_observation_id": "0588b6a1efe74bfaa0fe7d9b3f104ce5"
+    },
+    {
+      "round": 5,
+      "observation_id": "0588b6a1efe74bfaa0fe7d9b3f104ce5",
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "0588b6a1efe74bfaa0fe7d9b3f104ce5",
+        "head_visible": "yes",
+        "wrist_visible": "no",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "not_visible",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            20,
+            0,
+            0
+          ],
+          "reason": "HEAD shows the down button on the right and the right finger below it; move forward to bring the right finger toward the button face."
+        }
+      },
+      "decision_basis": {
+        "observation_id": "0588b6a1efe74bfaa0fe7d9b3f104ce5",
+        "visual_basis": {
+          "head_visible": "yes",
+          "wrist_visible": "no",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above"
+        },
+        "expected_effect": "approach",
+        "source": "model_decision_checked_against_current_assessment",
+        "check_scope": "Exact structured agreement and selected explicit prose conflicts; not general semantic proof."
+      },
+      "execution_status": "completed",
+      "after_observation_id": "bfa9a72b5e644f79ac3ba735e07c93c2"
+    }
+  ],
+  "findings": [
+    {
+      "kind": "recorded_fact",
+      "round": 4,
+      "observation_id": "a33df54bf29748988bf1151cf4528f32",
+      "detail": "assessment and visual_basis say head_vertical=above; reason says below; command Z=-10."
+    },
+    {
+      "kind": "image_interpretation",
+      "rounds": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "detail": "Button above visible right fingertip in head image; wrist button cropped at top then leaves view. No verified activation."
+    },
+    {
+      "kind": "recorded_fact",
+      "rounds": [
+        3,
+        5
+      ],
+      "detail": "Forward commands total +X50 mm; no upward command in first five rounds."
+    },
+    {
+      "kind": "separate_older_run_bug",
+      "run": "20261101_233237_284f0f1b",
+      "round": 8,
+      "detail": "Negative statement 未清楚看到 was falsely classified as visible by reason_conflicts, causing termination."
+    }
+  ],
+  "followup_time": "2026-11-01T23:46:06+08:00",
+  "followup_completed_rounds": [
+    {
+      "round": 6,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            10,
+            0,
+            0
+          ],
+          "reason": "HEAD sees the down button at right/below the open right finger; advance forward to bring the right finger toward the button face for pressing."
+        }
+      },
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "bfa9a72b5e644f79ac3ba735e07c93c2",
+        "head_visible": "yes",
+        "wrist_visible": "no",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "not_visible",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "status": "completed"
+    },
+    {
+      "round": 7,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            10,
+            0,
+            0
+          ],
+          "reason": "Head shows the down button to the right and above the right finger; move forward to close distance and reassess alignment before pressing."
+        }
+      },
+      "assessment": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "d95d69edbb854ec5a4fe069d29a712b4",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "unknown",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "status": "completed"
+    }
+  ]
+}

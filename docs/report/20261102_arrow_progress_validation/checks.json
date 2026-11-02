@@ -1,0 +1,28 @@
+{
+  "pytest": {
+    "tests": 473,
+    "passed": 472,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "seconds": 35.119
+  },
+  "skip_reason": "Node not installed; equivalent dashboard rendering executed successfully in V8",
+  "compileall": "passed",
+  "git_diff_check": "passed",
+  "robot_started": false,
+  "live_motion_commands_sent": 0,
+  "model_validation": "see summary.json; visual misjudgments and rejected recovery are retained",
+  "source_sha256": {
+    "src/pressb/agent_loop/progress.py": "8798bdbbb16fc5e69da7fed16c7ab56257af795478f3d2df4682bb83b8519db7",
+    "src/pressb/agent_loop/conversation.py": "69c9b8bcfe93b3839979e6a5cef024dba8b5648764e5bc1285dd4080684c13ef",
+    "src/pressb/agent_loop/client.py": "40486dbf035b6ac3dbbe5836f4c79df0e898b400c39b94bdc33ed55d21b37aca",
+    "src/pressb/agent_loop/model_context.py": "90b0518520cf26eb260e0dd4d45bdefb995eb9af5410be127877ecbabf61fbdf",
+    "src/pressb/agent_loop/failure_case.py": "0d5d5584785198bbe365781022984452adfeaf30129cb7dc5ada576b4d16efa7",
+    "scripts/s1b_agent.py": "1b722fd307e5bb84aa4afaea9c7841c2b9349622ea0e730d654a486ed121a545",
+    "scripts/s1b_agent_run.py": "79c32f8d209132e34dd28dd1bb8bba001f9d22e69df1925edd45ec622e8f0197",
+    "scripts/s1b_agent_dashboard.py": "72461e90fb8a606fe50c608edc9666885fa33fb4ee5a2989b41de0ea390a7e75",
+    "scripts/validate_agent_progress.py": "4992ec4836ede154b9737492c1c91134ab8aef8c62efc63e6fd5f3e15ab4a402",
+    "docs/astribot/planar_control/agent_system_prompt_red_marker.txt": "83c6f04eceb906a6e03874d2c971bb38aaa348b3a11896a01f68dfd1159787e8"
+  }
+}

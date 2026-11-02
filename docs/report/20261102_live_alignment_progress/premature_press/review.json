@@ -1,0 +1,1203 @@
+{
+  "recorded_at": "2026-11-02T00:15:47.492713+08:00",
+  "run": "outputs/agent_web/20261102_000527_84b15208",
+  "operator_feedback": {
+    "source": "user",
+    "quote": "现在又提前按下了",
+    "interpretation": "用户报告提前前压；不据此宣称按钮已触发或推断碰撞。"
+  },
+  "log_facts": {
+    "outcome": {
+      "status": "operator_stopped",
+      "model_reported_done": false,
+      "human_verified_success": null,
+      "human_verified_retracted": null,
+      "completed_motion_commands": 14,
+      "stop_error": "<urlopen error [Errno 111] Connection refused>",
+      "error": "operator_stopped"
+    },
+    "net_completed_command_mm": [
+      80.0,
+      -90.0,
+      90.0
+    ],
+    "rounds": [
+      {
+        "round": 1,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "18b8c665017e409482289a4d05456558",
+          "previous_observation_id": null,
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": 11314,
+          "input_tokens_estimate": 11314
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "18b8c665017e409482289a4d05456558",
+          "head_visible": "no",
+          "wrist_visible": "yes",
+          "contact_finger": "unknown",
+          "head_horizontal": "unknown",
+          "head_vertical": "unknown",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_head",
+          "arguments": {
+            "head_deg": [
+              0,
+              30
+            ],
+            "reason": "Head view shows only blank wall; panel and right finger not visible, so pitch down to ~30° to frame the panel and selected finger."
+          }
+        },
+        "basis": {
+          "observation_id": "18b8c665017e409482289a4d05456558",
+          "visual_basis": {
+            "head_visible": "no",
+            "wrist_visible": "yes",
+            "contact_finger": "unknown",
+            "head_horizontal": "unknown",
+            "head_vertical": "unknown"
+          },
+          "expected_effect": "improve_head_view",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "51ca889e951d4598aa92cec20a8880df",
+            "observation_id": "18b8c665017e409482289a4d05456558",
+            "type": "head",
+            "head_deg": [
+              0,
+              30
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+          "previous_observation_id": "18b8c665017e409482289a4d05456558",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 15157
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "unknown",
+          "head_horizontal": "unknown",
+          "head_vertical": "unknown",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              30,
+              0,
+              0
+            ],
+            "reason": "HEAD sees the down button at right edge and the right-side finger is not yet identifiable; move forward to bring the open right finger toward the button face for alignment."
+          }
+        },
+        "basis": {
+          "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "unknown",
+            "head_horizontal": "unknown",
+            "head_vertical": "unknown"
+          },
+          "expected_effect": "approach",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "e44ee91ea7e34d6c91a0d061abc01b2e",
+            "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+            "type": "move",
+            "xyz_mm": [
+              30,
+              0,
+              0
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "291c556a17e84d1eab8c4bea737b4121"
+          }
+        }
+      },
+      {
+        "round": 3,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "291c556a17e84d1eab8c4bea737b4121",
+          "previous_observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 15164
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "291c556a17e84d1eab8c4bea737b4121",
+          "head_visible": "yes",
+          "wrist_visible": "no",
+          "contact_finger": "unknown",
+          "head_horizontal": "unknown",
+          "head_vertical": "unknown",
+          "wrist_relation": "not_visible",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_head",
+          "arguments": {
+            "head_deg": [
+              0.0,
+              30.0
+            ],
+            "reason": "Head view is too high/oblique and the panel button plus right finger are not clearly framed; increase look-down pitch to see the complete panel and selected finger for alignment."
+          }
+        },
+        "basis": {
+          "observation_id": "291c556a17e84d1eab8c4bea737b4121",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "no",
+            "contact_finger": "unknown",
+            "head_horizontal": "unknown",
+            "head_vertical": "unknown"
+          },
+          "expected_effect": "improve_head_view",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "14b3029a73f2455dba402403b09b8c38",
+            "observation_id": "291c556a17e84d1eab8c4bea737b4121",
+            "type": "head",
+            "head_deg": [
+              0.0,
+              30.0
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "650aa161d6174b60af495eede7769a2b"
+          }
+        }
+      },
+      {
+        "round": 4,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "650aa161d6174b60af495eede7769a2b",
+          "previous_observation_id": "291c556a17e84d1eab8c4bea737b4121",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 15514
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "650aa161d6174b60af495eede7769a2b",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "unknown",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              10.0
+            ],
+            "reason": "HEAD shows the down button right and above the right finger; move robot right (-Y) and raise (+Z) to reduce both lateral and height deviations before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "650aa161d6174b60af495eede7769a2b",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "d73f3fdfe0cd4a1f886651e20f7239d0",
+            "observation_id": "650aa161d6174b60af495eede7769a2b",
+            "type": "move",
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              10.0
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "290db6e1aae84e1f94ec4ab82a0a4a19"
+          }
+        }
+      },
+      {
+        "round": 5,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "290db6e1aae84e1f94ec4ab82a0a4a19",
+          "previous_observation_id": "650aa161d6174b60af495eede7769a2b",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 15890
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "290db6e1aae84e1f94ec4ab82a0a4a19",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows the down button right and above the right finger; move robot right (-Y) and raise (+Z) to reduce both lateral and height deviations before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "290db6e1aae84e1f94ec4ab82a0a4a19",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "4cd47e6527b843c1b0b3eabdea5dc75b",
+            "observation_id": "290db6e1aae84e1f94ec4ab82a0a4a19",
+            "type": "move",
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "5660d9d8ed9941eda67160244e2def0f"
+          }
+        }
+      },
+      {
+        "round": 6,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "5660d9d8ed9941eda67160244e2def0f",
+          "previous_observation_id": "290db6e1aae84e1f94ec4ab82a0a4a19",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16227
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "5660d9d8ed9941eda67160244e2def0f",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ],
+            "reason": "HEAD中按钮在右手指右侧且上方，手指偏左偏低；按attention_axis先抬升+Z并右移-Y接近按钮，剩余水平偏差待观察。"
+          }
+        },
+        "basis": {
+          "observation_id": "5660d9d8ed9941eda67160244e2def0f",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_vertical_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "cbb6b5086f554ac6984e9b40448423ef",
+            "observation_id": "5660d9d8ed9941eda67160244e2def0f",
+            "type": "move",
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "63ec6c285fa54e8eb2c881e841abe768"
+          }
+        }
+      },
+      {
+        "round": 7,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "63ec6c285fa54e8eb2c881e841abe768",
+          "previous_observation_id": "5660d9d8ed9941eda67160244e2def0f",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16579
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "63ec6c285fa54e8eb2c881e841abe768",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows the down button right and above the right finger; move robot right (-Y) and raise (+Z) to reduce both lateral and height offsets before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "63ec6c285fa54e8eb2c881e841abe768",
+          "visual_basis": {
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above",
+            "head_visible": "yes",
+            "wrist_visible": "yes"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "199af7f0d9984c5f882347adcb6dc3b0",
+            "observation_id": "63ec6c285fa54e8eb2c881e841abe768",
+            "type": "move",
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "8c09fa41f9d84606b8c252e42da56f42"
+          }
+        }
+      },
+      {
+        "round": 8,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "8c09fa41f9d84606b8c252e42da56f42",
+          "previous_observation_id": "63ec6c285fa54e8eb2c881e841abe768",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16575
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "8c09fa41f9d84606b8c252e42da56f42",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows the down button right and above the right-side finger; move robot right (-Y) and raise (+Z) to reduce both lateral and height deviations before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "8c09fa41f9d84606b8c252e42da56f42",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "625bbdbd4a6c47158caefcc8f7305655",
+            "observation_id": "8c09fa41f9d84606b8c252e42da56f42",
+            "type": "move",
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "407f15409cca4f3597d6cd3646988897"
+          }
+        }
+      },
+      {
+        "round": 9,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "407f15409cca4f3597d6cd3646988897",
+          "previous_observation_id": "8c09fa41f9d84606b8c252e42da56f42",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16575
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "407f15409cca4f3597d6cd3646988897",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows the down button right and above the right finger; move robot right (-Y) and raise (+Z) to reduce both lateral and height deviations before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "407f15409cca4f3597d6cd3646988897",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "47383eb6f77d4b0f9beaef24b0991fbb",
+            "observation_id": "407f15409cca4f3597d6cd3646988897",
+            "type": "move",
+            "xyz_mm": [
+              0,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "7d333ceb2b404b47805868ae37181846"
+          }
+        }
+      },
+      {
+        "round": 10,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "7d333ceb2b404b47805868ae37181846",
+          "previous_observation_id": "407f15409cca4f3597d6cd3646988897",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16560
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "7d333ceb2b404b47805868ae37181846",
+          "head_visible": "yes",
+          "head_horizontal": "right",
+          "head_vertical": "below",
+          "lamp": "unknown",
+          "lamp_view": "unknown",
+          "wrist_relation": "right",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              0,
+              -10
+            ],
+            "reason": "HEAD shows the down button right and below the right finger; move forward, robot-right and lower to reduce both offsets before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "7d333ceb2b404b47805868ae37181846",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "below"
+          },
+          "expected_effect": "reduce_vertical_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "a4935da2e1b14598ba9b2d741468f0b3",
+            "observation_id": "7d333ceb2b404b47805868ae37181846",
+            "type": "move",
+            "xyz_mm": [
+              10,
+              0,
+              -10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "255bbb85341c487e8394358181ec26f7"
+          }
+        }
+      },
+      {
+        "round": 11,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "255bbb85341c487e8394358181ec26f7",
+          "previous_observation_id": "7d333ceb2b404b47805868ae37181846",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16560
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "255bbb85341c487e8394358181ec26f7",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "head_visible": "yes",
+          "lamp": "unknown",
+          "lamp_view": "unknown",
+          "wrist_relation": "center",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              0,
+              10
+            ],
+            "reason": "HEAD shows the down button above/right of the right finger; raise and approach to reduce the height gap while keeping the right finger as contact reference."
+          }
+        },
+        "basis": {
+          "observation_id": "255bbb85341c487e8394358181ec26f7",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_vertical_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "a5f4d532d37440248aab6c089b0a2492",
+            "observation_id": "255bbb85341c487e8394358181ec26f7",
+            "type": "move",
+            "xyz_mm": [
+              10,
+              0,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "ef575c126b28411380625c3faba40236"
+          }
+        }
+      },
+      {
+        "round": 12,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "ef575c126b28411380625c3faba40236",
+          "previous_observation_id": "255bbb85341c487e8394358181ec26f7",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16577
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "ef575c126b28411380625c3faba40236",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows the down button right and above the right finger; move forward, robot-right (-Y) and raise (+Z) to reduce both horizontal and vertical deviation before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "ef575c126b28411380625c3faba40236",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "6dc83af2836d4dcdbcf05438db3554d9",
+            "observation_id": "ef575c126b28411380625c3faba40236",
+            "type": "move",
+            "xyz_mm": [
+              10,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "a1004229301e4262ac3ee2417bad418b"
+          }
+        }
+      },
+      {
+        "round": 13,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "a1004229301e4262ac3ee2417bad418b",
+          "previous_observation_id": "ef575c126b28411380625c3faba40236",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16580
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "a1004229301e4262ac3ee2417bad418b",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows the down button right and above the right finger; move forward, robot right (-Y) and up (+Z) to reduce both lateral and height deviation before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "a1004229301e4262ac3ee2417bad418b",
+          "visual_basis": {
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above",
+            "head_visible": "yes",
+            "wrist_visible": "yes"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "fc945ec1d6c34a35b18253b7f071bf0e",
+            "observation_id": "a1004229301e4262ac3ee2417bad418b",
+            "type": "move",
+            "xyz_mm": [
+              10,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "5db86300ae9a41c0bfcac1c4495dc368"
+          }
+        }
+      },
+      {
+        "round": 14,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "5db86300ae9a41c0bfcac1c4495dc368",
+          "previous_observation_id": "a1004229301e4262ac3ee2417bad418b",
+          "stage": "action_request",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16582
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "5db86300ae9a41c0bfcac1c4495dc368",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "center",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              -10,
+              10
+            ],
+            "reason": "HEAD shows button right and above the right finger; move forward, robot-right and up to reduce both lateral and height offsets before pressing."
+          }
+        },
+        "basis": {
+          "observation_id": "5db86300ae9a41c0bfcac1c4495dc368",
+          "visual_basis": {
+            "head_visible": "yes",
+            "wrist_visible": "yes",
+            "contact_finger": "head_image_right",
+            "head_horizontal": "right",
+            "head_vertical": "above"
+          },
+          "expected_effect": "reduce_horizontal_error",
+          "source": "model_decision_checked_against_current_assessment",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "check_scope": "Structured agreement, explicit scene relations and stated chassis motion signs; not general semantic proof or calibrated geometry."
+        },
+        "execution": {
+          "status": "completed",
+          "request": {
+            "session_id": "cf96304bf9314ec3bba5dad3034cce38",
+            "command_id": "18d7a1ce1d7243c3a720ba7db5d2a422",
+            "observation_id": "5db86300ae9a41c0bfcac1c4495dc368",
+            "type": "move",
+            "xyz_mm": [
+              10,
+              -10,
+              10
+            ]
+          },
+          "capture": {
+            "status": "complete",
+            "observation_id": "e4656703f2174344b4d9e52bbb7d23de"
+          }
+        }
+      },
+      {
+        "round": 15,
+        "context": {
+          "format": "pressb-conversation-v3",
+          "decision_mode": "grounded",
+          "observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+          "previous_observation_id": "5db86300ae9a41c0bfcac1c4495dc368",
+          "stage": "interrupted",
+          "perception_format": "pressb-grounding-v1",
+          "alignment_control_version": "pressb-alignment-control-v1",
+          "memory_mode": "bounded_current_state",
+          "compression_generation": 0,
+          "image_count": 5,
+          "compression_status": "bounded_not_needed",
+          "input_tokens_exact": null,
+          "input_tokens_estimate": 16581
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "center",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        }
+      }
+    ]
+  },
+  "image_review": {
+    "source": "assistant_image_review_not_calibrated_contact",
+    "round10": "按钮在选定头图右指尖上方，与模型below判读相反。",
+    "round14": "指尖投影在按钮下方面板区域，未见可靠亮灯变化；实际接触受力不能从单张图片确认。"
+  },
+  "analysis": [
+    {
+      "type": "inference",
+      "reason": "R10错误视觉判读被动作阶段当作一致依据；文本一致不能证明视觉正确。",
+      "rounds": [
+        10
+      ],
+      "observation_ids": [
+        "7d333ceb2b404b47805868ae37181846"
+      ]
+    },
+    {
+      "type": "log_fact_and_inference",
+      "reason": "R11至R14判读仍above/right，动作仍每轮含+X10；纠偏理由没有独立解释为何需要前推。",
+      "rounds": [
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "type": "code_reproduction",
+      "reason": "R10理由move forward, robot-right and lower与Y=0矛盾，逗号分句丢失共享move动词，现有正则漏检。",
+      "rounds": [
+        10
+      ]
+    }
+  ],
+  "source_sha256": {
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0000/decision_context.json": "bdf4d652f42d47a67ed59c476c73f4ce14706384d873d4a2dd28ab7e492ad6bd",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0000/perception/assessment.json": "fd09605a2f30208aea69b8b8fc996618335baab86f347ae5276b0d1eb6e6e4e3",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0000/proposal.json": "56ca1bf53bf8367f7642a39e21a9d0fe96991f251e91c3778a3f44848e557808",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0000/decision_basis.json": "2aec54ff5ddea3d71592b9983c7d254ee433e6851e1180f84637e4a533451624",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0000/result.json": "ff1cba006cb87e09f4930ec370d6501f39da1b29fa3aaaa066a60b10685c48d7",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0001/decision_context.json": "2b99b745180fdc168acb8b4271877b6de51b18f2f63478a0afc5f8df7c5024fd",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0001/perception/assessment.json": "b8af94d76215693d4c2edc3c6faa532f6a619fa0b594820b4447cae630eb4e96",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0001/proposal.json": "5caeca1e95f74fb12ef2fd95b0fab8f56ed3bf108db52687c0c800b5e73bbf3f",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0001/decision_basis.json": "223546dc7c280bd58553db5b06b4e7622835fbf6541a87aad6cb175c951ec7ea",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0001/result.json": "a4ce8c5b2fea8f3f90bb0c9971e0c43a7cdd310e7edd9add1e55e9ede1714f2f",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0002/decision_context.json": "c0781da8f8e1193df051b4f01b57b97b1cc3635a9b0f63701265f911da795109",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0002/perception/assessment.json": "6562d9dea4f022855d59a61460195ce80891125d85d7fcc5523c8088c58f12db",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0002/proposal.json": "5cb3b7f2bb3fb96324ab5b6f9300c00b5c850ca3fe5e65ef6b89b7b382a904f7",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0002/decision_basis.json": "e255e74cdbe176e2bfe767524933fbd5a87f27f11dbdb147a7059304bfdd62b9",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0002/result.json": "592316ad562e0fc1846d29db49111d6a686639c0f67cdc824623f0534a6e45c3",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0003/decision_context.json": "aae315e7e3e35494a1ec74bf45f592db38520d269d37b58f4029da91942a46aa",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0003/perception/assessment.json": "a15ec321a1a2c42112e82adf9289ad4b81d3fee235d9d5eba84527e0b66256d8",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0003/proposal.json": "2f9de24c3daa10abb592e588c4c9a07d1d5c9da9e3eda04aaa1229657386e4a2",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0003/decision_basis.json": "b483a8ec62aa91469d139c0eae606e29fbfab138e0550509dfa5e7b60fe91a57",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0003/result.json": "47c1917350851019d73f5245067eebba21ff711271cffa6476f7d14a4b60a7ea",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0004/decision_context.json": "34f59b8e7f3115e78e1165d23f5ca9649ee5a4b7710a273df6780b759fe4b36a",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0004/perception/assessment.json": "562fc474686a6b6acefceb66edd35f2e7dd2aa53359db803d308a1763e3b0978",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0004/proposal.json": "7d4732eb0da5db88010e9a7c49f26a897c75f03c91d115db7f17876ea125dd47",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0004/decision_basis.json": "f09957a6b02b35384fa125d517ed0d06dc593a3918a514b179592c7eb1775d59",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0004/result.json": "767840bf13da3edd1dd4cdcf19595b24353c5248e89d25666211ed39924e4b96",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0005/decision_context.json": "bd6d785f2a2bcefad6f8510fc9b5cb2600e35da44c85bb0f98e7164584c86d9e",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0005/perception/assessment.json": "372d219751233d4f050c4233115f19bf4bf4c43936a3cce3a2b782e9356a17ef",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0005/proposal.json": "3c285ebf9090cf12778d4e74e0871fe1ffa3c94c3fec1bf7f3f9b6ae8c150e4c",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0005/decision_basis.json": "807565509cb94e08a3e2db2b317d7e4dda9f3260b9947ad6465e56acf62757f4",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0005/result.json": "0964e24974a6810f8011f8421b42d9599f89946557cf98587cd71ea3f823aef4",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0006/decision_context.json": "b85448415323ea4824e5e7cd2daae90ad90112e98792385f08973cc5a52567bd",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0006/perception/assessment.json": "87546b62d9e02d73f4469b7f168088435054177df1ebccc37e925f9c7013e14b",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0006/proposal.json": "f4ebccfd7d5a978932c3eff7afda3b38b6d3bff71edfe7e7a369976ba2c3a3bc",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0006/decision_basis.json": "912dc44b404723bacac897495ff64b56e6ebafaf489976c97a080fbf556ed381",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0006/result.json": "e0d0ba7a21dc2d9d7d40e316d7841506115cc9a8a09d2825848f7f8b5b67d9a6",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0007/decision_context.json": "8ad189528142bf79b957f1b24e8531f2d21bcd4f0800b96c93bca5aeaeeede89",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0007/perception/assessment.json": "d6e6e823b821dced0c990c5718e364ae77424ef00a04321481ee9f3c96af0a96",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0007/proposal.json": "29f34fc1af2ca8fe16189d1b13775ffc11a6018e3b566b91e57f72508dd5d704",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0007/decision_basis.json": "25ac58ce8da3cb7aea04b3c40fbe849146b6d294d7a8fecfcf698ea6bc6f6d7c",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0007/result.json": "f3c2071784eca95f7d796835e17dbcdcf2c49a123a79069c5e285a8499de7398",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0008/decision_context.json": "84d8e313f1cdafd47f4ce9967305a268975b2883ba9a604b0100fab1cb3a2423",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0008/perception/assessment.json": "4caf7a58d1895e129488681340e647817668579723bd06f2100037770dba3284",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0008/proposal.json": "7d4732eb0da5db88010e9a7c49f26a897c75f03c91d115db7f17876ea125dd47",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0008/decision_basis.json": "5d4b6e1fb54c4e54d49622e0772bd187e5f9e593a265108820e69b131a8d5012",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0008/result.json": "74cfaa610c712f00d58e9fe274144c618966c9277c1425970c96f5b81081f149",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0009/decision_context.json": "89936bd3b8e83ac1dbe7036e1a02d974864e5f59d055bae0c889fac8abb069e7",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0009/perception/assessment.json": "6497dead606c9d4bf2cba47c4f7d1a612a8524b8023285c058ab63a3b22afbc5",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0009/proposal.json": "81dedbf0a6d201fd5a4b1e116ae33c227c7331724b9c99391556bafe9e2e6d19",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0009/decision_basis.json": "525f6772e0ce7d8e9c0a7fc8742701a029461332b901e2657862de863d99e1af",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0009/result.json": "0ebb19cdf19432e36d158b8f5f345452bd04f3ce1710caa313f30f92e430c87f",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0010/decision_context.json": "5be6b3c9c2a0f0fbb00a6d78c1466137966ffc97bd04ed2cf43b0493cc167eda",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0010/perception/assessment.json": "b83fedd0d8aad525658caaff84f1bbbc4289b3639f601ae6c495d430593f5305",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0010/proposal.json": "0afd4b60b0f519f6afee93b61b742d42aeb424bdf2062b2f3cdf5cfe554c6e77",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0010/decision_basis.json": "c8fca3be6fad1cf6a0c62e5264c0afe4a29faacc11c8743bee52069072bb95a8",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0010/result.json": "b9c98089d0167c75190777120116962c5b4f5289b481871099775f1817b82b40",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0011/decision_context.json": "b40a560cdac1effc99a35d1a3484d209cdb78f381049d16488701852eae2338b",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0011/perception/assessment.json": "9d5cd8806a6f8f826738d3ca5050ad1e02bed1f7d1d6cc4bd47adec3f533a09b",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0011/proposal.json": "e7c4357438ce636b393a4d06944239e3e9080c3f6abd78ce6a9129dd3952d874",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0011/decision_basis.json": "51245156e921e83d1a19f3b9b16a5377ad5cc64ffcaf642e994542424f68d4ef",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0011/result.json": "75c5d55740ffe72d05ec4664ef20e162035a39bd80aaab9a75c5844ccd686f5d",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0012/decision_context.json": "bc865dc534a80b32e88bf2ada86747d18300933fcc4519b321a7f9263a78b040",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0012/perception/assessment.json": "dc3fcaf8a3f91c1eb0a269da3131c772405d155c960df2cec46e07133ddfd4d8",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0012/proposal.json": "0a7b554a6d7f7693ab75e99b66adcccd218d04a4cfbabf7cd1f4fd3d626d44df",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0012/decision_basis.json": "2b1cce0eec2742bc3e3206971b0d448278ecb292aea1f31992350806f112dd59",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0012/result.json": "a057c940cec7c0104808e98a1dcef9aee18171a3bf90c9678ac8a5f187460ada",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0013/decision_context.json": "bb949d87ea3d53105019385a00738a4fd88e4bc90cbc7775029776a5a7787141",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0013/perception/assessment.json": "328f88fac0a4f31f0f75d8f9b524531dfe2acbd9de824879f00e698379d5d62c",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0013/proposal.json": "128e0c17d495cad4e063901a04f20d58410071e19e4ae6cdd1dacc4080bf3fe7",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0013/decision_basis.json": "4254abb6e599d1c2ecfade9225c80d4b8ce3fede8e1a10e21d10d6f3178fcbc8",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0013/result.json": "b2035cb811a09fc77ab8c0d2bdab0ce2a9d56709ab5f258c8708fc468f8d07fd",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0014/decision_context.json": "63a0ecad7008e3d9b77da09ee929cf1d30242a0178724d2ead44abe9724be1c9",
+    "outputs/agent_web/20261102_000527_84b15208/agent/rounds/0014/perception/assessment.json": "5ff90b2ea1cd32ab7fd02da9043d1e58f8478780dce6ee94989f3c13e3f9d015",
+    "outputs/agent_web/20261102_000527_84b15208/agent/observations/7d333ceb2b404b47805868ae37181846/head.jpg": "f5266b3a69c27af00b61b8f1f25efba28f6c6debc4ae8386ca9a411f4bc3b8e3",
+    "outputs/agent_web/20261102_000527_84b15208/agent/observations/7d333ceb2b404b47805868ae37181846/right.jpg": "3ed43588fcfdaea2b02ae462884db9b8d4bc11c4578bec55cb69f562dd41eb06",
+    "outputs/agent_web/20261102_000527_84b15208/agent/observations/e4656703f2174344b4d9e52bbb7d23de/head.jpg": "3d7f08453dcaf65b83ad634f35848048989c28f0ff286fc65f8d9b1cfc21f4b6",
+    "outputs/agent_web/20261102_000527_84b15208/agent/observations/e4656703f2174344b4d9e52bbb7d23de/right.jpg": "b9236de67dfe744c83a7a66b4665c5d7708b8d4cb6077d71e5a295fa672aee89"
+  },
+  "original_logs_modified": false
+}

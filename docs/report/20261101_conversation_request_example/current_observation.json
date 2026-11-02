@@ -1,0 +1,57 @@
+{
+  "context_type": "LIVE_OBSERVATION",
+  "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+  "state": {
+    "measured_pose": {
+      "xyz_mm": [
+        504.2,
+        -138.9,
+        1198.0
+      ],
+      "quaternion_xyzw": [
+        0.0003,
+        0.0032,
+        0.7089,
+        0.7053
+      ]
+    },
+    "command_pose": {
+      "xyz_mm": [
+        507.5,
+        -139.7,
+        1200.4
+      ],
+      "quaternion_xyzw": [
+        -0.0005,
+        0.0013,
+        0.7083,
+        0.7059
+      ]
+    },
+    "head_deg": [
+      -0.7,
+      24.9
+    ],
+    "gripper_command": null,
+    "measured_gripper_sdk_native": [
+      -0.2151
+    ],
+    "rgb_state_skew_ms": 4.2
+  },
+  "depth": {
+    "median_mm": null,
+    "status": "测距区域无有效深度",
+    "valid_pixels": 0,
+    "window_pixels": 25,
+    "center_px": [
+      433,
+      287
+    ],
+    "point_normalized": [
+      0.677621,
+      0.799443
+    ],
+    "revision": 0,
+    "rgb_depth_skew_ms": 0.2
+  }
+}

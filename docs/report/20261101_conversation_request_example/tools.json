@@ -1,0 +1,145 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "propose_move",
+      "description": "Translate hand by chassis-frame delta; preserve orientation. No automatic return.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "xyz_mm": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3,
+            "description": "[X,Y,Z] millimeters; +X forward, -X retract, +Y robot LEFT, -Y robot RIGHT, +Z up. Added to previous commanded target, not measured pose. Image directions are not chassis directions. XYZ may move together."
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "xyz_mm",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "propose_head",
+      "description": "Set absolute head joint angles; changes head view, not hand or wrist pose.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "head_deg": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "[yaw,pitch] absolute degrees, not increments. Do not assume unprovided joint signs."
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "head_deg",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "propose_gripper",
+      "description": "c closes, o opens the gripper; an open single-finger press is permitted.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "c",
+              "o"
+            ],
+            "description": "Keyboard c/o; startup preserves gripper state."
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "request_observation",
+      "description": "request observation",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "report_done",
+      "description": "report done",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "evidence": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "report_unable",
+      "description": "report unable",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+]

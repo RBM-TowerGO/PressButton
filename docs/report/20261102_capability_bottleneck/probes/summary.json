@@ -1,0 +1,556 @@
+{
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "model_only": true,
+  "thinking": false,
+  "max_tokens": 256,
+  "results": [
+    {
+      "name": "A_raw_sticker",
+      "frame": "A",
+      "kind": "sticker",
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.321392080746591,
+      "usage": {
+        "prompt_tokens": 737,
+        "total_tokens": 801,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "above",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "relation_correct": false,
+      "vertical_correct": true,
+      "horizontal_correct": false,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "A_raw_tip",
+      "frame": "A",
+      "kind": "tip",
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.236092431936413,
+      "usage": {
+        "prompt_tokens": 748,
+        "total_tokens": 812,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "right",
+        "reference_visible": "yes",
+        "target_visible": "yes",
+        "vertical": "above"
+      },
+      "format_valid": true,
+      "relation_correct": false,
+      "vertical_correct": true,
+      "horizontal_correct": false,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "A_flip_sticker",
+      "frame": "A",
+      "kind": "sticker",
+      "transform": "vertical_flip_offline_only",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.255885418038815,
+      "usage": {
+        "prompt_tokens": 737,
+        "total_tokens": 801,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "no",
+        "reference_visible": "no",
+        "vertical": "unknown",
+        "horizontal": "unknown"
+      },
+      "format_valid": true,
+      "relation_correct": false,
+      "vertical_correct": false,
+      "horizontal_correct": false,
+      "relation_unknown": true,
+      "presence_report_correct": false
+    },
+    {
+      "name": "A_flip_tip",
+      "frame": "A",
+      "kind": "tip",
+      "transform": "vertical_flip_offline_only",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.242094967048615,
+      "usage": {
+        "prompt_tokens": 748,
+        "total_tokens": 812,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "no",
+        "reference_visible": "no",
+        "vertical": "unknown",
+        "horizontal": "unknown"
+      },
+      "format_valid": true,
+      "relation_correct": false,
+      "vertical_correct": false,
+      "horizontal_correct": false,
+      "relation_unknown": true,
+      "presence_report_correct": false
+    },
+    {
+      "name": "A_raw_marked",
+      "frame": "A",
+      "kind": "marked",
+      "transform": "assistant_T_P_annotations",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.24882090324536,
+      "usage": {
+        "prompt_tokens": 738,
+        "total_tokens": 802,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "relation_correct": false,
+      "vertical_correct": false,
+      "horizontal_correct": false,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "A_flip_marked",
+      "frame": "A",
+      "kind": "marked",
+      "transform": "assistant_T_P_annotations_vertical_flip",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.263434114865959,
+      "usage": {
+        "prompt_tokens": 738,
+        "total_tokens": 802,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "below",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "A_crop2x_tip",
+      "frame": "A",
+      "kind": "tip",
+      "transform": {
+        "crop_box": [
+          345,
+          75,
+          590,
+          350
+        ],
+        "scale": 2,
+        "caveat": "Changes resolution AND surrounding context; cannot attribute a difference to one alone."
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.325602885801345,
+      "usage": {
+        "prompt_tokens": 783,
+        "total_tokens": 847,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "B_raw_sticker",
+      "frame": "B",
+      "kind": "sticker",
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.221733897924423,
+      "usage": {
+        "prompt_tokens": 737,
+        "total_tokens": 801,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "B_raw_tip",
+      "frame": "B",
+      "kind": "tip",
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.239633170887828,
+      "usage": {
+        "prompt_tokens": 748,
+        "total_tokens": 812,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "left",
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "above"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "B_crop2x_tip",
+      "frame": "B",
+      "kind": "tip",
+      "transform": {
+        "crop_box": [
+          115,
+          20,
+          565,
+          350
+        ],
+        "scale": 2,
+        "caveat": "Changes resolution AND surrounding context; cannot attribute a difference to one alone."
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 6.53036663075909,
+      "usage": {
+        "prompt_tokens": 1116,
+        "total_tokens": 1180,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false,
+      "presence_report_correct": true
+    },
+    {
+      "name": "coordinates_above_left",
+      "frame": null,
+      "kind": "coordinates",
+      "transform": "text_only",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "elapsed_s": 3.92571809515357,
+      "usage": {
+        "prompt_tokens": 435,
+        "total_tokens": 474,
+        "completion_tokens": 39,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false
+    },
+    {
+      "name": "coordinates_below_left",
+      "frame": null,
+      "kind": "coordinates",
+      "transform": "text_only",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "left"
+      },
+      "elapsed_s": 3.9144092621281743,
+      "usage": {
+        "prompt_tokens": 435,
+        "total_tokens": 474,
+        "completion_tokens": 39,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "left",
+        "vertical": "below"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false
+    },
+    {
+      "name": "coordinates_above_right",
+      "frame": null,
+      "kind": "coordinates",
+      "transform": "text_only",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "right"
+      },
+      "elapsed_s": 3.888370884116739,
+      "usage": {
+        "prompt_tokens": 435,
+        "total_tokens": 474,
+        "completion_tokens": 39,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false
+    },
+    {
+      "name": "coordinates_below_right",
+      "frame": null,
+      "kind": "coordinates",
+      "transform": "text_only",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "elapsed_s": 3.8687799577601254,
+      "usage": {
+        "prompt_tokens": 435,
+        "total_tokens": 474,
+        "completion_tokens": 39,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "right",
+        "vertical": "below"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false
+    },
+    {
+      "name": "A_raw_tip_repeat",
+      "frame": "A",
+      "kind": "tip",
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "repeat_of": "A_raw_tip",
+      "elapsed_s": 6.192906565964222,
+      "usage": {
+        "prompt_tokens": 748,
+        "total_tokens": 812,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "right",
+        "reference_visible": "yes",
+        "target_visible": "yes",
+        "vertical": "above"
+      },
+      "format_valid": true,
+      "relation_correct": false,
+      "vertical_correct": true,
+      "horizontal_correct": false,
+      "relation_unknown": false,
+      "presence_report_correct": true,
+      "parsed_equal_to_first": true
+    },
+    {
+      "name": "B_raw_tip_repeat",
+      "frame": "B",
+      "kind": "tip",
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "repeat_of": "B_raw_tip",
+      "elapsed_s": 6.229090324603021,
+      "usage": {
+        "prompt_tokens": 748,
+        "total_tokens": 812,
+        "completion_tokens": 64,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "left",
+        "target_visible": "yes",
+        "reference_visible": "yes",
+        "vertical": "above"
+      },
+      "format_valid": true,
+      "relation_correct": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_unknown": false,
+      "presence_report_correct": true,
+      "parsed_equal_to_first": true
+    }
+  ],
+  "status": "completed",
+  "totals": {
+    "requests": 16,
+    "prompt_tokens": 11066,
+    "completion_tokens": 924,
+    "elapsed_s": 90.90433159098029,
+    "format_valid": 16,
+    "relation_correct": 10
+  }
+}

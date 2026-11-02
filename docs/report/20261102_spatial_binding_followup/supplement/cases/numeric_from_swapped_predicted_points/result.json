@@ -1,0 +1,43 @@
+{
+  "name": "numeric_from_swapped_predicted_points",
+  "mode": "relation",
+  "frame": "A",
+  "stimulus": null,
+  "dependencies": {
+    "source_run": "/home/js/robot/VLA/PressButton/docs/report/20261102_spatial_binding_followup/probes",
+    "prior_predictions": {
+      "T": {
+        "x": 736,
+        "y": 775
+      },
+      "P": {
+        "x": 657,
+        "y": 317
+      }
+    }
+  },
+  "expected": {
+    "vertical": "below",
+    "horizontal": "right"
+  },
+  "prompt": "Use only these numeric coordinates, no image or object identification: TARGET T={\"x\": 736, \"y\": 775}; REFERENCE P={\"x\": 657, \"y\": 317}; both use x increasing right and y increasing down. Compare TARGET relative to REFERENCE. Output only vertical and horizontal relations.",
+  "elapsed_s": 3.9606359899044037,
+  "usage": {
+    "prompt_tokens": 529,
+    "total_tokens": 569,
+    "completion_tokens": 40,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "horizontal": "right",
+    "vertical": "below"
+  },
+  "format_valid": true,
+  "vertical_correct": true,
+  "horizontal_correct": true,
+  "relation_correct": true
+}

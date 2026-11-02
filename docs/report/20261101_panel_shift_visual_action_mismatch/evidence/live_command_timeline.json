@@ -1,0 +1,436 @@
+[
+  {
+    "round": 1,
+    "proposal": {
+      "name": "propose_head",
+      "arguments": {
+        "head_deg": [
+          0.0,
+          30.0
+        ],
+        "reason": "Tilt head down to bring the elevator down-call button panel into the head view for global alignment before approaching, matching the demo setup."
+      }
+    },
+    "decision_observation_id": "4e81e4d0b3e64aecb1238dff4281e3b0",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "802776158826473e8037954eda26f26e",
+      "observation_id": "4e81e4d0b3e64aecb1238dff4281e3b0",
+      "type": "head",
+      "head_deg": [
+        0.0,
+        30.0
+      ]
+    },
+    "after_observation_id": "f26dd067700944e9aba5b8369d32d2b6",
+    "error": null
+  },
+  {
+    "round": 2,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0.0,
+          200.0,
+          200.0
+        ],
+        "reason": "LIVE head shows the down-call button panel ahead and wrist shows the open gripper below the button with no activation light yet. Coarse approach: raise and move left toward the panel to bring the open gripper finger near the button, following the demo's initial coarse approach. Remaining height/lateral alignment will be refined after observing the new views."
+      }
+    },
+    "decision_observation_id": "f26dd067700944e9aba5b8369d32d2b6",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "396c253d831b46b289b408c8f18146d8",
+      "observation_id": "f26dd067700944e9aba5b8369d32d2b6",
+      "type": "move",
+      "xyz_mm": [
+        0.0,
+        200.0,
+        200.0
+      ]
+    },
+    "after_observation_id": "bf12ba1ba0584abc97a8326f9ff1983d",
+    "error": null
+  },
+  {
+    "round": 3,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0.0,
+          -50.0,
+          -20.0
+        ],
+        "reason": "LIVE head shows the down-call button panel ahead with the open gripper below it; wrist view shows the panel edge but the button is not yet clearly in frame. Move right (-Y) and slightly down (-Z) to bring the open gripper finger closer to the button height/lateral position, following the demo's coarse alignment before forward press. Remaining height/lateral uncertainty will be rechecked after this move."
+      }
+    },
+    "decision_observation_id": "bf12ba1ba0584abc97a8326f9ff1983d",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "5b12840f77944e30bc5cdb4e8def8d20",
+      "observation_id": "bf12ba1ba0584abc97a8326f9ff1983d",
+      "type": "move",
+      "xyz_mm": [
+        0.0,
+        -50.0,
+        -20.0
+      ]
+    },
+    "after_observation_id": "f1520c7f48504eccbc436292128eb37d",
+    "error": null
+  },
+  {
+    "round": 4,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          30.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the down-call button panel ahead with the open gripper below it; wrist view shows the button between the two open fingers but not yet at contact height. Move forward +30 mm to bring the open gripper finger closer to the button, following the demo's forward approach. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "f1520c7f48504eccbc436292128eb37d",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "707396786d784c779df531f286b1292b",
+      "observation_id": "f1520c7f48504eccbc436292128eb37d",
+      "type": "move",
+      "xyz_mm": [
+        30.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "5e6b72fa88914c24b46707a14af75a6e",
+    "error": null
+  },
+  {
+    "round": 5,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0.0,
+          0.0,
+          -10.0
+        ],
+        "reason": "LIVE head shows the down-call button panel ahead with the open gripper below it; wrist view shows the button between the two open fingers but not yet at contact height. Descend 10 mm to bring the right open-gripper finger closer to the button height, following the demo's fine downward adjustment before forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "5e6b72fa88914c24b46707a14af75a6e",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "3b1c7456d898467f89050fbd01455048",
+      "observation_id": "5e6b72fa88914c24b46707a14af75a6e",
+      "type": "move",
+      "xyz_mm": [
+        0.0,
+        0.0,
+        -10.0
+      ]
+    },
+    "after_observation_id": "3b16486aff47417bb1eb0d4fa831638e",
+    "error": null
+  },
+  {
+    "round": 6,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0.0,
+          0.0,
+          -20.0
+        ],
+        "reason": "LIVE head shows the down-call button panel ahead with the open gripper below it; wrist view shows the button between the two open fingers but not yet at contact height. Descend 20 mm to bring the right open-gripper finger closer to the button height, following the demo's fine downward adjustment before forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "3b16486aff47417bb1eb0d4fa831638e",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "fd0cb82b1c334140996af5ed5e4f4df9",
+      "observation_id": "3b16486aff47417bb1eb0d4fa831638e",
+      "type": "move",
+      "xyz_mm": [
+        0.0,
+        0.0,
+        -20.0
+      ]
+    },
+    "after_observation_id": "eb8f356150844fc5bd652d1d33b1ba74",
+    "error": null
+  },
+  {
+    "round": 7,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          30.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the down-call button panel ahead with the open gripper below it; wrist view shows the button between the two open fingers but not yet at contact height. Move forward +30 mm to bring the open gripper finger closer to the button, following the demo's forward approach. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "eb8f356150844fc5bd652d1d33b1ba74",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "b3525a0aae2046c3970a9fefddf28681",
+      "observation_id": "eb8f356150844fc5bd652d1d33b1ba74",
+      "type": "move",
+      "xyz_mm": [
+        30.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "a2648cd706a5429c857c83c290e35589",
+    "error": null
+  },
+  {
+    "round": 8,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0.0,
+          -20.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger projected slightly left of the down-call button center; wrist view shows the button on the right side between the open fingers. Move -Y 20 mm to laterally align the contacting finger with the button center before forward press, following the demo's lateral fine adjustment. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "a2648cd706a5429c857c83c290e35589",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "ca827c856a4f401a9dfcb72f15dd3bf4",
+      "observation_id": "a2648cd706a5429c857c83c290e35589",
+      "type": "move",
+      "xyz_mm": [
+        0.0,
+        -20.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "5f544a8069284d9f8e5251b3858100a8",
+    "error": null
+  },
+  {
+    "round": 9,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          30.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger now aligned near the down-call button center; wrist view shows the button between the open fingers. Move forward +30 mm to bring the contacting finger closer to the button face, following the demo's forward approach after lateral alignment. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "5f544a8069284d9f8e5251b3858100a8",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "c27c16bf5b864b4991d37a1bcaf269be",
+      "observation_id": "5f544a8069284d9f8e5251b3858100a8",
+      "type": "move",
+      "xyz_mm": [
+        30.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "291488ec5b9d43b293e47438ef2d24b3",
+    "error": null
+  },
+  {
+    "round": 10,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          10.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +10 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "291488ec5b9d43b293e47438ef2d24b3",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "cd0bea10af764b63a36ee51929439634",
+      "observation_id": "291488ec5b9d43b293e47438ef2d24b3",
+      "type": "move",
+      "xyz_mm": [
+        10.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "63dd4b6c28284c7381dd5c0031b2afd2",
+    "error": null
+  },
+  {
+    "round": 11,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          5.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "63dd4b6c28284c7381dd5c0031b2afd2",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "9b619efe48c3406e9cded1db6f0df1eb",
+      "observation_id": "63dd4b6c28284c7381dd5c0031b2afd2",
+      "type": "move",
+      "xyz_mm": [
+        5.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+    "error": null
+  },
+  {
+    "round": 12,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          5.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "8bbfb419c0c640dfa11be8ab0ee27885",
+      "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+      "type": "move",
+      "xyz_mm": [
+        5.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+    "error": null
+  },
+  {
+    "round": 13,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          5.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "bb261a811ae94366bcfd147e60452349",
+      "observation_id": "6daa4bb541ea4fd2a7462db7a1a8f63c",
+      "type": "move",
+      "xyz_mm": [
+        5.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+    "error": null
+  },
+  {
+    "round": 14,
+    "proposal": {
+      "name": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          5.0,
+          0.0,
+          0.0
+        ],
+        "reason": "LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet."
+      }
+    },
+    "decision_observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+    "execution_record_present": true,
+    "status": "completed",
+    "executed_request": {
+      "session_id": "7a8720f8e7144d85a14fc5ce2118768a",
+      "command_id": "5b0d829d7df041598bbc2e5aa762e99b",
+      "observation_id": "c2291f5cb1a046c59f6ec035da012c76",
+      "type": "move",
+      "xyz_mm": [
+        5.0,
+        0.0,
+        0.0
+      ]
+    },
+    "after_observation_id": "c4c713245ca64f14848d9d7574bac01a",
+    "error": null
+  },
+  {
+    "round": 15,
+    "proposal": null,
+    "decision_observation_id": "c4c713245ca64f14848d9d7574bac01a",
+    "execution_record_present": false,
+    "status": null,
+    "executed_request": null,
+    "after_observation_id": null,
+    "error": {
+      "stage": "model_request",
+      "attempt": 0,
+      "error_type": "RemoteDisconnected",
+      "error": "Remote end closed connection without response",
+      "elapsed_s": 13.070790288038552
+    }
+  }
+]

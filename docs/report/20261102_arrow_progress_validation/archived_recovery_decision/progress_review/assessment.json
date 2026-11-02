@@ -1,0 +1,19 @@
+{
+  "format": "pressb-progress-review-v1",
+  "source": "model_not_human",
+  "evidence_observation_ids": [
+    "fb2b79422cb84b40b12fcb4bb38ab2a4",
+    "02bbfd18cc3b45e091c3d6d9e2971c79"
+  ],
+  "comparison_view": "wrist",
+  "head_horizontal": "center",
+  "head_vertical": "level",
+  "horizontal_change": "unchanged",
+  "note": "Wrist view shows the same down-call button and red contact marker in both frames; button center remains near the marker with no discernible change. Head view is too hazy to reliably compare.",
+  "observation_id": "02bbfd18cc3b45e091c3d6d9e2971c79",
+  "previous_observation_id": "fb2b79422cb84b40b12fcb4bb38ab2a4",
+  "vertical_change": "unchanged",
+  "wrist_horizontal": "center",
+  "wrist_vertical": "level",
+  "approach_change": "unchanged"
+}

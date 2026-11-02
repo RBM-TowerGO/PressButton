@@ -14,8 +14,10 @@ import uuid
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
 sys.path.insert(0, str(ROOT/'src'))
 from pressb.agent_loop.common import atomic_json, request, SESSION_SCHEMA
+from pressb.agent_loop.demonstration import Demonstration
 from pressb.agent_loop.failure_case import FailureCase
 from s1b_agent_dashboard import Dashboard, serve
 from start_s1b_inference import check_port_available
@@ -35,7 +37,7 @@ def wait_for_service(process, base, stop, timeout=180):
                 raise RuntimeError('机器人服务版本不匹配')
             return session
         if time.monotonic() >= deadline:
-            raise TimeoutError('等待机器人服务超过180秒；SDK接管提示需要在终端输入 yes。')
+            raise TimeoutError('等待机器人服务超时；请查看终端 / 网页中的 SDK 和服务启动日志。')
         stop.wait(.2)
     raise InterruptedError('operator_stopped')
 
@@ -65,7 +67,8 @@ def relay_output(stream, emit):
 
 def launch(args):
     if not sys.stdin.isatty():
-        raise RuntimeError('请在交互终端运行，以便输入 SDK 控制权接管确认。')
+        raise RuntimeError('请在交互终端运行，以便使用 q 回车停止机器人服务。')
+    auto_confirm = getattr(args, 'auto_confirm', True)
     ports = (args.robot_port, args.camera_port, args.web_port, args.thor_port)
     if len(set(ports)) != len(ports) or any(not 1 <= p <= 65535 for p in ports):
         raise ValueError('端口必须互不相同且在1–65535之间')
@@ -73,10 +76,23 @@ def launch(args):
         check_port_available(port)
     if not (Path(args.demo).expanduser()/'session.json').is_file():
         raise ValueError('找不到示范 session.json：'+args.demo)
+    prompt_path = Path(getattr(args, 'prompt', DEFAULT_PROMPT)).expanduser().resolve()
+    try:
+        prompt_path.read_text()
+    except OSError as exc:
+        raise ValueError('无法读取 Agent 提示词：'+str(prompt_path)) from exc
+    decision_mode = getattr(args, 'decision_mode', 'grounded')
+    demo_last_steps = getattr(args, 'demo_last_steps', None)
+    if demo_last_steps is None and decision_mode == 'grounded':
+        demo_last_steps = 3
     failure_path = getattr(args, 'failure_case', None)
     if failure_path:
         # Fail before SDK takeover if any required case evidence is missing.
         FailureCase(failure_path)
+    # Validate the selected activation evidence before starting any robot process.
+    demo = Demonstration(args.demo)
+    if demo_last_steps is not None:
+        demo.select_activation_tail(demo_last_steps)
     stamp = datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%Y%m%d_%H%M%S')
     directory = Path(args.output).expanduser() if args.output else ROOT/'outputs'/'agent_web'/(stamp+'_'+uuid.uuid4().hex[:8])
     directory.mkdir(parents=True, exist_ok=False)
@@ -86,7 +102,12 @@ def launch(args):
     lock = threading.Lock()
     robot_base = f'http://127.0.0.1:{args.robot_port}'
     camera_base = f'http://127.0.0.1:{args.camera_port}'
-    state = dict(phase='starting', goal=args.goal, output=str(directory))
+    state = dict(phase='starting', goal=args.goal, output=str(directory),
+                 decision_mode=decision_mode, demo=str(demo.root), demo_last_steps=demo_last_steps,
+                 demo_selection=demo.selection, failure_case=failure_path, prompt=str(prompt_path),
+                 progress_monitor_format='pressb-progress-v1' if decision_mode == 'direct' else None,
+                 view_acquisition_format='pressb-view-acquisition-v1' if decision_mode == 'direct' else None,
+                 auto_confirm=auto_confirm)
     log = (directory/'terminal.log').open('a', buffering=1)
     server = service = agent = None
     readers = []
@@ -120,20 +141,35 @@ def launch(args):
             signal.signal(sig, interrupt)
         update()
         server, web_thread = serve(Dashboard(directory, camera_base, stop), args.web_port)
-        emit(f'网页：http://127.0.0.1:{server.server_port}\n记录目录：{directory}\n'
-             '请在本终端处理 SDK 接管提示；服务就绪后 Agent 将自动运行。\n')
+        emit(f'网页：http://127.0.0.1:{server.server_port}\n记录目录：{directory}\n')
+        emit(('SDK 控制权接管将自动回复 yes；' if auto_confirm else '请在本终端处理 SDK 接管提示；')
+             + '服务就绪后 Agent 将自动运行。\n')
+        if decision_mode == 'grounded':
+            emit(f'短闭环：成功示范 {len(demo.images)} 张、失败参考 {"启用" if failure_path else "关闭"}；'
+                 '当前双图独立判读后决策，必要时单独验证撤回；thinking 关闭。\n')
+        elif decision_mode == 'direct':
+            emit('直接模式：先检查头部取景，取景不足时只允许头部调整/重新观察/结束；'
+                 '每轮记录进展，异常时复核，判断冲突时恢复取景。thinking 关闭。\n')
         try:
             update(phase='waiting_for_service')
-            service = spawn([sys.executable, str(ROOT/'scripts/s1b_agent_service.py'), '--host', args.host,
-                '--port', str(args.robot_port), '--view-port', str(args.camera_port)], sys.stdin)
+            service_argv = [sys.executable, str(ROOT/'scripts/s1b_agent_service.py'), '--host', args.host,
+                '--port', str(args.robot_port), '--view-port', str(args.camera_port)]
+            if auto_confirm:
+                service_argv.append('--auto-confirm')
+            service = spawn(service_argv, sys.stdin)
             session = wait_for_service(service, robot_base, stop)
             update(phase='running', session_id=session['session_id'])
             # Only SSH/service reads this terminal. q reaches the robot service;
             # its exit immediately cancels the Agent, including a pending model call.
             agent_argv = [sys.executable, str(ROOT/'scripts/s1b_agent.py'), '--goal', args.goal,
                 '--demo', str(Path(args.demo).expanduser().resolve()), '--output', str(directory/'agent'),
+                '--prompt', str(prompt_path),
                 '--robot-base', robot_base, '--thor-host', args.thor_host,
-                '--thor-port', str(args.thor_port), '--max-rounds', str(args.max_rounds)]
+                '--thor-port', str(args.thor_port), '--max-rounds', str(args.max_rounds),
+                '--context-budget-tokens', str(getattr(args, 'context_budget_tokens', 65536)),
+                '--decision-mode', decision_mode]
+            if demo_last_steps is not None:
+                agent_argv.extend(['--demo-last-steps', str(demo_last_steps)])
             if failure_path:
                 agent_argv.extend(['--failure-case', str(Path(failure_path).expanduser().resolve())])
             agent = spawn(agent_argv, subprocess.DEVNULL)
@@ -188,22 +224,38 @@ def launch(args):
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', default='S1B')
+    parser.add_argument('--auto-confirm', action=argparse.BooleanOptionalAction, default=True,
+                        help='automatically answer yes to SDK takeover prompts (default: enabled)')
     parser.add_argument('--goal', default='按下电梯外呼向下按钮并撤回')
+    parser.add_argument('--prompt', default=str(DEFAULT_PROMPT), help='Agent system prompt file')
     parser.add_argument('--demo', default=str(ROOT/'outputs/keyboard_sessions/20261101_182424_352b5047'))
+    parser.add_argument('--demo-last-steps', type=int,
+                        help='completed steps ending at reviewed activation; grounded defaults to 3, other modes use all')
     failure_group = parser.add_mutually_exclusive_group()
     failure_group.add_argument('--failure-case',
-        default=str(ROOT/'outputs/agent_web/20261101_184824_dcb23038'),
-        help='reviewed failure run directory; defaults to the latest edge-contact failure')
+        default=argparse.SUPPRESS,
+        help='reviewed failure run; grounded omits by default, direct/separated keep the prior default')
     failure_group.add_argument('--no-failure-case', action='store_const', const=None, dest='failure_case',
-                               help='explicitly omit failure context')
+                               default=argparse.SUPPRESS, help='explicitly omit failure context')
     parser.add_argument('--output', help='new session directory; default outputs/agent_web/<timestamp_id>')
     parser.add_argument('--robot-port', type=int, default=6210)
     parser.add_argument('--camera-port', type=int, default=8765)
     parser.add_argument('--web-port', type=int, default=8766)
     parser.add_argument('--thor-host', default='Thor')
     parser.add_argument('--thor-port', type=int, default=18000)
+    parser.add_argument('--context-budget-tokens', type=int, default=65536)
+    parser.add_argument('--decision-mode', choices=('grounded', 'separated', 'direct'), default='grounded')
     parser.add_argument('--max-rounds', type=int, default=20)
     args = parser.parse_args(argv)
+    if not hasattr(args, 'failure_case'):
+        args.failure_case = (None if args.decision_mode == 'grounded' else
+                            str(ROOT/'outputs/agent_web/20261101_184824_dcb23038'))
+    if args.demo_last_steps is None and args.decision_mode == 'grounded':
+        args.demo_last_steps = 3
+    if args.demo_last_steps is not None and args.demo_last_steps <= 0:
+        parser.error('--demo-last-steps must be positive')
+    if args.context_budget_tokens <= 0:
+        parser.error('--context-budget-tokens must be positive')
     if args.max_rounds <= 0:
         parser.error('--max-rounds must be positive')
     return args

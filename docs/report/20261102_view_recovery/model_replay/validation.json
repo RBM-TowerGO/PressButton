@@ -1,0 +1,260 @@
+{
+  "model_only": true,
+  "robot_connected": false,
+  "commands_sent": 0,
+  "source_run": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_120741_0ca36af5/agent",
+  "rounds": [
+    1,
+    4,
+    8
+  ],
+  "thinking": false,
+  "source_code_sha256": {
+    "scripts/validate_agent_view_recovery.py": "7a8137f55ef830e254a2ee1a4e7662502bcc6d5a874101587aa40e5b23c9a9b7",
+    "src/pressb/agent_loop/view_acquisition.py": "66d187d7844670dfeda7de61ffdf39e5117573fc57a0edd56aa69ccfc434da73"
+  },
+  "cases": [
+    {
+      "round": 1,
+      "observation_id": "8edf67ed93b0460293861f758919f6a5",
+      "assessment": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "8edf67ed93b0460293861f758919f6a5",
+        "head": {
+          "panel_visible": "no",
+          "button_visibility": "not_visible",
+          "contact_visibility": "not_visible",
+          "button_box": null,
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Head view shows a reflective wall and robot reflection; no clear elevator down-call button face or white arrow marker is visible.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.55,
+            0.0,
+            0.66,
+            0.13
+          ],
+          "arrow_box": [
+            0.72,
+            0.72,
+            0.86,
+            0.86
+          ],
+          "contact_tip": [
+            0.72,
+            0.82
+          ],
+          "note": "Wrist shows the down-call button with downward symbol at top center; a white/cream arrow marker is on the right finger, with the physical finger front end near the arrow tip.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "metrics": {
+        "image_count": 2,
+        "observation_id": "8edf67ed93b0460293861f758919f6a5",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 2,
+        "validation_failures": 1,
+        "prompt_tokens": 5832,
+        "completion_tokens": 459,
+        "status": "validated",
+        "elapsed_s": 44.6076749949716,
+        "usage": {
+          "prompt_tokens": 3066,
+          "total_tokens": 3348,
+          "completion_tokens": 282,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "last_validation_error": "invalid_inspect_view_fields"
+      }
+    },
+    {
+      "round": 4,
+      "observation_id": "333564ef86724083a54ac6ca6f620a10",
+      "assessment": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "333564ef86724083a54ac6ca6f620a10",
+        "head": {
+          "panel_visible": "no",
+          "button_visibility": "not_visible",
+          "contact_visibility": "not_visible",
+          "button_box": null,
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Head view shows a reflective wall and robot reflection; no clear elevator down-call button or white arrow marker is visible.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.57,
+            0.13,
+            0.66,
+            0.27
+          ],
+          "arrow_box": [
+            0.74,
+            0.76,
+            0.86,
+            0.91
+          ],
+          "contact_tip": [
+            0.73,
+            0.78
+          ],
+          "note": "Wrist view shows a round down-call button with downward symbol on the panel; a white/cream arrow marker is on the right finger, with the physical finger front end near the arrow but not fully clear.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "metrics": {
+        "image_count": 2,
+        "observation_id": "333564ef86724083a54ac6ca6f620a10",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 1,
+        "validation_failures": 0,
+        "prompt_tokens": 2765,
+        "completion_tokens": 286,
+        "status": "validated",
+        "elapsed_s": 27.350027373991907,
+        "usage": {
+          "prompt_tokens": 2765,
+          "total_tokens": 3051,
+          "completion_tokens": 286,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      }
+    },
+    {
+      "round": 8,
+      "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+      "assessment": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+        "head": {
+          "panel_visible": "no",
+          "button_visibility": "not_visible",
+          "contact_visibility": "not_visible",
+          "button_box": null,
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Head view shows a reflective wall and robot reflection; no clear elevator down-call button or white arrow marker is visible.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.585,
+            0.235,
+            0.665,
+            0.375
+          ],
+          "arrow_box": [
+            0.735,
+            0.735,
+            0.865,
+            0.875
+          ],
+          "contact_tip": [
+            0.735,
+            0.785
+          ],
+          "note": "Wrist view shows a round elevator down-call button on the metal panel and a white/cream arrow marker on the right finger; the physical finger front end is partly visible near the marker.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "metrics": {
+        "image_count": 2,
+        "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 1,
+        "validation_failures": 0,
+        "prompt_tokens": 2764,
+        "completion_tokens": 291,
+        "status": "validated",
+        "elapsed_s": 27.865509575698525,
+        "usage": {
+          "prompt_tokens": 2764,
+          "total_tokens": 3055,
+          "completion_tokens": 291,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      }
+    }
+  ],
+  "status": "completed",
+  "limitations": [
+    "Three independent saved observations, one requested check each; no closed-loop execution.",
+    "Annotations visualize model localization, not calibrated contact or human confirmation.",
+    "A valid schema is not proof of correct visual localization.",
+    "Original and overlay images are distinct; only original images are sent to the model."
+  ]
+}

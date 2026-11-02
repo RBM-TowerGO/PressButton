@@ -1,0 +1,124 @@
+{
+  "model": "qwen38",
+  "temperature": 0,
+  "max_tokens": 384,
+  "stream": false,
+  "chat_template_kwargs": {
+    "enable_thinking": false
+  },
+  "tool_choice": "required",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "inspect_saved_image",
+        "description": "Read-only image localization, relation or label inspection; no action.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "target_point": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "reference_point": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1000
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "vertical": {
+              "type": "string",
+              "enum": [
+                "above",
+                "level",
+                "below",
+                "unknown"
+              ]
+            },
+            "horizontal": {
+              "type": "string",
+              "enum": [
+                "left",
+                "center",
+                "right",
+                "unknown"
+              ]
+            }
+          },
+          "required": [
+            "target_point",
+            "reference_point",
+            "vertical",
+            "horizontal"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "system",
+      "content": "This is an offline read-only image inspection experiment, never a robot control request. Image coordinates: x increases toward image RIGHT; y increases toward image BOTTOM. For point localization, use normalized x and y in [0,1000], with (0,0) at the top-left and (1000,1000) at the bottom-right. If the requested point cannot be identified, return null. Relations always describe the requested TARGET relative to the requested REFERENCE. Do not infer robot motion or 3D contact. Return the specified tool exactly once without prose. Report unknown when an image relation cannot be established."
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Return target_point and reference_point as normalized coordinates, and vertical and horizontal relations describing TARGET relative to REFERENCE."
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "../../images/2562900068c469b5630b99d5d166cf48b3448c20da04bc433ac06058a8cd3a8c.png"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "large_photo_T_point",
+  "mode": "point",
+  "stimulus": "large_photo",
+  "frame": "A",
+  "scale": 1,
+  "image_size": [
+    640,
+    360
+  ],
+  "transform": "none",
+  "expected": {
+    "point": [
+      420,
+      117
+    ]
+  },
+  "prompt": "Locate the center of the colored dot labelled T. Use the dot center, not the letter center. Return only its normalized point, or null if uncertain.",
+  "request_sent": true,
+  "elapsed_s": 4.385691171046346,
+  "usage": {
+    "prompt_tokens": 744,
+    "total_tokens": 787,
+    "completion_tokens": 43,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "point": {
+      "x": 656,
+      "y": 318
+    }
+  },
+  "format_valid": true,
+  "point_pixel_xy": [
+    419.184,
+    114.162
+  ],
+  "point_signed_error_xy_px": [
+    -0.8159999999999741,
+    -2.837999999999994
+  ],
+  "point_error_px": 2.9529815441346603,
+  "point_source_error_px": 2.9529815441346603
+}

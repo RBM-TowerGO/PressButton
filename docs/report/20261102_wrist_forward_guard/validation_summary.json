@@ -1,0 +1,230 @@
+{
+  "policy": "wrist_horizontal",
+  "user_selection": "只检查腕图中横向位于两指之间",
+  "robot_commands_sent": 0,
+  "tests": "381 passed in 18.98s",
+  "model_report": "outputs/forward_guard_validation_20261102/report.json",
+  "cases": [
+    {
+      "case": "round02_current",
+      "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+      "assessment": {
+        "format": "pressb-forward-alignment-v1",
+        "source": "model_not_human",
+        "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+        "button_visible": "yes",
+        "button_between_fingers": "no",
+        "two_fingertips_visible": "yes"
+      },
+      "decision": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+        "assessment_observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": false,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "yes",
+          "button_between_fingers": "no"
+        },
+        "reasons": [
+          "button_between_fingers:no"
+        ],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success."
+      },
+      "metrics": {
+        "image_count": 1,
+        "observation_id": "8f60ad68c5e04f5084dda8aec27b08c3",
+        "previous_observation_id": null,
+        "tool": "inspect_forward_alignment",
+        "attempts": 1,
+        "prompt_tokens": 1095,
+        "completion_tokens": 61,
+        "usage": {
+          "prompt_tokens": 1095,
+          "total_tokens": 1156,
+          "completion_tokens": 61,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 6.205958968959749
+      },
+      "allowed": false
+    },
+    {
+      "case": "round10_current",
+      "observation_id": "7d333ceb2b404b47805868ae37181846",
+      "assessment": {
+        "format": "pressb-forward-alignment-v1",
+        "source": "model_not_human",
+        "observation_id": "7d333ceb2b404b47805868ae37181846",
+        "button_visible": "yes",
+        "button_between_fingers": "yes",
+        "two_fingertips_visible": "yes"
+      },
+      "decision": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "7d333ceb2b404b47805868ae37181846",
+        "assessment_observation_id": "7d333ceb2b404b47805868ae37181846",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": true,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "yes",
+          "button_between_fingers": "yes"
+        },
+        "reasons": [],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success."
+      },
+      "metrics": {
+        "image_count": 1,
+        "observation_id": "7d333ceb2b404b47805868ae37181846",
+        "previous_observation_id": null,
+        "tool": "inspect_forward_alignment",
+        "attempts": 1,
+        "prompt_tokens": 1097,
+        "completion_tokens": 61,
+        "usage": {
+          "prompt_tokens": 1097,
+          "total_tokens": 1158,
+          "completion_tokens": 61,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 5.963598397560418
+      },
+      "allowed": true
+    },
+    {
+      "case": "round14_after",
+      "observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+      "assessment": {
+        "format": "pressb-forward-alignment-v1",
+        "source": "model_not_human",
+        "observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+        "button_visible": "yes",
+        "two_fingertips_visible": "no",
+        "button_between_fingers": "unknown"
+      },
+      "decision": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+        "assessment_observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": false,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "no",
+          "button_between_fingers": "unknown"
+        },
+        "reasons": [
+          "two_fingertips_visible:no",
+          "button_between_fingers:unknown"
+        ],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success."
+      },
+      "metrics": {
+        "image_count": 1,
+        "observation_id": "e4656703f2174344b4d9e52bbb7d23de",
+        "previous_observation_id": null,
+        "tool": "inspect_forward_alignment",
+        "attempts": 1,
+        "prompt_tokens": 1097,
+        "completion_tokens": 61,
+        "usage": {
+          "prompt_tokens": 1097,
+          "total_tokens": 1158,
+          "completion_tokens": 61,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 5.94875645916909
+      },
+      "allowed": false
+    },
+    {
+      "case": "demo_step10_before",
+      "observation_id": "saved-demo-10-before",
+      "assessment": {
+        "format": "pressb-forward-alignment-v1",
+        "source": "model_not_human",
+        "observation_id": "saved-demo-10-before",
+        "button_visible": "yes",
+        "two_fingertips_visible": "yes",
+        "button_between_fingers": "yes"
+      },
+      "decision": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "saved-demo-10-before",
+        "assessment_observation_id": "saved-demo-10-before",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": true,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "yes",
+          "button_between_fingers": "yes"
+        },
+        "reasons": [],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success."
+      },
+      "metrics": {
+        "image_count": 1,
+        "observation_id": "saved-demo-10-before",
+        "previous_observation_id": null,
+        "tool": "inspect_forward_alignment",
+        "attempts": 1,
+        "prompt_tokens": 1074,
+        "completion_tokens": 61,
+        "usage": {
+          "prompt_tokens": 1074,
+          "total_tokens": 1135,
+          "completion_tokens": 61,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 5.962942257057875
+      },
+      "allowed": true
+    }
+  ],
+  "code_sha256": {
+    "src/pressb/agent_loop/client.py": "d80692e7bfdc738d142ce2462f6f817e1cd376be4501ed8c0fca0e5823438c50",
+    "src/pressb/agent_loop/forward_guard.py": "1ade1e305e8930cef838695b12bc7d804ec98d2e784af1921f599ed4df3719f5",
+    "src/pressb/agent_loop/short_loop.py": "2ce53c4f66d953aebe57acc92475eb70fce146bf9a5b1cfb2ee3abd9a04fde08",
+    "scripts/s1b_agent.py": "b68d710329a93b1b61c211d690ef6f6dad083b9e069251e718afd9911859848f",
+    "scripts/s1b_agent_dashboard.py": "a5dd4441c43f9112640c7dbc18c014c02e7a20a4c8269bc499504925c5d9fa5e",
+    "docs/astribot/planar_control/agent_system_prompt.txt": "25a82a15b1d48edc79f0d2c4c4b06288c9b29369327b8c89aa7f3d8a4b5014e7"
+  }
+}

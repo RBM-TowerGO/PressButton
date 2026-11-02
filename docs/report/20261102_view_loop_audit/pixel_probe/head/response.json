@@ -1,0 +1,42 @@
+{
+  "id": "chatcmpl-ae08f3a3e6e6aa54",
+  "object": "chat.completion",
+  "created": 1793601253,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"image_available\": true,\n  \"main_subject\": \"白色桌面及下方的机械臂\",\n  \"button\": \"不可见\",\n  \"gripper\": \"可见，左右两侧各有一个黑色机械夹爪\",\n  \"marker\": \"不可见\",\n  \"positions\": {\n    \"main_subject\": \"占据画面中央大部分区域\",\n    \"button\": \"不可见\",\n    \"gripper\": \"分别位于画面左下角和右下角\",\n    \"marker\": \"不可见\"\n  }\n}\n```",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "stop",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 964,
+    "total_tokens": 1085,
+    "completion_tokens": 121,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

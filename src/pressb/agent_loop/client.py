@@ -1,5 +1,7 @@
 """Model request construction, strict proposals and artifact downloads."""
 import json
+import copy
+import itertools
 import time
 import uuid
 from pathlib import Path
@@ -7,7 +9,6 @@ from .common import atomic_json, request, sha256
 
 from s1b_keyboard_control import validate_command
 from .common import SESSION_SCHEMA
-from .demonstration import image_content
 
 TOOLS = []
 for name, fields in (
@@ -20,23 +21,38 @@ for name, fields in (
     TOOLS.append(dict(type='function', function=dict(name=name, description=name.replace('_',' '),
         parameters=dict(type='object', properties=fields, required=list(fields), additionalProperties=False))))
 
+for tool in TOOLS:
+    function = tool['function']
+    fields = function['parameters']['properties']
+    if function['name'] == 'propose_move':
+        function['description'] = ('Translate hand by chassis-frame delta; preserve orientation. No automatic return. '
+            'Any positive X, including an XYZ combination, requires an independent CURRENT wrist check '
+            'that the button is horizontally between both visible finger ends. Unknown does not pass. '
+            'A rejected forward proposal is not executed or clipped; choose a new command.')
+        fields['xyz_mm']['description'] = ('[X,Y,Z] millimeters; +X forward, -X retract, +Y robot LEFT, '
+            '-Y robot RIGHT, +Z up. Added to previous commanded target, not measured pose. '
+            'Image directions are not chassis directions. XYZ may move together.')
+    elif function['name'] == 'propose_head':
+        function['description'] = 'Set absolute head joint angles; changes head view, not hand or wrist pose.'
+        fields['head_deg']['description'] = ('[yaw,pitch] absolute degrees, not increments. This setup has a demonstrated '
+            'look-down pitch near +30 degrees; it is a reference, not a required value or an additional 30-degree turn. '
+            'Choose angles from the current head image to see the full panel; keep an already adequate view. '
+            'Head movement does not reposition the wrist camera or hand.')
+    elif function['name'] == 'propose_gripper':
+        function['description'] = 'c closes, o opens the gripper; an open single-finger press is permitted.'
+        fields['key']['description'] = 'Keyboard c/o; startup preserves gripper state.'
+    elif function['name'] == 'request_observation':
+        function['description'] = ('Capture fresh images at the current camera poses, without head or hand movement. '
+            'CURRENT dual images are already supplied each round. Refresh can resolve transient uncertainty, '
+            'but cannot reveal a panel cropped out of the head view; choose propose_head to change that framing.')
+
 
 def build_request(goal, obs, wrist_bytes, session, history, prompt, head_bytes, demo=None, failure_case=None):
-    if session.get('schema') != SESSION_SCHEMA:
-        raise ValueError('keyboard_session_schema_required')
-    context = dict(goal=goal, context_type='LIVE_OBSERVATION', observation_id=obs['observation_id'],
-        state=obs['state'], fixed_point=obs['selection'], depth=obs['depth'],
-        session=session, recent_history=history[-5:])
-    content = list(demo.content) if demo else []
-    if failure_case:
-        content.extend(failure_case.content)
-    content.extend([dict(type='text',text=json.dumps(context,ensure_ascii=False,allow_nan=False)),
-        dict(type='text',text='LIVE HEAD camera; current observation, not a demonstration.'), image_content(head_bytes),
-        dict(type='text',text='LIVE RIGHT WRIST camera; original image. The depth sample pixel is metadata, not a marked contact point.'),
-        image_content(wrist_bytes)])
-    return dict(model='qwen38',temperature=0,max_tokens=1024,stream=False,
-        chat_template_kwargs=dict(enable_thinking=False),tools=TOOLS,tool_choice='required',
-        messages=[dict(role='system',content=prompt),dict(role='user',content=content)])
+    # Compatibility entry for single-observation callers; the live runner owns a Conversation.
+    from .conversation import Conversation
+    if history:
+        raise ValueError('use_conversation_for_history')
+    return Conversation(goal, obs, head_bytes, wrist_bytes, session, prompt, demo, failure_case).body()
 
 
 def parse_proposal(response, observation, session):
@@ -58,30 +74,175 @@ def parse_proposal(response, observation, session):
     return dict(name=name,arguments=args)
 
 
-def propose(model_base, body, obs, session, directory, timeout=120, cancel=None):
+def is_forward(proposal):
+    return (proposal.get('name') == 'propose_move'
+            and proposal['arguments']['xyz_mm'][0] > 0)
+
+
+def require_forward_permission(proposal, obs, decision):
+    """Check the same observation and exact command again immediately before HTTP.
+
+    This Agent-side rule does not change the keyboard executor or HTTP schema.
+    """
+    if not is_forward(proposal):
+        return
+    from . import forward_guard as guard
+    d = decision if isinstance(decision, dict) else {}
+    command = dict(type='move', xyz_mm=proposal['arguments']['xyz_mm'])
+    if (d.get('format') != guard.GATE_FORMAT or d.get('policy') != guard.POLICY
+            or d.get('source') != 'program_rule_on_model_judgment' or d.get('allowed') is not True
+            or d.get('observation_id') != obs['observation_id']
+            or d.get('assessment_observation_id') != obs['observation_id']
+            or d.get('authorized_command') != command
+            or any(d.get('basis', {}).get(k) != 'yes' for k in guard.FIELDS)):
+        raise ValueError('positive_X_requires_current_wrist_between_fingers_permission')
+
+
+def propose(model_base, body, obs, session, directory, timeout=120, cancel=None, conversation=None):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
     atomic_json(directory/'request.json',body)
-    for attempt in range(2):
-        if cancel is not None and cancel.is_set():raise InterruptedError('operator_stopped')
+    initial_body = copy.deepcopy(body)
+    metrics=dict(elapsed_s=0.,attempts=0,prompt_tokens=0,completion_tokens=0,
+                 validation_failures=0, status='requesting')
+    guard_assessment = None
+    if conversation is not None:
+        conversation.forward_guard_decision = None
+
+    def correction_status(status):
+        path = directory/'correction.json'
+        if path.exists():
+            value = json.loads(path.read_text())
+            value['status'] = status
+            atomic_json(path, value)
+
+    def check():
+        if cancel is not None and cancel.is_set():
+            metrics['status'] = 'interrupted'
+            atomic_json(directory/'action_metrics.json', metrics)
+            correction_status('interrupted')
+            atomic_json(directory/'error.json', dict(stage='model_request', error='operator_stopped'))
+            raise InterruptedError('operator_stopped')
+        if conversation is not None:
+            conversation.check_observation(obs['observation_id'])
+
+    def stage(value):
+        path = directory/'decision_context.json'
+        meta = json.loads(path.read_text()) if path.exists() else dict(observation_id=obs['observation_id'])
+        meta.update(stage=value, forward_guard_policy='wrist_horizontal')
+        atomic_json(path, meta)
+
+    def forward_check(proposal, attempt):
+        nonlocal guard_assessment
+        from . import forward_guard as guard
+        if not is_forward(proposal):
+            return None
+        if conversation is None:
+            raise ValueError('positive_X_requires_bound_current_observation')
+        check()
+        if guard_assessment is None:
+            stage('forward_guard')
+            try:
+                current = conversation.observations[obs['observation_id']]
+                guard_body = guard.build_request(conversation.goal, current)
+                guard_assessment = guard.inspect(model_base, guard_body, obs['observation_id'],
+                                                 directory/'forward_guard', cancel)
+                check()
+            except Exception as exc:
+                stage('interrupted' if isinstance(exc, InterruptedError) else 'failed')
+                atomic_json(directory/'error.json', dict(stage='forward_guard', error_type=type(exc).__name__, error=str(exc)))
+                if isinstance(exc, InterruptedError):
+                    raise
+                # A failed visual request is not an action-format repair opportunity.
+                raise RuntimeError('forward_guard_failed:'+str(exc)) from exc
+        check()
+        decision = guard.evaluate(guard_assessment, obs['observation_id'])
+        if decision['allowed']:
+            decision['authorized_command'] = dict(type='move', xyz_mm=copy.deepcopy(proposal['arguments']['xyz_mm']))
+        atomic_json(directory/'forward_guard'/f'candidate-{attempt}.json', dict(proposal=proposal, decision=decision))
+        atomic_json(directory/'forward_guard'/'decision.json', decision)
+        stage('action_request')
+        if not decision['allowed']:
+            raise ValueError('forward_blocked_button_not_confirmed_between_wrist_fingers:'+
+                json.dumps(decision['basis'], ensure_ascii=False)+
+                '; This command was NOT executed. Choose a new zero/negative-X move, head/gripper adjustment, '
+                'observation, or report unable. Do not repeat positive X on this same observation. '
+                'Only horizontal wrist alignment is required; there is no height or depth threshold.')
+        require_forward_permission(proposal, obs, decision)
+        return decision
+
+    for attempt in itertools.count():
+        check()
+        metrics.update(attempts=attempt+1, status='requesting')
+        atomic_json(directory/'action_metrics.json',metrics)
         started=time.monotonic()
         try:
             response=request(model_base,'/chat/completions',body,timeout=timeout)
         except Exception as exc:
+            metrics['elapsed_s'] += time.monotonic()-started
+            metrics['status'] = 'failed'
+            correction_status('failed')
+            atomic_json(directory/'action_metrics.json',metrics)
             atomic_json(directory/'error.json',dict(stage='model_request',attempt=attempt,
                 error_type=type(exc).__name__,error=str(exc),elapsed_s=time.monotonic()-started))
             raise
         atomic_json(directory/f'response-{attempt}.json',dict(response=response,elapsed_s=time.monotonic()-started))
+        metrics['elapsed_s'] += time.monotonic()-started
+        for field in ('prompt_tokens','completion_tokens'):
+            metrics[field] += (response.get('usage') or {}).get(field,0)
+        atomic_json(directory/'action_metrics.json',metrics)
+        check()
         try:
-            proposal=parse_proposal(response,obs,session)
+            proposal=(conversation.parse_response(response,obs,session,directory)
+                      if conversation is not None and hasattr(conversation,'parse_response')
+                      else parse_proposal(response,obs,session))
+            if conversation is not None and hasattr(conversation, 'review_proposal'):
+                conversation.review_proposal(model_base, proposal, directory, cancel)
+            permission = forward_check(proposal, attempt)
+            check()
+            if conversation is not None:
+                conversation.check_observation(obs['observation_id'])
+                conversation.accept(response)
+                conversation.forward_guard_decision = permission
+            atomic_json(directory/'assistant.json', response['choices'][0]['message'])
+            metrics['status'] = 'validated'
+            atomic_json(directory/'action_metrics.json', metrics)
+            if attempt:
+                correction = json.loads((directory/'correction.json').read_text())
+                correction.update(status='accepted', accepted_attempt=attempt,
+                                  corrections=metrics['validation_failures'])
+                atomic_json(directory/'correction.json', correction)
             atomic_json(directory/'proposal.json',proposal);return proposal
         except (ValueError,KeyError,TypeError,IndexError) as exc:
-            if attempt:
-                atomic_json(directory/'error.json',dict(stage='parse_proposal',attempt=attempt,
-                    error_type=type(exc).__name__,error=str(exc)))
-                raise ValueError('invalid_model_proposal:'+str(exc)) from exc
-            body=dict(body,messages=body['messages']+[dict(role='user',content=
-                'Your previous response was invalid: '+str(exc)+'. Return exactly one valid tool call for the original observation.')])
+            metrics.update(status='repairing', validation_failures=metrics['validation_failures']+1)
+            atomic_json(directory/'action_metrics.json', metrics)
+            correction = dict(stage='parse_proposal', status='retrying', attempt=attempt,
+                              next_attempt=attempt+1, observation_id=obs['observation_id'],
+                              error_type=type(exc).__name__, error=str(exc))
+            atomic_json(directory/f'validation-{attempt}.json', correction)
+            atomic_json(directory/'correction.json', correction)
+            repair='Your previous response was invalid: '+str(exc)+'. Return exactly one valid tool call for the original observation.'
+            if conversation is not None and getattr(conversation,'decision_mode',None)=='grounded':
+                repair += (' Match the CURRENT alignment assessment and actuator effect. Do not invent a substitute execution result. '
+                           'Previous invalid response: '+json.dumps(response.get('choices'),ensure_ascii=False))
+            if conversation is not None and getattr(conversation, 'monitor_progress', False):
+                # A newly triggered review is appended to this observation before
+                # retrying; the rejected candidate never enters accepted history.
+                body = conversation.body()
+            else:
+                body = copy.deepcopy(initial_body)
+            body=dict(body,messages=body['messages']+[dict(role='user',content=repair)])
+            atomic_json(directory/f'repair-request-{attempt+1}.json',body)
             atomic_json(directory/'repair-request.json',body)
+        except InterruptedError:
+            metrics['status'] = 'interrupted'
+            atomic_json(directory/'action_metrics.json', metrics)
+            correction_status('interrupted')
+            raise
+        except Exception:
+            metrics['status'] = 'failed'
+            atomic_json(directory/'action_metrics.json', metrics)
+            correction_status('failed')
+            raise
 
 
 class RobotClient:
@@ -136,8 +297,9 @@ class RobotClient:
         atomic_json(folder/'manifest.json',obs)
         return obs,folder
 
-    def execute(self, proposal, obs):
+    def execute(self, proposal, obs, forward_check=None):
         self.check_running()
+        require_forward_permission(proposal, obs, forward_check)
         args=proposal['arguments']
         body=dict(session_id=self.session['session_id'],command_id=uuid.uuid4().hex,
             observation_id=obs['observation_id'],type=proposal['name'].removeprefix('propose_'))

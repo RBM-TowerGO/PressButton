@@ -1,0 +1,6 @@
+{
+  "stage": "parse_proposal",
+  "attempt": 1,
+  "error_type": "ValueError",
+  "error": "progress_reassessment_required: repeat_Z_unsupported_by_review:unchanged; repeat_Z_alignment_reached_or_unknown:level; progress_contradicts_current_review:vertical=level. The candidate was NOT executed. Consume DIRECT_PROGRESS_REVIEW and choose a supported new action, improve the view, reobserve, or report unable. Do not repeat an unsupported same-axis direction."
+}

@@ -1,0 +1,1170 @@
+{
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "thinking": false,
+  "failure_case": null,
+  "mode": "full_perception_and_action",
+  "dry_run": false,
+  "rounds": [
+    6,
+    12,
+    17
+  ],
+  "selected_demo_steps": {
+    "mode": "reviewed_activation_tail",
+    "requested_last_steps": 3,
+    "selected_steps": [
+      "000008",
+      "000009",
+      "000010"
+    ],
+    "activation_step": "000010",
+    "activation_boundary": "after",
+    "model_image_count": 3,
+    "source_operation_count": 11,
+    "analysis_version": "2026-11-01.182424.v1",
+    "limitations": "Selection ends at reviewed activation; interrupted later withdrawal and missing final remain unverified."
+  },
+  "results": [
+    {
+      "round": 6,
+      "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+      "original": {
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              0,
+              -10
+            ],
+            "reason": "In HEAD the button is below the right finger, so lower the hand -10mm to reduce the vertical offset before any forward press."
+          }
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "below",
+          "head_visible": "yes",
+          "lamp": "unknown",
+          "lamp_view": "unknown",
+          "wrist_relation": "right",
+          "wrist_visible": "yes"
+        },
+        "action_metrics": {
+          "elapsed_s": 30.208582622930408,
+          "attempts": 2,
+          "prompt_tokens": 24369,
+          "completion_tokens": 297
+        },
+        "perception_metrics": {
+          "image_count": 2,
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "previous_observation_id": null,
+          "tool": "inspect_alignment",
+          "attempts": 1,
+          "prompt_tokens": 2052,
+          "completion_tokens": 118,
+          "usage": {
+            "prompt_tokens": 2052,
+            "total_tokens": 2170,
+            "completion_tokens": 118,
+            "prompt_tokens_details": null,
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsed_s": 11.690400619059801
+        }
+      },
+      "current_assessment": {
+        "format": "pressb-grounding-v2",
+        "source": "model_not_human",
+        "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown",
+        "geometry": {
+          "head_button_box": [
+            0.885,
+            0.665,
+            0.935,
+            0.735
+          ],
+          "head_finger_tip": null,
+          "delta_image_norm": null,
+          "error_button_units": null,
+          "magnitude": {
+            "horizontal": "unknown",
+            "vertical": "unknown"
+          },
+          "convention": "button_center_minus_selected_tip; image x right, y down",
+          "classification": {
+            "center_fraction": 0.25,
+            "small_max": 0.5,
+            "medium_max": 2.0
+          },
+          "semantics": "Image-plane categories only; not millimeters, 3D contact, motion permission or activation."
+        }
+      },
+      "current_assessment_source": "new_model",
+      "action_images": 5,
+      "restored_commands": 5,
+      "control_memory": {
+        "source": "recorded_execution_and_model_judgments_kept_separate",
+        "preferred_contact": "head_image_right",
+        "selected_contact": "head_image_right",
+        "latest_result": {
+          "command_id": "eac4175bfbae4e63898457e0db25cc5c",
+          "command": {
+            "type": "move",
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ]
+          },
+          "status": "completed",
+          "sends_completed": true,
+          "completion_basis": "command_interpolation",
+          "elapsed_s": 0.95,
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "error": null,
+          "replay": {
+            "note": "Historical result only. No command was sent by this validation.",
+            "recorded_actual_command": {
+              "type": "move",
+              "xyz_mm": [
+                0.0,
+                -10.0,
+                0.0
+              ]
+            }
+          },
+          "command_source": "saved_recording_not_replay_proposal"
+        },
+        "previous_alignment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "alignment_progress": {
+          "source": "categorical_model_comparison_not_metric",
+          "status": "unknown",
+          "previous_observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "previous_command": {
+            "type": "move",
+            "xyz_mm": [
+              0.0,
+              -10.0,
+              0.0
+            ]
+          },
+          "limitation": "Coarse image categories only; unchanged categories do not prove no physical improvement."
+        },
+        "alignment_control": {
+          "format": "pressb-alignment-control-v1",
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "source": "derived_from_model_judgments_and_recorded_commands_not_new_visual_evidence",
+          "contact_finger": "unknown",
+          "axes": {
+            "horizontal": {
+              "button_relative_to_finger": "unknown",
+              "finger_relative_to_button": "unknown",
+              "unresolved_observations": 0,
+              "transitions_without_axis_command": 0,
+              "chassis_axis": "Y",
+              "recent_nonzero_axis_commands": [],
+              "axis_direction_reversals": 0
+            },
+            "vertical": {
+              "button_relative_to_finger": "unknown",
+              "finger_relative_to_button": "unknown",
+              "unresolved_observations": 0,
+              "transitions_without_axis_command": 0,
+              "chassis_axis": "Z",
+              "recent_nonzero_axis_commands": [],
+              "axis_direction_reversals": 0
+            }
+          },
+          "attention_axis": null,
+          "limitation": "Image relations only. Axis activity is not calibrated correction or proof of improvement."
+        },
+        "control_plan": {
+          "format": "pressb-control-plan-v1",
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "source": "program_advice_from_model_judgments_not_human_confirmation",
+          "preferred_contact": "head_image_right",
+          "selected_contact": "unknown",
+          "stage": "get_view",
+          "focus": null,
+          "alignment_size": {
+            "horizontal": "unknown",
+            "vertical": "unknown"
+          },
+          "step_hint_mm": null,
+          "geometry_progress": {
+            "comparable": false,
+            "reason": "selected_finger_unknown_or_changed",
+            "needs_recheck": false,
+            "previous_observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+            "current_observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+            "axes": {},
+            "source": "comparison_of_model_estimates_not_measured_hand_error"
+          },
+          "head_target_info": {
+            "last_absolute_target_deg": [
+              0.0,
+              30.0
+            ],
+            "current_measured_head_deg": [
+              -0.7,
+              25.4
+            ],
+            "measured_after_last_target_deg": [
+              -0.7,
+              25.2
+            ],
+            "last_target_observation_id": "eb8f9d5fdfbb418bbd0366b8504330b7",
+            "command_id": "bdcfd7a480ac4814b55d5f9a85aa1a1c",
+            "measured_pose_stable_since_last_target": true,
+            "avoid_repeating_same_target": true,
+            "guidance": "Choose head yaw/pitch from current framing. +30 degrees pitch is an absolute look-down example, not a fixed target or an increment. If this view remains inadequate after the last target, choose a different sensible target; repeating it does not provide a new viewpoint. Head rotation does not move the hand or change the wrist camera."
+          },
+          "evidence": {
+            "light_on": null,
+            "withdrawal": null
+          },
+          "expected_change": "head_target_and_selected_finger_identifiable",
+          "instructions": [
+            "Improve HEAD framing to locate the button and preferred HEAD-image RIGHT finger; a fresh observation alone does not alter the viewpoint.",
+            "For a correction purpose focus on hand Y/Z; do not hide positive X inside a correction label. Robot RIGHT is -Y and UP is +Z, but image right is not automatically robot right.",
+            "Stages and step sizes are advice, not new execution gates. A separately justified approach is still allowed when the independent current-WRIST horizontal-between-fingers guard passes; no height or depth validity prerequisite is added.",
+            "Open single-finger contact is allowed. Unknown depth or an unconfirmed light event does not itself forbid forward motion. Sending a command is not proof of arrival, contact, or success."
+          ]
+        },
+        "evidence": {
+          "initial_lamp": {
+            "observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+            "lamp": "unknown",
+            "view": "unknown",
+            "source": "model_judgment_not_human_verification"
+          },
+          "last_off": null,
+          "light_on": null,
+          "withdrawal": null
+        }
+      },
+      "status": "proposal_not_executed",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            10.0,
+            40.0
+          ],
+          "reason": "Current HEAD view is too wide and the panel/button plus right-side contact finger are not clearly framed; choose a different look-down pose to reveal the full panel and selected finger."
+        }
+      },
+      "elapsed_s": 46.921,
+      "action_metrics": {
+        "elapsed_s": 32.611804173793644,
+        "attempts": 2,
+        "prompt_tokens": 24236,
+        "completion_tokens": 299
+      },
+      "perception_metrics": {
+        "image_count": 2,
+        "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+        "previous_observation_id": null,
+        "tool": "locate_alignment",
+        "attempts": 1,
+        "prompt_tokens": 2250,
+        "completion_tokens": 146,
+        "usage": {
+          "prompt_tokens": 2250,
+          "total_tokens": 2396,
+          "completion_tokens": 146,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 13.985381457954645
+      }
+    },
+    {
+      "round": 12,
+      "observation_id": "769bcaec708644af8c2830b75d850ff2",
+      "original": {
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              10,
+              0
+            ],
+            "reason": "In HEAD the button is right of the selected right finger; move robot left (+Y) to reduce horizontal offset before any forward press."
+          }
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "769bcaec708644af8c2830b75d850ff2",
+          "head_horizontal": "right",
+          "head_vertical": "below",
+          "head_visible": "yes",
+          "lamp": "unknown",
+          "lamp_view": "unknown",
+          "contact_finger": "head_image_right",
+          "wrist_relation": "right",
+          "wrist_visible": "yes"
+        },
+        "action_metrics": {
+          "elapsed_s": 14.824461345095187,
+          "attempts": 1,
+          "prompt_tokens": 11957,
+          "completion_tokens": 142
+        },
+        "perception_metrics": {
+          "image_count": 2,
+          "observation_id": "769bcaec708644af8c2830b75d850ff2",
+          "previous_observation_id": null,
+          "tool": "inspect_alignment",
+          "attempts": 1,
+          "prompt_tokens": 2053,
+          "completion_tokens": 118,
+          "usage": {
+            "prompt_tokens": 2053,
+            "total_tokens": 2171,
+            "completion_tokens": 118,
+            "prompt_tokens_details": null,
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsed_s": 11.652544280979782
+        }
+      },
+      "current_assessment": {
+        "format": "pressb-grounding-v2",
+        "source": "model_not_human",
+        "observation_id": "769bcaec708644af8c2830b75d850ff2",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown",
+        "geometry": {
+          "head_button_box": [
+            0.875,
+            0.635,
+            0.925,
+            0.705
+          ],
+          "head_finger_tip": null,
+          "delta_image_norm": null,
+          "error_button_units": null,
+          "magnitude": {
+            "horizontal": "unknown",
+            "vertical": "unknown"
+          },
+          "convention": "button_center_minus_selected_tip; image x right, y down",
+          "classification": {
+            "center_fraction": 0.25,
+            "small_max": 0.5,
+            "medium_max": 2.0
+          },
+          "semantics": "Image-plane categories only; not millimeters, 3D contact, motion permission or activation."
+        }
+      },
+      "current_assessment_source": "new_model",
+      "action_images": 5,
+      "restored_commands": 11,
+      "control_memory": {
+        "source": "recorded_execution_and_model_judgments_kept_separate",
+        "preferred_contact": "head_image_right",
+        "selected_contact": "head_image_right",
+        "latest_result": {
+          "command_id": "fe394ab46710461d892e719013587d5b",
+          "command": {
+            "type": "move",
+            "xyz_mm": [
+              0.0,
+              0.0,
+              15.0
+            ]
+          },
+          "status": "completed",
+          "sends_completed": true,
+          "completion_basis": "command_interpolation",
+          "elapsed_s": 1.41,
+          "observation_id": "769bcaec708644af8c2830b75d850ff2",
+          "error": null,
+          "replay": {
+            "note": "Historical result only. No command was sent by this validation.",
+            "recorded_actual_command": {
+              "type": "move",
+              "xyz_mm": [
+                0.0,
+                0.0,
+                15.0
+              ]
+            }
+          },
+          "command_source": "saved_recording_not_replay_proposal"
+        },
+        "previous_alignment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+          "head_visible": "yes",
+          "wrist_visible": "yes",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "wrist_relation": "right",
+          "lamp": "unknown",
+          "lamp_view": "unknown"
+        },
+        "alignment_progress": {
+          "source": "categorical_model_comparison_not_metric",
+          "status": "unknown",
+          "previous_observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+          "observation_id": "769bcaec708644af8c2830b75d850ff2",
+          "previous_command": {
+            "type": "move",
+            "xyz_mm": [
+              0.0,
+              0.0,
+              15.0
+            ]
+          },
+          "limitation": "Coarse image categories only; unchanged categories do not prove no physical improvement."
+        },
+        "alignment_control": {
+          "format": "pressb-alignment-control-v1",
+          "observation_id": "769bcaec708644af8c2830b75d850ff2",
+          "source": "derived_from_model_judgments_and_recorded_commands_not_new_visual_evidence",
+          "contact_finger": "unknown",
+          "axes": {
+            "horizontal": {
+              "button_relative_to_finger": "unknown",
+              "finger_relative_to_button": "unknown",
+              "unresolved_observations": 0,
+              "transitions_without_axis_command": 0,
+              "chassis_axis": "Y",
+              "recent_nonzero_axis_commands": [],
+              "axis_direction_reversals": 0
+            },
+            "vertical": {
+              "button_relative_to_finger": "unknown",
+              "finger_relative_to_button": "unknown",
+              "unresolved_observations": 0,
+              "transitions_without_axis_command": 0,
+              "chassis_axis": "Z",
+              "recent_nonzero_axis_commands": [],
+              "axis_direction_reversals": 0
+            }
+          },
+          "attention_axis": null,
+          "limitation": "Image relations only. Axis activity is not calibrated correction or proof of improvement."
+        },
+        "control_plan": {
+          "format": "pressb-control-plan-v1",
+          "observation_id": "769bcaec708644af8c2830b75d850ff2",
+          "source": "program_advice_from_model_judgments_not_human_confirmation",
+          "preferred_contact": "head_image_right",
+          "selected_contact": "unknown",
+          "stage": "get_view",
+          "focus": null,
+          "alignment_size": {
+            "horizontal": "unknown",
+            "vertical": "unknown"
+          },
+          "step_hint_mm": null,
+          "geometry_progress": {
+            "comparable": false,
+            "reason": "selected_finger_unknown_or_changed",
+            "needs_recheck": false,
+            "previous_observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+            "current_observation_id": "769bcaec708644af8c2830b75d850ff2",
+            "axes": {},
+            "source": "comparison_of_model_estimates_not_measured_hand_error"
+          },
+          "head_target_info": {
+            "last_absolute_target_deg": [
+              -5,
+              30
+            ],
+            "current_measured_head_deg": [
+              -1.7,
+              26.5
+            ],
+            "measured_after_last_target_deg": [
+              -1.7,
+              26.5
+            ],
+            "last_target_observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+            "command_id": "eae8f05e7b6d4df2b4994ea35f11bca7",
+            "measured_pose_stable_since_last_target": true,
+            "avoid_repeating_same_target": true,
+            "guidance": "Choose head yaw/pitch from current framing. +30 degrees pitch is an absolute look-down example, not a fixed target or an increment. If this view remains inadequate after the last target, choose a different sensible target; repeating it does not provide a new viewpoint. Head rotation does not move the hand or change the wrist camera."
+          },
+          "evidence": {
+            "light_on": null,
+            "withdrawal": null
+          },
+          "expected_change": "head_target_and_selected_finger_identifiable",
+          "instructions": [
+            "Improve HEAD framing to locate the button and preferred HEAD-image RIGHT finger; a fresh observation alone does not alter the viewpoint.",
+            "For a correction purpose focus on hand Y/Z; do not hide positive X inside a correction label. Robot RIGHT is -Y and UP is +Z, but image right is not automatically robot right.",
+            "Stages and step sizes are advice, not new execution gates. A separately justified approach is still allowed when the independent current-WRIST horizontal-between-fingers guard passes; no height or depth validity prerequisite is added.",
+            "Open single-finger contact is allowed. Unknown depth or an unconfirmed light event does not itself forbid forward motion. Sending a command is not proof of arrival, contact, or success."
+          ]
+        },
+        "evidence": {
+          "initial_lamp": {
+            "observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+            "lamp": "unknown",
+            "view": "unknown",
+            "source": "model_judgment_not_human_verification"
+          },
+          "last_off": null,
+          "light_on": null,
+          "withdrawal": null
+        }
+      },
+      "status": "proposal_not_executed",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -10,
+            30
+          ],
+          "reason": "HEAD view is too far left to see the panel and selected right finger; yaw left to bring the button and hand into frame for alignment."
+        }
+      },
+      "elapsed_s": 30.232,
+      "action_metrics": {
+        "elapsed_s": 15.207794934045523,
+        "attempts": 1,
+        "prompt_tokens": 11960,
+        "completion_tokens": 139
+      },
+      "perception_metrics": {
+        "image_count": 2,
+        "observation_id": "769bcaec708644af8c2830b75d850ff2",
+        "previous_observation_id": null,
+        "tool": "locate_alignment",
+        "attempts": 1,
+        "prompt_tokens": 2251,
+        "completion_tokens": 146,
+        "usage": {
+          "prompt_tokens": 2251,
+          "total_tokens": 2397,
+          "completion_tokens": 146,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 14.154968284070492
+      }
+    },
+    {
+      "round": 17,
+      "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+      "original": {
+        "proposal": {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              10,
+              10
+            ],
+            "reason": "HEAD shows the right-side finger below and left of the down button; raise and move robot-left to reduce the vertical and lateral offset before any forward press."
+          }
+        },
+        "assessment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "head_visible": "yes",
+          "lamp": "unknown",
+          "lamp_view": "unknown",
+          "wrist_relation": "right",
+          "wrist_visible": "yes"
+        },
+        "action_metrics": {
+          "elapsed_s": 15.549486126750708,
+          "attempts": 1,
+          "prompt_tokens": 12335,
+          "completion_tokens": 147
+        },
+        "perception_metrics": {
+          "image_count": 2,
+          "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+          "previous_observation_id": null,
+          "tool": "inspect_alignment",
+          "attempts": 1,
+          "prompt_tokens": 2052,
+          "completion_tokens": 118,
+          "usage": {
+            "prompt_tokens": 2052,
+            "total_tokens": 2170,
+            "completion_tokens": 118,
+            "prompt_tokens_details": null,
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            }
+          },
+          "elapsed_s": 11.68911358108744
+        }
+      },
+      "current_assessment": {
+        "format": "pressb-grounding-v2",
+        "source": "model_not_human",
+        "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown",
+        "geometry": {
+          "head_button_box": [
+            0.87,
+            0.63,
+            0.92,
+            0.7
+          ],
+          "head_finger_tip": [
+            0.83,
+            0.86
+          ],
+          "delta_image_norm": [
+            0.06500000000000006,
+            -0.19499999999999995
+          ],
+          "error_button_units": [
+            1.3,
+            -2.785714285714287
+          ],
+          "magnitude": {
+            "horizontal": "medium",
+            "vertical": "large"
+          },
+          "convention": "button_center_minus_selected_tip; image x right, y down",
+          "classification": {
+            "center_fraction": 0.25,
+            "small_max": 0.5,
+            "medium_max": 2.0
+          },
+          "semantics": "Image-plane categories only; not millimeters, 3D contact, motion permission or activation."
+        }
+      },
+      "current_assessment_source": "new_model",
+      "action_images": 5,
+      "restored_commands": 16,
+      "control_memory": {
+        "source": "recorded_execution_and_model_judgments_kept_separate",
+        "preferred_contact": "head_image_right",
+        "selected_contact": "head_image_right",
+        "latest_result": {
+          "command_id": "9f2e06851543466fb2e81fb950950ddd",
+          "command": {
+            "type": "move",
+            "xyz_mm": [
+              0,
+              10,
+              10
+            ]
+          },
+          "status": "completed",
+          "sends_completed": true,
+          "completion_basis": "command_interpolation",
+          "elapsed_s": 1.33,
+          "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+          "error": null,
+          "replay": {
+            "note": "Historical result only. No command was sent by this validation.",
+            "recorded_actual_command": {
+              "type": "move",
+              "xyz_mm": [
+                0,
+                10,
+                10
+              ]
+            }
+          },
+          "command_source": "saved_recording_not_replay_proposal"
+        },
+        "previous_alignment": {
+          "format": "pressb-grounding-v1",
+          "source": "model_not_human",
+          "observation_id": "025479b7972646bebbdc72d752083efa",
+          "contact_finger": "head_image_right",
+          "head_horizontal": "right",
+          "head_vertical": "above",
+          "head_visible": "yes",
+          "lamp": "unknown",
+          "lamp_view": "unknown",
+          "wrist_relation": "right",
+          "wrist_visible": "yes"
+        },
+        "alignment_progress": {
+          "source": "categorical_model_comparison_not_metric",
+          "status": "unchanged_or_unresolved",
+          "previous_observation_id": "025479b7972646bebbdc72d752083efa",
+          "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+          "previous_command": {
+            "type": "move",
+            "xyz_mm": [
+              0,
+              10,
+              10
+            ]
+          },
+          "limitation": "Coarse image categories only; unchanged categories do not prove no physical improvement."
+        },
+        "alignment_control": {
+          "format": "pressb-alignment-control-v1",
+          "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+          "source": "derived_from_model_judgments_and_recorded_commands_not_new_visual_evidence",
+          "contact_finger": "head_image_right",
+          "axes": {
+            "horizontal": {
+              "button_relative_to_finger": "right",
+              "finger_relative_to_button": "left",
+              "unresolved_observations": 7,
+              "transitions_without_axis_command": 0,
+              "chassis_axis": "Y",
+              "recent_nonzero_axis_commands": [
+                {
+                  "delta_mm": 10,
+                  "before_observation_id": "025479b7972646bebbdc72d752083efa",
+                  "after_observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+                  "result_status": "completed"
+                },
+                {
+                  "delta_mm": 10,
+                  "before_observation_id": "d144450137fe456682c12dab89c4d4c3",
+                  "after_observation_id": "025479b7972646bebbdc72d752083efa",
+                  "result_status": "completed"
+                },
+                {
+                  "delta_mm": 10,
+                  "before_observation_id": "a66f1d9fed9b4efd802fc242839e37fe",
+                  "after_observation_id": "d144450137fe456682c12dab89c4d4c3",
+                  "result_status": "completed"
+                }
+              ],
+              "axis_direction_reversals": 0,
+              "relation_statement": "In HEAD, BUTTON is right relative to selected FINGER; the same FINGER is left relative to BUTTON. This describes image projection only."
+            },
+            "vertical": {
+              "button_relative_to_finger": "above",
+              "finger_relative_to_button": "below",
+              "unresolved_observations": 7,
+              "transitions_without_axis_command": 0,
+              "chassis_axis": "Z",
+              "recent_nonzero_axis_commands": [
+                {
+                  "delta_mm": 10,
+                  "before_observation_id": "025479b7972646bebbdc72d752083efa",
+                  "after_observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+                  "result_status": "completed"
+                },
+                {
+                  "delta_mm": 10,
+                  "before_observation_id": "d144450137fe456682c12dab89c4d4c3",
+                  "after_observation_id": "025479b7972646bebbdc72d752083efa",
+                  "result_status": "completed"
+                },
+                {
+                  "delta_mm": 10,
+                  "before_observation_id": "a37f68a5911845d69e404fcd44d51ee1",
+                  "after_observation_id": "a66f1d9fed9b4efd802fc242839e37fe",
+                  "result_status": "completed"
+                }
+              ],
+              "axis_direction_reversals": 0,
+              "relation_statement": "In HEAD, BUTTON is above relative to selected FINGER; the same FINGER is below relative to BUTTON. This describes image projection only."
+            }
+          },
+          "attention_axis": "vertical",
+          "limitation": "Image relations only. Axis activity is not calibrated correction or proof of improvement."
+        },
+        "control_plan": {
+          "format": "pressb-control-plan-v1",
+          "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+          "source": "program_advice_from_model_judgments_not_human_confirmation",
+          "preferred_contact": "head_image_right",
+          "selected_contact": "head_image_right",
+          "stage": "align",
+          "focus": "vertical",
+          "alignment_size": {
+            "horizontal": "medium",
+            "vertical": "large"
+          },
+          "step_hint_mm": 20,
+          "geometry_progress": {
+            "comparable": false,
+            "reason": "geometry_missing_or_invalid",
+            "needs_recheck": false,
+            "previous_observation_id": "025479b7972646bebbdc72d752083efa",
+            "current_observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+            "axes": {},
+            "source": "comparison_of_model_estimates_not_measured_hand_error"
+          },
+          "head_target_info": {
+            "last_absolute_target_deg": [
+              -5,
+              30
+            ],
+            "current_measured_head_deg": [
+              -1.7,
+              26.5
+            ],
+            "measured_after_last_target_deg": [
+              -1.7,
+              26.5
+            ],
+            "last_target_observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+            "command_id": "eae8f05e7b6d4df2b4994ea35f11bca7",
+            "measured_pose_stable_since_last_target": true,
+            "avoid_repeating_same_target": false,
+            "guidance": "Choose head yaw/pitch from current framing. +30 degrees pitch is an absolute look-down example, not a fixed target or an increment. If this view remains inadequate after the last target, choose a different sensible target; repeating it does not provide a new viewpoint. Head rotation does not move the hand or change the wrist camera."
+          },
+          "evidence": {
+            "light_on": null,
+            "withdrawal": null
+          },
+          "expected_change": "reduce_vertical_image_error",
+          "instructions": [
+            "Address the vertical image offset and inspect its change after the actual movement. Check the other axis too; a coarse relation that remains unchanged does not establish lack of progress.",
+            "Consider 20 mm as an adjustable trial step for this large visual error; this is not a calibrated pixel-to-mm conversion, minimum, cap, or forced action.",
+            "For a correction purpose focus on hand Y/Z; do not hide positive X inside a correction label. Robot RIGHT is -Y and UP is +Z, but image right is not automatically robot right.",
+            "Stages and step sizes are advice, not new execution gates. A separately justified approach is still allowed when the independent current-WRIST horizontal-between-fingers guard passes; no height or depth validity prerequisite is added.",
+            "Open single-finger contact is allowed. Unknown depth or an unconfirmed light event does not itself forbid forward motion. Sending a command is not proof of arrival, contact, or success."
+          ]
+        },
+        "evidence": {
+          "initial_lamp": {
+            "observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+            "lamp": "unknown",
+            "view": "unknown",
+            "source": "model_judgment_not_human_verification"
+          },
+          "last_off": null,
+          "light_on": null,
+          "withdrawal": null
+        }
+      },
+      "status": "proposal_not_executed",
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            20
+          ],
+          "reason": "HEAD shows the right finger below the button with a large vertical error; raise the hand to align the contact area with the pressable face."
+        }
+      },
+      "elapsed_s": 30.745,
+      "action_metrics": {
+        "elapsed_s": 15.340705638751388,
+        "attempts": 1,
+        "prompt_tokens": 12044,
+        "completion_tokens": 143
+      },
+      "perception_metrics": {
+        "image_count": 2,
+        "observation_id": "efc9827e68764bba9515683ab5ae8eb9",
+        "previous_observation_id": null,
+        "tool": "locate_alignment",
+        "attempts": 1,
+        "prompt_tokens": 2250,
+        "completion_tokens": 154,
+        "usage": {
+          "prompt_tokens": 2250,
+          "total_tokens": 2404,
+          "completion_tokens": 154,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 14.89793225005269
+      }
+    }
+  ],
+  "limitations": [
+    "All input frames are from a saved run, not a live camera.",
+    "Historical judgments are model judgments, not human-confirmed geometry.",
+    "Later recorded images reflect original commands, never these new suggestions.",
+    "No suggestion is executed; this cannot establish task success or physical improvement.",
+    "Action-only mode reuses the original current assessment; full mode recomputes it."
+  ],
+  "source_integrity": {
+    "sha256": {
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/session.json": "4b28b42af7b3be9e5f1f9873fa4c38fd05d64a7be1a0c9a0728a1a21e62a53de",
+      "/home/js/robot/VLA/PressButton/docs/astribot/planar_control/agent_system_prompt.txt": "25a82a15b1d48edc79f0d2c4c4b06288c9b29369327b8c89aa7f3d8a4b5014e7",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/session.json": "5c7403260f1429683ab1a20dde90611f311fde05b737d924e056793dbca01350",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/case_review.json": "893f70048754ad7ff5f568ad6226080dffb0378214e2b46cf19ff287c59d58d6",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/operation.json": "fbdd833fe175ff943743d46088b2559f3a2cccaf4491a6509bde9aefcad710f5",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/before/metadata.json": "b786becfc7e23f497c63275b4451700baeef4701aa6303d19ec3bc2376dbc1f7",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/before/head.jpg": "e721703a9bf4391e09e9fd6a1470d3f25d2a713dc046d4ef739441d5de618280",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/before/right.jpg": "9668b97db2ab3230fbce2a8b4116dd81bd67f18136291a1b567588b0bb03bc87",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/after/metadata.json": "57a606dac7572146ac8f2a5c66fa0bf20a38eacbaf4ab1d488f14553ae79b642",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/after/head.jpg": "4637298a81807565aa40f93fbd513dd1a8603d990c85e4b211db04aa6c37da12",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000001/after/right.jpg": "4a6cdf93921105088a70d8add547acce66db07a33c9c9e54ea49cf8942e2ce7b",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/operation.json": "32e47b29b7a251e02fedcea5329b3884ee6eeb52f4feab51efa7a0cd4baf8136",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/before/metadata.json": "2186a13952ee9adb6d7ac086611f83982ca29d194335e639608e93e42a97dc71",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/before/head.jpg": "6f2ee9cbe07d31b6df39c2915d8ef81483993c3fb716d50fc8d9c93a3a3b151d",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/before/right.jpg": "2f819d5aec32cd36f581bd47c7278f9d3db038d01b40275716c063c6c8bb8ad9",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/after/metadata.json": "d216feff9b972c66ae91f5f67be590302b794d387d7747856261a665b04a945c",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/after/head.jpg": "59cfe3701e01a4d24678a6bd0aae0ac62a418e1ce954460ed08338ebe5b7f308",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000002/after/right.jpg": "6718886c53877b7f01c9b8c78640e996b01ba4c38ee6c805b5c81c17b3fcb54d",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/operation.json": "87e6b95e6187770b93def01ea6d626036b244c1ba34ece839a1e949f614e8676",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/before/metadata.json": "bddca228bbc40b07302a8f26a66e47847046c9abbb8ecd8aa867a4f4df8b9840",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/before/head.jpg": "413dad83ce943f31dbf50c756d6e41afcfedfba7ca53010685444781e6491695",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/before/right.jpg": "1fe6d58931448d456d788c5a2ea7722efaf24f61d63c52d1de571311f5cf0fe2",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/after/metadata.json": "5942d8966ef643fd7b09c573aae6172e4215707941c23d81e7a07fe0f1602d23",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/after/head.jpg": "45ddb0c3661924dfb5b64ef44baa56cd0747239155642bb0be01cf94a968b17f",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000003/after/right.jpg": "c0b4dea0a9f61b93b528134197375b969ee2c68cb0e30ab588438869304836f4",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/operation.json": "2cc87b147caa4292a68d3aa9e71ee33b358d7f8662c474117771bc1099e96074",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/before/metadata.json": "2bcef1e14765219484113708fd5547c2ab52e1678176ed2abb17923fe6979ac4",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/before/head.jpg": "250fc983f37e1a566762fc6985482b409f213b0edcc8220730bc0ce7fb756fcd",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/before/right.jpg": "c919a367a50f99d39f9f3bd202f46d83ce56d814846a0999d26ca220f6efe2a0",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/after/metadata.json": "c80b44b1b8e694da8e201277a6f892c9b9231c70a8d7d44d4bf8bcd75619a4cd",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/after/head.jpg": "a6a59851a6ef9fc1479497afceef63ce05bb2bf69b7b1f2597050536e6f6d5ed",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000004/after/right.jpg": "27ccd391d814e45e8a855cc983469ce67c1b948fb2279f05cdbd6bd42f9abe11",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/operation.json": "5f2ceb5decc3c888ae82a77266d1fe0acd0b8cc7c386672b37ebacfdfdf66e0d",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/before/metadata.json": "d0c0553abb001b33fd83e6a16e5740ea49868cc7b3703ead02dba9b8d32b6e54",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/before/head.jpg": "eb81f890471cc53734cc739e17ea53085bad11a8772354d50327d674ad0864f3",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/before/right.jpg": "2a870ea8a1f2d6e2b53e86b15e0bfc8dcfce34ff941674dcfb39140c82f44eec",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/after/metadata.json": "ec21fa3f1a6f6dd95487efc7c2cd6b010a5396ef0896b364db205c05ad760fe6",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/after/head.jpg": "fbfa30ad0307d6ace777929f208e05809d94fd5f035ca27999bde619698df4fa",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000005/after/right.jpg": "1b1c975b36b7b4d271e065d0d50c121503cadd4cf8f0d38e0619964c15ba2628",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/operation.json": "7c701a911d700f42d188c704f57fbf316b233123103c61376f19f6f5b59dbe83",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/before/metadata.json": "c55aa2eb221c3a76c334082436567c915f0e92e9ebae69ad48b8e241d16697d2",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/before/head.jpg": "f2616a9b5c080c8a7bac4d72f9dea6403a9beb854113234be7fbc4e9617ca118",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/before/right.jpg": "d73a9df5461b7ad904139d199dc107082a4dd146d1e85334d0b603729ca24543",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/after/metadata.json": "e0a02a2f23b24217eefe87b25b4419325f05f1072070df8c39962f4b782efa67",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/after/head.jpg": "65d66a37c2175e28a63d1a39b68aefda23a6c3d99f38fa10d6e45704bf398381",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000006/after/right.jpg": "3ed892d74ab35965d5121ad4acee0c88b23ec9fa1e1ec8524b76f42bf4e979d3",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/operation.json": "4d29e1f3fbff721967567d9639ec2a06b00a46297d1f5909967c0134111c741f",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/before/metadata.json": "59b778424ef52b61aceaccce10251a61903c5d2905d4196cb44eb0ff4439a7d9",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/before/head.jpg": "1da6d4af60cb409f76cdd9971ffcd6e680226f114a2b4fbff782a1c08a043eb8",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/before/right.jpg": "2dbe308c5d91743e52728146fd48def99c2a9d04245d9e462ce2e5ec20518564",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/after/metadata.json": "ee4cffbe91ab077fe5e095f8b7f8b06965da9e4fbbbcd4a22aaf72e40a521d0e",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/after/head.jpg": "3d16182256015a83e7fff11a003fe73fd72ec67196ce285188afedd04d6ede5c",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000007/after/right.jpg": "924f2893813f2e29033611159037a5da2d78dd87bbd8ae75c553eaa5782e9eaf",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/operation.json": "355ea11f69f48cfdafda744bc8843db44429508420319b6be33dd3ef25a95ae7",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/before/metadata.json": "7a62c6b3d3df1e0a6889f3addaabe76c08afdceac98719459481e8315e6d9c5b",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/before/head.jpg": "67dd6bb974d79e4f63463f2abadf2f0e268e678ed2ae3f0dbf2ce18245270c02",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/before/right.jpg": "c7baccb3ff05124e8bce61ae90848e63ad9f608a5ca9a1986697bb527f81b269",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/after/metadata.json": "9cfaec8b65390597b744a1350205671214a6e36ad5b8b9f29eaf77ce6c07caf5",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/after/head.jpg": "be85550a01d5d321d6af10c2ae1a49c012c61edb01f40ecbff6c647af54a8cf5",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000008/after/right.jpg": "24f85ae468600b68fcccc0bc430651af6afb2526763fbc41f62e1f79b1dfe7d6",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/operation.json": "91fc263ea003f5144f840956bc50eb61a2060e7d18966881092c8540f8858869",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/before/metadata.json": "21802ae1e511bbe2c9691d2d013314b110d4e9161958239055b020e3ccdbc2b5",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/before/head.jpg": "c127e2453782e73d8e84ed19f948cdc0c90d6296f68e4ec8267c27680957fb78",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/before/right.jpg": "f43608bf1f16f05edf0bc7a09181bbfd5c0c53e8ba3a8370cb6d07431f864165",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/after/metadata.json": "c56df8913cb5361facb78fbad6e65a2223f6c499a291e3c2c90e3cc672a4c2d1",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/after/head.jpg": "039b10795b63fb8f28bb3228d188ec5fdad5c23f74b62a6b6ac9b991f1639bd2",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000009/after/right.jpg": "a8db3bc740c91905887349f77f49f9d38be64834e98b16afed424a5248542fd6",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/operation.json": "2ec2403111dce0b713904fc05e47d34d593ec346a9ea86d789ccaff786f1ebc1",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/before/metadata.json": "0850f28b10365b1ca31c05692795c86332de4176bbe0f999882150f1d12318c7",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/before/head.jpg": "8642adcf5771138e589c6e9281686e91487471e0c036692c001df027cf16e924",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/before/right.jpg": "f3b1bd29902f8981ad403502326726af341aee16ff2a316890d94d89bf6ab0d7",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/after/metadata.json": "e68629c99d2b4b0b490f2c4eee33c8a639c5c412cc764a65d8cf5d77d068fd67",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/after/head.jpg": "ff70508a41f38ca3043fa53380a7d7756e8dc969a7fa93f2c19cb3339a6846aa",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000010/after/right.jpg": "2f35ef6f2bde0c1e48b0cd9305eb654c823c3c4417cc5fccb57779fb25cc4f89",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000011/operation.json": "d2ff99b67fc692ecb683d61cd4c5a9caf3f077e4dfab24f45a5cdafc4916bc30",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000011/before/metadata.json": "884b577e6c285ee6d25b838703c41161e061da7c50a04bce24d2ff2d14bf06f4",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000011/before/head.jpg": "9ac3f6e58c3f68e7a09d5e01ef6953339a7345a3c3301a995f9b92760999fbde",
+      "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047/operations/000011/before/right.jpg": "7e19bddde86403f0823d92e588b7afd8918b11b7f4c7fd347aa575e2c11031a8",
+      "/home/js/robot/VLA/PressButton/src/pressb/agent_loop/short_loop.py": "93ed7692b4cc835b1408c69d74bbf2f1726abb854c3865be0bae719a5d3611ef",
+      "/home/js/robot/VLA/PressButton/src/pressb/agent_loop/client.py": "d80692e7bfdc738d142ce2462f6f817e1cd376be4501ed8c0fca0e5823438c50",
+      "/home/js/robot/VLA/PressButton/src/pressb/agent_loop/grounding.py": "b5519c5434936987b47a5a73098673970da700077722d08987f739e8d2e3cae9",
+      "/home/js/robot/VLA/PressButton/scripts/validate_agent_alignment_fix.py": "af2e7f9148a020019c352c27fc207bcf3665f30987ce3347b2133d876139da7a",
+      "/home/js/robot/VLA/PressButton/src/pressb/agent_loop/decision_validation.py": "05cd5b4b8c18328924ff850cfa6973dae43473bc231088e58d387159196992b5",
+      "/home/js/robot/VLA/PressButton/src/pressb/agent_loop/localization.py": "202828ba5dc0224b5e975d1274944db4fad24953f4a6431b78579793edec8ce7",
+      "/home/js/robot/VLA/PressButton/src/pressb/agent_loop/control_policy.py": "0cf0c6d6373e300c32ca396a935d59d1f6d892857e11626c4b1b540afe8f9c1c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0000/decision_context.json": "6af6d24a1edc159c080af11ebfa9cc1b4d8b547734b8c74a5297d4dfab7dd983",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/dd5bf7565745426a8c6c5efa393cddd2/manifest.json": "4e4f56afad5f93cd8332852117660e80b5ff84e1158e636b09cba00703293e47",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/dd5bf7565745426a8c6c5efa393cddd2/head.jpg": "a2e2ba8c46bdb52214bce17855dc267f0e0ee40cf0b6b39bb74b6c3671a09a1a",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/dd5bf7565745426a8c6c5efa393cddd2/right.jpg": "c90e01199b78b86d2481af037f9806d6004cc56c4d3415f1d9e72b36a160e531",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0000/perception/assessment.json": "0f5ae1cba46935c9dbeabece8e6be07399d9e197775426ad9f167fbca24be796",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0000/proposal.json": "f0e19be617db3bc649d4f3baae9fab72a620978c4e0c0ecd513d9d4d9145159e",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0000/assistant.json": "a3e835f614a95b7f6a3e736863000376676002b9a90249904256fc1bd78e999b",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0000/result.json": "695864fb5330f95f91e79c958d57afd46e66fb131d9a9101bc889b4868877177",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/3f580c9004114ce08b14d9e38e53ad67/manifest.json": "a96c9d4572d2a09a94d8a3f7d23e9ad3d6e40fce0ab7e4110eb988386e78f8ee",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/3f580c9004114ce08b14d9e38e53ad67/head.jpg": "15827e2c0f3a865adf8f1e160f51e37e27e60b49389c144acad9e2a0b159f368",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/3f580c9004114ce08b14d9e38e53ad67/right.jpg": "00233d26d40beaa64f90de545f1b99aa9913b10856c2b56dad691df63f09c575",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0001/decision_context.json": "1e6e8af4327718d20b8c8ee9d8d84eab32b3e1804bed62b46b16a579c051ec2f",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0001/perception/assessment.json": "3a6627687d95b5254525027ffc9525f5f0c703561c33213a06d0eeca0b0a6a2a",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0001/proposal.json": "e093bb86b6bc61054e4b331edcada922c886df8e3f09a16e452e0ebc20c7d71f",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0001/assistant.json": "e77a8e08e8bcaa0266cbc53d665046e6ad6c85b52e8ee84402b79058d0cd281c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0001/result.json": "3b2bcbf0273a2d52e7e5c660e855fdbf3ee9e85f800baf2c396f73bf03fe8ed6",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/9a983be1c1a042a2b7124753a269363f/manifest.json": "b8e2a7e5ed20a626fb4cd856c325359c87a4aad8e0b3ed87a621cd82149af322",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/9a983be1c1a042a2b7124753a269363f/head.jpg": "47ffac468f63986a4a9b36c4052ffa214a410b481b11d97ef811a11513f3d038",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/9a983be1c1a042a2b7124753a269363f/right.jpg": "9fdb47a1fc39be19fcbb01285c9dc918be7f234d4f95ddeba061e11f6eee8500",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0002/decision_context.json": "b899c0e60fcf403025995f4ef2acd7bebacec63093fa9b661622f1ad04bf2dde",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0002/perception/assessment.json": "5be3174608d6713c596239ee1efec7476ac1ab7fb56fa39a9803c1ff77e697c2",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0002/proposal.json": "23eeca52d5292ace133693e033ffb24f13fb758e3ab8e45c10c6dd5d2cfda4fb",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0002/assistant.json": "4a8aed401451d013697effdde0e93b5c99a114276284d4cfd99e1ae5e0ad0efc",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0002/result.json": "ae1414fcb3c52b97dbed75114362044d74159544b515662360b72953c4390fbe",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/eb8f9d5fdfbb418bbd0366b8504330b7/manifest.json": "308f47a89d30e482036f0b328c25d10f89a9917dad8b5737a965ef97b90c3892",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/eb8f9d5fdfbb418bbd0366b8504330b7/head.jpg": "889bcd661668c5d572a5bb99e37902c8f58af833320f7cd356b27c39dc1be875",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/eb8f9d5fdfbb418bbd0366b8504330b7/right.jpg": "caefcad944ebb1bc99589d36f85b1e031fb847469a2e148c2a0e8f561b819e78",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0003/decision_context.json": "0ad47d6ee44cea1faef2e6de5173a3c556856341667096f26f580a36166f9c30",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0003/perception/assessment.json": "99656dae1c177238807aa7c64ab90b691a1ef5e3f10c93992b1abca0f7e5a26d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0003/proposal.json": "8d602cd5ce42502d3866fdbefc162ad1246429b388e2415782c250587c6b5afa",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0003/assistant.json": "dd17acfdf4b50bf7bf488bb5160f78644ac4eb0f620e4bb4db94bccd1f294c25",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0003/result.json": "75aa9313da274c202f5e06090bf09f40d33f1bab936d6599ecf5045a2871f3d9",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/9dc0a70c009f41fa8db73a760d2e1986/manifest.json": "299214d754f185c8aafec75fb75af205aeb48cecbbbc2e8b8f077bc2b8b57645",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/9dc0a70c009f41fa8db73a760d2e1986/head.jpg": "32953e1bafbcf9b73c03e48d0af70f231580aa02896a525b1b3168f9b475ab3d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/9dc0a70c009f41fa8db73a760d2e1986/right.jpg": "efbd57252674bd8499b5f3568670c9f0670c1949d4e1c24557b15e74a714cd54",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0004/decision_context.json": "48bcf285555d1842cc921c475ea4d298e5444f4dc0b32ce89b888aa0cf5af379",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0004/perception/assessment.json": "0470f144c12e2aeebdd1e055f923106d4d155700a25916620e32b855c475f494",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0004/proposal.json": "642be350e52275ed2c43183fc2672b604ddbaf7ee96d575205ab0fceea93e92f",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0004/assistant.json": "e0ed6b3eaafbbe1eab6e2642327394de965a70f749d88c2e45be4c5514b543d7",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0004/result.json": "a6aab9e245aaabf84b72e4075dd80c9d9ed55195f28657bf7b0a598e6eaa123c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/1fd8c480e5874f4a8fc773ee862bbe82/manifest.json": "ede1e1950ee9e90b23c8d82fe8dc84b1e5bb96fa35b48988aa31c94db8878c10",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/1fd8c480e5874f4a8fc773ee862bbe82/head.jpg": "6e75e9db22fcb4823bc27f42afe2b4f1af4c0aa83eb365bf17bc3a81eabe8c48",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/1fd8c480e5874f4a8fc773ee862bbe82/right.jpg": "8d6223d26b391262b7077cde63f4877f03e87b7014759190ab70ede062d9ce0b",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/decision_context.json": "4890d7793cea813c31fe6abecf12c1868988743a1a6275d6c6c6a84b345bc6e8",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/perception/assessment.json": "2cc24d97925954457f100898020ba13f5467678452909758752366fb7a546bd5",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/proposal.json": "a383aa8c4ce0e4a2c54246ca250ff52f93c79a74c072246c4d017c55cdcab26c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/action_metrics.json": "f5b72e084902a35e7fe147adc52b112754eb07fcb884a2fe285804f1d3c4b208",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/perception/metrics.json": "1c6d39e71bd950f290b13fb6a88a1ad44d84f88af3b9110644f8a1a2936fb64f",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/assistant.json": "f6acfb5b25e28006df6de1f78f9ecdd0fe8ea767549dfdab42a0042b027f40cb",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0005/result.json": "7e77d0e0496e0b7a54fc47175265eb273f5a785d4c62335c4d866b934ca42e1c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/3b59ad3fbc8e448884d82aa0b61288eb/manifest.json": "e129a7b69d9d0131fb94f87093ea12d568b047f96e7c36c3846a8a8bd25b3745",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/3b59ad3fbc8e448884d82aa0b61288eb/head.jpg": "906fda555deb9ea79c2c9d17305864c6ef5de9fed890c10a32af35773dbf3906",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/3b59ad3fbc8e448884d82aa0b61288eb/right.jpg": "4bab001a1d6a79b1833e8d0b0d350d82e37c764a578fe2a88e888557f250127d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0006/decision_context.json": "1f88c84d207f3d90578f224208f2859fe874ff18311e80b43a45c417da808c81",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0006/perception/assessment.json": "5ff22aaf0c175c300986bfa221f765e6510b11295d4eb35feff91edb952e7df3",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0006/proposal.json": "9c07fe74667321fdd0c91bb734c3f5994cfafe8694b0097143de4a21be9d7c07",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0006/assistant.json": "e0064844824a65ede4339f4068dffec9a6fae1485b38eb772ffc2ad62df05f1b",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0006/result.json": "45d8350cfc1c4759467b6acd64bd60a7d6ca74a23967bf3adad8a6a97a454ec7",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/18d0ab91f0dd4de28b4c7b68f7f49d1e/manifest.json": "d450fc439ea7f87d2723cc16aa76d6810edbc105135ff3b395064b3f288fd5cf",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/18d0ab91f0dd4de28b4c7b68f7f49d1e/head.jpg": "4474bb173c71ced86c2d715258b5246969931f0128f6edb41f3c3002e8c1e624",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/18d0ab91f0dd4de28b4c7b68f7f49d1e/right.jpg": "826c38558d715e1772ea5c545be0e18b8517c6671a47b37d3b2ee32ac3bb7626",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0007/decision_context.json": "0368b779e709f76b8852d894f1ac81c52fb4731c656e77fd90158ad5fcf57feb",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0007/perception/assessment.json": "3d646d38ba41b862e768f62a70a409b2a18e8d721a19148e10a7ed8518966e32",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0007/proposal.json": "d3174189332bdb772f33c9d76b33d6eb5cea22b38d75e5fc86e330904e84741d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0007/assistant.json": "65a80c3ea716af0e57dc329cc66200fc921da7cddb0891a1fdd7730b8dd1c3b8",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0007/result.json": "0d0de2462bc6bd3d16f2d794d2c833a7f13821062b9673b3341e0e2f6f7df261",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/21062529bbb946c2aa56fe5c66229ca4/manifest.json": "92bd95bfed96082426c2c22bb3dfe93c9a473175ae886225c31aecefc66369af",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/21062529bbb946c2aa56fe5c66229ca4/head.jpg": "fbedbf80a3166172dbe1aad11fa3cd9702670ab851f9bcd235985a52c4086014",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/21062529bbb946c2aa56fe5c66229ca4/right.jpg": "a2d9e006695ea980a79e187b72a2e6346c644e3c7245d37547f471ad471daac1",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0008/decision_context.json": "9211da302cedf1dbdaabbdd1f718bdd72992fde7b4bc4be1725325a3b9186c7b",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0008/perception/assessment.json": "c8f97386f53254754a8987558f8f4e1144087c4718fb5df5cec315bb6ef6ea51",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0008/proposal.json": "3774bbffa913e52122575c2068fee5ce0da142ff3133f4151f9f64e51000de96",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0008/assistant.json": "3a29b273d5c4ce68a5a9acef1803d401d836c03b19a8da9ed799389f29954f12",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0008/result.json": "ad1ec222a319ce0382ee4130d1a6254e8eea49fcd23c0d51c3b0fbabb3533c99",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/6ac4a671e3334a95aec458c742cd7ab5/manifest.json": "f6e38570d5ebc90cff9a15430c87dd242b3390194f2cccaff15d09aad975f560",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/6ac4a671e3334a95aec458c742cd7ab5/head.jpg": "c85a8b231903a4df292f04814a92449e423f8cdf9f426c2966b68ec806dd4cb0",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/6ac4a671e3334a95aec458c742cd7ab5/right.jpg": "c20b5a0dde4e51fb6e5fa97c34cccac68d01fe8045d9f45757b4b7ba8397882c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0009/decision_context.json": "64bc4963c1ae893f5cc043237af00846c334eb3dc1bc0d82b8ac58e2660f7832",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0009/perception/assessment.json": "2a4fad0be71a9cfefee7e8b185d1fab967979d232a46b68b59f87eae619d5631",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0009/proposal.json": "9f94933bd4067a7df47df2ad3a36a381ec773477bb7805ddac35f4e5b3d4c8a2",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0009/assistant.json": "a25aae59f3227abec5de8a4c3962751b90fb1824e40cdeaecc55f799250a8435",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0009/result.json": "48dcb1018d14b951a27bdb2a0aaa8c2ecdd9da14d38dc93dcfc793bed96dcb4a",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/ce140c6b38394ed28fc6ff42f2c5d215/manifest.json": "ec9b05acce7dfc6441f5670a4803180a460ac07144de0679b49c74e92b0e2c01",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/ce140c6b38394ed28fc6ff42f2c5d215/head.jpg": "94364fc43c843c40ac4403809592873cd1138c375958056269eb9185394bdaa5",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/ce140c6b38394ed28fc6ff42f2c5d215/right.jpg": "99037789a250351588330ef6207362d1f670e3edef98f84f0162f284cabebb99",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0010/decision_context.json": "32238df065bdf7249a08bc8208a82667ae603bc80701a776e9cd39edef0d171f",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0010/perception/assessment.json": "6a600a77f7950e23eb1bf112c51f52d1bc0b9bbb7452874b33237c6dff94948d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0010/proposal.json": "05c0eb7edcdbdf9811367c5f516f1b8e8cad1fe0db4703701f03785769716ca8",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0010/assistant.json": "25d518a49745a098ecf8653d4e29fb92eba29936b95a70b74a7f4db59989ebe8",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0010/result.json": "43feb24cc6843d15cda12cb7e0c6d1488deee2cb2614740251af793fb21ce0f2",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/769bcaec708644af8c2830b75d850ff2/manifest.json": "c9c85092467546bcaffc529df477cf7e5a4c48d8efa4cba7b443a06b183fa180",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/769bcaec708644af8c2830b75d850ff2/head.jpg": "fa7d32c6d32e6431f3549632ee1d96f9a174b86f39f48efd922a5b054df4795b",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/769bcaec708644af8c2830b75d850ff2/right.jpg": "7711a4bcc585c4d63624ab598bc6d148de23421adc73b5f0053ce6c961c2b9fe",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/decision_context.json": "752c70e5849fafa1d8c62c8956ca5e132260d1d1627b14a2acf73188cdcc28dc",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/perception/assessment.json": "deae23d80592613abe92c124bc34856d4c6f32ef441f4edf10a9820d6eb80163",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/proposal.json": "0d30f98af5ee147941b39777a4edcabd5537d493398e7d08a60c8db84a80b52c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/action_metrics.json": "53e9b2594d389451324951279a3d2065cfd3af8c92fe0897da7bd9d7ab21b76e",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/perception/metrics.json": "503399f9ac28af53e3b87cf4cf3119674af182874d7c748024ad078b27b3f212",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/assistant.json": "c40e234fbd06a5c6fe0b15c424970262ff51ad162c38ec0a069048ef6d4a43f8",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0011/result.json": "0efc455a649fab7cd888665925ab90929d57461c1e74465d3189542a5c2876ff",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/a37f68a5911845d69e404fcd44d51ee1/manifest.json": "7bb6a278ae9da688cdc4293392d875f3087eaec7f9a36bcf8524aa89c9882f4d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/a37f68a5911845d69e404fcd44d51ee1/head.jpg": "cdc01a9aca527a7579243a6b392d162f312a5a720dd11d514de126b7c4777ec6",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/a37f68a5911845d69e404fcd44d51ee1/right.jpg": "f4113dc6e1516963c3c6a3f0da195d2c357fb7f8c9f7c3b54d468263e49e14fe",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0012/decision_context.json": "3856446984fbc36601331c94c7ed165bab131e028ceb92764119948c300999eb",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0012/perception/assessment.json": "bd43dff953051bfcfaa87cac035b81aacdd2744c9c9596cb7badbcb5fe8a9dcc",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0012/proposal.json": "e1b955c5b07e902199ab38cc3f74c570edbeebb37129dd86af63bae652d0321f",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0012/assistant.json": "3055e4f1fa808129f522e66a91ce0d8c04868b36536d6bed90cbce58013301fe",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0012/result.json": "4692295d73fd99a604e11ee7071c0b8df1044cf1553f829989e367444a2f2ba4",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/a66f1d9fed9b4efd802fc242839e37fe/manifest.json": "d0e838326012cac1c1370a43ef6d62395769ac8acba4ccd1cdd9587f00c98ed4",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/a66f1d9fed9b4efd802fc242839e37fe/head.jpg": "6b705d0d43bf74d9cde3a638e4e055402240921af9646ebfb987e277df5b2c5e",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/a66f1d9fed9b4efd802fc242839e37fe/right.jpg": "3579b946be144b2263795b6813558b264c5e425cdfb0d0872afc1479a3231923",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0013/decision_context.json": "892d78ae94db79684a1082be3748eeab6505b9ea8443cd3215e9e5a244536070",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0013/perception/assessment.json": "190d63052acaba2459d295d7974b27bab1b8d3a8edce1431daafdf2d0d8be032",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0013/proposal.json": "0d30f98af5ee147941b39777a4edcabd5537d493398e7d08a60c8db84a80b52c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0013/assistant.json": "9d8770fc9705971c1ce743633ebe0f4f385dcbc1f1b3dceffa2374735309107e",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0013/result.json": "740bd80390645ddcc8d8b2505b4a7d5e56a67f1ee91d4c3adf22e5ea6ecba42d",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/d144450137fe456682c12dab89c4d4c3/manifest.json": "7a6086f05cc68911bedd0594254be7feb132f19b7fa69f442e6266f2990cfb08",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/d144450137fe456682c12dab89c4d4c3/head.jpg": "a854e3fee95f00f74f9ff1228469ba87e21ef8794bc33505bd887fdb9159f6e2",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/d144450137fe456682c12dab89c4d4c3/right.jpg": "f25bbef3123d91f211b87aaf494414d8b2f4d1a8c0a93ed6fa53be5aa8497810",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0014/decision_context.json": "e7bf01ee0c8db9f26c42184804ac447bd444cd6294646125ecf66a12b6dc849c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0014/perception/assessment.json": "9b1f1cb8d1aadc48316d23a2c375790844637ec580e356f3b0d5978885a20676",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0014/proposal.json": "9854fa29dcae4ffd2d3996438c576128c7104894fd2c16ff4775429aadec0b5a",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0014/assistant.json": "ffb3f41d8ce03472ecc3735a799a04cee696154c77937d764b97fe0e80adf930",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0014/result.json": "fe278eb83b221fd72f40f7393f30f2005761e1e0287fb8b608dc48fa86381fa9",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/025479b7972646bebbdc72d752083efa/manifest.json": "0e1e9ef8add16b053c273aa09baff8b27a3dc24955f91dacbf09c66fd93d307c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/025479b7972646bebbdc72d752083efa/head.jpg": "61f837b4b4e39a40f12879546895966e7167393713becb6df31d161ec472afd8",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/025479b7972646bebbdc72d752083efa/right.jpg": "dcc3647e011c942181637062fa18b00b13adbe73a99a6d0b212cb214802f587b",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0015/decision_context.json": "5f67b40cae38ab2b77ec435a342e408084d0bb4cbb174d3be7caa98f8a8e1b56",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0015/perception/assessment.json": "06c8205d1f6f3f1193df8870cc3a4598aacc476a52298b69457d7c87e144d846",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0015/proposal.json": "8d0355a7e50de3309d8ca5aca76f631d05dcee80a8d41259e05a606198717644",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0015/assistant.json": "49a0bdc46f92daf56a7ee9609f291eb5fb22ada7086c32aa45ac0cf0a11de80e",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0015/result.json": "8db539a04c36463ed0f039e1e966fc22bd9c19e0bc59234408119334db76036c",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/efc9827e68764bba9515683ab5ae8eb9/manifest.json": "c9c72dc846b1f65f9760235c8b6041142d416283017445718a67dac3fee9ee9e",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/efc9827e68764bba9515683ab5ae8eb9/head.jpg": "1598769c2203aa43f9efea79aa8e554f8bcf7f01fee6e362611452fd9d87f180",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/observations/efc9827e68764bba9515683ab5ae8eb9/right.jpg": "f51878cfd75582976e30b8fec145fd063cd6a3d7ccdf52f0681fc0a86e26ffdb",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0016/decision_context.json": "52e4fc45959c97ddd08affed03528cd2b81c7a407d775c28f1f00cfaf5a4ec91",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0016/perception/assessment.json": "b2ccb686864fc97f0dcb6335df75ed9e31d1f5682c10311b1be628c32d2682c6",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0016/proposal.json": "ca901bffeb48fc9c1ecac07c2f284e576a79e001d844f7b2c6a64880b8208f85",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0016/action_metrics.json": "195f40992f1e4416b900397b3f5fb413bae60b9e13535b1bc809816eb21f7452",
+      "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_002849_b03f7d26/agent/rounds/0016/perception/metrics.json": "4f9aea4214f1f1c8a0fd3e877efa9e0b5c0dd69b328d2f18dd17c5b597ca12fa"
+    },
+    "unchanged": true
+  }
+}

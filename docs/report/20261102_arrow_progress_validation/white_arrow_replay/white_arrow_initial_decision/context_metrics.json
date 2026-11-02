@@ -1,0 +1,14 @@
+{
+  "format": "pressb-conversation-v1",
+  "decision_mode": "direct",
+  "observation_id": "arrow_marker_20261102_114636",
+  "previous_observation_id": null,
+  "stage": "action_request",
+  "perception_format": null,
+  "compression_generation": 0,
+  "progress_monitor_format": "pressb-progress-v1",
+  "image_count": 5,
+  "compression_status": "not_needed",
+  "input_tokens_exact": 9975,
+  "input_tokens_estimate": 9975
+}

@@ -1,0 +1,76 @@
+{
+  "name": "swapped_photo_combined_points_relation",
+  "mode": "combined",
+  "frame": "A",
+  "image_size": [
+    640,
+    360
+  ],
+  "scale": 1,
+  "stimulus": "existing_swapped_photo",
+  "expected": {
+    "target_point": [
+      470,
+      280
+    ],
+    "reference_point": [
+      420,
+      117
+    ],
+    "vertical": "below",
+    "horizontal": "right"
+  },
+  "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Return target_point and reference_point as normalized coordinates, and vertical and horizontal relations describing TARGET relative to REFERENCE.",
+  "elapsed_s": 9.36944156838581,
+  "usage": {
+    "prompt_tokens": 921,
+    "total_tokens": 1016,
+    "completion_tokens": 95,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "target_point": {
+      "x": 735,
+      "y": 770
+    },
+    "reference_point": {
+      "x": 655,
+      "y": 315
+    },
+    "vertical": "below",
+    "horizontal": "right"
+  },
+  "format_valid": true,
+  "vertical_correct": true,
+  "horizontal_correct": true,
+  "relation_correct": true,
+  "target_point_pixel_xy": [
+    469.66499999999996,
+    276.43
+  ],
+  "target_point_signed_error_xy_px": [
+    -0.3350000000000364,
+    -3.569999999999993
+  ],
+  "target_point_error_px": 3.58568333794271,
+  "target_point_source_error_px": 3.58568333794271,
+  "reference_point_pixel_xy": [
+    418.545,
+    113.085
+  ],
+  "reference_point_signed_error_xy_px": [
+    -1.454999999999984,
+    -3.9150000000000063
+  ],
+  "reference_point_error_px": 4.17663141778156,
+  "reference_point_source_error_px": 4.17663141778156,
+  "relation_from_own_points": {
+    "vertical": "below",
+    "horizontal": "right"
+  },
+  "relation_agrees_with_own_points": true
+}

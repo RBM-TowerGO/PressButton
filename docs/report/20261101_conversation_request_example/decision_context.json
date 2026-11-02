@@ -1,0 +1,13 @@
+{
+  "format": "pressb-conversation-v2",
+  "decision_mode": "separated",
+  "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+  "previous_observation_id": "63dd4b6c28284c7381dd5c0031b2afd2",
+  "stage": "action_request",
+  "perception_format": "pressb-perception-v1",
+  "compression_generation": 0,
+  "image_count": 38,
+  "compression_status": "not_needed",
+  "input_tokens_exact": 50715,
+  "input_tokens_estimate": 50715
+}

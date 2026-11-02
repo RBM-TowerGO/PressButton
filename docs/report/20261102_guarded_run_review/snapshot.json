@@ -1,0 +1,820 @@
+{
+  "as_of": "2026-11-02T00:36:02.379482+08:00",
+  "run": "outputs/agent_web/20261102_002849_b03f7d26",
+  "net_completed_command_mm": [
+    0.0,
+    -20.0,
+    55.0
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+        "previous_observation_id": null,
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": 11553,
+        "input_tokens_estimate": 11553
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+        "head_visible": "no",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            0.0,
+            30.0
+          ],
+          "reason": "HEAD view is mostly blank wall and does not show the panel/button or the right finger; pitch down to look at the panel and selected finger."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 18.05000849533826,
+        "attempts": 1,
+        "prompt_tokens": 11553,
+        "completion_tokens": 143
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "5f624edc4524419c801d2e99c8b63082",
+          "observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+          "type": "head",
+          "head_deg": [
+            0.0,
+            30.0
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "3f580c9004114ce08b14d9e38e53ad67"
+        }
+      }
+    },
+    {
+      "round": 2,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "3f580c9004114ce08b14d9e38e53ad67",
+        "previous_observation_id": "dd5bf7565745426a8c6c5efa393cddd2",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15403,
+        "forward_guard_policy": "wrist_horizontal"
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "3f580c9004114ce08b14d9e38e53ad67",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "Wrist shows the down button above the open finger ends, not between them; raise the hand to bring the right-side finger up toward the button face and improve horizontal alignment before any forward move."
+        }
+      },
+      "forward_guard": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "3f580c9004114ce08b14d9e38e53ad67",
+        "assessment_observation_id": "3f580c9004114ce08b14d9e38e53ad67",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": false,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "no",
+          "button_between_fingers": "unknown"
+        },
+        "reasons": [
+          "two_fingertips_visible:no",
+          "button_between_fingers:unknown"
+        ],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success."
+      },
+      "action_metrics": {
+        "elapsed_s": 29.6480006640777,
+        "attempts": 2,
+        "prompt_tokens": 23985,
+        "completion_tokens": 294
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "b2b81b0d5bbf41d488466c3f2d441025",
+          "observation_id": "3f580c9004114ce08b14d9e38e53ad67",
+          "type": "move",
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "9a983be1c1a042a2b7124753a269363f"
+        }
+      }
+    },
+    {
+      "round": 3,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "9a983be1c1a042a2b7124753a269363f",
+        "previous_observation_id": "3f580c9004114ce08b14d9e38e53ad67",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15394
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "9a983be1c1a042a2b7124753a269363f",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            0.0,
+            30.0
+          ],
+          "reason": "Head view is too high and the panel/button/finger are not clearly framed; pitch to ~30° look-down to see the full panel and preferred right finger before any forward move."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 16.332321553956717,
+        "attempts": 1,
+        "prompt_tokens": 11816,
+        "completion_tokens": 152
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "bdcfd7a480ac4814b55d5f9a85aa1a1c",
+          "observation_id": "9a983be1c1a042a2b7124753a269363f",
+          "type": "head",
+          "head_deg": [
+            0.0,
+            30.0
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "eb8f9d5fdfbb418bbd0366b8504330b7"
+        }
+      }
+    },
+    {
+      "round": 4,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "eb8f9d5fdfbb418bbd0366b8504330b7",
+        "previous_observation_id": "9a983be1c1a042a2b7124753a269363f",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15744
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "eb8f9d5fdfbb418bbd0366b8504330b7",
+        "head_visible": "yes",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "lamp": "unknown",
+        "lamp_view": "unknown",
+        "wrist_relation": "right",
+        "wrist_visible": "yes",
+        "contact_finger": "head_image_right"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0.0,
+            0.0,
+            15.0
+          ],
+          "reason": "HEAD shows the down button above the right finger; raise the hand to reduce vertical error before any forward approach."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 14.976627303753048,
+        "attempts": 1,
+        "prompt_tokens": 11869,
+        "completion_tokens": 143
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "3c5d9888b1284ea7a5937be4355ffdec",
+          "observation_id": "eb8f9d5fdfbb418bbd0366b8504330b7",
+          "type": "move",
+          "xyz_mm": [
+            0.0,
+            0.0,
+            15.0
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "9dc0a70c009f41fa8db73a760d2e1986"
+        }
+      }
+    },
+    {
+      "round": 5,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+        "previous_observation_id": "eb8f9d5fdfbb418bbd0366b8504330b7",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15947
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0.0,
+            -10.0,
+            0.0
+          ],
+          "reason": "In HEAD the button is right of the selected right finger; move robot right (-Y) to reduce horizontal offset before any forward press."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 15.40386085305363,
+        "attempts": 1,
+        "prompt_tokens": 11964,
+        "completion_tokens": 148
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "eac4175bfbae4e63898457e0db25cc5c",
+          "observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+          "type": "move",
+          "xyz_mm": [
+            0.0,
+            -10.0,
+            0.0
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82"
+        }
+      }
+    },
+    {
+      "round": 6,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+        "previous_observation_id": "9dc0a70c009f41fa8db73a760d2e1986",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 16107
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "below",
+        "head_visible": "yes",
+        "lamp": "unknown",
+        "lamp_view": "unknown",
+        "wrist_relation": "right",
+        "wrist_visible": "yes"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            -10
+          ],
+          "reason": "In HEAD the button is below the right finger, so lower the hand -10mm to reduce the vertical offset before any forward press."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 30.208582622930408,
+        "attempts": 2,
+        "prompt_tokens": 24369,
+        "completion_tokens": 297
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "6bb4c8330aa542978dfcd159601df54a",
+          "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+          "type": "move",
+          "xyz_mm": [
+            0,
+            0,
+            -10
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "3b59ad3fbc8e448884d82aa0b61288eb"
+        }
+      }
+    },
+    {
+      "round": 7,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "3b59ad3fbc8e448884d82aa0b61288eb",
+        "previous_observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 16274
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "3b59ad3fbc8e448884d82aa0b61288eb",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            15
+          ],
+          "reason": "HEAD shows button above the right finger; raise hand +Z to reduce vertical error before pressing."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 30.97869951184839,
+        "attempts": 2,
+        "prompt_tokens": 24519,
+        "completion_tokens": 305
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "bc2ce4c2eb28492ab01351d53ae44119",
+          "observation_id": "3b59ad3fbc8e448884d82aa0b61288eb",
+          "type": "move",
+          "xyz_mm": [
+            0,
+            0,
+            15
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "18d0ab91f0dd4de28b4c7b68f7f49d1e"
+        }
+      }
+    },
+    {
+      "round": 8,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "18d0ab91f0dd4de28b4c7b68f7f49d1e",
+        "previous_observation_id": "3b59ad3fbc8e448884d82aa0b61288eb",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15401
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "18d0ab91f0dd4de28b4c7b68f7f49d1e",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            -10,
+            0
+          ],
+          "reason": "Wrist shows the down button to the right of both fingers; move robot right (-Y) to bring the right-side finger toward the button's horizontal position before any forward press."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 15.631787606980652,
+        "attempts": 1,
+        "prompt_tokens": 11801,
+        "completion_tokens": 149
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "b97f0ee0923b455a901cd1b75d256fda",
+          "observation_id": "18d0ab91f0dd4de28b4c7b68f7f49d1e",
+          "type": "move",
+          "xyz_mm": [
+            0,
+            -10,
+            0
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "21062529bbb946c2aa56fe5c66229ca4"
+        }
+      }
+    },
+    {
+      "round": 9,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "21062529bbb946c2aa56fe5c66229ca4",
+        "previous_observation_id": "18d0ab91f0dd4de28b4c7b68f7f49d1e",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15398
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "21062529bbb946c2aa56fe5c66229ca4",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "Wrist shows the down button above the open gripper fingers; raise the hand to bring the right-side finger up toward the button face before any forward press."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 15.149208133108914,
+        "attempts": 1,
+        "prompt_tokens": 11794,
+        "completion_tokens": 145
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "6a6f6a5c5df84c2c8e210b07d95d9eec",
+          "observation_id": "21062529bbb946c2aa56fe5c66229ca4",
+          "type": "move",
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "6ac4a671e3334a95aec458c742cd7ab5"
+        }
+      }
+    },
+    {
+      "round": 10,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "6ac4a671e3334a95aec458c742cd7ab5",
+        "previous_observation_id": "21062529bbb946c2aa56fe5c66229ca4",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15396
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "6ac4a671e3334a95aec458c742cd7ab5",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "unknown",
+        "head_horizontal": "unknown",
+        "head_vertical": "unknown",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -5,
+            30
+          ],
+          "reason": "Head view crops the panel and right finger; pitch to ~30 look-down to frame the full panel, target button and right finger for alignment."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 32.171054400037974,
+        "attempts": 2,
+        "prompt_tokens": 23900,
+        "completion_tokens": 320
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "eae8f05e7b6d4df2b4994ea35f11bca7",
+          "observation_id": "6ac4a671e3334a95aec458c742cd7ab5",
+          "type": "head",
+          "head_deg": [
+            -5,
+            30
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "ce140c6b38394ed28fc6ff42f2c5d215"
+        }
+      }
+    },
+    {
+      "round": 11,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+        "previous_observation_id": "6ac4a671e3334a95aec458c742cd7ab5",
+        "stage": "action_request",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0,
+        "image_count": 5,
+        "compression_status": "bounded_not_needed",
+        "input_tokens_exact": null,
+        "input_tokens_estimate": 15738
+      },
+      "perception": {
+        "format": "pressb-grounding-v1",
+        "source": "model_not_human",
+        "observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+        "head_visible": "yes",
+        "wrist_visible": "yes",
+        "contact_finger": "head_image_right",
+        "head_horizontal": "right",
+        "head_vertical": "above",
+        "wrist_relation": "right",
+        "lamp": "unknown",
+        "lamp_view": "unknown"
+      },
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0.0,
+            0.0,
+            15.0
+          ],
+          "reason": "In HEAD the down button is above the right finger, so raise the hand to reduce vertical error before any forward press."
+        }
+      },
+      "forward_guard": null,
+      "action_metrics": {
+        "elapsed_s": 15.173887266777456,
+        "attempts": 1,
+        "prompt_tokens": 11858,
+        "completion_tokens": 145
+      },
+      "error": null,
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "f1f97f67b68b49dd863587c5002834d2",
+          "command_id": "fe394ab46710461d892e719013587d5b",
+          "observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+          "type": "move",
+          "xyz_mm": [
+            0.0,
+            0.0,
+            15.0
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "769bcaec708644af8c2830b75d850ff2"
+        }
+      }
+    },
+    {
+      "round": 12,
+      "context": {
+        "format": "pressb-conversation-v3",
+        "decision_mode": "grounded",
+        "observation_id": "769bcaec708644af8c2830b75d850ff2",
+        "previous_observation_id": "ce140c6b38394ed28fc6ff42f2c5d215",
+        "stage": "perception",
+        "perception_format": "pressb-grounding-v1",
+        "alignment_control_version": "pressb-alignment-control-v1",
+        "memory_mode": "bounded_current_state",
+        "compression_generation": 0
+      },
+      "perception": null,
+      "proposal": null,
+      "forward_guard": null,
+      "action_metrics": null,
+      "error": null
+    }
+  ],
+  "outcome": null,
+  "review_only": true,
+  "findings": [
+    {
+      "round": 2,
+      "kind": "recorded_control_fact",
+      "text": "Candidate +X20 rejected by independent wrist guard; accepted +Z10 executed."
+    },
+    {
+      "round": 3,
+      "kind": "recorded_control_fact",
+      "text": "Repeated absolute head [0,30], with little measured change."
+    },
+    {
+      "round": 6,
+      "kind": "assistant_visual_review",
+      "observation_id": "1fd8c480e5874f4a8fc773ee862bbe82",
+      "text": "Button is visibly above selected HEAD fingertip; model labels below. Input image bytes match saved images."
+    },
+    {
+      "round": 6,
+      "kind": "reproduced_code_false_positive",
+      "text": "The reason button is right of the right finger and below it agrees with below; inverse regex treats finger and below it as finger below button. Rejected Y-10 becomes Z-10 on repair, which executes."
+    }
+  ]
+}

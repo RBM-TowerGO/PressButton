@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-98d504c5180f2642",
+  "object": "chat.completion",
+  "created": 1793540997,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-a4691c66df37d2a8",
+            "type": "function",
+            "function": {
+              "name": "propose_move",
+              "arguments": "{\"xyz_mm\": [0.0, -10.0, 0.0], \"reason\": \"Offline assessment: head shows button to the right of the gripper and alignment is misaligned; wrist does not see the button. Move -Y 10 mm (robot right) to bring the contacting finger laterally toward the button center before forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet.\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 50233,
+    "total_tokens": 50360,
+    "completion_tokens": 127,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

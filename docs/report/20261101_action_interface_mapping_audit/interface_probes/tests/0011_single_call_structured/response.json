@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-88d08163e2367aec",
+  "object": "chat.completion",
+  "created": 1793541319,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-b15031d85d353f61",
+            "type": "function",
+            "function": {
+              "name": "propose_move",
+              "arguments": "{\"xyz_mm\": [0.0, 0.0, -5.0], \"reason\": \"LIVE head shows the open gripper finger slightly above the down-call button; wrist view shows the button between the open fingers but not yet at contact height. Descend 5 mm to bring the right open-gripper finger to the button height before forward press, following the demo's fine downward adjustment. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet.\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 50241,
+    "total_tokens": 50376,
+    "completion_tokens": 135,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

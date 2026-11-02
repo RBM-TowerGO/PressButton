@@ -1,0 +1,35 @@
+{
+  "name": "blank_swapped_relation",
+  "mode": "relation",
+  "frame": "A",
+  "image_size": [
+    640,
+    360
+  ],
+  "scale": 1,
+  "stimulus": "blank_swapped",
+  "expected": {
+    "vertical": "below",
+    "horizontal": "right"
+  },
+  "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+  "elapsed_s": 3.9959756643511355,
+  "usage": {
+    "prompt_tokens": 735,
+    "total_tokens": 775,
+    "completion_tokens": 40,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "vertical": "below",
+    "horizontal": "right"
+  },
+  "format_valid": true,
+  "vertical_correct": true,
+  "horizontal_correct": true,
+  "relation_correct": true
+}

@@ -155,7 +155,7 @@ def test_model_dual_views_and_keyboard_tools(setup):
     wrist=next(p for p in service.artifacts.values() if p.name=='right.jpg').read_bytes()
     head=next(p for p in service.artifacts.values() if p.name=='head.jpg').read_bytes()
     body=build_request('按下',obs,wrist,service.session,[],'English prompt',head)
-    content=body['messages'][1]['content']
+    content=body['messages'][-1]['content']
     assert len([v for v in content if v['type']=='image_url'])==2
     assert body['chat_template_kwargs']=={'enable_thinking':False}
     for name,args in [('propose_move',dict(xyz_mm=[45,20,0],reason='align')),
@@ -194,16 +194,31 @@ def test_storage_failure_never_reexecutes(setup,monkeypatch):
     assert service.submit(body)==receipt and len(backend.calls)==1
 
 
-def test_automatic_full_loop_executes_once(tmp_path,monkeypatch):
+def test_automatic_full_loop_executes_once(tmp_path,monkeypatch,approved_forward_view):
     import s1b_agent
     from types import SimpleNamespace
     backend=FakeBackend();service=Service(backend,FakeCamera(),tmp_path/'robot')
     server=make_server(service,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
-    monkeypatch.setattr(s1b_agent,'propose',lambda *a,**k:dict(name='propose_move',arguments=dict(xyz_mm=[2,1,0],reason='test')))
+    monkeypatch.setattr('pressb.agent_loop.conversation.tokenize', lambda *a:1000)
+    from pressb.agent_loop import view_acquisition
+    from test_view_acquisition import reply, located
+    monkeypatch.setattr(view_acquisition, 'inspect', lambda base, body, oid, directory, cancel=None:
+                        view_acquisition.validate(reply(oid=oid, head=located()), oid))
+    def fake_propose(*a, **k):
+        args = dict(xyz_mm=[2,1,0],reason='test')
+        progress = dict(observation_id=k['conversation'].current_id, subgoal='approach', view='wrist',
+                        button_vertical='level', button_horizontal='center', last_effect='first')
+        response = tool('propose_move', dict(args, progress=progress))
+        response['choices'][0]['message']['tool_calls'][0]['id'] = 'test-call'
+        k['conversation'].accept(response)
+        proposal = dict(name='propose_move', arguments=args)
+        k['conversation'].forward_guard_decision = approved_forward_view(proposal, k['conversation'].current_id)
+        return proposal
+    monkeypatch.setattr(s1b_agent,'propose',fake_propose)
     monkeypatch.setattr('builtins.input',lambda *args:pytest.fail('automatic loop must not ask for confirmation'))
     prompt=tmp_path/'prompt';prompt.write_text('test')
     args=SimpleNamespace(output=str(tmp_path/'client'),prompt=str(prompt),model_base='http://unused/v1',
-        replay=None,thor_port=18000,thor_host='unused',robot_base='http://127.0.0.1:'+str(server.server_port),max_rounds=1,goal='test')
+        replay=None,thor_port=18000,thor_host='unused',robot_base='http://127.0.0.1:'+str(server.server_port),max_rounds=1,goal='test',decision_mode='direct')
     try:
         s1b_agent.run(args)
         assert len(backend.calls)==1 and backend.stopped

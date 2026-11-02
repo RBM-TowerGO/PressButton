@@ -1,0 +1,35 @@
+{
+  "name": "A_raw_tip_repeat",
+  "frame": "A",
+  "kind": "tip",
+  "transform": "none",
+  "expected": {
+    "vertical": "above",
+    "horizontal": "left"
+  },
+  "repeat_of": "A_raw_tip",
+  "elapsed_s": 6.192906565964222,
+  "usage": {
+    "prompt_tokens": 748,
+    "total_tokens": 812,
+    "completion_tokens": 64,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "horizontal": "right",
+    "reference_visible": "yes",
+    "target_visible": "yes",
+    "vertical": "above"
+  },
+  "format_valid": true,
+  "relation_correct": false,
+  "vertical_correct": true,
+  "horizontal_correct": false,
+  "relation_unknown": false,
+  "presence_report_correct": true,
+  "parsed_equal_to_first": true
+}

@@ -1,0 +1,279 @@
+{
+  "scope": "Read-only synthesis of existing reports and selected raw result summaries; no new model or robot calls.",
+  "studies": [
+    {
+      "id": "axis_and_oracle",
+      "report": "docs/report/20261101_action_interface_mapping_audit/README.md",
+      "raw": "docs/report/20261101_action_interface_mapping_audit/report.json",
+      "request_count": 21,
+      "stimuli": "Three adjacent observations from one shifted-panel run, plus six no-image direction encoding prompts.",
+      "contrasts": [
+        {
+          "condition": "original",
+          "n": 3,
+          "result": "3/3 +X5; reasons falsely claim wrist button between fingers"
+        },
+        {
+          "condition": "coordinate_hint_only",
+          "n": 3,
+          "result": "3/3 +X5"
+        },
+        {
+          "condition": "coordinate_description_in_tool",
+          "n": 3,
+          "result": "3/3 +X5"
+        },
+        {
+          "condition": "correct_visual_facts_only",
+          "n": 3,
+          "result": "3/3 -Y10; facts supplied visibility, relative position and misalignment, no desired axis/distance"
+        },
+        {
+          "condition": "correct_visual_facts_plus_coordinates",
+          "n": 3,
+          "result": "3/3 -Y10"
+        },
+        {
+          "condition": "explicit_robot_direction_to_xyz",
+          "n": 6,
+          "result": "6/6 correctly encode right/left/forward/backward/up/down"
+        }
+      ],
+      "supports": "Direction-symbol coding is available. Correct current visual state can change action choice. Coordinate reminder alone did not correct these decisions.",
+      "does_not_establish": "Neither arbitrary image-to-robot mapping nor correct millimeter magnitude, contact, or physical success was tested."
+    },
+    {
+      "id": "tool_semantics",
+      "report": "docs/report/20261101_action_interface_mapping_audit/README.md",
+      "raw": "docs/report/20261101_action_interface_mapping_audit/interface_probes/report.json",
+      "request_count": 4,
+      "stimuli": "One shifted-panel observation.",
+      "contrasts": [
+        {
+          "condition": "ambiguous_next_axis",
+          "n": 1,
+          "result": "Visual relative position correct but next_axis +Y"
+        },
+        {
+          "condition": "explicit_hand_motion_semantics_and_signs",
+          "n": 1,
+          "result": "next_axis -Y"
+        },
+        {
+          "condition": "semantic_robot_hand_direction",
+          "n": 1,
+          "result": "right"
+        },
+        {
+          "condition": "more_required_fields_in_full_history_action",
+          "n": 1,
+          "result": "All four new required fields omitted; invalid response"
+        }
+      ],
+      "supports": "Tool meaning and robot-vs-image-motion semantics can affect sign output.",
+      "does_not_establish": "Single-frame probes; semantics and sign hints changed together."
+    },
+    {
+      "id": "minimal_rich_history",
+      "report": "docs/report/20261101_panel_shift_root_cause/README.md",
+      "raw": "outputs/grounding_diagnosis_20261101/report.json",
+      "request_count": 11,
+      "stimuli": "One shifted-panel observation.",
+      "contrasts": [
+        {
+          "condition": "minimal_dual_minimal_head_minimal_wrist",
+          "n": 3,
+          "result": "All three coarse visible/not-visible/right judgments match reviewed image"
+        },
+        {
+          "condition": "rich_current_only",
+          "n": 1,
+          "result": "Text says wrist button absent but visibility partial and false box; missing observation ID"
+        },
+        {
+          "condition": "rich_before_current_pair",
+          "n": 1,
+          "result": "Schema valid but wrist visibility/box false"
+        },
+        {
+          "condition": "history_original_or_without_reasons_or_without_both",
+          "n": 3,
+          "result": "Each -Z10; placeholder rationale copied when supplied"
+        },
+        {
+          "condition": "history_without_old_images",
+          "n": 1,
+          "result": "-Y20 but still falsely says wrist button visible"
+        },
+        {
+          "condition": "minimal_visual_facts_then_action_current",
+          "n": 1,
+          "result": "Head adjustment, cites current facts"
+        },
+        {
+          "condition": "minimal_visual_facts_then_action_history",
+          "n": 1,
+          "result": "-Z10 and contradiction of supplied wrist invisibility"
+        }
+      ],
+      "supports": "Failure depends on task formulation and current evidence consumption, not only total context length. Detailed 2/4-image tasks failed at approximately 2.4K/3.7K tokens.",
+      "does_not_establish": "Prompt, schema and pose inputs differ between minimal/rich. History ablations alter length and include copied placeholder interference; no isolated internal attention mechanism proved."
+    },
+    {
+      "id": "thinking",
+      "report": "docs/report/20261101_direct_thinking/README.md",
+      "raw": "outputs/direct_thinking_validation_20261101/report.json",
+      "request_count": 6,
+      "stimuli": "Three adjacent shifted-panel observations, paired same-message requests.",
+      "contrasts": [
+        {
+          "condition": "thinking_off",
+          "n": 3,
+          "result": "3/3 +X5"
+        },
+        {
+          "condition": "thinking_on",
+          "n": 3,
+          "result": "3/3 +X5, actual reasoning tokens 85/121/83"
+        }
+      ],
+      "supports": "Actual thinking did not change the wrong action for these long-history requests.",
+      "does_not_establish": "Not a test of all reasoning budgets, compact visual review, or model families; no stable latency ratio."
+    },
+    {
+      "id": "success_tail_history",
+      "report": "docs/report/20261101_success_tail/README.md",
+      "raw": "outputs/success_tail_validation_20261101/report.json",
+      "request_count": 6,
+      "stimuli": "Same three adjacent observations; success steps 8/9/10 only, no failure case, no thinking.",
+      "contrasts": [
+        {
+          "condition": "current_only_5_images",
+          "n": 3,
+          "result": "3 head adjustments, no rightward hand correction; one reason wrongly claims head motion changes wrist view"
+        },
+        {
+          "condition": "with_run_history_27_29_31_images",
+          "n": 3,
+          "result": "One -Z10 and two +X5; false wrist alignment claims"
+        }
+      ],
+      "supports": "Removing task history changes policy; neither this nor dropping failure cases guarantees correct action.",
+      "does_not_establish": "No isolated failure-case-only intervention, no task success, no physical execution."
+    },
+    {
+      "id": "separated_pipeline",
+      "report": "docs/report/20261101_perception_action_separation/README.md",
+      "raw": "outputs/perception_validation_20261101/report.json",
+      "decision_conditions": 8,
+      "stimuli": "Three adjacent observations direct and separated plus two extra separated repeats on first frame.",
+      "contrasts": [
+        {
+          "condition": "direct",
+          "n": 3,
+          "result": "3/3 +X5"
+        },
+        {
+          "condition": "separated",
+          "n": 5,
+          "result": "5/5 +X5; 5/5 wrist partial and false full-width bottom box; head offset judged but not used to correct"
+        }
+      ],
+      "supports": "Splitting agents alone did not fix incorrect perception or consumption of current evidence.",
+      "does_not_establish": "Correlated frames, one setting, no physical actions. Decision conditions are not equal to model-call count."
+    },
+    {
+      "id": "short_loop",
+      "report": "docs/report/20261101_short_visual_loop/README.md",
+      "raw": "outputs/short_loop_validation_20261101/report.json",
+      "stimuli": "Three adjacent shifted observations with compact current-only perception and short action memory.",
+      "contrasts": [
+        {
+          "condition": "offset_frames",
+          "n": 3,
+          "result": "All three wrist invisible correctly; actions -Y10, +X10, -Y10"
+        }
+      ],
+      "supports": "Correct coarse visual state can coexist with wrong priority/action; shorter pipeline improved some suggestions.",
+      "does_not_establish": "No controlled causal separation of all pipeline changes; cannot claim 2/3 task success."
+    },
+    {
+      "id": "white_arrow_localization",
+      "report": "docs/report/20261102_view_recovery/model_replay_report.md",
+      "raw": "docs/report/20261102_view_recovery/model_replay/validation.json",
+      "request_count": 4,
+      "stimuli": "Saved white-arrow run rounds 1,4,8, three current dual-image localization cases; one format repair.",
+      "contrasts": [
+        {
+          "condition": "three_frames",
+          "n": 3,
+          "result": "3/3 unusable head matches framing; wrist button boxes shifted left, contact partial, formal relations unknown all three"
+        }
+      ],
+      "supports": "Fine object/contact localization and uncertainty remain bottlenecks; structured point output is auditable but not reliably accurate.",
+      "does_not_establish": "Unknown is not an incorrect above/below sign; do not call it three direction errors or three successes. No calibrated contact ground truth."
+    },
+    {
+      "id": "pixel_delivery_control",
+      "report": "docs/report/20261102_view_loop_audit/pixel_probe/README.md",
+      "raw": "docs/report/20261102_view_loop_audit/pixel_probe/summary.json",
+      "request_count": 3,
+      "stimuli": "Same question with current head, current wrist, or uniform gray control image.",
+      "contrasts": [
+        {
+          "condition": "head",
+          "n": 1,
+          "result": "Detects two grippers but misses button and mislabels surface"
+        },
+        {
+          "condition": "wrist",
+          "n": 1,
+          "result": "Detects upper-left down button and gripper but misses visible arrow"
+        },
+        {
+          "condition": "gray",
+          "n": 1,
+          "result": "Reports gray scene and no task objects"
+        }
+      ],
+      "supports": "Pixels influence end-to-end response; object recognition omissions persist.",
+      "does_not_establish": "Does not prove all internal decoding/cache paths correct, nor global visual competence."
+    }
+  ],
+  "most_supported_bottlenecks": [
+    "Reliable grounding of the actual contact reference in current pixels, especially small/oblique arrow and finger end.",
+    "Keeping current visual state consistent across structured fields and using it to constrain action instead of stale historical descriptions.",
+    "Camera/action causality and selection of appropriate actuator; head-to-wrist confusion observed.",
+    "Fine image-to-robot geometry and step size remain unvalidated, rather than proven universally absent."
+  ],
+  "preserved_subcapabilities": [
+    "Six explicit robot directions encoded correctly in six isolated requests.",
+    "Coarse visibility and rightward position judged correctly under simple prompts on the tested shifted frame.",
+    "Correct visual-state oracle changed three baseline actions from +X to -Y without an explicit desired axis."
+  ],
+  "not_yet_isolated": [
+    "Given accurate point coordinates, pure above/below-left/right comparison.",
+    "Object identification versus coordinate localization versus relation computation in the same marked scene.",
+    "General image-to-body transformation under different camera poses.",
+    "Correct mm magnitude or calibrated physical contact.",
+    "Quantization, model size, sampling parameters, or image resolution as causal factors."
+  ],
+  "confounds": [
+    "Latest get_view hard gate demands precise contact localization in head view; no get_view progress monitor. Repeated head search is partly program design, not an uncontaminated model ability test.",
+    "Actual head angles stay below commanded goals even after 47-65 seconds. Executor stops head sends after final interpolation; native SDK physical cause remains unconfirmed.",
+    "Independent service task deepcopy/write race caused final HTTP 503; reproduced with fake. Not a cause of earlier perception errors.",
+    "Most tests use the same correlated shifted-panel frames; source reports are copied/summarized elsewhere. Do not sum percentages across reports as independent samples.",
+    "Actual endpoint is Inferact/Qwen3.8-27B-NVFP4; no same-prompt BF16/FP8 or other-model comparison establishes quantization as cause."
+  ],
+  "source_sha256": {
+    "docs/report/20261101_action_interface_mapping_audit/report.json": "92761d02784792fb2bff5e759ad1a6c2a4a3f293b5422230b5a93c3a11f9b680",
+    "docs/report/20261101_action_interface_mapping_audit/interface_probes/report.json": "5f65fac8219f583f30b40bc14c282f3ad56cca41680c80beb644e255ec3761f2",
+    "outputs/grounding_diagnosis_20261101/report.json": "bcc4811b0d9351d0b14fbdf7b3a40fb9eb2efaf9427c3592c8199b7721289777",
+    "outputs/direct_thinking_validation_20261101/report.json": "9f435069307617482289eda02adbf4a91b4447fbdcd47e57efbe48e46bca8a1b",
+    "outputs/success_tail_validation_20261101/report.json": "35431bc039e12cded47de8be0abf7bc30bd9d226745790a8625214528464ed11",
+    "outputs/perception_validation_20261101/report.json": "baa786a6b86c3e54d9ccf87bf3245850804ea18498b67ad078a974219826706b",
+    "outputs/short_loop_validation_20261101/report.json": "4b98133a72b4755280b24826b2dc29bd53d75a1ba18b548975f5de0363077776",
+    "docs/report/20261102_view_recovery/model_replay/validation.json": "fc2416deeb8dffc86288a60739b3168e7e4bcc944007f3238cdd93b025dc1996",
+    "docs/report/20261102_view_loop_audit/pixel_probe/summary.json": "7c0769a02969b39103a6ecc1f11d1b292e7724d3161f8bba510a029d11cf9a4f"
+  }
+}

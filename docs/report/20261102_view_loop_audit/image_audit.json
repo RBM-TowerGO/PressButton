@@ -1,0 +1,1521 @@
+{
+  "run": "outputs/agent_web/20261102_142505_13668097/agent",
+  "scope": "Offline archive audit only; no robot or model requests.",
+  "request_files_checked": 14,
+  "encoded_images_checked": 63,
+  "all_images_match_archived_files": true,
+  "all_current_pairs_match_in_head_wrist_order": true,
+  "observations": [
+    {
+      "round": 1,
+      "observation_id": "a713792e553f49b68cd2c647f5191a2a",
+      "captured_monotonic_ns": 268894337795523,
+      "utc_ns": 1793600720800375886,
+      "frames": {
+        "right": {
+          "source_ns": 1793600720461582080,
+          "receipt_ns": 268894054517035
+        },
+        "depth": {
+          "source_ns": 1793600720461582080,
+          "receipt_ns": 268894054860211
+        },
+        "head": {
+          "source_ns": 1793600720474638080,
+          "receipt_ns": 268894077427878
+        }
+      },
+      "measured_head_deg": [
+        -0.7105963331750885,
+        24.925562091319488
+      ],
+      "rgb_state_skew_ms": 1.835852,
+      "artifacts": {
+        "head": {
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "manifest_hash_matches": true
+        },
+        "right": {
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "manifest_hash_matches": true
+        }
+      }
+    },
+    {
+      "round": 2,
+      "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2",
+      "captured_monotonic_ns": 268944248999622,
+      "utc_ns": 1793600770711579185,
+      "frames": {
+        "right": {
+          "source_ns": 1793600770373680896,
+          "receipt_ns": 268943968308621
+        },
+        "depth": {
+          "source_ns": 1793600770373730048,
+          "receipt_ns": 268943967693652
+        },
+        "head": {
+          "source_ns": 1793600770376992000,
+          "receipt_ns": 268943979171099
+        }
+      },
+      "measured_head_deg": [
+        -0.9756076729715834,
+        25.111889651877437
+      ],
+      "rgb_state_skew_ms": 9.93464,
+      "artifacts": {
+        "head": {
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 4.360989221643519
+        },
+        "right": {
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 1.9450506365740743
+        }
+      },
+      "seconds_since_previous": 49.911204099
+    },
+    {
+      "round": 3,
+      "observation_id": "982596cf3b094fcbb1d7e3d57835feb9",
+      "captured_monotonic_ns": 269010122710677,
+      "utc_ns": 1793600836585289920,
+      "frames": {
+        "right": {
+          "source_ns": 1793600836090515968,
+          "receipt_ns": 269009684525718
+        },
+        "depth": {
+          "source_ns": 1793600836090793984,
+          "receipt_ns": 269009683814799
+        },
+        "head": {
+          "source_ns": 1793600836091813888,
+          "receipt_ns": 269009695067074
+        }
+      },
+      "measured_head_deg": [
+        -1.2499080700392953,
+        28.82314123929557
+      ],
+      "rgb_state_skew_ms": 1.238523,
+      "artifacts": {
+        "head": {
+          "sha256": "a4865e5179cc08a38b3019a53eb9c9b54559c2a507594437f60745b4f91e2a91",
+          "bytes": 55928,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 16.18700557002315
+        },
+        "right": {
+          "sha256": "b94467c3df30829617f8cf892045f742272b05b94ebc266fd5cb515a2fa93be9",
+          "bytes": 22068,
+          "dimensions": [
+            640,
+            360
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 2.360943287037037
+        }
+      },
+      "seconds_since_previous": 65.873711055
+    },
+    {
+      "round": 4,
+      "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+      "captured_monotonic_ns": 269058595683824,
+      "utc_ns": 1793600885058263419,
+      "frames": {
+        "right": {
+          "source_ns": 1793600884635763968,
+          "receipt_ns": 269058231048072
+        },
+        "depth": {
+          "source_ns": 1793600884635845120,
+          "receipt_ns": 269058230342846
+        },
+        "head": {
+          "source_ns": 1793600884648125952,
+          "receipt_ns": 269058250790250
+        }
+      },
+      "measured_head_deg": [
+        -1.2799609023873515,
+        34.23210464681207
+      ],
+      "rgb_state_skew_ms": 15.986675,
+      "artifacts": {
+        "head": {
+          "sha256": "614b7e507abcdaa3714a7e75444e47d883f84508af9c048a4a095d81288e4925",
+          "bytes": 58453,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 19.81128689236111
+        },
+        "right": {
+          "sha256": "4e102f80bb41df7b67459fd4f85272df54fafead654a2b5c9aae8e8efa7a2fb3",
+          "bytes": 22208,
+          "dimensions": [
+            640,
+            360
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 3.4948683449074074
+        }
+      },
+      "seconds_since_previous": 48.472973147
+    },
+    {
+      "round": 5,
+      "observation_id": "981630409f1349a2a93a53a23eb19399",
+      "captured_monotonic_ns": 269123245926789,
+      "utc_ns": 1793600949708506704,
+      "frames": {
+        "right": {
+          "source_ns": 1793600949251730944,
+          "receipt_ns": 269122848779782
+        },
+        "depth": {
+          "source_ns": 1793600949252013056,
+          "receipt_ns": 269122848144896
+        },
+        "head": {
+          "source_ns": 1793600949238469120,
+          "receipt_ns": 269122841720806
+        }
+      },
+      "measured_head_deg": [
+        -1.4449782727348595,
+        40.334468858868256
+      ],
+      "rgb_state_skew_ms": 40.008283,
+      "artifacts": {
+        "head": {
+          "sha256": "0c1cb1b4a12816a44e8692a0298e63538058c7ee7df3dee1359366a12626e55f",
+          "bytes": 61826,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 23.888621238425927
+        },
+        "right": {
+          "sha256": "5e4c2c464af64437bcf10e86f2c25b510f52adef06754ba1af18d83de3b3f731",
+          "bytes": 22530,
+          "dimensions": [
+            640,
+            360
+          ],
+          "manifest_hash_matches": true,
+          "mean_absolute_rgb_difference_vs_previous": 6.451588541666666
+        }
+      },
+      "seconds_since_previous": 64.650242965
+    }
+  ],
+  "requests": [
+    {
+      "round": 1,
+      "path": "rounds/0000/request.json",
+      "image_count": 5,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [
+        "a713792e553f49b68cd2c647f5191a2a"
+      ],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000008 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "1c7578566fa9e1816ff741ab0dca991809ae7f6caaeee4d9f6cf6c13b07d30c2",
+          "bytes": 168124,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000008.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000009 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "8c4afa23d06e7cd0ae64f3721f64ddbdf1f73738c027c9ce055f86d686211f68",
+          "bytes": 170017,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000009.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000010 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "3dcb71ef32c8f6bdb81a6dace439923ad3e17719563959eb89781ba5a91f1d35",
+          "bytes": 172743,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000010.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/head.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "path": "rounds/0000/view_acquisition/request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "path": "rounds/0001/request.json",
+      "image_count": 7,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [
+        "a713792e553f49b68cd2c647f5191a2a",
+        "ebb4fe5624074540b0d6f1e33db3f6d2"
+      ],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000008 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "1c7578566fa9e1816ff741ab0dca991809ae7f6caaeee4d9f6cf6c13b07d30c2",
+          "bytes": 168124,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000008.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000009 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "8c4afa23d06e7cd0ae64f3721f64ddbdf1f73738c027c9ce055f86d686211f68",
+          "bytes": 170017,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000009.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000010 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "3dcb71ef32c8f6bdb81a6dace439923ad3e17719563959eb89781ba5a91f1d35",
+          "bytes": 172743,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000010.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/head.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/right.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "path": "rounds/0001/view_acquisition/repair-request-1.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "path": "rounds/0001/view_acquisition/repair-request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "path": "rounds/0001/view_acquisition/request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "path": "rounds/0002/request.json",
+      "image_count": 9,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [
+        "a713792e553f49b68cd2c647f5191a2a",
+        "ebb4fe5624074540b0d6f1e33db3f6d2",
+        "982596cf3b094fcbb1d7e3d57835feb9"
+      ],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000008 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "1c7578566fa9e1816ff741ab0dca991809ae7f6caaeee4d9f6cf6c13b07d30c2",
+          "bytes": 168124,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000008.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000009 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "8c4afa23d06e7cd0ae64f3721f64ddbdf1f73738c027c9ce055f86d686211f68",
+          "bytes": 170017,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000009.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000010 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "3dcb71ef32c8f6bdb81a6dace439923ad3e17719563959eb89781ba5a91f1d35",
+          "bytes": 172743,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000010.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/head.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/right.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        },
+        {
+          "message_index": 10,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "a4865e5179cc08a38b3019a53eb9c9b54559c2a507594437f60745b4f91e2a91",
+          "bytes": 55928,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/head.jpg"
+          ]
+        },
+        {
+          "message_index": 10,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "b94467c3df30829617f8cf892045f742272b05b94ebc266fd5cb515a2fa93be9",
+          "bytes": 22068,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "path": "rounds/0002/view_acquisition/request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "a4865e5179cc08a38b3019a53eb9c9b54559c2a507594437f60745b4f91e2a91",
+          "bytes": 55928,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "b94467c3df30829617f8cf892045f742272b05b94ebc266fd5cb515a2fa93be9",
+          "bytes": 22068,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "path": "rounds/0003/request.json",
+      "image_count": 11,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [
+        "a713792e553f49b68cd2c647f5191a2a",
+        "ebb4fe5624074540b0d6f1e33db3f6d2",
+        "982596cf3b094fcbb1d7e3d57835feb9",
+        "d3c61eeacec24a2c9c44b7d7210bbc74"
+      ],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000008 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "1c7578566fa9e1816ff741ab0dca991809ae7f6caaeee4d9f6cf6c13b07d30c2",
+          "bytes": 168124,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000008.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000009 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "8c4afa23d06e7cd0ae64f3721f64ddbdf1f73738c027c9ce055f86d686211f68",
+          "bytes": 170017,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000009.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000010 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "3dcb71ef32c8f6bdb81a6dace439923ad3e17719563959eb89781ba5a91f1d35",
+          "bytes": 172743,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000010.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/head.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/right.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        },
+        {
+          "message_index": 10,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "a4865e5179cc08a38b3019a53eb9c9b54559c2a507594437f60745b4f91e2a91",
+          "bytes": 55928,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/head.jpg"
+          ]
+        },
+        {
+          "message_index": 10,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "b94467c3df30829617f8cf892045f742272b05b94ebc266fd5cb515a2fa93be9",
+          "bytes": 22068,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/right.jpg"
+          ]
+        },
+        {
+          "message_index": 14,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "614b7e507abcdaa3714a7e75444e47d883f84508af9c048a4a095d81288e4925",
+          "bytes": 58453,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/head.jpg"
+          ]
+        },
+        {
+          "message_index": 14,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "4e102f80bb41df7b67459fd4f85272df54fafead654a2b5c9aae8e8efa7a2fb3",
+          "bytes": 22208,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "path": "rounds/0003/view_acquisition/repair-request-1.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "614b7e507abcdaa3714a7e75444e47d883f84508af9c048a4a095d81288e4925",
+          "bytes": 58453,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "4e102f80bb41df7b67459fd4f85272df54fafead654a2b5c9aae8e8efa7a2fb3",
+          "bytes": 22208,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "path": "rounds/0003/view_acquisition/repair-request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "614b7e507abcdaa3714a7e75444e47d883f84508af9c048a4a095d81288e4925",
+          "bytes": 58453,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "4e102f80bb41df7b67459fd4f85272df54fafead654a2b5c9aae8e8efa7a2fb3",
+          "bytes": 22208,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "path": "rounds/0003/view_acquisition/request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "614b7e507abcdaa3714a7e75444e47d883f84508af9c048a4a095d81288e4925",
+          "bytes": 58453,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "4e102f80bb41df7b67459fd4f85272df54fafead654a2b5c9aae8e8efa7a2fb3",
+          "bytes": 22208,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "path": "rounds/0004/request.json",
+      "image_count": 13,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [
+        "a713792e553f49b68cd2c647f5191a2a",
+        "ebb4fe5624074540b0d6f1e33db3f6d2",
+        "982596cf3b094fcbb1d7e3d57835feb9",
+        "d3c61eeacec24a2c9c44b7d7210bbc74",
+        "981630409f1349a2a93a53a23eb19399"
+      ],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000008 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "1c7578566fa9e1816ff741ab0dca991809ae7f6caaeee4d9f6cf6c13b07d30c2",
+          "bytes": 168124,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000008.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000009 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "8c4afa23d06e7cd0ae64f3721f64ddbdf1f73738c027c9ce055f86d686211f68",
+          "bytes": 170017,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000009.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "HISTORICAL DEMO step 000010 status=completed: top BEFORE, bottom AFTER; left HEAD, right WRIST. Interrupted commands and missing AFTER images do not prove completed motion.",
+          "frame": null,
+          "sha256": "3dcb71ef32c8f6bdb81a6dace439923ad3e17719563959eb89781ba5a91f1d35",
+          "bytes": 172743,
+          "dimensions": [
+            1280,
+            792
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "demonstration/000010.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "c95c4814b0ddf4e03872ce9f1077fedb936dec62d82df63fc2788486a1f6e152",
+          "bytes": 54860,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/head.jpg"
+          ]
+        },
+        {
+          "message_index": 2,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "a713792e553f49b68cd2c647f5191a2a",
+          "sha256": "b92ca1a9bea6a801271da22e2f04b6118a9ac7fa1292cf40693e94644818e8d9",
+          "bytes": 21811,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/a713792e553f49b68cd2c647f5191a2a/right.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "a9c82135a07ca1c0253afb0ed20709f768638fda40967029b18d662991f88aeb",
+          "bytes": 54526,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/head.jpg"
+          ]
+        },
+        {
+          "message_index": 6,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "sha256": "dc6196e216dc4d782fa4c0d22cb365ea1f80940648a4839c69b65858aa7dfec6",
+          "bytes": 21870,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/ebb4fe5624074540b0d6f1e33db3f6d2/right.jpg"
+          ]
+        },
+        {
+          "message_index": 10,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "a4865e5179cc08a38b3019a53eb9c9b54559c2a507594437f60745b4f91e2a91",
+          "bytes": 55928,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/head.jpg"
+          ]
+        },
+        {
+          "message_index": 10,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "982596cf3b094fcbb1d7e3d57835feb9",
+          "sha256": "b94467c3df30829617f8cf892045f742272b05b94ebc266fd5cb515a2fa93be9",
+          "bytes": 22068,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/982596cf3b094fcbb1d7e3d57835feb9/right.jpg"
+          ]
+        },
+        {
+          "message_index": 14,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "614b7e507abcdaa3714a7e75444e47d883f84508af9c048a4a095d81288e4925",
+          "bytes": 58453,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/head.jpg"
+          ]
+        },
+        {
+          "message_index": 14,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "sha256": "4e102f80bb41df7b67459fd4f85272df54fafead654a2b5c9aae8e8efa7a2fb3",
+          "bytes": 22208,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/d3c61eeacec24a2c9c44b7d7210bbc74/right.jpg"
+          ]
+        },
+        {
+          "message_index": 18,
+          "preceding_label": "LIVE HEAD camera; current observation, not a demonstration.",
+          "frame": "981630409f1349a2a93a53a23eb19399",
+          "sha256": "0c1cb1b4a12816a44e8692a0298e63538058c7ee7df3dee1359366a12626e55f",
+          "bytes": 61826,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/981630409f1349a2a93a53a23eb19399/head.jpg"
+          ]
+        },
+        {
+          "message_index": 18,
+          "preceding_label": "LIVE RIGHT WRIST camera; original image; depth pixel is not a contact point.",
+          "frame": "981630409f1349a2a93a53a23eb19399",
+          "sha256": "5e4c2c464af64437bcf10e86f2c25b510f52adef06754ba1af18d83de3b3f731",
+          "bytes": 22530,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/981630409f1349a2a93a53a23eb19399/right.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "path": "rounds/0004/view_acquisition/request.json",
+      "image_count": 2,
+      "all_images_match_archived_files": true,
+      "current_pair_matches_in_head_wrist_order": true,
+      "live_observation_ids": [],
+      "images": [
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT HEAD original image",
+          "frame": "981630409f1349a2a93a53a23eb19399",
+          "sha256": "0c1cb1b4a12816a44e8692a0298e63538058c7ee7df3dee1359366a12626e55f",
+          "bytes": 61826,
+          "dimensions": [
+            1280,
+            720
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/981630409f1349a2a93a53a23eb19399/head.jpg"
+          ]
+        },
+        {
+          "message_index": 1,
+          "preceding_label": "CURRENT RIGHT WRIST original image",
+          "frame": "981630409f1349a2a93a53a23eb19399",
+          "sha256": "5e4c2c464af64437bcf10e86f2c25b510f52adef06754ba1af18d83de3b3f731",
+          "bytes": 22530,
+          "dimensions": [
+            640,
+            360
+          ],
+          "mime_header": "data:image/jpeg;base64",
+          "matches": [
+            "observations/981630409f1349a2a93a53a23eb19399/right.jpg"
+          ]
+        }
+      ]
+    }
+  ],
+  "limits": "Matches prove client input bytes and archive/manifest binding; they do not directly inspect server image-decoder internals. Repair-request aliases duplicate one recorded request each.",
+  "visual_review": {
+    "source": "assistant_saved_image_review_not_operator_confirmation",
+    "initial_head": "Panel and target button fully framed; gripper ends cropped at lower edge.",
+    "last_head": "Panel/button and both grippers visible. The white marker on the right gripper is seen edge-on as a narrow light strip, not the conspicuous arrow shape of the wrist view; exact marked physical tip identity remains less clear.",
+    "last_wrist": "Button upper-left, clear large white arrow on the right finger. Only head commands explain near-constant wrist framing."
+  },
+  "motion_capture_timing": [
+    {
+      "round": 1,
+      "command_id": "6425dfb8834d420fbfae0b170ea5c9ad",
+      "target_head_deg": [
+        -0.7,
+        30
+      ],
+      "send_duration_s": 0.481973905,
+      "measured_head_deg": [
+        -0.9756076729715834,
+        25.111889651877437
+      ],
+      "capture_completed_after_send_ms": 529.948308,
+      "state_receipt_after_send_ms": 189.328531,
+      "final_state_head_deg": [
+        -0.9564831432955476,
+        24.57913489661644
+      ],
+      "final_state_receipt_after_send_ms": -4.563157,
+      "frames": {
+        "right": {
+          "receipt_after_send_ms": 249.257307,
+          "source_before_capture_ms": 337.898289
+        },
+        "depth": {
+          "receipt_after_send_ms": 248.642338,
+          "source_before_capture_ms": 337.849137
+        },
+        "head": {
+          "receipt_after_send_ms": 260.119785,
+          "source_before_capture_ms": 334.587185
+        }
+      },
+      "next_movement_start_sample": {
+        "head_deg": [
+          -0.9805254091739924,
+          25.115168142679043
+        ],
+        "seconds_after_this_send": 64.755811477
+      }
+    },
+    {
+      "round": 2,
+      "command_id": "20091ff291e348efb807bb32a0132ec5",
+      "target_head_deg": [
+        -0.7,
+        35
+      ],
+      "send_duration_s": 0.927363157,
+      "measured_head_deg": [
+        -1.2499080700392953,
+        28.82314123929557
+      ],
+      "capture_completed_after_send_ms": 731.174824,
+      "state_receipt_after_send_ms": 244.627747,
+      "final_state_head_deg": [
+        -1.237340521966472,
+        27.482238501438662
+      ],
+      "final_state_receipt_after_send_ms": -10.286789,
+      "frames": {
+        "right": {
+          "receipt_after_send_ms": 292.989865,
+          "source_before_capture_ms": 494.773952
+        },
+        "depth": {
+          "receipt_after_send_ms": 292.278946,
+          "source_before_capture_ms": 494.495936
+        },
+        "head": {
+          "receipt_after_send_ms": 303.531221,
+          "source_before_capture_ms": 493.476032
+        }
+      },
+      "next_movement_start_sample": {
+        "head_deg": [
+          -1.2553722213753056,
+          28.8406265235708
+        ],
+        "seconds_after_this_send": 47.466466432
+      }
+    },
+    {
+      "round": 3,
+      "command_id": "c1a1ca42e45e45499a5c4dafc3ca1a08",
+      "target_head_deg": [
+        -0.7,
+        42
+      ],
+      "send_duration_s": 1.236256607,
+      "measured_head_deg": [
+        -1.2799609023873515,
+        34.23210464681207
+      ],
+      "capture_completed_after_send_ms": 510.36975,
+      "state_receipt_after_send_ms": 107.279785,
+      "final_state_head_deg": [
+        -1.3138386406706146,
+        33.51575440666113
+      ],
+      "final_state_receipt_after_send_ms": -2.278825,
+      "frames": {
+        "right": {
+          "receipt_after_send_ms": 145.733998,
+          "source_before_capture_ms": 422.499451
+        },
+        "depth": {
+          "receipt_after_send_ms": 145.028772,
+          "source_before_capture_ms": 422.418299
+        },
+        "head": {
+          "receipt_after_send_ms": 165.476176,
+          "source_before_capture_ms": 410.137467
+        }
+      },
+      "next_movement_start_sample": {
+        "head_deg": [
+          -1.319849207140226,
+          34.69437184983853
+        ],
+        "seconds_after_this_send": 63.448566433
+      }
+    },
+    {
+      "round": 4,
+      "command_id": "36a505fbfcaa424fb978316c67358614",
+      "target_head_deg": [
+        -0.7,
+        48
+      ],
+      "send_duration_s": 1.25076129,
+      "measured_head_deg": [
+        -1.4449782727348595,
+        40.334468858868256
+      ],
+      "capture_completed_after_send_ms": 496.175082,
+      "state_receipt_after_send_ms": 104.641071,
+      "final_state_head_deg": [
+        -1.4504424240708698,
+        39.35474652432163
+      ],
+      "final_state_receipt_after_send_ms": -7.720939,
+      "frames": {
+        "right": {
+          "receipt_after_send_ms": 99.028075,
+          "source_before_capture_ms": 456.77576
+        },
+        "depth": {
+          "receipt_after_send_ms": 98.393189,
+          "source_before_capture_ms": 456.493648
+        },
+        "head": {
+          "receipt_after_send_ms": 91.969099,
+          "source_before_capture_ms": 470.037584
+        }
+      }
+    }
+  ],
+  "timing_interpretation": "All head frames were received after send completion. Capture uses an early post-send observation rather than measured arrival. Next-movement start samples 47–65 seconds later still show prior head target not reached, so evidence does not support attributing all target errors solely to a short image-capture delay. Cause requires controller/hold-path inspection."
+}

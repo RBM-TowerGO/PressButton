@@ -1,0 +1,138 @@
+[
+  {
+    "operation_id": "000001",
+    "kind": "head",
+    "command": {
+      "head_deg": [
+        0.0,
+        30.0
+      ],
+      "start_head_deg": [
+        -0.2914959257031062,
+        2.4001446237510375
+      ],
+      "head_speed_deg_s": 20.0
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000002",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        0.0,
+        200.0,
+        200.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000003",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        0.0,
+        -50.0,
+        -20.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000004",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        30.0,
+        0.0,
+        0.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000005",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        0.0,
+        0.0,
+        -10.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000006",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        0.0,
+        0.0,
+        -20.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000007",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        30.0,
+        0.0,
+        0.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000008",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        0.0,
+        -20.0,
+        0.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000009",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        30.0,
+        0.0,
+        0.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000010",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        10.0,
+        0.0,
+        0.0
+      ]
+    },
+    "status": "completed"
+  },
+  {
+    "operation_id": "000011",
+    "kind": "move",
+    "command": {
+      "xyz_mm": [
+        -100.0,
+        0.0,
+        0.0
+      ]
+    },
+    "status": "interrupted"
+  }
+]

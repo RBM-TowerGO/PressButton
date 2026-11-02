@@ -86,15 +86,28 @@ def test_launcher_waits_for_new_schema_and_handles_stop(monkeypatch):
 
 
 @pytest.mark.parametrize('failure_context', [None, 'reviewed-case'])
-def test_launcher_cancels_agent_when_service_exits(tmp_path, monkeypatch, failure_context):
+@pytest.mark.parametrize('decision_mode', ['grounded', 'separated', 'direct'])
+@pytest.mark.parametrize('auto_confirm', [True, False])
+def test_launcher_cancels_agent_when_service_exits(tmp_path, monkeypatch, failure_context, decision_mode, auto_confirm):
     from pathlib import Path
     demo = tmp_path/'demo'
     atomic_json(demo/'session.json', {})
     events = []
     processes = []
     closed = []
+    prompt_path = launcher.DEFAULT_PROMPT
+    if decision_mode == 'direct':
+        prompt_path = tmp_path/'red marker prompt.txt'
+        prompt_path.write_text('Use the marked contact tip in the current images.')
     monkeypatch.setattr(launcher.sys, 'stdin', SimpleNamespace(isatty=lambda:True))
     monkeypatch.setattr(launcher, 'check_port_available', lambda port:None)
+    class Demo:
+        def __init__(self, root):
+            self.root=Path(root);self.images=[None]*11;self.selection=dict(mode='all')
+        def select_activation_tail(self, count):
+            assert count==3
+            self.images=[None]*3;self.selection=dict(mode='reviewed_activation_tail',model_image_count=3)
+    monkeypatch.setattr(launcher, 'Demonstration', Demo)
     reviews = []
     monkeypatch.setattr(launcher, 'FailureCase', lambda path:reviews.append(path))
     monkeypatch.setattr(launcher.signal, 'signal', lambda *a:None)
@@ -108,12 +121,21 @@ def test_launcher_cancels_agent_when_service_exits(tmp_path, monkeypatch, failur
             self.is_agent=any(Path(a).name=='s1b_agent.py' for a in argv)
             if self.is_agent:
                 assert kwargs['stdin'] == subprocess.DEVNULL
+                assert argv[argv.index('--decision-mode')+1] == decision_mode
+                assert argv[argv.index('--prompt')+1] == str(prompt_path.resolve())
+                if decision_mode in ('grounded', 'direct'):
+                    assert argv[argv.index('--demo-last-steps')+1] == '3'
+                else:
+                    assert '--demo-last-steps' not in argv
                 if failure_context:
                     assert argv[argv.index('--failure-case')+1] == str(Path(failure_context).resolve())
                 else:
                     assert '--failure-case' not in argv
                 processes[0].returncode=0
                 events[1].set()  # finish dashboard review without blocking this test
+            else:
+                assert kwargs['stdin'] is launcher.sys.stdin
+                assert ('--auto-confirm' in argv) is auto_confirm
             processes.append(self)
         def poll(self):return self.returncode
         def wait(self, timeout):return self.returncode
@@ -128,11 +150,17 @@ def test_launcher_cancels_agent_when_service_exits(tmp_path, monkeypatch, failur
     monkeypatch.setattr(launcher, 'serve', lambda *a:(server,SimpleNamespace(join=lambda *a:None)))
     args=SimpleNamespace(host='fake',demo=str(demo),goal='test',output=str(tmp_path/'run'),
         robot_port=6210,camera_port=8765,web_port=8766,thor_port=18000,thor_host='fake',max_rounds=20,
-        failure_case=failure_context)
+        failure_case=failure_context,decision_mode=decision_mode,auto_confirm=auto_confirm)
+    if decision_mode == 'direct':
+        args.prompt = str(prompt_path)
+        args.demo_last_steps = 3
     launcher.launch(args)
     assert reviews == ([failure_context] if failure_context else [])
     assert len(processes) == 2 and processes[1] in closed
-    assert json.loads((tmp_path/'run/launcher.json').read_text())['reason'] == 'robot_service_exited'
+    archive = json.loads((tmp_path/'run/launcher.json').read_text())
+    assert archive['reason'] == 'robot_service_exited'
+    assert archive['prompt'] == str(prompt_path.resolve())
+    assert archive['auto_confirm'] is auto_confirm
 
 
 def test_sdk_prompt_forwarded_without_newline():
@@ -152,3 +180,42 @@ def test_sdk_prompt_forwarded_without_newline():
         finally:
             os.close(write_fd)
             reader.join(2)
+
+
+def test_context_metrics_and_compression_status(tmp_path):
+    rd = tmp_path/'agent/rounds/0000'
+    atomic_json(rd/'context_metrics.json',dict(image_count=20, compression_generation=1, compression_status='running'))
+    state = dashboard.Dashboard(tmp_path, '', threading.Event()).state()
+    assert state['rounds'][0]['phase'] == '压缩历史中'
+    atomic_json(rd/'response-0.json',dict(elapsed_s=2,response=dict(usage=dict(prompt_tokens=15000,completion_tokens=90))))
+    atomic_json(rd/'context_metrics.json',dict(image_count=20, compression_generation=1, compression_status='completed'))
+    state = dashboard.Dashboard(tmp_path, '', threading.Event()).state()
+    assert state['rounds'][0]['usage']['prompt_tokens'] == 15000
+    assert state['rounds'][0]['context']['image_count'] == 20
+    assert 'cached_tokens' not in state['rounds'][0]['usage']
+
+
+def test_context_budget_argument():
+    assert launcher.parse_args([]).context_budget_tokens == 65536
+    assert launcher.parse_args(['--context-budget-tokens','50000']).context_budget_tokens == 50000
+    with pytest.raises(SystemExit):
+        launcher.parse_args(['--context-budget-tokens','0'])
+
+
+def test_separated_compatibility_and_dashboard(tmp_path):
+    assert launcher.parse_args([]).decision_mode=='grounded'
+    assert launcher.parse_args(['--decision-mode','separated']).decision_mode=='separated'
+    assert launcher.parse_args(['--decision-mode','direct']).decision_mode=='direct'
+    with pytest.raises(SystemExit):launcher.parse_args(['--decision-mode','invalid'])
+    rd=tmp_path/'agent/rounds/0000'
+    atomic_json(rd/'decision_context.json',dict(decision_mode='separated',observation_id='now',stage='perception'))
+    d=dashboard.Dashboard(tmp_path,'',threading.Event())
+    assert d.state()['rounds'][0]['phase']=='判读中'
+    atomic_json(rd/'perception/assessment.json',dict(observation_id='now',head_visibility='full',wrist_visibility='not_visible'))
+    atomic_json(rd/'perception/metrics.json',dict(image_count=4,elapsed_s=2,prompt_tokens=4000,completion_tokens=100))
+    row=d.state()['rounds'][0]
+    assert row['phase']=='动作决策中' and row['perception']['metrics']['image_count']==4
+    assert row['decision']['observation_id']=='now'
+    atomic_json(tmp_path/'agent/result.json',dict(status='operator_stopped'))
+    atomic_json(rd/'error.json',dict(stage='round',error='operator_stopped'))
+    assert d.state()['rounds'][0]['phase']=='已停止'

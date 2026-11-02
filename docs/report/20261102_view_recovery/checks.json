@@ -1,0 +1,27 @@
+{
+  "tests": 806,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 1,
+  "passed": 805,
+  "elapsed_s": 45.138,
+  "skip_reason": "Node unavailable; dashboard rendering separately checked in V8",
+  "compileall": "passed",
+  "git_diff_check": "passed",
+  "robot_started": false,
+  "robot_commands_sent": 0,
+  "model_requests_sent": 4,
+  "thinking_enabled": false,
+  "model_validation": "Three saved observations only; all head views correctly rejected; wrist relation unknown in all three; visual correctness not passed.",
+  "source_sha256": {
+    "src/pressb/agent_loop/view_acquisition.py": "2b4f18d3264cf935c320de6fce32d76805b55dece50d98b3ddd19852324c7baf",
+    "src/pressb/agent_loop/conversation.py": "5bfb9c6223a4202d7607aeb026ae5d8be7f69a3a4ef5eb6ee437b2944e451abd",
+    "src/pressb/agent_loop/failure_case.py": "cbb84dbf6b6de8a0f592128b14474c9bf7eb0024c5eea45271ac4b1a0a940aa8",
+    "src/pressb/agent_loop/model_context.py": "7ea338d7112fff79400ded269c0a417658df6b7b82993f3bad459ccda0af26bf",
+    "scripts/s1b_agent.py": "43e19394d4bf1c7c97fb21510b75e1abfa0bcaea196233575757e9d991053d23",
+    "scripts/s1b_agent_run.py": "3d29f849137a043029e9670f98b23922e8731aeddd557fb14e3c92b6a4b049e0",
+    "scripts/s1b_agent_dashboard.py": "fd6a0f5ebec8cb2262bf3f0d66064befc92d8b212ea2a179094e00bfeff7d646",
+    "scripts/validate_agent_view_recovery.py": "4b53208938712a2eeb65a3868a9392a43e5f4df07ed9dd4cbbaf244d7abb5bda",
+    "docs/astribot/planar_control/agent_system_prompt_red_marker.txt": "5ee1344b83b06afdd592aac7e8ab9a444ef41fad71e6498f439f2ffb54265d14"
+  }
+}

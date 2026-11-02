@@ -1,0 +1,32 @@
+{
+  "scope": "Read-only audit of diagnose_agent_capability.py and predeclared probes/plan.json; no new model or robot calls.",
+  "checked": {
+    "expected_answers_excluded_from_payload": true,
+    "source_case_names_excluded_from_payload": true,
+    "repeat_requests_byte_equivalent": true,
+    "vertical_flip_expected_y_transform_correct": true,
+    "both_crops_keep_target_face_and_physical_reference_tip": true,
+    "T_P_marks_visually_at_declared_positions": true,
+    "numeric_coordinate_controls_do_not_include_relation_answer": true,
+    "unknown_scored_separately_and_not_correct": true
+  },
+  "important_confounds": [
+    "Vertical flip changes the real button down-arrow symbol into an up-arrow while raw-flip prompt still names DOWN-CALL. Raw-flip failures/unknown cannot uniquely diagnose spatial reversal failure. T/P marked flips explicitly compare annotations and avoid this referent ambiguity.",
+    "presence_report_correct checks only yes/yes. It is affirmative-presence reporting, not proven object identification or fine localization accuracy; no predicted location is scored. Uncertain physical-tip identity is not necessarily an object-recognition error.",
+    "relation_correct is answer-label match conditional on assistant-reviewed approximate references, not contact calibration or robotics control correctness.",
+    "Crop/enlarge changes resolution, field of view, context and distractors together. Neither success nor failure isolates resolution alone.",
+    "T/P marks inject approximate referent locations and salient colored cues. Improved results support ability under externally grounded references, not a unique neural mechanism.",
+    "Two difficult source images and one repeat each do not estimate general success rate or stochastic stability; correlated transformations are not independent scenes."
+  ],
+  "scope_supported": [
+    "Text-coordinate comparison separate from natural-object grounding.",
+    "Marked-point image relation separate from natural reference identification.",
+    "Sticker-center vs physical-tip reference wording sensitivity on the same raw pixels.",
+    "Exact repeated request consistency for two observations."
+  ],
+  "scope_not_supported": [
+    "General 3D spatial understanding, hand-eye transform, mm magnitude, contact or closed-loop task success.",
+    "Causal attribution to model quantization, visual encoder, pretraining coverage, attention or reasoning layers.",
+    "Raw-flip-only diagnosis of above/below inability."
+  ]
+}

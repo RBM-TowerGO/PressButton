@@ -1,0 +1,4 @@
+{
+  "overlay_renderer_sha256": "4b53208938712a2eeb65a3868a9392a43e5f4df07ed9dd4cbbaf244d7abb5bda",
+  "note": "After requests, captions were moved outside the image so the top-edge button remains unobscured. Original input images, model calls and responses are unchanged."
+}

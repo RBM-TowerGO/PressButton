@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-873e28f03974472b",
+    "object": "chat.completion",
+    "created": 1793591807,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-abc933df22a297c0",
+              "type": "function",
+              "function": {
+                "name": "review_progress",
+                "arguments": "{\"comparison_view\": \"wrist\", \"head_horizontal\": \"center\", \"head_vertical\": \"level\", \"horizontal_change\": \"unchanged\", \"note\": \"Wrist view shows the same down-call button and red contact marker in both frames; button center remains near the marker with no discernible change. Head view is too hazy to reliably compare.\", \"observation_id\": \"02bbfd18cc3b45e091c3d6d9e2971c79\", \"previous_observation_id\": \"fb2b79422cb84b40b12fcb4bb38ab2a4\", \"vertical_change\": \"unchanged\", \"wrist_horizontal\": \"center\", \"wrist_vertical\": \"level\", \"approach_change\": \"unchanged\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 3444,
+      "total_tokens": 3698,
+      "completion_tokens": 254,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 24.14188834792003
+}

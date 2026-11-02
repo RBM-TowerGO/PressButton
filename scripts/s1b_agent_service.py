@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Robot-local v2 motion/observation service; --host deploys with an interactive SDK prompt."""
+"""Robot-local v2 service; --host deploys over SSH, --auto-confirm accepts SDK takeover."""
 import argparse
 import os
 from pathlib import Path
@@ -35,6 +35,8 @@ def launch(args):
             argv=['python3',remote+'/scripts/s1b_agent_service.py','--port',str(args.port),'--view-port',str(args.view_port),
                 '--output',args.output,'--control-hz',str(args.control_hz),'--speed-mm-s',str(args.speed_mm_s),
                 '--head-speed-deg-s',str(args.head_speed_deg_s)]
+            if getattr(args, 'auto_confirm', False):
+                argv.append('--auto-confirm')
             command=ENV+'; '+CAMERA_ENV+'; '+sdk_environment(dict(sdk_root=args.sdk_root))+'; '+shlex.join(argv)
             result=run_ssh(['ssh','-t','-o','ExitOnForwardFailure=yes',
                 '-L',f'127.0.0.1:{args.port}:127.0.0.1:{args.port}',
@@ -66,7 +68,8 @@ def run(args):
         print(f'相机网页已就绪：http://127.0.0.1:{args.view_port}',flush=True)
         from astribot_sdk.core.astribot_api.astribot_client import Astribot
         from pressb.s1b_deployment.robot_state import RobotState
-        robot=connect_robot(Astribot,args.control_hz);_SDK_KEEPALIVE.append(robot)
+        robot=connect_robot(Astribot,args.control_hz,
+                            auto_confirm=getattr(args, 'auto_confirm', False));_SDK_KEEPALIVE.append(robot)
         if not robot.get_control_rights_status():raise RuntimeError('未取得 SDK 控制权')
         print('运动模式：共用键盘执行器，XYZ / h / c / o；q 回车或 Ctrl-C 停止。',flush=True)
         robot.set_head_follow_effector(False)
@@ -143,6 +146,7 @@ def run(args):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--host');p.add_argument('--sdk-root',default='/home/astribot/astribot_sdk_aarch64')
+    p.add_argument('--auto-confirm', action='store_true', help='automatically answer yes to SDK takeover prompts')
     p.add_argument('--port',type=int,default=6210);p.add_argument('--view-port',type=int,default=8765)
     p.add_argument('--output',default='~/.local/share/pressb/agent_sessions')
     p.add_argument('--control-hz',type=float,default=250)

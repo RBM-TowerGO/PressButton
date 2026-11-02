@@ -1,0 +1,135 @@
+{
+  "model": "Inferact/Qwen3.8-27B-NVFP4",
+  "revision": "6128240ebaf4eaa7bad2b3d1c72c37d677c5f462",
+  "versions": {
+    "vllm": "0.28.0",
+    "transformers": "5.15.1",
+    "torch": "2.13.0+cu130",
+    "xgrammar": "0.2.3"
+  },
+  "model_type": "qwen3_5",
+  "language_model_only": false,
+  "quantization": {
+    "config_groups": {
+      "group_0": {
+        "input_activations": {
+          "dynamic": false,
+          "group_size": 16,
+          "num_bits": 4,
+          "type": "float"
+        },
+        "targets": [
+          "Linear"
+        ],
+        "weights": {
+          "dynamic": false,
+          "group_size": 16,
+          "num_bits": 4,
+          "type": "float"
+        }
+      }
+    },
+    "producer": {
+      "name": "modelopt",
+      "version": "0.0.1.dev1+ga21173a4d"
+    },
+    "quant_algo": "NVFP4",
+    "quant_method": "modelopt"
+  },
+  "quantization_ignored_vision": [
+    "model.visual*"
+  ],
+  "preprocessor": {
+    "size": {
+      "longest_edge": 16777216,
+      "shortest_edge": 65536
+    },
+    "patch_size": 16,
+    "temporal_patch_size": 2,
+    "merge_size": 2,
+    "image_mean": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "image_std": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "processor_class": "Qwen3VLProcessor",
+    "image_processor_type": "Qwen2VLImageProcessorFast"
+  },
+  "vision_config": {
+    "deepstack_visual_indexes": [],
+    "depth": 27,
+    "dtype": "bfloat16",
+    "hidden_act": "gelu_pytorch_tanh",
+    "hidden_size": 1152,
+    "in_channels": 3,
+    "initializer_range": 0.02,
+    "intermediate_size": 4304,
+    "model_type": "qwen3_5_vision",
+    "num_heads": 16,
+    "num_position_embeddings": 2304,
+    "out_hidden_size": 5120,
+    "patch_size": 16,
+    "spatial_merge_size": 2,
+    "temporal_patch_size": 2
+  },
+  "generation_config": {
+    "bos_token_id": 248044,
+    "do_sample": true,
+    "eos_token_id": [
+      248046,
+      248044
+    ],
+    "pad_token_id": 248044,
+    "temperature": 1.0,
+    "top_k": 20,
+    "top_p": 0.95,
+    "transformers_version": "5.13.0"
+  },
+  "chat_template_sha256": "c3cf9e34abf4f9e36c2d72165aa9c132d3e2a725b6c2586aaa3a8af9d7a81041",
+  "parser_mapping_excerpt": [
+    {
+      "line": 173,
+      "text": "    \"qwen3_coder\": ("
+    },
+    {
+      "line": 177,
+      "text": "    \"qwen3_xml\": ("
+    }
+  ],
+  "parser_code": "# SPDX-License-Identifier: Apache-2.0\n# SPDX-FileCopyrightText: Copyright contributors to the vLLM project\n\nfrom vllm.parser.engine.registered_adapters import Qwen3ParserToolAdapter\n\n\nclass Qwen3EngineToolParser(Qwen3ParserToolAdapter):  # type: ignore[valid-type, misc]\n    structural_tag_model = \"qwen_3_coder\"\n",
+  "server_args": [
+    "/usr/bin/python3",
+    "/usr/local/bin/vllm",
+    "serve",
+    "Inferact/Qwen3.8-27B-NVFP4",
+    "--revision",
+    "6128240ebaf4eaa7bad2b3d1c72c37d677c5f462",
+    "--tokenizer-revision",
+    "6128240ebaf4eaa7bad2b3d1c72c37d677c5f462",
+    "--served-model-name",
+    "qwen38",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8000",
+    "--max-model-len",
+    "262144",
+    "--max-num-seqs",
+    "1",
+    "--gpu-memory-utilization",
+    "0.7",
+    "--reasoning-parser",
+    "qwen3",
+    "--enable-auto-tool-choice",
+    "--tool-call-parser",
+    "qwen3_coder",
+    "--default-chat-template-kwargs",
+    "{\"enable_thinking\":false}"
+  ],
+  "strict_env": "UNSET"
+}

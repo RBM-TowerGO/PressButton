@@ -1,0 +1,19 @@
+{
+  "format": "pressb-progress-review-v1",
+  "source": "model_not_human",
+  "evidence_observation_ids": [
+    "02bbfd18cc3b45e091c3d6d9e2971c79",
+    "33520cc1b13b43eb837a2e93ef175050"
+  ],
+  "observation_id": "33520cc1b13b43eb837a2e93ef175050",
+  "previous_observation_id": "02bbfd18cc3b45e091c3d6d9e2971c79",
+  "comparison_view": "wrist",
+  "head_vertical": "unknown",
+  "head_horizontal": "unknown",
+  "wrist_vertical": "level",
+  "wrist_horizontal": "right",
+  "vertical_change": "unchanged",
+  "horizontal_change": "unchanged",
+  "approach_change": "unchanged",
+  "note": "In the wrist view, the down-call button and the red-marked finger contact end are identifiable in both BEFORE and CURRENT. The button center appears at roughly the same row as the red marker (level) and to the right of it in both frames; the offset looks essentially unchanged. The head view is too hazy/reflective to reliably identify the button and contact end, so head relations are unknown."
+}

@@ -1,0 +1,35 @@
+{
+  "context_type": "INDEPENDENT_PERCEPTION_MODEL_ASSESSMENT",
+  "format": "pressb-perception-v1",
+  "source": "model_assessment_not_human_verification",
+  "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+  "previous_observation_id": "63dd4b6c28284c7381dd5c0031b2afd2",
+  "head_visibility": "partial",
+  "head_bbox": [
+    850,
+    650,
+    920,
+    730
+  ],
+  "head_relation": "right of gripper, far from fingers",
+  "head_contact": "no visible finger contact; button face visible but not aligned",
+  "head_light": "off",
+  "wrist_visibility": "partial",
+  "wrist_bbox": [
+    0,
+    650,
+    1000,
+    1000
+  ],
+  "wrist_relation": "fingers at bottom, button not clearly visible",
+  "wrist_contact": "no visible contact; foggy view",
+  "wrist_light": "off",
+  "alignment_change": "unknown",
+  "light_on": "no",
+  "withdrawal": "no",
+  "evidence_observation_ids": [
+    "63dd4b6c28284c7381dd5c0031b2afd2",
+    "facfb77c2dd54fe6b3a20ebf26b15a7d"
+  ],
+  "note": "Down-call button visible on right panel in both frames; gripper remains away from it with no visible contact, light change, or withdrawal."
+}

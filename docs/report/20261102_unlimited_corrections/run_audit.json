@@ -1,0 +1,444 @@
+{
+  "source_run": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_120741_0ca36af5/agent",
+  "rows": [
+    {
+      "round": 1,
+      "observation_id": "8edf67ed93b0460293861f758919f6a5",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "当前腕部画面可见向下按钮与带白箭头手指，按钮在手指前端上方；先按首次高度先验小幅+Z对齐高度，再评估水平。"
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "17627b726c4645e78c1eb0dc0cb8dc35",
+        "observation_id": "8edf67ed93b0460293861f758919f6a5",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      }
+    },
+    {
+      "round": 2,
+      "observation_id": "a3f6bd855add44e5a8d7eef7ec72509a",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "腕部画面中按钮仍高于带白箭头手指前端，继续小幅+Z使高度接近level后再评估水平。"
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "f3b715649d5e4db3b1ce61a11a02cc8a",
+        "observation_id": "a3f6bd855add44e5a8d7eef7ec72509a",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      }
+    },
+    {
+      "round": 3,
+      "observation_id": "b65ee122b59e4dd28107f20211424949",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "腕部画面按钮仍高于带白箭头手指前端，继续小幅+Z接近level，随后评估水平与前进。"
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "784f74d900e64b2da69e141c6d8837ec",
+        "observation_id": "b65ee122b59e4dd28107f20211424949",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      }
+    },
+    {
+      "round": 4,
+      "observation_id": "333564ef86724083a54ac6ca6f620a10",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            10,
+            0
+          ],
+          "reason": "评审显示+Z未改善且按钮在带箭头手指前端右侧；按腕部水平偏移改+Y（机器人左）使按钮移向中心，再评估高度。"
+        }
+      },
+      "progress_review": {
+        "format": "pressb-progress-review-v1",
+        "source": "model_not_human",
+        "evidence_observation_ids": [
+          "b65ee122b59e4dd28107f20211424949",
+          "333564ef86724083a54ac6ca6f620a10"
+        ],
+        "observation_id": "333564ef86724083a54ac6ca6f620a10",
+        "previous_observation_id": "b65ee122b59e4dd28107f20211424949",
+        "comparison_view": "wrist",
+        "head_vertical": "unknown",
+        "head_horizontal": "unknown",
+        "wrist_vertical": "above",
+        "wrist_horizontal": "right",
+        "vertical_change": "unchanged",
+        "horizontal_change": "unchanged",
+        "approach_change": "unchanged",
+        "note": "In the wrist view the down-call button is identifiable in both frames. The marked right finger contact end is at the lower right; the button center remains above and to the right of that contact end in both BEFORE and CURRENT. The head view is too hazy to reliably identify the button/contact reference. No clear change in offset or approach is observable between the two wrist frames."
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "18a771ac5a5a4ad19ec94627a0947455",
+        "observation_id": "333564ef86724083a54ac6ca6f620a10",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          10,
+          0
+        ]
+      }
+    },
+    {
+      "round": 5,
+      "observation_id": "c8b1179c79634e85a0a72801d7a3dab0",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "+Y后腕部按钮仍高于带白箭头手指前端且水平接近中心；继续小幅+Z使高度接近level，再评估前进。"
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "201490cceb984844950601651385e2c0",
+        "observation_id": "c8b1179c79634e85a0a72801d7a3dab0",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      }
+    },
+    {
+      "round": 6,
+      "observation_id": "a3f00f8a941a419189578fb23707375e",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "腕部按钮仍高于带白箭头手指前端且水平接近中心；继续小幅+Z接近level，再评估前进。"
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "4713ac691bd44e068a22c50980095568",
+        "observation_id": "a3f00f8a941a419189578fb23707375e",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      }
+    },
+    {
+      "round": 7,
+      "observation_id": "5f8e78be946d4866a65a87e4133d750a",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "腕部按钮仍高于带白箭头手指前端且水平接近中心；继续小幅+Z接近level，再评估前进。"
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "9e6f89b38d8248ed850293ac31ea49a2",
+        "observation_id": "5f8e78be946d4866a65a87e4133d750a",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      }
+    },
+    {
+      "round": 8,
+      "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            -10
+          ],
+          "reason": "评审显示按钮已低于带白箭头手指前端且水平居中；小幅-Z回到接近level，再评估前进按压。"
+        }
+      },
+      "progress_review": {
+        "format": "pressb-progress-review-v1",
+        "source": "model_not_human",
+        "evidence_observation_ids": [
+          "5f8e78be946d4866a65a87e4133d750a",
+          "f31cc38545bf422b980a9196c7a4ebbd"
+        ],
+        "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+        "previous_observation_id": "5f8e78be946d4866a65a87e4133d750a",
+        "comparison_view": "wrist",
+        "head_vertical": "unknown",
+        "head_horizontal": "unknown",
+        "wrist_vertical": "below",
+        "wrist_horizontal": "center",
+        "vertical_change": "unchanged",
+        "horizontal_change": "unchanged",
+        "approach_change": "unchanged",
+        "note": "Wrist view shows the same down-call button and marked finger contact end in both frames. The button center is below the contact end and roughly centered horizontally in both. No discernible change in offset or approach between BEFORE and CURRENT."
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "1dd31e2aabdb47c989b090f490207caa",
+        "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          -10
+        ]
+      }
+    },
+    {
+      "round": 9,
+      "observation_id": "ef8366bbfa6d4f6485390ad9f9b9ef4f",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            10,
+            0,
+            0
+          ],
+          "reason": "腕部按钮与带白箭头手指前端高度接近level且水平居中，按钮位于两手指前端之间；小幅+X接近按钮面以观察指示是否亮起。"
+        }
+      },
+      "forward_guard": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "ef8366bbfa6d4f6485390ad9f9b9ef4f",
+        "assessment_observation_id": "ef8366bbfa6d4f6485390ad9f9b9ef4f",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": true,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "yes",
+          "button_between_fingers": "yes"
+        },
+        "reasons": [],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success.",
+        "authorized_command": {
+          "type": "move",
+          "xyz_mm": [
+            10,
+            0,
+            0
+          ]
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "f1d60b26545c4deb822669bdce27d7b7",
+        "observation_id": "ef8366bbfa6d4f6485390ad9f9b9ef4f",
+        "type": "move",
+        "xyz_mm": [
+          10,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "round": 10,
+      "observation_id": "24dac74062014c3a86d6458e60b06c90",
+      "executed": true,
+      "proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            10,
+            0,
+            0
+          ],
+          "reason": "腕部按钮仍高于带白箭头手指前端且水平居中，按钮在两手指前端之间；继续小幅+X接近按钮面以观察指示是否亮起。"
+        }
+      },
+      "forward_guard": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "24dac74062014c3a86d6458e60b06c90",
+        "assessment_observation_id": "24dac74062014c3a86d6458e60b06c90",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": true,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "yes",
+          "button_between_fingers": "yes"
+        },
+        "reasons": [],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success.",
+        "authorized_command": {
+          "type": "move",
+          "xyz_mm": [
+            10,
+            0,
+            0
+          ]
+        }
+      },
+      "executed_command": {
+        "session_id": "e79a5abb3efa4475bea9c070d52f3600",
+        "command_id": "dc9d9843b6c048188fa4ce4750636c43",
+        "observation_id": "24dac74062014c3a86d6458e60b06c90",
+        "type": "move",
+        "xyz_mm": [
+          10,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "round": 11,
+      "observation_id": "d35f972f8b194ee9869dbe1cb5a4815f",
+      "executed": false,
+      "error": {
+        "stage": "parse_proposal",
+        "attempt": 1,
+        "error_type": "ValueError",
+        "error": "progress_reassessment_required: progress_contradicts_current_review:horizontal=right. The candidate was NOT executed. Consume DIRECT_PROGRESS_REVIEW and choose a supported new action, improve the view, reobserve, or report unable. Do not repeat an unsupported same-axis direction."
+      },
+      "progress_review": {
+        "format": "pressb-progress-review-v1",
+        "source": "model_not_human",
+        "evidence_observation_ids": [
+          "24dac74062014c3a86d6458e60b06c90",
+          "d35f972f8b194ee9869dbe1cb5a4815f"
+        ],
+        "observation_id": "d35f972f8b194ee9869dbe1cb5a4815f",
+        "previous_observation_id": "24dac74062014c3a86d6458e60b06c90",
+        "comparison_view": "wrist",
+        "head_vertical": "unknown",
+        "head_horizontal": "unknown",
+        "wrist_vertical": "above",
+        "wrist_horizontal": "right",
+        "vertical_change": "unchanged",
+        "horizontal_change": "unchanged",
+        "approach_change": "unchanged",
+        "note": "In the wrist view the down-call button is clearly visible and the marked finger tip (white arrow) is at the lower right. The button center is above and to the right of the contact end in both BEFORE and CURRENT; the offset looks essentially the same, with no visible approach or separation. Head view is too hazy to compare reliably."
+      },
+      "forward_guard": {
+        "format": "pressb-forward-guard-v1",
+        "source": "program_rule_on_model_judgment",
+        "observation_id": "d35f972f8b194ee9869dbe1cb5a4815f",
+        "assessment_observation_id": "d35f972f8b194ee9869dbe1cb5a4815f",
+        "policy": "wrist_horizontal",
+        "required_fields": [
+          "button_visible",
+          "two_fingertips_visible",
+          "button_between_fingers"
+        ],
+        "allowed": false,
+        "basis": {
+          "button_visible": "yes",
+          "two_fingertips_visible": "no",
+          "button_between_fingers": "unknown"
+        },
+        "reasons": [
+          "two_fingertips_visible:no",
+          "button_between_fingers:unknown"
+        ],
+        "limitation": "CURRENT wrist horizontal containment only; does not establish height alignment, contact or task success."
+      }
+    }
+  ],
+  "commanded_net_mm": [
+    20.0,
+    10.0,
+    50.0
+  ],
+  "model_time_s": {
+    "action_s": 225.11425968632102,
+    "review_s": 83.20615554135293,
+    "forward_guard_s": 17.973652308341116
+  },
+  "result": {
+    "status": "error",
+    "model_reported_done": false,
+    "human_verified_success": null,
+    "human_verified_retracted": null,
+    "completed_motion_commands": 10,
+    "stop": {
+      "phase": "STOPPED",
+      "session_id": "e79a5abb3efa4475bea9c070d52f3600"
+    },
+    "error": "invalid_model_proposal:progress_reassessment_required: progress_contradicts_current_review:horizontal=right. The candidate was NOT executed. Consume DIRECT_PROGRESS_REVIEW and choose a supported new action, improve the view, reobserve, or report unable. Do not repeat an unsupported same-axis direction."
+  }
+}

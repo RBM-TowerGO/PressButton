@@ -1,0 +1,30 @@
+{
+  "name": "coordinates_above_left",
+  "frame": null,
+  "kind": "coordinates",
+  "transform": "text_only",
+  "expected": {
+    "vertical": "above",
+    "horizontal": "left"
+  },
+  "elapsed_s": 3.92571809515357,
+  "usage": {
+    "prompt_tokens": 435,
+    "total_tokens": 474,
+    "completion_tokens": 39,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "finish_reason": "tool_calls",
+  "parsed": {
+    "vertical": "above",
+    "horizontal": "left"
+  },
+  "format_valid": true,
+  "relation_correct": true,
+  "vertical_correct": true,
+  "horizontal_correct": true,
+  "relation_unknown": false
+}

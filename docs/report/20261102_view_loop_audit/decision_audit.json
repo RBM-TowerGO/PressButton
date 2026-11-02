@@ -1,0 +1,833 @@
+{
+  "source_run": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_142505_13668097/agent",
+  "read_only": true,
+  "robot_requests_sent": 0,
+  "model_requests_sent": 0,
+  "findings": [
+    "All five rounds remained get_view; no progress_review or visual conflict occurred.",
+    "Five head commands pitch 30,35,42,48,55 degrees completed sending on the robot. Local client records only four because the fifth result poll failed HTTP503 dictionary changed size during iteration; remote_task_snapshot.json confirms fifth command completion and capture.",
+    "The model did not repeat an identical absolute angle. It repeatedly increased pitch because HEAD contact marker/tip was not identified. Action calls were all legal on first attempt.",
+    "usable_head requires panel visible plus full button and full contact tip in HEAD. No hand tools are exposed while this fails. Current progress monitor excludes head motion and does not run during get_view, so this stage has no stagnation-aware recovery.",
+    "Assistant image inspection of the fifth HEAD frame shows the panel/button and both grippers, including a small pale marker on the right outer finger; model HEAD contact detection remains unknown. This is saved-image assistant review, not human confirmation.",
+    "Recorded actual head pitch remains substantially below prior targets even at the next command start 47-65 seconds later. This is not adequately explained by an immediate post-command capture alone.",
+    "Shared executor stops sending head targets when interpolation ends and resumes arm+torso Cartesian holds. With filter control, this is a plausible tracking-loss cause requiring SDK semantics verification; not proven from this audit alone.",
+    "Later read-only SDK file audit confirms final-head-target-to-Cartesian-only handoff in the executor, but readable wrappers do not establish native overwrite semantics. See sdk_head_handoff_audit.json."
+  ],
+  "rows": [
+    {
+      "round": 1,
+      "observation_id": "a713792e553f49b68cd2c647f5191a2a",
+      "phase": "get_view",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -0.7,
+            30
+          ],
+          "reason": "当前头部画面能看到按钮但接触端不可见；略微增加俯仰以获取更完整的面板与手指接触端视图，便于后续判断。"
+        }
+      },
+      "head_measured_deg": [
+        -0.7105963331750885,
+        24.925562091319488
+      ],
+      "measured_pose_m_xyzw": [
+        0.4004691170362126,
+        -0.2710774251499924,
+        1.0463173926362064,
+        0.0015403933663084588,
+        0.005644277268243273,
+        0.7085440822841678,
+        0.7056422980395115
+      ],
+      "command_pose_m_xyzw": [
+        0.40019083954312495,
+        -0.2720880892536258,
+        1.046155151980091,
+        0.002297169857693669,
+        0.00495547558184419,
+        0.7069042555032561,
+        0.7072881589732646
+      ],
+      "view": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "a713792e553f49b68cd2c647f5191a2a",
+        "head": {
+          "button_box": [
+            0.575,
+            0.545,
+            0.61,
+            0.605
+          ],
+          "button_visibility": "partial",
+          "contact_tip": null,
+          "contact_visibility": "not_visible",
+          "note": "Down-call button with downward symbol is visible on the metal panel, but no white arrow marker or finger contact is visible in this view.",
+          "arrow_box": null,
+          "panel_visible": "yes",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "button_box": [
+            0.185,
+            0.08,
+            0.255,
+            0.22
+          ],
+          "button_visibility": "partial",
+          "contact_tip": null,
+          "contact_visibility": "not_visible",
+          "note": "Down-call button with downward symbol is visible on the left metal panel; a white arrow sticker is visible on the right finger but the physical contact front end is not clearly identifiable.",
+          "arrow_box": [
+            0.68,
+            0.78,
+            0.82,
+            0.92
+          ],
+          "panel_visible": "yes",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "action_metrics": {
+        "elapsed_s": 19.066723227966577,
+        "attempts": 1,
+        "prompt_tokens": 9723,
+        "completion_tokens": 161,
+        "validation_failures": 0,
+        "status": "validated"
+      },
+      "view_metrics": {
+        "image_count": 2,
+        "observation_id": "a713792e553f49b68cd2c647f5191a2a",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 1,
+        "validation_failures": 0,
+        "prompt_tokens": 2767,
+        "completion_tokens": 305,
+        "status": "validated",
+        "elapsed_s": 29.216444118879735,
+        "usage": {
+          "prompt_tokens": 2767,
+          "total_tokens": 3072,
+          "completion_tokens": 305,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+          "command_id": "6425dfb8834d420fbfae0b170ea5c9ad",
+          "observation_id": "a713792e553f49b68cd2c647f5191a2a",
+          "type": "head",
+          "head_deg": [
+            -0.7,
+            30
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2"
+        },
+        "completion_basis": "command_interpolation",
+        "started_monotonic_ns": 268943237077409,
+        "completed_monotonic_ns": 268943719051314,
+        "first_state": {
+          "receipt_ns": 268943237407437,
+          "head_deg": [
+            -0.7166068996446998,
+            24.9315726577891
+          ]
+        },
+        "last_state": {
+          "receipt_ns": 268943714488157,
+          "head_deg": [
+            -0.9564831432955476,
+            24.57913489661644
+          ]
+        }
+      }
+    },
+    {
+      "round": 2,
+      "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2",
+      "phase": "get_view",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -0.7,
+            35
+          ],
+          "reason": "头部画面已完整看到按钮，但接触端仍不可见；继续增加俯仰以让手指/箭头接触端进入头部画面，便于建立可用视图。"
+        }
+      },
+      "head_measured_deg": [
+        -0.9756076729715834,
+        25.111889651877437
+      ],
+      "measured_pose_m_xyzw": [
+        0.4004257997015144,
+        -0.2717590045347832,
+        1.045627071453372,
+        0.0019087108648325616,
+        0.006006198459272672,
+        0.7084873953079894,
+        0.7056953259676607
+      ],
+      "command_pose_m_xyzw": [
+        0.40019083954312495,
+        -0.2720880892536258,
+        1.046155151980091,
+        0.002297169857693669,
+        0.00495547558184419,
+        0.7069042555032561,
+        0.7072881589732646
+      ],
+      "view": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2",
+        "head": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "not_visible",
+          "button_box": [
+            0.57,
+            0.54,
+            0.61,
+            0.6
+          ],
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Head shows the elevator down-call button on the panel; no white arrow marker or finger contact is visible in this view.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.18,
+            0.05,
+            0.31,
+            0.25
+          ],
+          "arrow_box": [
+            0.66,
+            0.74,
+            0.82,
+            0.9
+          ],
+          "contact_tip": [
+            0.66,
+            0.86
+          ],
+          "note": "Wrist shows the down-call button on the left panel and a white arrow marker on a finger; the physical finger front end is partially visible near the marker.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "action_metrics": {
+        "elapsed_s": 16.729321372229606,
+        "attempts": 1,
+        "prompt_tokens": 11936,
+        "completion_tokens": 162,
+        "validation_failures": 0,
+        "status": "validated"
+      },
+      "view_metrics": {
+        "image_count": 2,
+        "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 2,
+        "validation_failures": 1,
+        "prompt_tokens": 5843,
+        "completion_tokens": 491,
+        "status": "validated",
+        "elapsed_s": 47.171995729673654,
+        "usage": {
+          "prompt_tokens": 3079,
+          "total_tokens": 3374,
+          "completion_tokens": 295,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "last_validation_error": "invalid_inspect_view_fields"
+      },
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+          "command_id": "20091ff291e348efb807bb32a0132ec5",
+          "observation_id": "ebb4fe5624074540b0d6f1e33db3f6d2",
+          "type": "head",
+          "head_deg": [
+            -0.7,
+            35
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "982596cf3b094fcbb1d7e3d57835feb9"
+        },
+        "completion_basis": "command_interpolation",
+        "started_monotonic_ns": 269008464172696,
+        "completed_monotonic_ns": 269009391535853,
+        "first_state": {
+          "receipt_ns": 269008474862791,
+          "head_deg": [
+            -0.9805254091739924,
+            25.115168142679043
+          ]
+        },
+        "last_state": {
+          "receipt_ns": 269009381249064,
+          "head_deg": [
+            -1.237340521966472,
+            27.482238501438662
+          ]
+        },
+        "seconds_since_previous_head_send_complete": 64.755811477,
+        "previous_head_target_deg": [
+          -0.7,
+          30
+        ]
+      }
+    },
+    {
+      "round": 3,
+      "observation_id": "982596cf3b094fcbb1d7e3d57835feb9",
+      "phase": "get_view",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -0.7,
+            42
+          ],
+          "reason": "头部画面已看到按钮但接触端仍不可见；继续增加俯仰以把下方手指/箭头接触端纳入头部画面，争取可用视图。"
+        }
+      },
+      "head_measured_deg": [
+        -1.2499080700392953,
+        28.82314123929557
+      ],
+      "measured_pose_m_xyzw": [
+        0.40001464402299225,
+        -0.27312283278422755,
+        1.0442657385896212,
+        0.002720224075924739,
+        0.007038487712270743,
+        0.7076271457065539,
+        0.706545740013268
+      ],
+      "command_pose_m_xyzw": [
+        0.40019083954312495,
+        -0.2720880892536258,
+        1.046155151980091,
+        0.002297169857693669,
+        0.00495547558184419,
+        0.7069042555032561,
+        0.7072881589732646
+      ],
+      "view": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "982596cf3b094fcbb1d7e3d57835feb9",
+        "head": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "not_visible",
+          "button_box": [
+            0.565,
+            0.47,
+            0.605,
+            0.535
+          ],
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Down-call button face is visible on the metal panel; no white arrow marker or clear finger contact end is visible in this view.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.18,
+            0.07,
+            0.27,
+            0.21
+          ],
+          "arrow_box": [
+            0.68,
+            0.78,
+            0.82,
+            0.93
+          ],
+          "contact_tip": [
+            0.68,
+            0.82
+          ],
+          "note": "Down-call button face is visible on the left metal panel; a white/cream arrow marker is on the right gripper/finger, but the physical contact front end is only partially identifiable.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "action_metrics": {
+        "elapsed_s": 16.727903557009995,
+        "attempts": 1,
+        "prompt_tokens": 14159,
+        "completion_tokens": 159,
+        "validation_failures": 0,
+        "status": "validated"
+      },
+      "view_metrics": {
+        "image_count": 2,
+        "observation_id": "982596cf3b094fcbb1d7e3d57835feb9",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 1,
+        "validation_failures": 0,
+        "prompt_tokens": 2763,
+        "completion_tokens": 307,
+        "status": "validated",
+        "elapsed_s": 29.59075593110174,
+        "usage": {
+          "prompt_tokens": 2763,
+          "total_tokens": 3070,
+          "completion_tokens": 307,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+          "command_id": "c1a1ca42e45e45499a5c4dafc3ca1a08",
+          "observation_id": "982596cf3b094fcbb1d7e3d57835feb9",
+          "type": "head",
+          "head_deg": [
+            -0.7,
+            42
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74"
+        },
+        "completion_basis": "command_interpolation",
+        "started_monotonic_ns": 269056849057467,
+        "completed_monotonic_ns": 269058085314074,
+        "first_state": {
+          "receipt_ns": 269056858002285,
+          "head_deg": [
+            -1.2553722213753056,
+            28.8406265235708
+          ]
+        },
+        "last_state": {
+          "receipt_ns": 269058083035249,
+          "head_deg": [
+            -1.3138386406706146,
+            33.51575440666113
+          ]
+        },
+        "seconds_since_previous_head_send_complete": 47.466466432,
+        "previous_head_target_deg": [
+          -0.7,
+          35
+        ]
+      }
+    },
+    {
+      "round": 4,
+      "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+      "phase": "get_view",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -0.7,
+            48
+          ],
+          "reason": "头部画面已看到按钮和下方手指，但箭头/接触端仍不可辨；继续增加俯仰以把带箭头的手指前端纳入头部画面。"
+        }
+      },
+      "head_measured_deg": [
+        -1.2799609023873515,
+        34.23210464681207
+      ],
+      "measured_pose_m_xyzw": [
+        0.39988839384928354,
+        -0.27331225408394016,
+        1.0440969300283032,
+        0.0028712921107448184,
+        0.007176505463033078,
+        0.7074413541542041,
+        0.7067297813757532
+      ],
+      "command_pose_m_xyzw": [
+        0.40019083954312495,
+        -0.2720880892536258,
+        1.046155151980091,
+        0.002297169857693669,
+        0.00495547558184419,
+        0.7069042555032561,
+        0.7072881589732646
+      ],
+      "view": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+        "head": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "not_visible",
+          "button_box": [
+            0.56,
+            0.36,
+            0.61,
+            0.43
+          ],
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Down-call button visible on panel; no white arrow marker or clear contact tip in head view.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.16,
+            0.02,
+            0.31,
+            0.42
+          ],
+          "arrow_box": [
+            0.66,
+            0.72,
+            0.82,
+            0.92
+          ],
+          "contact_tip": [
+            0.72,
+            0.82
+          ],
+          "note": "Down-call button visible upper-left; white arrow marker on right finger, physical contact front end near marker tip.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "action_metrics": {
+        "elapsed_s": 16.774198271799833,
+        "attempts": 1,
+        "prompt_tokens": 16355,
+        "completion_tokens": 159,
+        "validation_failures": 0,
+        "status": "validated"
+      },
+      "view_metrics": {
+        "image_count": 2,
+        "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 2,
+        "validation_failures": 1,
+        "prompt_tokens": 5835,
+        "completion_tokens": 472,
+        "status": "validated",
+        "elapsed_s": 45.56916255597025,
+        "usage": {
+          "prompt_tokens": 3072,
+          "total_tokens": 3353,
+          "completion_tokens": 281,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "last_validation_error": "invalid_inspect_view_fields"
+      },
+      "execution": {
+        "status": "completed",
+        "request": {
+          "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+          "command_id": "36a505fbfcaa424fb978316c67358614",
+          "observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+          "type": "head",
+          "head_deg": [
+            -0.7,
+            48
+          ]
+        },
+        "capture": {
+          "status": "complete",
+          "observation_id": "981630409f1349a2a93a53a23eb19399"
+        },
+        "completion_basis": "command_interpolation",
+        "started_monotonic_ns": 269121498990417,
+        "completed_monotonic_ns": 269122749751707,
+        "first_state": {
+          "receipt_ns": 269121533880507,
+          "head_deg": [
+            -1.319849207140226,
+            34.69437184983853
+          ]
+        },
+        "last_state": {
+          "receipt_ns": 269122742030768,
+          "head_deg": [
+            -1.4504424240708698,
+            39.35474652432163
+          ]
+        },
+        "seconds_since_previous_head_send_complete": 63.448566433,
+        "previous_head_target_deg": [
+          -0.7,
+          42
+        ]
+      }
+    },
+    {
+      "round": 5,
+      "observation_id": "981630409f1349a2a93a53a23eb19399",
+      "phase": "get_view",
+      "proposal": {
+        "name": "propose_head",
+        "arguments": {
+          "head_deg": [
+            -0.7,
+            55
+          ],
+          "reason": "头部画面已看到按钮和下方手指，但箭头/接触端仍不可辨；继续增加俯仰以把带箭头的手指前端纳入头部画面。"
+        }
+      },
+      "head_measured_deg": [
+        -1.4449782727348595,
+        40.334468858868256
+      ],
+      "measured_pose_m_xyzw": [
+        0.39965020729125905,
+        -0.2725920375530083,
+        1.0443812414659162,
+        0.002719172633301057,
+        0.00725097702177123,
+        0.7075343092739171,
+        0.7066365619133368
+      ],
+      "command_pose_m_xyzw": [
+        0.40019083954312495,
+        -0.2720880892536258,
+        1.046155151980091,
+        0.002297169857693669,
+        0.00495547558184419,
+        0.7069042555032561,
+        0.7072881589732646
+      ],
+      "view": {
+        "format": "pressb-view-acquisition-v1",
+        "source": "model_not_human",
+        "observation_id": "981630409f1349a2a93a53a23eb19399",
+        "head": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "unknown",
+          "button_box": [
+            0.56,
+            0.25,
+            0.61,
+            0.32
+          ],
+          "arrow_box": null,
+          "contact_tip": null,
+          "note": "Down-call button visible on metal panel; no clear white arrow marker or identifiable finger contact end in head view.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "wrist": {
+          "panel_visible": "yes",
+          "button_visibility": "full",
+          "contact_visibility": "partial",
+          "button_box": [
+            0.18,
+            0.08,
+            0.27,
+            0.22
+          ],
+          "arrow_box": [
+            0.66,
+            0.74,
+            0.82,
+            0.92
+          ],
+          "contact_tip": [
+            0.66,
+            0.86
+          ],
+          "note": "Down-call button visible upper-left; white arrow marker on right finger, physical finger front end near marker tip but not fully clear.",
+          "derived_relation": {
+            "vertical": "unknown",
+            "horizontal": "unknown",
+            "dx": null,
+            "dy": null,
+            "units": "normalized_image",
+            "tolerance": 0.01
+          }
+        },
+        "usable_head": false
+      },
+      "action_metrics": {
+        "elapsed_s": 17.302174537908286,
+        "attempts": 1,
+        "prompt_tokens": 18577,
+        "completion_tokens": 163,
+        "validation_failures": 0,
+        "status": "validated"
+      },
+      "view_metrics": {
+        "image_count": 2,
+        "observation_id": "981630409f1349a2a93a53a23eb19399",
+        "previous_observation_id": null,
+        "tool": "inspect_view",
+        "attempts": 1,
+        "validation_failures": 0,
+        "prompt_tokens": 2767,
+        "completion_tokens": 291,
+        "status": "validated",
+        "elapsed_s": 28.146045371890068,
+        "usage": {
+          "prompt_tokens": 2767,
+          "total_tokens": 3058,
+          "completion_tokens": 291,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "execution": {
+        "status": "no_result_record",
+        "error": {
+          "stage": "round",
+          "error_type": "ValueError",
+          "error": "HTTP 503: {\n  \"error\": \"dictionary changed size during iteration\"\n}"
+        }
+      },
+      "remote_execution_confirmation": {
+        "file": "/home/astribot/.local/share/pressb/agent_sessions/a8794637fecb49ab98492fcd8216d2e8/tasks/1a0ab76337a04bc4a997481c492ef512.json",
+        "task_id": "1a0ab76337a04bc4a997481c492ef512",
+        "command_id": "e8e33ff31be443a18622c3ae6558eb35",
+        "request": {
+          "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+          "command_id": "e8e33ff31be443a18622c3ae6558eb35",
+          "observation_id": "981630409f1349a2a93a53a23eb19399",
+          "type": "head",
+          "head_deg": [
+            -0.7,
+            55
+          ]
+        },
+        "status": "completed",
+        "phase": "READY",
+        "error": null,
+        "capture": {
+          "status": "complete",
+          "observation_id": "4438ad63a1d14eb4b00f800aa279eadc"
+        },
+        "motion": {
+          "action_completed": true,
+          "head_deg": [
+            -1.4438854424676575,
+            46.46087533680289
+          ],
+          "started_monotonic_ns": 269169430725334,
+          "completed_monotonic_ns": 269170757366893
+        }
+      }
+    }
+  ],
+  "recommendations": [
+    "Separate task-appropriate HEAD global panel framing from WRIST contact localization; do not require the tiny marker to be independently full/clear in HEAD as the sole prerequisite for all hand alignment.",
+    "Add measurable get_view progress tracking: whether new required content becomes visible and whether actual head pose changes toward the commanded pose. Different pitch commands can still form a futile search loop.",
+    "Diagnose the head target handoff/hold behavior in the shared executor, preserving keyboard/Agent parity. Do not pretend sent completion equals reached pose or apply an unverified fixed settle delay.",
+    "Keep live image bindings and partial/unknown provenance explicit; use frozen artifacts for checking the detector, without additional robot motion."
+  ]
+}

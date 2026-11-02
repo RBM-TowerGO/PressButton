@@ -1,0 +1,179 @@
+{
+  "robot_connected": false,
+  "commands_sent": 0,
+  "model_only": true,
+  "cases": [
+    {
+      "case": "before_round_10",
+      "assessment": {
+        "format": "pressb-progress-review-v1",
+        "source": "model_not_human",
+        "evidence_observation_ids": [
+          "85292cda89a44b3fa71be53ce848e1a0",
+          "1b833be64d8f4f30b6d9c4d343538b5a"
+        ],
+        "observation_id": "1b833be64d8f4f30b6d9c4d343538b5a",
+        "previous_observation_id": "85292cda89a44b3fa71be53ce848e1a0",
+        "comparison_view": "wrist",
+        "head_vertical": "unknown",
+        "head_horizontal": "unknown",
+        "wrist_vertical": "level",
+        "wrist_horizontal": "center",
+        "vertical_change": "unchanged",
+        "horizontal_change": "unchanged",
+        "approach_change": "unchanged",
+        "note": "Wrist view shows the down-call button and red marker in both frames; button center remains roughly level/center relative to the marked contact end with no discernible change in projection offset or approach."
+      },
+      "archived_next_proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "升+Z后按钮仍高于红色标记，继续升+Z使按钮下移到与标记同高，便于水平对齐。"
+        }
+      },
+      "continuation_errors": [
+        "repeat_Z_unsupported_by_review:unchanged",
+        "repeat_Z_alignment_reached_or_unknown:level"
+      ],
+      "metrics": {
+        "image_count": 4,
+        "observation_id": "1b833be64d8f4f30b6d9c4d343538b5a",
+        "previous_observation_id": "85292cda89a44b3fa71be53ce848e1a0",
+        "tool": "review_progress",
+        "attempts": 1,
+        "prompt_tokens": 3447,
+        "completion_tokens": 257,
+        "usage": {
+          "prompt_tokens": 3447,
+          "total_tokens": 3704,
+          "completion_tokens": 257,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 25.543442358262837
+      }
+    },
+    {
+      "case": "before_round_19",
+      "assessment": {
+        "format": "pressb-progress-review-v1",
+        "source": "model_not_human",
+        "evidence_observation_ids": [
+          "fb2b79422cb84b40b12fcb4bb38ab2a4",
+          "02bbfd18cc3b45e091c3d6d9e2971c79"
+        ],
+        "observation_id": "02bbfd18cc3b45e091c3d6d9e2971c79",
+        "previous_observation_id": "fb2b79422cb84b40b12fcb4bb38ab2a4",
+        "comparison_view": "wrist",
+        "head_vertical": "unknown",
+        "head_horizontal": "unknown",
+        "wrist_vertical": "level",
+        "wrist_horizontal": "center",
+        "vertical_change": "unchanged",
+        "horizontal_change": "unchanged",
+        "approach_change": "unchanged",
+        "note": "In the wrist view the down-call button and the red-marked finger contact end are identifiable in both frames. The button center remains approximately level with and centered relative to the marked contact end in both BEFORE and CURRENT, with no discernible change in projection offset or visible approach/separation. The head view is too hazy/reflective to reliably identify the button and contact reference, so comparison is based on the wrist view."
+      },
+      "archived_next_proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "升+Z后按钮仍高于红色标记，继续升+Z使按钮下移到与标记同高，便于水平对齐。"
+        }
+      },
+      "continuation_errors": [
+        "repeat_Z_unsupported_by_review:unchanged",
+        "repeat_Z_alignment_reached_or_unknown:level"
+      ],
+      "metrics": {
+        "image_count": 4,
+        "observation_id": "02bbfd18cc3b45e091c3d6d9e2971c79",
+        "previous_observation_id": "fb2b79422cb84b40b12fcb4bb38ab2a4",
+        "tool": "review_progress",
+        "attempts": 1,
+        "prompt_tokens": 3444,
+        "completion_tokens": 300,
+        "usage": {
+          "prompt_tokens": 3444,
+          "total_tokens": 3744,
+          "completion_tokens": 300,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 29.466310659889132
+      }
+    },
+    {
+      "case": "before_round_20",
+      "assessment": {
+        "format": "pressb-progress-review-v1",
+        "source": "model_not_human",
+        "evidence_observation_ids": [
+          "02bbfd18cc3b45e091c3d6d9e2971c79",
+          "33520cc1b13b43eb837a2e93ef175050"
+        ],
+        "observation_id": "33520cc1b13b43eb837a2e93ef175050",
+        "previous_observation_id": "02bbfd18cc3b45e091c3d6d9e2971c79",
+        "comparison_view": "wrist",
+        "head_vertical": "unknown",
+        "head_horizontal": "unknown",
+        "wrist_vertical": "level",
+        "wrist_horizontal": "right",
+        "vertical_change": "unchanged",
+        "horizontal_change": "unchanged",
+        "approach_change": "unchanged",
+        "note": "In the wrist view, the down-call button and the red-marked finger contact end are identifiable in both BEFORE and CURRENT. The button center appears at roughly the same row as the red marker (level) and to the right of it in both frames; the offset looks essentially unchanged. The head view is too hazy/reflective to reliably identify the button and contact end, so head relations are unknown."
+      },
+      "archived_next_proposal": {
+        "name": "propose_move",
+        "arguments": {
+          "xyz_mm": [
+            0,
+            0,
+            10
+          ],
+          "reason": "升+Z后按钮仍高于红色标记，继续升+Z使按钮下移到与标记同高，便于水平对齐。"
+        }
+      },
+      "continuation_errors": [
+        "repeat_Z_unsupported_by_review:unchanged",
+        "repeat_Z_alignment_reached_or_unknown:level"
+      ],
+      "metrics": {
+        "image_count": 4,
+        "observation_id": "33520cc1b13b43eb837a2e93ef175050",
+        "previous_observation_id": "02bbfd18cc3b45e091c3d6d9e2971c79",
+        "tool": "review_progress",
+        "attempts": 1,
+        "prompt_tokens": 3446,
+        "completion_tokens": 299,
+        "usage": {
+          "prompt_tokens": 3446,
+          "total_tokens": 3745,
+          "completion_tokens": 299,
+          "prompt_tokens_details": null,
+          "completion_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        },
+        "elapsed_s": 29.20777497906238
+      }
+    }
+  ],
+  "limitation": "Archived later frames are actual old-run outcomes, never outcomes of new model suggestions.",
+  "status": "error",
+  "error_type": "ValueError",
+  "error": "invalid_model_proposal:progress_reassessment_required: repeat_Z_unsupported_by_review:unchanged; repeat_Z_alignment_reached_or_unknown:level; progress_contradicts_current_review:vertical=level. The candidate was NOT executed. Consume DIRECT_PROGRESS_REVIEW and choose a supported new action, improve the view, reobserve, or report unable. Do not repeat an unsupported same-axis direction."
+}

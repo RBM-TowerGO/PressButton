@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-ae495ee362ebaa9b",
+  "object": "chat.completion",
+  "created": 1793540967,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-a8ed186f5ff98c85",
+            "type": "function",
+            "function": {
+              "name": "propose_move",
+              "arguments": "{\"xyz_mm\": [5.0, 0.0, 0.0], \"reason\": \"LIVE head shows the open gripper finger aligned near the down-call button; wrist view shows the button between the open fingers close to contact. Move forward +5 mm to bring the right open-gripper finger into contact with the button face, following the demo's fine forward press. Remaining height/lateral alignment will be rechecked after this move; no activation light is visible yet.\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 50146,
+    "total_tokens": 50277,
+    "completion_tokens": 131,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

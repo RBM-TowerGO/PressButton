@@ -1,0 +1,53 @@
+{
+  "format": "pressb-view-acquisition-v1",
+  "source": "model_not_human",
+  "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+  "head": {
+    "panel_visible": "no",
+    "button_visibility": "not_visible",
+    "contact_visibility": "not_visible",
+    "button_box": null,
+    "arrow_box": null,
+    "contact_tip": null,
+    "note": "Head view shows a reflective wall and robot reflection; no clear elevator down-call button or white arrow marker is visible.",
+    "derived_relation": {
+      "vertical": "unknown",
+      "horizontal": "unknown",
+      "dx": null,
+      "dy": null,
+      "units": "normalized_image",
+      "tolerance": 0.01
+    }
+  },
+  "wrist": {
+    "panel_visible": "yes",
+    "button_visibility": "full",
+    "contact_visibility": "partial",
+    "button_box": [
+      0.585,
+      0.235,
+      0.665,
+      0.375
+    ],
+    "arrow_box": [
+      0.735,
+      0.735,
+      0.865,
+      0.875
+    ],
+    "contact_tip": [
+      0.735,
+      0.785
+    ],
+    "note": "Wrist view shows a round elevator down-call button on the metal panel and a white/cream arrow marker on the right finger; the physical finger front end is partly visible near the marker.",
+    "derived_relation": {
+      "vertical": "unknown",
+      "horizontal": "unknown",
+      "dx": null,
+      "dy": null,
+      "units": "normalized_image",
+      "tolerance": 0.01
+    }
+  },
+  "usable_head": false
+}

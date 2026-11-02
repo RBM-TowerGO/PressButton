@@ -1,0 +1,624 @@
+{
+  "sources": {
+    "A": {
+      "run": "20261102_120741_0ca36af5",
+      "round": 8,
+      "observation_id": "f31cc38545bf422b980a9196c7a4ebbd",
+      "target_xy": [
+        420,
+        117
+      ],
+      "physical_tip_xy": [
+        470,
+        280
+      ],
+      "crop_box": [
+        345,
+        75,
+        590,
+        350
+      ],
+      "source": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_120741_0ca36af5/agent/observations/f31cc38545bf422b980a9196c7a4ebbd/right.jpg",
+      "sha256": "75ea8658fe3c8520019f5bfd85a7e9a6eae4e065bb74ff922489cc6fb2f7fcfb",
+      "size": [
+        640,
+        360
+      ],
+      "annotation_source": "assistant_visual_review_before_requests_not_operator_label_or_calibration",
+      "annotation_uncertainty": "Approximate 2D button center and physical finger front end; not calibrated contact coordinates."
+    },
+    "B": {
+      "run": "20261102_142505_13668097",
+      "round": 5,
+      "observation_id": "981630409f1349a2a93a53a23eb19399",
+      "target_xy": [
+        164,
+        60
+      ],
+      "physical_tip_xy": [
+        470,
+        280
+      ],
+      "crop_box": [
+        115,
+        20,
+        565,
+        350
+      ],
+      "source": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_142505_13668097/agent/observations/981630409f1349a2a93a53a23eb19399/right.jpg",
+      "sha256": "5e4c2c464af64437bcf10e86f2c25b510f52adef06754ba1af18d83de3b3f731",
+      "size": [
+        640,
+        360
+      ],
+      "annotation_source": "assistant_visual_review_before_requests_not_operator_label_or_calibration",
+      "annotation_uncertainty": "Approximate 2D button center and physical finger front end; not calibrated contact coordinates."
+    }
+  },
+  "conditions": [
+    {
+      "name": "A_button_point",
+      "mode": "point",
+      "stimulus": "A_full1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          420,
+          117
+        ],
+        "point_box": [
+          410,
+          107,
+          430,
+          127
+        ]
+      },
+      "prompt": "Locate the center of the circular elevator button face. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "A_tip_point",
+      "mode": "point",
+      "stimulus": "A_full1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          470,
+          280
+        ],
+        "point_box": [
+          460,
+          260,
+          490,
+          297
+        ]
+      },
+      "prompt": "Locate the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "B_button_point",
+      "mode": "point",
+      "stimulus": "B_full1x",
+      "frame": "B",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          164,
+          60
+        ],
+        "point_box": [
+          154,
+          50,
+          174,
+          70
+        ]
+      },
+      "prompt": "Locate the center of the circular elevator button face. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "B_tip_point",
+      "mode": "point",
+      "stimulus": "B_full1x",
+      "frame": "B",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          470,
+          280
+        ],
+        "point_box": [
+          460,
+          260,
+          490,
+          297
+        ]
+      },
+      "prompt": "Locate the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "A_relation",
+      "mode": "relation",
+      "stimulus": "A_full1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "A_reverse_relation",
+      "mode": "relation",
+      "stimulus": "A_full1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. REFERENCE: the center of the circular elevator button face. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "A_combined_points_relation",
+      "mode": "combined",
+      "stimulus": "A_full1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "target_point": [
+          420,
+          117
+        ],
+        "reference_point": [
+          470,
+          280
+        ],
+        "target_point_box": [
+          410,
+          107,
+          430,
+          127
+        ],
+        "reference_point_box": [
+          460,
+          260,
+          490,
+          297
+        ],
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Return target_point and reference_point as normalized coordinates, and vertical and horizontal relations describing TARGET relative to REFERENCE."
+    },
+    {
+      "name": "B_combined_points_relation",
+      "mode": "combined",
+      "stimulus": "B_full1x",
+      "frame": "B",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "target_point": [
+          164,
+          60
+        ],
+        "reference_point": [
+          470,
+          280
+        ],
+        "target_point_box": [
+          154,
+          50,
+          174,
+          70
+        ],
+        "reference_point_box": [
+          460,
+          260,
+          490,
+          297
+        ],
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Return target_point and reference_point as normalized coordinates, and vertical and horizontal relations describing TARGET relative to REFERENCE."
+    },
+    {
+      "name": "A_full2x_relation",
+      "mode": "relation",
+      "stimulus": "A_full2x",
+      "frame": "A",
+      "scale": 2,
+      "image_size": [
+        1280,
+        720
+      ],
+      "transform": {
+        "scale": 2,
+        "crop": null
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "A_crop1x_relation",
+      "mode": "relation",
+      "stimulus": "A_crop1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        245,
+        275
+      ],
+      "transform": {
+        "scale": 1,
+        "crop": [
+          345,
+          75,
+          590,
+          350
+        ]
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "A_crop2x_relation",
+      "mode": "relation",
+      "stimulus": "A_crop2x",
+      "frame": "A",
+      "scale": 2,
+      "image_size": [
+        490,
+        550
+      ],
+      "transform": {
+        "scale": 2,
+        "crop": [
+          345,
+          75,
+          590,
+          350
+        ]
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "A_gray_outside_ROI_relation",
+      "mode": "relation",
+      "stimulus": "A_gray_outside_ROI",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": {
+        "outside_ROI": "RGB128",
+        "ROI": [
+          345,
+          75,
+          590,
+          350
+        ],
+        "original_ROI_pixels_and_positions": true
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "large_photo_ocr",
+      "mode": "ocr",
+      "stimulus": "large_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "magenta_label": "T",
+        "cyan_label": "P"
+      },
+      "prompt": "Read the letter next to the MAGENTA dot and the letter next to the CYAN dot. Return magenta_label and cyan_label. Do not report positions or object names. If unreadable, use null."
+    },
+    {
+      "name": "large_photo_T_point",
+      "mode": "point",
+      "stimulus": "large_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          420,
+          117
+        ]
+      },
+      "prompt": "Locate the center of the colored dot labelled T. Use the dot center, not the letter center. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "large_photo_P_point",
+      "mode": "point",
+      "stimulus": "large_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          470,
+          280
+        ]
+      },
+      "prompt": "Locate the center of the colored dot labelled P. Use the dot center, not the letter center. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "large_photo_relation",
+      "mode": "relation",
+      "stimulus": "large_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "large_photo_reverse",
+      "mode": "relation",
+      "stimulus": "large_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET: center of the colored dot labelled P. REFERENCE: center of the colored dot labelled T. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "swapped_photo_relation",
+      "mode": "relation",
+      "stimulus": "swapped_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "only_letters_T_and_P_exchanged; colors_and_points_unchanged",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "blank_large_relation",
+      "mode": "relation",
+      "stimulus": "blank_large",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "same_markers_and_letters_on_RGB128_background",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    },
+    {
+      "name": "numeric_from_A_predicted_points",
+      "mode": "relation",
+      "frame": "A",
+      "stimulus": null,
+      "expected": {},
+      "dependencies": [
+        "A_button_point",
+        "A_tip_point"
+      ],
+      "adaptive_rule": "Use the exact first-response normalized points from the two dependencies; skip without a request if either is null or invalid.",
+      "prompt_template": "TARGET T={A_button_point}; REFERENCE P={A_tip_point}; coordinates x right, y down. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "transform": "text_only_declared_dependency"
+    },
+    {
+      "name": "swapped_photo_ocr",
+      "mode": "ocr",
+      "stimulus": "swapped_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "magenta_label": "P",
+        "cyan_label": "T"
+      },
+      "prompt": "Read the letter next to the MAGENTA dot and the letter next to the CYAN dot. Return magenta_label and cyan_label. Do not report positions or object names. If unreadable, use null."
+    },
+    {
+      "name": "swapped_photo_T_point",
+      "mode": "point",
+      "stimulus": "swapped_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          470,
+          280
+        ]
+      },
+      "prompt": "Locate the center of the colored dot labelled T. Use the dot center, not the letter center. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "swapped_photo_P_point",
+      "mode": "point",
+      "stimulus": "swapped_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "point": [
+          420,
+          117
+        ]
+      },
+      "prompt": "Locate the center of the colored dot labelled P. Use the dot center, not the letter center. Return only its normalized point, or null if uncertain."
+    },
+    {
+      "name": "prior_small_TP_ocr",
+      "mode": "ocr",
+      "stimulus": "prior_small_TP",
+      "frame": "A",
+      "image_size": [
+        640,
+        360
+      ],
+      "scale": 1,
+      "transform": "exact_previous_stimulus_bytes",
+      "source": "/home/js/robot/VLA/PressButton/docs/report/20261102_capability_bottleneck/probes/images/28a42c509c9a8b312532aa80fc6b2ea36089892a9fd0ee7b71634a3933b35783.jpg",
+      "sha256": "28a42c509c9a8b312532aa80fc6b2ea36089892a9fd0ee7b71634a3933b35783",
+      "expected": {
+        "magenta_label": "T",
+        "cyan_label": "P"
+      },
+      "prompt": "Read the letter next to the MAGENTA dot and the letter next to the CYAN dot. Return magenta_label and cyan_label. Do not report positions or object names. If unreadable, use null."
+    },
+    {
+      "name": "A_translated_ROI_relation",
+      "mode": "relation",
+      "stimulus": "A_translated_ROI",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": {
+        "source_ROI": [
+          345,
+          75,
+          590,
+          350
+        ],
+        "destination_left_top": [
+          10,
+          75
+        ],
+        "delta": [
+          -335,
+          0
+        ],
+        "canvas_size": [
+          640,
+          360
+        ],
+        "original_ROI_pixels_preserved": true
+      },
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations."
+    }
+  ],
+  "predeclared_before_requests": true,
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "design_limits": [
+    "Selected saved frames and diagnostic stimuli; no population accuracy estimate.",
+    "Manual source coordinates are approximate assistant annotations, not calibrated physical contact.",
+    "Each first response is retained; no correction, best-response selection or silent retries.",
+    "No robot client is constructed and no command is executed.",
+    "Correct coordinate arithmetic does not prove visual identification or 3D understanding.",
+    "PNG derivatives avoid additional JPEG compression but cannot restore lost source information.",
+    "Synthetic marker and label tasks are distinct from natural-object tasks."
+  ]
+}

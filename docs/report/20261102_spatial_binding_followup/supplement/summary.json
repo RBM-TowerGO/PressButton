@@ -1,0 +1,443 @@
+{
+  "post_initial_result_supplement": true,
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "model_only": true,
+  "thinking": false,
+  "max_tokens": 384,
+  "results": [
+    {
+      "name": "swapped_photo_relation_repeat1",
+      "mode": "relation",
+      "stimulus": "swapped_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "only_letters_T_and_P_exchanged; colors_and_points_unchanged",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "repeat_of": "/home/js/robot/VLA/PressButton/docs/report/20261102_spatial_binding_followup/probes/cases/swapped_photo_relation",
+      "elapsed_s": 4.049813183024526,
+      "usage": {
+        "prompt_tokens": 735,
+        "total_tokens": 775,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "vertical_correct": false,
+      "horizontal_correct": false,
+      "relation_correct": false
+    },
+    {
+      "name": "swapped_photo_relation_repeat2",
+      "mode": "relation",
+      "stimulus": "swapped_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "only_letters_T_and_P_exchanged; colors_and_points_unchanged",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "repeat_of": "/home/js/robot/VLA/PressButton/docs/report/20261102_spatial_binding_followup/probes/cases/swapped_photo_relation",
+      "elapsed_s": 3.9753579939715564,
+      "usage": {
+        "prompt_tokens": 735,
+        "total_tokens": 775,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "vertical_correct": false,
+      "horizontal_correct": false,
+      "relation_correct": false
+    },
+    {
+      "name": "large_photo_relation_repeat",
+      "mode": "relation",
+      "stimulus": "large_photo",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "repeat_of": "/home/js/robot/VLA/PressButton/docs/report/20261102_spatial_binding_followup/probes/cases/large_photo_relation",
+      "elapsed_s": 4.058400683104992,
+      "usage": {
+        "prompt_tokens": 735,
+        "total_tokens": 775,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_correct": true
+    },
+    {
+      "name": "A_relation_repeat",
+      "mode": "relation",
+      "stimulus": "A_full1x",
+      "frame": "A",
+      "scale": 1,
+      "image_size": [
+        640,
+        360
+      ],
+      "transform": "none",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "repeat_of": "/home/js/robot/VLA/PressButton/docs/report/20261102_spatial_binding_followup/probes/cases/A_relation",
+      "elapsed_s": 3.988384509924799,
+      "usage": {
+        "prompt_tokens": 742,
+        "total_tokens": 782,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": false,
+      "relation_correct": false
+    },
+    {
+      "name": "swapped_photo_combined_points_relation",
+      "mode": "combined",
+      "frame": "A",
+      "image_size": [
+        640,
+        360
+      ],
+      "scale": 1,
+      "stimulus": "existing_swapped_photo",
+      "expected": {
+        "target_point": [
+          470,
+          280
+        ],
+        "reference_point": [
+          420,
+          117
+        ],
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Return target_point and reference_point as normalized coordinates, and vertical and horizontal relations describing TARGET relative to REFERENCE.",
+      "elapsed_s": 9.36944156838581,
+      "usage": {
+        "prompt_tokens": 921,
+        "total_tokens": 1016,
+        "completion_tokens": 95,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "target_point": {
+          "x": 735,
+          "y": 770
+        },
+        "reference_point": {
+          "x": 655,
+          "y": 315
+        },
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_correct": true,
+      "target_point_pixel_xy": [
+        469.66499999999996,
+        276.43
+      ],
+      "target_point_signed_error_xy_px": [
+        -0.3350000000000364,
+        -3.569999999999993
+      ],
+      "target_point_error_px": 3.58568333794271,
+      "target_point_source_error_px": 3.58568333794271,
+      "reference_point_pixel_xy": [
+        418.545,
+        113.085
+      ],
+      "reference_point_signed_error_xy_px": [
+        -1.454999999999984,
+        -3.9150000000000063
+      ],
+      "reference_point_error_px": 4.17663141778156,
+      "reference_point_source_error_px": 4.17663141778156,
+      "relation_from_own_points": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "relation_agrees_with_own_points": true
+    },
+    {
+      "name": "swapped_photo_color_relation",
+      "mode": "relation",
+      "frame": "A",
+      "image_size": [
+        640,
+        360
+      ],
+      "scale": 1,
+      "stimulus": "existing_swapped_photo",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET: center of the CYAN dot. REFERENCE: center of the MAGENTA dot. Compare only these colored points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "elapsed_s": 4.014118197839707,
+      "usage": {
+        "prompt_tokens": 721,
+        "total_tokens": 761,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_correct": true
+    },
+    {
+      "name": "blank_swapped_relation",
+      "mode": "relation",
+      "frame": "A",
+      "image_size": [
+        640,
+        360
+      ],
+      "scale": 1,
+      "stimulus": "blank_swapped",
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "TARGET T: center of the colored dot labelled T. REFERENCE P: center of the colored dot labelled P. Use the dot centers, not the letter centers; compare only these annotated points. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "elapsed_s": 3.9959756643511355,
+      "usage": {
+        "prompt_tokens": 735,
+        "total_tokens": 775,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_correct": true
+    },
+    {
+      "name": "numeric_from_swapped_predicted_points",
+      "mode": "relation",
+      "frame": "A",
+      "stimulus": null,
+      "dependencies": {
+        "source_run": "/home/js/robot/VLA/PressButton/docs/report/20261102_spatial_binding_followup/probes",
+        "prior_predictions": {
+          "T": {
+            "x": 736,
+            "y": 775
+          },
+          "P": {
+            "x": 657,
+            "y": 317
+          }
+        }
+      },
+      "expected": {
+        "vertical": "below",
+        "horizontal": "right"
+      },
+      "prompt": "Use only these numeric coordinates, no image or object identification: TARGET T={\"x\": 736, \"y\": 775}; REFERENCE P={\"x\": 657, \"y\": 317}; both use x increasing right and y increasing down. Compare TARGET relative to REFERENCE. Output only vertical and horizontal relations.",
+      "elapsed_s": 3.9606359899044037,
+      "usage": {
+        "prompt_tokens": 529,
+        "total_tokens": 569,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "right",
+        "vertical": "below"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_correct": true
+    },
+    {
+      "name": "A_mask_other_finger_relation",
+      "mode": "relation",
+      "frame": "A",
+      "image_size": [
+        640,
+        360
+      ],
+      "scale": 1,
+      "stimulus": "A_mask_other_finger_relation",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "mask_box_exclusive_right_bottom": [
+        0,
+        250,
+        250,
+        360
+      ],
+      "mask_area_px": 27500,
+      "rationale": "mask_left_other_finger",
+      "target_and_arrow_tip_outside_mask": true,
+      "elapsed_s": 4.147089280188084,
+      "usage": {
+        "prompt_tokens": 742,
+        "total_tokens": 782,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "vertical": "above",
+        "horizontal": "right"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": false,
+      "relation_correct": false
+    },
+    {
+      "name": "A_mask_background_control_relation",
+      "mode": "relation",
+      "frame": "A",
+      "image_size": [
+        640,
+        360
+      ],
+      "scale": 1,
+      "stimulus": "A_mask_background_control_relation",
+      "expected": {
+        "vertical": "above",
+        "horizontal": "left"
+      },
+      "prompt": "TARGET T: the center of the circular elevator button face. REFERENCE P: the physical finger front end indicated by the WHITE ARROW STICKER; use that physical end, not the sticker center and not the other finger. Compare TARGET relative to REFERENCE in the image plane. Output only vertical and horizontal relations.",
+      "mask_box_exclusive_right_bottom": [
+        0,
+        0,
+        250,
+        110
+      ],
+      "mask_area_px": 27500,
+      "rationale": "equal_area_background_mask_keep_both_fingers",
+      "target_and_arrow_tip_outside_mask": true,
+      "elapsed_s": 4.0633238847367465,
+      "usage": {
+        "prompt_tokens": 742,
+        "total_tokens": 782,
+        "completion_tokens": 40,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "parsed": {
+        "horizontal": "left",
+        "vertical": "above"
+      },
+      "format_valid": true,
+      "vertical_correct": true,
+      "horizontal_correct": true,
+      "relation_correct": true
+    }
+  ],
+  "status": "completed",
+  "totals": {
+    "requests": 10,
+    "prompt_tokens": 7337,
+    "completion_tokens": 455,
+    "elapsed_s": 45.62254095543176,
+    "format_valid": 10
+  }
+}

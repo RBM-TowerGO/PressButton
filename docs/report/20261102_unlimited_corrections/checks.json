@@ -1,0 +1,18 @@
+{
+  "tests": 728,
+  "passed": 727,
+  "skipped": 1,
+  "failures": 0,
+  "errors": 0,
+  "skip_reason": "Node unavailable; dashboard rendering separately verified in V8",
+  "source_sha256": {
+    "src/pressb/agent_loop/client.py": "6b139e68cb50e37e39a1f687be05d471d2007299fc78939950a50542fd01f4db",
+    "src/pressb/agent_loop/grounding.py": "0954a5c3c836db911b3545562252ad0d2f8f0a8cf223fa560718c6f07ca97d84",
+    "src/pressb/agent_loop/perception.py": "c4951efeaf70b83e64aff697f4427e222cbe4ec87483ab2bfce51bc429e21450",
+    "src/pressb/agent_loop/conversation.py": "6ffc339150b5c9e4bfcaa9eef16eb3b111b994bd6f4f42d564003229b9120f6b",
+    "scripts/s1b_agent_dashboard.py": "b8a25959454738a36903f66191726f953877067d06d67760f8a7ff5104c8bfaa"
+  },
+  "robot_started": false,
+  "model_requests_sent_for_this_change": 0,
+  "validation": "fake model/SDK/HTTP regression; not a live task success test"
+}

@@ -1,0 +1,9 @@
+{
+  "reproduced": true,
+  "error_type": "RuntimeError",
+  "error": "dictionary changed size during iteration",
+  "traceback": "Traceback (most recent call last):\n  File \"<stdin>\", line 20, in <module>\n  File \"/home/js/robot/VLA/PressButton/src/pressb/agent_loop/service.py\", line 113, in task\n    with self.lock:return copy.deepcopy(self.tasks[tid])\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/js/robot/VLA/PressButton/.conda/envs/pressb/lib/python3.11/copy.py\", line 146, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/home/js/robot/VLA/PressButton/.conda/envs/pressb/lib/python3.11/copy.py\", line 230, in _deepcopy_dict\n    for key, value in x.items():\nRuntimeError: dictionary changed size during iteration\n",
+  "robot_connected": false,
+  "model_called": false,
+  "method": "Deterministic fake payload pauses deepcopy while an unlocked writer publishes the same task field as Service._run. No production file changed."
+}

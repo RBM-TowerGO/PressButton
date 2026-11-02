@@ -1,0 +1,55 @@
+{
+  "elapsed_s": 8.431842589285225,
+  "response": {
+    "id": "chatcmpl-b20cc676ccdb5c09",
+    "object": "chat.completion",
+    "created": 1793539276,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-b3788c6d57393414",
+              "type": "function",
+              "function": {
+                "name": "propose_head",
+                "arguments": "{\"head_deg\": [0.0, 30.0], \"reason\": \"Tilt head down to bring the down-call button panel into the head view for global alignment before approaching.\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 31537,
+      "total_tokens": 31607,
+      "completion_tokens": 70,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  }
+}

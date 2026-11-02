@@ -1,0 +1,21 @@
+{
+  "image_count": 2,
+  "observation_id": "333564ef86724083a54ac6ca6f620a10",
+  "previous_observation_id": null,
+  "tool": "inspect_view",
+  "attempts": 1,
+  "validation_failures": 0,
+  "prompt_tokens": 2765,
+  "completion_tokens": 286,
+  "status": "validated",
+  "elapsed_s": 27.350027373991907,
+  "usage": {
+    "prompt_tokens": 2765,
+    "total_tokens": 3051,
+    "completion_tokens": 286,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  }
+}

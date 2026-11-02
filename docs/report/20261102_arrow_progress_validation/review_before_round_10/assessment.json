@@ -1,0 +1,19 @@
+{
+  "format": "pressb-progress-review-v1",
+  "source": "model_not_human",
+  "evidence_observation_ids": [
+    "85292cda89a44b3fa71be53ce848e1a0",
+    "1b833be64d8f4f30b6d9c4d343538b5a"
+  ],
+  "observation_id": "1b833be64d8f4f30b6d9c4d343538b5a",
+  "previous_observation_id": "85292cda89a44b3fa71be53ce848e1a0",
+  "comparison_view": "wrist",
+  "head_vertical": "unknown",
+  "head_horizontal": "unknown",
+  "wrist_vertical": "level",
+  "wrist_horizontal": "center",
+  "vertical_change": "unchanged",
+  "horizontal_change": "unchanged",
+  "approach_change": "unchanged",
+  "note": "Wrist view shows the down-call button and red marker in both frames; button center remains roughly level/center relative to the marked contact end with no discernible change in projection offset or approach."
+}

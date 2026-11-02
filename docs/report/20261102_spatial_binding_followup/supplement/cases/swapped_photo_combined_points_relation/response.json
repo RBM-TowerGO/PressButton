@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-a4e1f16a0b9a84de",
+  "object": "chat.completion",
+  "created": 1793603369,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-80052bf617294fab",
+            "type": "function",
+            "function": {
+              "name": "inspect_saved_image",
+              "arguments": "{\"target_point\": {\"x\": 735, \"y\": 770}, \"reference_point\": {\"x\": 655, \"y\": 315}, \"vertical\": \"below\", \"horizontal\": \"right\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 921,
+    "total_tokens": 1016,
+    "completion_tokens": 95,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

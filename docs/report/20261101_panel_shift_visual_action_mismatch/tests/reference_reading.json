@@ -1,0 +1,9 @@
+{
+  "basis": "Assistant visual inspection of original images; operator reported moved panel and need to move right.",
+  "observation_id": "facfb77c2dd54fe6b3a20ebf26b15a7d",
+  "head_button_visible": true,
+  "head_button_relative_to_gripper": "right",
+  "wrist_button_visible": false,
+  "alignment": "misaligned",
+  "coordinate_contract": "Chassis +Y is robot left; robot right is -Y. Pixel offset is not a calibrated millimeter displacement."
+}
