@@ -1,0 +1,26 @@
+{
+  "format": "pressb-wrist-direction-hint-v1",
+  "source": "program_rule_applied_to_model_estimates_not_visual_truth",
+  "observation_id": "719f6166a9954fdab90776d400ad0a2e",
+  "camera": "wrist",
+  "coordinate_units": "normalized_01",
+  "button_visibility": "partial",
+  "contact_visibility": "partial",
+  "button_box": [
+    0.205,
+    0.1,
+    0.25,
+    0.15
+  ],
+  "contact_tip": [
+    0.77,
+    0.85
+  ],
+  "can_assess_interval": true,
+  "signs": {
+    "Y": 1,
+    "Z": 1
+  },
+  "caveat": "Applies only to the present unmirrored wrist mounting and preserved hand orientation. The button box covers only the visible portion, not the full face; its interval signs require confirmation in the current image. The physical tip is only partly visible; confirm its identity and endpoint. This is not positive-X permission or proof of alignment/contact. The executor is unchanged: no XYZ is generated, no displacement cap or hard gate is added.",
+  "instruction": "For this observation, use Y=+1 and Z=+1 if the CURRENT WRIST image confirms the same button face and marked physical tip. Choose nonzero millimeter magnitudes for nonzero signs; use zero only for an axis whose tip is already within the reported interval. If Z=+1, raise with positive Z; do not substitute negative Z for positive Z. Reacquire or reassess if the image contradicts these estimates."
+}

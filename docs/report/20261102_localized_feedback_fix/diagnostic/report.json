@@ -1,0 +1,470 @@
+{
+  "format": "pressb-localized-feedback-diagnostic-v1",
+  "model_only": true,
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "source_request": "/home/js/robot/VLA/PressButton/outputs/agent_web/20261102_162741_4885e81e/agent/rounds/0014/request.json",
+  "source_sha256": "62defb694bb7cd4b552a33fff52c4353f793c6ae592a31fbfd9a09eff2e85864",
+  "source_current_observation_id": "da0f07101060453d9b16f98b35a1113d",
+  "source_image_count": 33,
+  "intervention": {
+    "legacy_coordinate_units_assumed": "normalized_1000",
+    "canonical_units": "normalized_01",
+    "all_location_and_progress_messages_changed": [
+      3,
+      4,
+      8,
+      9,
+      13,
+      14,
+      18,
+      19,
+      23,
+      24,
+      28,
+      29,
+      33,
+      34,
+      38,
+      39,
+      43,
+      44,
+      48,
+      49,
+      53,
+      54,
+      58,
+      59,
+      63,
+      64,
+      68,
+      69,
+      73,
+      74
+    ],
+    "numerical_fields_scaled_by": 0.001,
+    "ratios_signs_reasons_images_preserved": true,
+    "raw_model_argument_copies_also_transformed_for_consistent_model_input": true
+  },
+  "caveats": [
+    "No new action is executed. Future images are never attributed to these proposals.",
+    "Coordinate normalization does not validate target/endpoint identity or physical contact.",
+    "Each condition changes model input; this is a small behavioral diagnostic, not a neural mechanism test.",
+    "Deterministic repeats and sequential calls share service cache; timings are descriptive.",
+    "D removes action history and old live images together; it cannot isolate these two effects."
+  ],
+  "results": [
+    {
+      "name": "A_archived_1",
+      "kind": "saved_visual_action",
+      "condition": "A_archived",
+      "repeat": 1,
+      "image_count": 33,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ],
+            "reason": "Button close and visible; advance slightly more to make the white-arrow finger contact the down-call button and trigger the light."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 61161,
+        "total_tokens": 61233,
+        "completion_tokens": 72,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": true,
+      "elapsed_s": 8.441529253963381
+    },
+    {
+      "name": "B_units_corrected_1",
+      "kind": "saved_visual_action",
+      "condition": "B_units_corrected",
+      "repeat": 1,
+      "image_count": 33,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ],
+            "reason": "Button close and visible; advance slightly more to make the white-arrow finger contact the down-call button and trigger the light."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 61045,
+        "total_tokens": 61117,
+        "completion_tokens": 72,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": true,
+      "elapsed_s": 42.50545012392104
+    },
+    {
+      "name": "C_corrected_reassessment_1",
+      "kind": "saved_visual_action",
+      "condition": "C_corrected_reassessment",
+      "repeat": 1,
+      "image_count": 33,
+      "calls": [
+        {
+          "name": "propose_head",
+          "arguments": {
+            "head_deg": [
+              -10,
+              35
+            ],
+            "reason": "Repeated forward advances did not change button/finger alignment; adjust head view to better see the marked finger and button to reassess alignment before pressing."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 61716,
+        "total_tokens": 61791,
+        "completion_tokens": 75,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": false,
+      "elapsed_s": 9.837756697554141
+    },
+    {
+      "name": "D_corrected_current_only_1",
+      "kind": "saved_visual_action",
+      "condition": "D_corrected_current_only",
+      "repeat": 1,
+      "image_count": 5,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              0,
+              0
+            ],
+            "reason": "前进接近按钮，使白色箭头所指手指前端对准下呼按钮以便按压。"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10256,
+        "total_tokens": 10322,
+        "completion_tokens": 66,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": true,
+      "elapsed_s": 9.283032733015716
+    },
+    {
+      "name": "D_corrected_current_only_2",
+      "kind": "saved_visual_action",
+      "condition": "D_corrected_current_only",
+      "repeat": 2,
+      "image_count": 5,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              10,
+              0,
+              0
+            ],
+            "reason": "前进接近按钮，使白色箭头所指手指前端对准下呼按钮以便按压。"
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10256,
+        "total_tokens": 10322,
+        "completion_tokens": 66,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": true,
+      "elapsed_s": 6.603329142089933
+    },
+    {
+      "name": "C_corrected_reassessment_2",
+      "kind": "saved_visual_action",
+      "condition": "C_corrected_reassessment",
+      "repeat": 2,
+      "image_count": 33,
+      "calls": [
+        {
+          "name": "propose_head",
+          "arguments": {
+            "head_deg": [
+              -10,
+              35
+            ],
+            "reason": "Repeated forward advances did not change button/finger alignment; adjust head view to better see the marked finger and button to reassess alignment before pressing."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 61716,
+        "total_tokens": 61791,
+        "completion_tokens": 75,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": false,
+      "elapsed_s": 9.290342490188777
+    },
+    {
+      "name": "B_units_corrected_2",
+      "kind": "saved_visual_action",
+      "condition": "B_units_corrected",
+      "repeat": 2,
+      "image_count": 33,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ],
+            "reason": "Button close and visible; advance slightly more to make the white-arrow finger contact the down-call button and trigger the light."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 61045,
+        "total_tokens": 61117,
+        "completion_tokens": 72,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": true,
+      "elapsed_s": 8.712120010983199
+    },
+    {
+      "name": "A_archived_2",
+      "kind": "saved_visual_action",
+      "condition": "A_archived",
+      "repeat": 2,
+      "image_count": 33,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ],
+            "reason": "Button close and visible; advance slightly more to make the white-arrow finger contact the down-call button and trigger the light."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 61161,
+        "total_tokens": 61233,
+        "completion_tokens": 72,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "pure_forward": true,
+      "elapsed_s": 8.299847991205752
+    },
+    {
+      "name": "coordinate_right",
+      "kind": "symbolic_coordinate_translation",
+      "expected_xyz_mm": [
+        0,
+        -10,
+        0
+      ],
+      "image_count": 0,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              -10,
+              0
+            ],
+            "reason": "Move hand 10 mm toward robot's right per coordinate contract (-Y = robot right)."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 2003,
+        "total_tokens": 2071,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "correct": true,
+      "pure_forward": false,
+      "elapsed_s": 6.6009217267856
+    },
+    {
+      "name": "coordinate_left",
+      "kind": "symbolic_coordinate_translation",
+      "expected_xyz_mm": [
+        0,
+        10,
+        0
+      ],
+      "image_count": 0,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              10,
+              0
+            ],
+            "reason": "Move hand 10 mm toward robot's left (+Y axis) as specified."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 2003,
+        "total_tokens": 2069,
+        "completion_tokens": 66,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "correct": true,
+      "pure_forward": false,
+      "elapsed_s": 6.399233205709606
+    },
+    {
+      "name": "coordinate_up",
+      "kind": "symbolic_coordinate_translation",
+      "expected_xyz_mm": [
+        0,
+        0,
+        10
+      ],
+      "image_count": 0,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              0,
+              10
+            ],
+            "reason": "Move hand +10mm along robot up axis per symbolic test."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 2003,
+        "total_tokens": 2066,
+        "completion_tokens": 63,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "correct": true,
+      "pure_forward": false,
+      "elapsed_s": 6.2037050309590995
+    },
+    {
+      "name": "coordinate_down",
+      "kind": "symbolic_coordinate_translation",
+      "expected_xyz_mm": [
+        0,
+        0,
+        -10
+      ],
+      "image_count": 0,
+      "calls": [
+        {
+          "name": "propose_move",
+          "arguments": {
+            "xyz_mm": [
+              0,
+              0,
+              -10
+            ],
+            "reason": "Encode 10 mm robot-down as -Z per coordinate contract; no visual planning needed."
+          }
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 2003,
+        "total_tokens": 2071,
+        "completion_tokens": 68,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "finish_reason": "tool_calls",
+      "single_tool_without_prose": true,
+      "correct": true,
+      "pure_forward": false,
+      "elapsed_s": 6.532366679050028
+    }
+  ],
+  "source_unchanged": true,
+  "completed": true
+}

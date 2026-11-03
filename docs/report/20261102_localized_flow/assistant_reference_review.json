@@ -1,0 +1,85 @@
+{
+  "source": "assistant_visual_review_not_calibration_or_human_confirmation",
+  "timing": "Original images inspected during replay; not a preregistered independent benchmark. A8/B5 wrist points reuse earlier diagnostic annotations.",
+  "coordinates": "pixels on original 1280x720 HEAD and 640x360 WRIST",
+  "references": {
+    "A6": {
+      "head": {
+        "button_visible": false,
+        "marked_contact_visible": false,
+        "note": "Only upper panel at bottom-right; button and hand are outside frame."
+      },
+      "wrist": {
+        "button_center_px": [
+          420,
+          87
+        ],
+        "marked_physical_end_px": [
+          470,
+          280
+        ],
+        "note": "Button face and marked physical front end visible; finger shaft cropping does not hide this end."
+      }
+    },
+    "A7": {
+      "head": {
+        "button_visible": false,
+        "marked_contact_visible": false,
+        "note": "Button and hand remain outside frame."
+      },
+      "wrist": {
+        "button_center_px": [
+          420,
+          102
+        ],
+        "marked_physical_end_px": [
+          470,
+          280
+        ],
+        "note": "Button face and marked physical front end visible."
+      }
+    },
+    "A8": {
+      "head": {
+        "button_visible": false,
+        "marked_contact_visible": false,
+        "note": "Button and hand remain outside frame."
+      },
+      "wrist": {
+        "button_center_px": [
+          420,
+          117
+        ],
+        "marked_physical_end_px": [
+          470,
+          280
+        ],
+        "note": "Uses same approximate annotation as prior diagnostic."
+      }
+    },
+    "B5": {
+      "head": {
+        "button_center_px": [
+          757,
+          204
+        ],
+        "marked_physical_end_px": [
+          1042,
+          516
+        ],
+        "note": "Target face visible; small white marker on outer finger of right-side hand identifies front end."
+      },
+      "wrist": {
+        "button_center_px": [
+          164,
+          60
+        ],
+        "marked_physical_end_px": [
+          470,
+          280
+        ],
+        "note": "Uses same approximate annotation as prior diagnostic."
+      }
+    }
+  }
+}

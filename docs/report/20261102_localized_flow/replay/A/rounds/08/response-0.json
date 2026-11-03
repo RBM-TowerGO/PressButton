@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-804dbfe85d255407",
+    "object": "chat.completion",
+    "created": 1793605821,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-addb5ce9b2d5018e",
+              "type": "function",
+              "function": {
+                "name": "request_observation",
+                "arguments": "{\"reason\": \"Head still shows no button/arrow; refresh to confirm current view before any forward press attempt.\", \"visual_basis\": {\"observation_id\": \"f31cc38545bf422b980a9196c7a4ebbd\", \"localization_revision\": 1, \"view\": \"unknown\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 15096,
+      "total_tokens": 15201,
+      "completion_tokens": 105,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 11.659047563094646
+}

@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-9ee6ed698084736d",
+  "object": "chat.completion",
+  "created": 1793609535,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-8f532eaf78541335",
+            "type": "function",
+            "function": {
+              "name": "propose_move",
+              "arguments": "{\"xyz_mm\": [0, -10, 0], \"reason\": \"Repeated +X did not reduce the wrist button/finger gap; move robot right to bring the white-arrow finger toward the button and test whether the gap closes.\", \"reassessment\": {\"observation_id\": \"da0f07101060453d9b16f98b35a1113d\", \"review_id\": \"review-da0f07101060453d9b16f98b35a1113d\", \"response_to_review\": \"accept\", \"evidence\": \"Wrist view shows button at top-left and white-arrow finger lower-right; repeated +X did not reduce the lateral gap and no light change occurred.\", \"expected_visual_change\": \"Button-box center and contact-tip separation should decrease in x, and the button edge may depress or illuminate.\", \"if_no_change\": \"Reconsider that forward X is not closing the true 3D gap and that a lateral or vertical correction is needed instead.\"}}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 55379,
+    "total_tokens": 55648,
+    "completion_tokens": 269,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

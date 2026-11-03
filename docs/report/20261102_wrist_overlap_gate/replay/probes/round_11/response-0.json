@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-a8b746348d3ffafd",
+    "object": "chat.completion",
+    "created": 1793612478,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-ae39c6ecde96380e",
+              "type": "function",
+              "function": {
+                "name": "locate_wrist_tip_overlap",
+                "arguments": "{\"button_box\": [232, 12, 318, 148], \"button_visibility\": \"full\", \"contact_tip\": [735, 800], \"contact_visibility\": \"full\", \"coordinate_units\": \"normalized_1000\", \"note\": \"Down-call button face is the circular button with down arrow; right gripper has a white arrow marking its front end.\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 1274,
+      "total_tokens": 1424,
+      "completion_tokens": 150,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 14.258676776662469
+}

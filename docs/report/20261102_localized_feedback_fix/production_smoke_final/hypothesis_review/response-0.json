@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-9fc4ea8012d9567b",
+    "object": "chat.completion",
+    "created": 1793609625,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-b916422559ef7031",
+              "type": "function",
+              "function": {
+                "name": "review_motion_hypothesis",
+                "arguments": "{\"observed_effect\": \"unchanged\", \"distance_only_hypothesis\": \"unsupported\", \"light_change\": \"no\", \"prediction_check\": \"not_supplied\", \"evidence\": \"After three +5 mm X moves, the wrist button box center moved from (0.30,0.065) to (0.2625,0.065) and the contact tip stayed at (0.70,0.76), so the button–tip gap did not consistently shrink and the head view shows no new contact or illumination.\", \"alternative_explanation\": \"The repeated forward motion may be changing the camera pose or button visibility rather than closing the true 3D distance, so the apparent projection shift is not reliable evidence of contact alignment.\", \"next_check\": \"Next, check whether the wrist contact tip visibly enters the button box or the button surface shows a press/illumination change; if the tip remains far from the button box, treat forward-only motion as insufficient.\"}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 5728,
+      "total_tokens": 6000,
+      "completion_tokens": 272,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 27.984903298784047
+}

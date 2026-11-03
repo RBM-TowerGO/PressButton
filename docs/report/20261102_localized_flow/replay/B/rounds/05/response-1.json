@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-af4a5eafbc69e9d9",
+    "object": "chat.completion",
+    "created": 1793605892,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-ae636bfbd3c1fb52",
+              "type": "function",
+              "function": {
+                "name": "request_observation",
+                "arguments": "{\"reason\": \"当前两视图均无可见手指前端/箭头接触点，usable_views为空；先刷新图像确认按钮与箭头是否清晰，再决定头部或手部调整。\", \"visual_basis\": {\"observation_id\": \"981630409f1349a2a93a53a23eb19399\", \"localization_revision\": 1, \"view\": \"unknown\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 9780,
+      "total_tokens": 9903,
+      "completion_tokens": 123,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 12.236205353867263
+}

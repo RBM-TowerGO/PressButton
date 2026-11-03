@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-b3c6cddf723c4e35",
+    "object": "chat.completion",
+    "created": 1793605785,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-9f0d936e7ec6fa22",
+              "type": "function",
+              "function": {
+                "name": "propose_head",
+                "arguments": "{\"head_deg\": [0, 30], \"reason\": \"Head still shows no button/arrow; pitch down to bring elevator panel into head view for cross-check before pressing.\", \"visual_basis\": {\"observation_id\": \"5f8e78be946d4866a65a87e4133d750a\", \"localization_revision\": 1, \"view\": \"unknown\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 12415,
+      "total_tokens": 12546,
+      "completion_tokens": 131,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 14.095537517219782
+}

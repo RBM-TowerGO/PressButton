@@ -1,0 +1,32 @@
+{
+  "schema": "pressb-agent-keyboard-v1",
+  "session_id": "a8794637fecb49ab98492fcd8216d2e8",
+  "speed_mm_s": 20.0,
+  "head_speed_deg_s": 20.0,
+  "control_hz": 250.0,
+  "reference_point": "sdk_end_effector",
+  "frame_id": "chassis",
+  "initial_pose_m_xyzw": [
+    0.4001891365121847,
+    -0.2720830844897598,
+    1.0461460008658183,
+    0.0023073154812160656,
+    0.004967376816968562,
+    0.7069061567081284,
+    0.7072861422868199
+  ],
+  "completion_basis": "command_interpolation_or_first_gripper_send",
+  "commands": [
+    "move",
+    "head",
+    "gripper"
+  ],
+  "execution_mode": "shared_keyboard_executor",
+  "coordinates": {
+    "x": "chassis +X forward",
+    "y": "chassis +Y left",
+    "z": "chassis +Z up"
+  },
+  "motion_units": "mm",
+  "head_units": "degrees_absolute"
+}

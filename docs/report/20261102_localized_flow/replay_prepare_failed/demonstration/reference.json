@@ -1,0 +1,3337 @@
+{
+  "source": "/home/js/robot/VLA/PressButton/outputs/keyboard_sessions/20261101_182424_352b5047",
+  "session": {
+    "schema": "pressb-keyboard-record-v1",
+    "started": {
+      "utc_ns": 1793528666494953815,
+      "monotonic_ns": 196840032395503
+    },
+    "status": "closed",
+    "settings": {
+      "speed_mm_s": 20.0,
+      "head_speed_deg_s": 20.0,
+      "control_hz": 250.0,
+      "frame": "chassis",
+      "units": "mm"
+    },
+    "recording_complete": false,
+    "recording_errors": [
+      {
+        "context": "operations/000011/after",
+        "error": "operator_stopped",
+        "utc_ns": 1793528876679879119,
+        "monotonic_ns": 197050217304260
+      },
+      {
+        "context": "final",
+        "error": "<urlopen error [Errno 111] Connection refused>",
+        "utc_ns": 1793528878890679922,
+        "monotonic_ns": 197052428104582
+      }
+    ],
+    "initial": {
+      "status": "complete",
+      "boundary": {
+        "utc_ns": 1793528675826431804,
+        "monotonic_ns": 196849363856145
+      },
+      "frames": {
+        "right": {
+          "source_ns": 1793528676092168960,
+          "receipt_ns": 196849682318730
+        },
+        "depth": {
+          "source_ns": 1793528676092783104,
+          "receipt_ns": 196849687080695
+        },
+        "head": {
+          "source_ns": 1793528676091859968,
+          "receipt_ns": 196849694272912
+        }
+      }
+    },
+    "final": {
+      "status": "missing",
+      "boundary": {
+        "utc_ns": 1793528876890453476,
+        "monotonic_ns": 197050427878521
+      },
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    "ended": {
+      "utc_ns": 1793528878901655807,
+      "monotonic_ns": 197052439080052
+    },
+    "exit_reason": "operator_exit"
+  },
+  "operations": [
+    {
+      "operation": {
+        "operation_id": "000001",
+        "kind": "head",
+        "command": {
+          "head_deg": [
+            0.0,
+            30.0
+          ],
+          "start_head_deg": [
+            -0.2914959257031062,
+            2.4001446237510375
+          ],
+          "head_speed_deg_s": 20.0
+        },
+        "start_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.26988699401238636,
+          1.0486824501412826,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.26988699401238636,
+          1.0486824501412826,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": null,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528682108470166,
+          "monotonic_ns": 196855645894251
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528682123470656,
+            "monotonic_ns": 196855660894838
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528682260240896,
+              "receipt_ns": 196855853792857
+            },
+            "depth": {
+              "source_ns": 1793528682260293120,
+              "receipt_ns": 196855853063900
+            },
+            "head": {
+              "source_ns": 1793528682253179904,
+              "receipt_ns": 196855857087630
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528682504477714,
+          "monotonic_ns": 196856041901544
+        },
+        "ended": {
+          "utc_ns": 1793528685094453651,
+          "monotonic_ns": 196858631877768
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528685094453651,
+            "monotonic_ns": 196858631877768
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528685294390016,
+              "receipt_ns": 196858891524981
+            },
+            "depth": {
+              "source_ns": 1793528685327805952,
+              "receipt_ns": 196858920354561
+            },
+            "head": {
+              "source_ns": 1793528685346073088,
+              "receipt_ns": 196859010951575
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528682260240896,
+                "receipt_ns": 196855853792857
+              },
+              "depth": {
+                "source_ns": 1793528682260293120,
+                "receipt_ns": 196855853063900
+              },
+              "head": {
+                "source_ns": 1793528682253179904,
+                "receipt_ns": 196855857087630
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": null,
+              "median_m": null,
+              "valid_pixels": 0,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "测距区域无有效深度",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528682260293120,
+              "rgb_source_ns": 1793528682260240896,
+              "skew_ms": 0.052224
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528682123470656,
+              "monotonic_ns": 196855660894838
+            },
+            "saved": {
+              "utc_ns": 1793528682483577780,
+              "monotonic_ns": 196856021002506
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528685294390016,
+                "receipt_ns": 196858891524981
+              },
+              "depth": {
+                "source_ns": 1793528685327805952,
+                "receipt_ns": 196858920354561
+              },
+              "head": {
+                "source_ns": 1793528685346073088,
+                "receipt_ns": 196859010951575
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": null,
+              "median_m": null,
+              "valid_pixels": 0,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "测距区域无有效深度",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528685327805952,
+              "rgb_source_ns": 1793528685294390016,
+              "skew_ms": 33.415936
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528685094453651,
+              "monotonic_ns": 196858631877768
+            },
+            "saved": {
+              "utc_ns": 1793528685540848060,
+              "monotonic_ns": 196859078273010
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000002",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            0.0,
+            200.0,
+            200.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.26988699401238636,
+          1.0486824501412826,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.06988699401238635,
+          1.2486824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528695129142794,
+          "monotonic_ns": 196868666567231
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528695138238001,
+            "monotonic_ns": 196868675661638
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528695197047040,
+              "receipt_ns": 196868792383808
+            },
+            "depth": {
+              "source_ns": 1793528695230342912,
+              "receipt_ns": 196868823443352
+            },
+            "head": {
+              "source_ns": 1793528695236998912,
+              "receipt_ns": 196868936695471
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528695493420066,
+          "monotonic_ns": 196869030843959
+        },
+        "ended": {
+          "utc_ns": 1793528722014745958,
+          "monotonic_ns": 196895552170043
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528722014745958,
+            "monotonic_ns": 196895552170043
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528722270511104,
+              "receipt_ns": 196895866834072
+            },
+            "depth": {
+              "source_ns": 1793528722270511104,
+              "receipt_ns": 196895866194136
+            },
+            "head": {
+              "source_ns": 1793528722266668032,
+              "receipt_ns": 196895870286094
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528695197047040,
+                "receipt_ns": 196868792383808
+              },
+              "depth": {
+                "source_ns": 1793528695230342912,
+                "receipt_ns": 196868823443352
+              },
+              "head": {
+                "source_ns": 1793528695236998912,
+                "receipt_ns": 196868936695471
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": null,
+              "median_m": null,
+              "valid_pixels": 0,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "测距区域无有效深度",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528695230342912,
+              "rgb_source_ns": 1793528695197047040,
+              "skew_ms": 33.295872
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528695138238001,
+              "monotonic_ns": 196868675661638
+            },
+            "saved": {
+              "utc_ns": 1793528695475886613,
+              "monotonic_ns": 196869013310858
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528722270511104,
+                "receipt_ns": 196895866834072
+              },
+              "depth": {
+                "source_ns": 1793528722270511104,
+                "receipt_ns": 196895866194136
+              },
+              "head": {
+                "source_ns": 1793528722266668032,
+                "receipt_ns": 196895870286094
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.24817547267087037,
+              "median_m": 0.24817741135918886,
+              "valid_pixels": 11,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528722270511104,
+              "rgb_source_ns": 1793528722270511104,
+              "skew_ms": 0.0
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528722014745958,
+              "monotonic_ns": 196895552170043
+            },
+            "saved": {
+              "utc_ns": 1793528722430631617,
+              "monotonic_ns": 196895968056502
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000003",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            0.0,
+            -50.0,
+            -20.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.06988699401238635,
+          1.2486824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.11988699401238635,
+          1.2286824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528743929405677,
+          "monotonic_ns": 196917466829378
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528743936389514,
+            "monotonic_ns": 196917473813215
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528743942440960,
+              "receipt_ns": 196917538970110
+            },
+            "depth": {
+              "source_ns": 1793528743942454016,
+              "receipt_ns": 196917538409608
+            },
+            "head": {
+              "source_ns": 1793528743956869888,
+              "receipt_ns": 196917663124579
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528744178525879,
+          "monotonic_ns": 196917715949804
+        },
+        "ended": {
+          "utc_ns": 1793528749230562343,
+          "monotonic_ns": 196922767986588
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528749230562343,
+            "monotonic_ns": 196922767986588
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528749311186944,
+              "receipt_ns": 196922905404318
+            },
+            "depth": {
+              "source_ns": 1793528749343852032,
+              "receipt_ns": 196922937192545
+            },
+            "head": {
+              "source_ns": 1793528749362072064,
+              "receipt_ns": 196923001689004
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528743942440960,
+                "receipt_ns": 196917538970110
+              },
+              "depth": {
+                "source_ns": 1793528743942454016,
+                "receipt_ns": 196917538409608
+              },
+              "head": {
+                "source_ns": 1793528743956869888,
+                "receipt_ns": 196917663124579
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": null,
+              "median_m": null,
+              "valid_pixels": 0,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "测距区域无有效深度",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528743942454016,
+              "rgb_source_ns": 1793528743942440960,
+              "skew_ms": 0.013056
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528743936389514,
+              "monotonic_ns": 196917473813215
+            },
+            "saved": {
+              "utc_ns": 1793528744157391065,
+              "monotonic_ns": 196917694815374
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528749311186944,
+                "receipt_ns": 196922905404318
+              },
+              "depth": {
+                "source_ns": 1793528749343852032,
+                "receipt_ns": 196922937192545
+              },
+              "head": {
+                "source_ns": 1793528749362072064,
+                "receipt_ns": 196923001689004
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.22144440964826437,
+              "median_m": 0.2214422790601534,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528749343852032,
+              "rgb_source_ns": 1793528749311186944,
+              "skew_ms": 32.665088
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528749230562343,
+              "monotonic_ns": 196922767986588
+            },
+            "saved": {
+              "utc_ns": 1793528749542208724,
+              "monotonic_ns": 196923079634121
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000004",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4024889336395348,
+          -0.11988699401238635,
+          1.2286824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4324889336395348,
+          -0.11988699401238635,
+          1.2286824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528761609431045,
+          "monotonic_ns": 196935146854938
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528761624243087,
+            "monotonic_ns": 196935161667268
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528761713729024,
+              "receipt_ns": 196935308743287
+            },
+            "depth": {
+              "source_ns": 1793528761713998080,
+              "receipt_ns": 196935308165411
+            },
+            "head": {
+              "source_ns": 1793528761709172992,
+              "receipt_ns": 196935314674564
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528761990448117,
+          "monotonic_ns": 196935527871946
+        },
+        "ended": {
+          "utc_ns": 1793528764808017134,
+          "monotonic_ns": 196938345441731
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528764808017134,
+            "monotonic_ns": 196938345441731
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528765014340096,
+              "receipt_ns": 196938608833529
+            },
+            "depth": {
+              "source_ns": 1793528765014356992,
+              "receipt_ns": 196938608150107
+            },
+            "head": {
+              "source_ns": 1793528765021814016,
+              "receipt_ns": 196938624207729
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528761713729024,
+                "receipt_ns": 196935308743287
+              },
+              "depth": {
+                "source_ns": 1793528761713998080,
+                "receipt_ns": 196935308165411
+              },
+              "head": {
+                "source_ns": 1793528761709172992,
+                "receipt_ns": 196935314674564
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.22064347892099526,
+              "median_m": 0.2206413560384471,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528761713998080,
+              "rgb_source_ns": 1793528761713729024,
+              "skew_ms": 0.269056
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528761624243087,
+              "monotonic_ns": 196935161667268
+            },
+            "saved": {
+              "utc_ns": 1793528761973533709,
+              "monotonic_ns": 196935510957282
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528765014340096,
+                "receipt_ns": 196938608833529
+              },
+              "depth": {
+                "source_ns": 1793528765014356992,
+                "receipt_ns": 196938608150107
+              },
+              "head": {
+                "source_ns": 1793528765021814016,
+                "receipt_ns": 196938624207729
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.19251078712566835,
+              "median_m": 0.19251016971744994,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528765014356992,
+              "rgb_source_ns": 1793528765014340096,
+              "skew_ms": 0.016896
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528764808017134,
+              "monotonic_ns": 196938345441731
+            },
+            "saved": {
+              "utc_ns": 1793528765229999937,
+              "monotonic_ns": 196938767424758
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000005",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            0.0,
+            0.0,
+            -10.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4324889336395348,
+          -0.11988699401238635,
+          1.2286824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4324889336395348,
+          -0.11988699401238635,
+          1.2186824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528780070706772,
+          "monotonic_ns": 196953608131017
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528780084868695,
+            "monotonic_ns": 196953622292172
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528780284869120,
+              "receipt_ns": 196953879628788
+            },
+            "depth": {
+              "source_ns": 1793528780318820096,
+              "receipt_ns": 196953912309536
+            },
+            "head": {
+              "source_ns": 1793528780330630912,
+              "receipt_ns": 196953984074065
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528780568553179,
+          "monotonic_ns": 196954105977008
+        },
+        "ended": {
+          "utc_ns": 1793528781511142433,
+          "monotonic_ns": 196955048566486
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528781511142433,
+            "monotonic_ns": 196955048566486
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528781718478080,
+              "receipt_ns": 196955313450014
+            },
+            "depth": {
+              "source_ns": 1793528781751907072,
+              "receipt_ns": 196955345495315
+            },
+            "head": {
+              "source_ns": 1793528781715045120,
+              "receipt_ns": 196955317400491
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528780284869120,
+                "receipt_ns": 196953879628788
+              },
+              "depth": {
+                "source_ns": 1793528780318820096,
+                "receipt_ns": 196953912309536
+              },
+              "head": {
+                "source_ns": 1793528780330630912,
+                "receipt_ns": 196953984074065
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.19271101980748565,
+              "median_m": 0.19291063379682405,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528780318820096,
+              "rgb_source_ns": 1793528780284869120,
+              "skew_ms": 33.950976
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528780084868695,
+              "monotonic_ns": 196953622292172
+            },
+            "saved": {
+              "utc_ns": 1793528780551801141,
+              "monotonic_ns": 196954089225706
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528781718478080,
+                "receipt_ns": 196955313450014
+              },
+              "depth": {
+                "source_ns": 1793528781751907072,
+                "receipt_ns": 196955345495315
+              },
+              "head": {
+                "source_ns": 1793528781715045120,
+                "receipt_ns": 196955317400491
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.19070869298931292,
+              "median_m": 0.19090732828906112,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528781751907072,
+              "rgb_source_ns": 1793528781718478080,
+              "skew_ms": 33.428992
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528781511142433,
+              "monotonic_ns": 196955048566486
+            },
+            "saved": {
+              "utc_ns": 1793528782056197206,
+              "monotonic_ns": 196955593621547
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000006",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            0.0,
+            0.0,
+            -20.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4324889336395348,
+          -0.11988699401238635,
+          1.2186824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4324889336395348,
+          -0.11988699401238635,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528795674758163,
+          "monotonic_ns": 196969212182376
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528795689286700,
+            "monotonic_ns": 196969226710625
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528795822140928,
+              "receipt_ns": 196969415749816
+            },
+            "depth": {
+              "source_ns": 1793528795822150912,
+              "receipt_ns": 196969415012955
+            },
+            "head": {
+              "source_ns": 1793528795825199104,
+              "receipt_ns": 196969427980232
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528796054105457,
+          "monotonic_ns": 196969591529286
+        },
+        "ended": {
+          "utc_ns": 1793528797934818286,
+          "monotonic_ns": 196971472242211
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528797934818286,
+            "monotonic_ns": 196971472242211
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528798022539008,
+              "receipt_ns": 196971616527142
+            },
+            "depth": {
+              "source_ns": 1793528798022624000,
+              "receipt_ns": 196971615627787
+            },
+            "head": {
+              "source_ns": 1793528798011207936,
+              "receipt_ns": 196971616311591
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528795822140928,
+                "receipt_ns": 196969415749816
+              },
+              "depth": {
+                "source_ns": 1793528795822150912,
+                "receipt_ns": 196969415012955
+              },
+              "head": {
+                "source_ns": 1793528795825199104,
+                "receipt_ns": 196969427980232
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.19030822762567837,
+              "median_m": 0.19030859929232757,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528795822150912,
+              "rgb_source_ns": 1793528795822140928,
+              "skew_ms": 0.009984
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528795689286700,
+              "monotonic_ns": 196969226710625
+            },
+            "saved": {
+              "utc_ns": 1793528796031880168,
+              "monotonic_ns": 196969569305245
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528798022539008,
+                "receipt_ns": 196971616527142
+              },
+              "depth": {
+                "source_ns": 1793528798022624000,
+                "receipt_ns": 196971615627787
+              },
+              "head": {
+                "source_ns": 1793528798011207936,
+                "receipt_ns": 196971616311591
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.1923105544438511,
+              "median_m": 0.19251016971744994,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528798022624000,
+              "rgb_source_ns": 1793528798022539008,
+              "skew_ms": 0.084992
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528797934818286,
+              "monotonic_ns": 196971472242211
+            },
+            "saved": {
+              "utc_ns": 1793528798301816340,
+              "monotonic_ns": 196971839240553
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000007",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4324889336395348,
+          -0.11988699401238635,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4624889336395348,
+          -0.11988699401238635,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528806136431263,
+          "monotonic_ns": 196979673855316
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528806142482822,
+            "monotonic_ns": 196979679907355
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528806258329088,
+              "receipt_ns": 196979851317663
+            },
+            "depth": {
+              "source_ns": 1793528806258394880,
+              "receipt_ns": 196979851734037
+            },
+            "head": {
+              "source_ns": 1793528806259081984,
+              "receipt_ns": 196979861476366
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528806523359627,
+          "monotonic_ns": 196980060783360
+        },
+        "ended": {
+          "utc_ns": 1793528809341360798,
+          "monotonic_ns": 196982878784819
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528809341360798,
+            "monotonic_ns": 196982878784819
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528809392407040,
+              "receipt_ns": 196982987081885
+            },
+            "depth": {
+              "source_ns": 1793528809392407040,
+              "receipt_ns": 196982986359751
+            },
+            "head": {
+              "source_ns": 1793528809408246016,
+              "receipt_ns": 196983071433877
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528806258329088,
+                "receipt_ns": 196979851317663
+              },
+              "depth": {
+                "source_ns": 1793528806258394880,
+                "receipt_ns": 196979851734037
+              },
+              "head": {
+                "source_ns": 1793528806259081984,
+                "receipt_ns": 196979861476366
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.1923105544438511,
+              "median_m": 0.19230870414558654,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528806258394880,
+              "rgb_source_ns": 1793528806258329088,
+              "skew_ms": 0.065792
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528806142482822,
+              "monotonic_ns": 196979679907355
+            },
+            "saved": {
+              "utc_ns": 1793528806499656765,
+              "monotonic_ns": 196980037081041
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528809392407040,
+                "receipt_ns": 196982987081885
+              },
+              "depth": {
+                "source_ns": 1793528809392407040,
+                "receipt_ns": 196982986359751
+              },
+              "head": {
+                "source_ns": 1793528809408246016,
+                "receipt_ns": 196983071433877
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.16327681558034646,
+              "median_m": 0.16317754125871142,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528809392407040,
+              "rgb_source_ns": 1793528809392407040,
+              "skew_ms": 0.0
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528809341360798,
+              "monotonic_ns": 196982878784819
+            },
+            "saved": {
+              "utc_ns": 1793528809586442910,
+              "monotonic_ns": 196983123869522
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000008",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            0.0,
+            -20.0,
+            0.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4624889336395348,
+          -0.11988699401238635,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.4624889336395348,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528823136000472,
+          "monotonic_ns": 196996673424333
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528823144238824,
+            "monotonic_ns": 196996681662909
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528823428868096,
+              "receipt_ns": 196997025440973
+            },
+            "depth": {
+              "source_ns": 1793528823428951040,
+              "receipt_ns": 196997024891973
+            },
+            "head": {
+              "source_ns": 1793528823417282048,
+              "receipt_ns": 196997019247952
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528823723731703,
+          "monotonic_ns": 196997261161452
+        },
+        "ended": {
+          "utc_ns": 1793528825601894180,
+          "monotonic_ns": 196999139319161
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528825601894180,
+            "monotonic_ns": 196999139319161
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528825896386048,
+              "receipt_ns": 196999491273985
+            },
+            "depth": {
+              "source_ns": 1793528825896413952,
+              "receipt_ns": 196999490588987
+            },
+            "head": {
+              "source_ns": 1793528825901743104,
+              "receipt_ns": 196999504514645
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528823428868096,
+                "receipt_ns": 196997025440973
+              },
+              "depth": {
+                "source_ns": 1793528823428951040,
+                "receipt_ns": 196997024891973
+              },
+              "head": {
+                "source_ns": 1793528823417282048,
+                "receipt_ns": 196997019247952
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.1611743724212651,
+              "median_m": 0.16117385550642804,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528823428951040,
+              "rgb_source_ns": 1793528823428868096,
+              "skew_ms": 0.082944
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528823144238824,
+              "monotonic_ns": 196996681662909
+            },
+            "saved": {
+              "utc_ns": 1793528823704825737,
+              "monotonic_ns": 196997242250270
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528825896386048,
+                "receipt_ns": 196999491273985
+              },
+              "depth": {
+                "source_ns": 1793528825896413952,
+                "receipt_ns": 196999490588987
+              },
+              "head": {
+                "source_ns": 1793528825901743104,
+                "receipt_ns": 196999504514645
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.15967262730763554,
+              "median_m": 0.1596734512467407,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528825896413952,
+              "rgb_source_ns": 1793528825896386048,
+              "skew_ms": 0.027904
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528825601894180,
+              "monotonic_ns": 196999139319161
+            },
+            "saved": {
+              "utc_ns": 1793528826119072570,
+              "monotonic_ns": 196999656496783
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000009",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.4624889336395348,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.49248893363953483,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528833615521276,
+          "monotonic_ns": 197007152945649
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528833628210879,
+            "monotonic_ns": 197007165635380
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528833864944128,
+              "receipt_ns": 197007462603498
+            },
+            "depth": {
+              "source_ns": 1793528833898345984,
+              "receipt_ns": 197007494974170
+            },
+            "head": {
+              "source_ns": 1793528833884619008,
+              "receipt_ns": 197007486935002
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528834093397259,
+          "monotonic_ns": 197007630821056
+        },
+        "ended": {
+          "utc_ns": 1793528836908348788,
+          "monotonic_ns": 197010445772713
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528836908348788,
+            "monotonic_ns": 197010445772713
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528837032331008,
+              "receipt_ns": 197010626869481
+            },
+            "depth": {
+              "source_ns": 1793528837032636928,
+              "receipt_ns": 197010626288388
+            },
+            "head": {
+              "source_ns": 1793528837031012096,
+              "receipt_ns": 197010636050527
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528833864944128,
+                "receipt_ns": 197007462603498
+              },
+              "depth": {
+                "source_ns": 1793528833898345984,
+                "receipt_ns": 197007494974170
+              },
+              "head": {
+                "source_ns": 1793528833884619008,
+                "receipt_ns": 197007486935002
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.15867146389854916,
+              "median_m": 0.15886974669122012,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528833898345984,
+              "rgb_source_ns": 1793528833864944128,
+              "skew_ms": 33.401856
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528833628210879,
+              "monotonic_ns": 197007165635380
+            },
+            "saved": {
+              "utc_ns": 1793528834074189101,
+              "monotonic_ns": 197007611613346
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528837032331008,
+                "receipt_ns": 197010626869481
+              },
+              "depth": {
+                "source_ns": 1793528837032636928,
+                "receipt_ns": 197010626288388
+              },
+              "head": {
+                "source_ns": 1793528837031012096,
+                "receipt_ns": 197010636050527
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.13194040087594316,
+              "median_m": 0.13194056635610313,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528837032636928,
+              "rgb_source_ns": 1793528837032331008,
+              "skew_ms": 0.30592
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528836908348788,
+              "monotonic_ns": 197010445772713
+            },
+            "saved": {
+              "utc_ns": 1793528837281295817,
+              "monotonic_ns": 197010818720797
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000010",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            10.0,
+            0.0,
+            0.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.49248893363953483,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.5024889336395348,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "completed",
+        "submitted": {
+          "utc_ns": 1793528852021526689,
+          "monotonic_ns": 197025558950294
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528852027378047,
+            "monotonic_ns": 197025564801044
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528852202854912,
+              "receipt_ns": 197025792196193
+            },
+            "depth": {
+              "source_ns": 1793528852203200000,
+              "receipt_ns": 197025797720349
+            },
+            "head": {
+              "source_ns": 1793528852201219072,
+              "receipt_ns": 197025804054062
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528852445098879,
+          "monotonic_ns": 197025982522612
+        },
+        "ended": {
+          "utc_ns": 1793528853387345899,
+          "monotonic_ns": 197026924770592
+        },
+        "reason": null,
+        "after": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528853387345899,
+            "monotonic_ns": 197026924770592
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528853436568064,
+              "receipt_ns": 197027031998842
+            },
+            "depth": {
+              "source_ns": 1793528853436871936,
+              "receipt_ns": 197027031406802
+            },
+            "head": {
+              "source_ns": 1793528853429497088,
+              "receipt_ns": 197027032949644
+            }
+          }
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528852202854912,
+                "receipt_ns": 197025792196193
+              },
+              "depth": {
+                "source_ns": 1793528852203200000,
+                "receipt_ns": 197025797720349
+              },
+              "head": {
+                "source_ns": 1793528852201219072,
+                "receipt_ns": 197025804054062
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.1315399355123086,
+              "median_m": 0.13158982786717757,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528852203200000,
+              "rgb_source_ns": 1793528852202854912,
+              "skew_ms": 0.345088
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528852027378047,
+              "monotonic_ns": 197025564801044
+            },
+            "saved": {
+              "utc_ns": 1793528852429363869,
+              "monotonic_ns": 197025966788274
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528853436568064,
+                "receipt_ns": 197027031998842
+              },
+              "depth": {
+                "source_ns": 1793528853436871936,
+                "receipt_ns": 197027031406802
+              },
+              "head": {
+                "source_ns": 1793528853429497088,
+                "receipt_ns": 197027032949644
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.13123958648958273,
+              "median_m": 0.13128922271051724,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528853436871936,
+              "rgb_source_ns": 1793528853436568064,
+              "skew_ms": 0.303872
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528853387345899,
+              "monotonic_ns": 197026924770592
+            },
+            "saved": {
+              "utc_ns": 1793528853706449144,
+              "monotonic_ns": 197027243874029
+            }
+          },
+          "missing_images": []
+        }
+      }
+    },
+    {
+      "operation": {
+        "operation_id": "000011",
+        "kind": "move",
+        "command": {
+          "xyz_mm": [
+            -100.0,
+            0.0,
+            0.0
+          ]
+        },
+        "start_command_pose_m_xyzw": [
+          0.5024889336395348,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "target_command_pose_m_xyzw": [
+          0.40248893363953486,
+          -0.13988699401238636,
+          1.1986824501412825,
+          0.0017311803016319238,
+          0.0017868034824553849,
+          0.7076005202115911,
+          0.7066083173472868
+        ],
+        "speed_mm_s": 20.0,
+        "status": "interrupted",
+        "submitted": {
+          "utc_ns": 1793528867125584983,
+          "monotonic_ns": 197040663009259
+        },
+        "completion_basis": "command_interpolation",
+        "before": {
+          "status": "complete",
+          "boundary": {
+            "utc_ns": 1793528867139282294,
+            "monotonic_ns": 197040676706250
+          },
+          "frames": {
+            "right": {
+              "source_ns": 1793528867373352960,
+              "receipt_ns": 197040968776870
+            },
+            "depth": {
+              "source_ns": 1793528867373352960,
+              "receipt_ns": 197040968143044
+            },
+            "head": {
+              "source_ns": 1793528867369692928,
+              "receipt_ns": 197040972296864
+            }
+          }
+        },
+        "started": {
+          "utc_ns": 1793528867615156214,
+          "monotonic_ns": 197041152580459
+        },
+        "ended": {
+          "utc_ns": 1793528876675452294,
+          "monotonic_ns": 197050212877659
+        },
+        "reason": "operator_stop",
+        "after": {
+          "status": "missing",
+          "boundary": {
+            "utc_ns": 1793528876675452294,
+            "monotonic_ns": 197050212877659
+          },
+          "error": "operator_stopped"
+        }
+      },
+      "observations": {
+        "before": {
+          "metadata": {
+            "frames": {
+              "right": {
+                "source_ns": 1793528867373352960,
+                "receipt_ns": 197040968776870
+              },
+              "depth": {
+                "source_ns": 1793528867373352960,
+                "receipt_ns": 197040968143044
+              },
+              "head": {
+                "source_ns": 1793528867369692928,
+                "receipt_ns": 197040972296864
+              }
+            },
+            "depth": {
+              "center_px": [
+                433,
+                287
+              ],
+              "center_m": 0.1309392374668568,
+              "median_m": 0.13093914596292497,
+              "valid_pixels": 20,
+              "window": 5,
+              "window_pixels": 25,
+              "scale_m": 9.999999747e-05,
+              "status": "ok",
+              "serial": "419122271476",
+              "depth_source_ns": 1793528867373352960,
+              "rgb_source_ns": 1793528867373352960,
+              "skew_ms": 0.0
+            },
+            "metadata": {
+              "serial": "419122271476",
+              "scale_m": 9.999999747e-05,
+              "depth": {
+                "width": 640,
+                "height": 360,
+                "fx": 324.3457642,
+                "fy": 324.3457642,
+                "ppx": 317.0299377,
+                "ppy": 174.2187805,
+                "model": 4,
+                "coeffs": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "color": {
+                "width": 640,
+                "height": 360,
+                "fx": 328.5041504,
+                "fy": 327.7710876,
+                "ppx": 318.8516235,
+                "ppy": 172.8995972,
+                "model": 2,
+                "coeffs": [
+                  -0.05280727521,
+                  0.05498881638,
+                  0.0004291888035,
+                  0.00052549463,
+                  -0.01820588112
+                ]
+              },
+              "rotation_column_major": [
+                0.9999977946,
+                0.0001752357639,
+                0.002082722262,
+                -0.0001778774604,
+                0.9999991655,
+                0.001268264139,
+                -0.002082498511,
+                -0.001268631779,
+                0.9999970198
+              ],
+              "translation_m": [
+                1.290522596e-05,
+                2.875946393e-06,
+                -1.293644164e-05
+              ]
+            },
+            "selection": {
+              "point_normalized": [
+                0.6776212832550861,
+                0.7994428969359332
+              ],
+              "revision": 0,
+              "saved": true,
+              "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+              "error": null
+            },
+            "boundary": {
+              "utc_ns": 1793528867139282294,
+              "monotonic_ns": 197040676706250
+            },
+            "saved": {
+              "utc_ns": 1793528867595460266,
+              "monotonic_ns": 197041132884991
+            }
+          },
+          "missing_images": []
+        },
+        "after": {
+          "metadata": null,
+          "missing_images": [
+            "head",
+            "right"
+          ]
+        }
+      }
+    }
+  ],
+  "context_type": "HISTORICAL_DEMONSTRATION_NOT_LIVE",
+  "coordinates": "chassis: +X forward, +Y robot left, +Z up; deltas mm; pose translation m; quaternion xyzw",
+  "state_semantics": "Recorded poses are COMMAND poses, not measured states.",
+  "outcome": "Operation completed means commands sent, not verified contact or button activation.",
+  "case_review": {
+    "schema": "pressb-case-review-v1",
+    "analysis_version": "2026-11-01.182424.v1",
+    "case_id": "20261101_182424_352b5047",
+    "outcome": "success",
+    "outcome_source": "operator_feedback",
+    "outcome_scope": "button_activation",
+    "user_feedback": "用户指定本次记录作为新的成功记录，并要求后续使用本次测距点。",
+    "verified_at": "2026-11-01T18:30:40.949451+08:00",
+    "button_activation_verified": true,
+    "withdrawal_verified": null,
+    "image_review": "第10步after头部和右腕画面均清楚显示目标按钮亮起，使用张开夹爪的一侧手指按压。",
+    "evidence": [
+      "operations/000010/after/head.jpg",
+      "operations/000010/after/right.jpg"
+    ],
+    "limitations": [
+      "第11步[-100,0,0] mm后撤在原始记录中为interrupted，after缺失，不能据此证明后撤完成。",
+      "会话final缺失，recording_complete=false；这些原始字段保持不变。",
+      "命令目标位姿不等于实测末端位姿，按压成功不代表完整撤回已验证。"
+    ],
+    "measurement_point": {
+      "point_normalized": [
+        0.6776212832550861,
+        0.7994428969359332
+      ],
+      "center_px": [
+        433,
+        287
+      ],
+      "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+      "persisted": true
+    },
+    "lessons": [
+      "允许张开夹爪单边手指按压；选定实际接触手指并依据实时图像调整高度与横向位置。",
+      "本例中第5/6步分别下降10/20 mm、第8步横向调整20 mm，均为历史动作，不能固定照搬。",
+      "看到本轮按钮亮起后仍须完成撤回并获取证据，不能因历史成功标签而跳过撤回验证。"
+    ]
+  }
+}

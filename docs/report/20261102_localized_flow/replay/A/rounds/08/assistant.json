@@ -1,0 +1,19 @@
+{
+  "role": "assistant",
+  "content": "",
+  "refusal": null,
+  "annotations": null,
+  "audio": null,
+  "function_call": null,
+  "tool_calls": [
+    {
+      "id": "chatcmpl-tool-addb5ce9b2d5018e",
+      "type": "function",
+      "function": {
+        "name": "request_observation",
+        "arguments": "{\"reason\": \"Head still shows no button/arrow; refresh to confirm current view before any forward press attempt.\", \"visual_basis\": {\"observation_id\": \"f31cc38545bf422b980a9196c7a4ebbd\", \"localization_revision\": 1, \"view\": \"unknown\"}}"
+      }
+    }
+  ],
+  "reasoning": null
+}

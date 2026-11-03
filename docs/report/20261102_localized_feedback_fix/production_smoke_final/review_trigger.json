@@ -1,0 +1,115 @@
+{
+  "format": "pressb-hypothesis-review-v1",
+  "source": "program_review_trigger_not_contact_judgment",
+  "observation_id": "da0f07101060453d9b16f98b35a1113d",
+  "review_required": true,
+  "reasons": [
+    "repeated_X_without_consistent_projection_improvement",
+    "repeated_forward_requires_contact_hypothesis_review"
+  ],
+  "repeat_count": 3,
+  "windows": [
+    {
+      "axis": "X",
+      "sign": 1,
+      "count": 13,
+      "total_mm": 95,
+      "baseline_observation_id": "cf08bdb6f9ce449ca53ccadd18d526ed",
+      "commands": [
+        {
+          "command_id": "8fb1dce18b064362b1912462ab224049",
+          "before_observation_id": "cf08bdb6f9ce449ca53ccadd18d526ed",
+          "after_observation_id": "da861b4c19a941968f755d1cceaa70b5",
+          "command": {
+            "type": "move",
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "command_id": "3c4d2e2a89664ced8b176fc659816e7d",
+          "before_observation_id": "da861b4c19a941968f755d1cceaa70b5",
+          "after_observation_id": "51e38a93b28f4df4aa154e31a61b97ba",
+          "command": {
+            "type": "move",
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "command_id": "42b62e374b1645a4a521d12e3498924d",
+          "before_observation_id": "51e38a93b28f4df4aa154e31a61b97ba",
+          "after_observation_id": "da0f07101060453d9b16f98b35a1113d",
+          "command": {
+            "type": "move",
+            "xyz_mm": [
+              5,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "views": {
+        "head": {
+          "before_error_button_units": null,
+          "current_error_button_units": null,
+          "projection_effect": "unknown"
+        },
+        "wrist": {
+          "before_error_button_units": null,
+          "current_error_button_units": null,
+          "projection_effect": "unknown"
+        }
+      }
+    }
+  ],
+  "baseline_observation_id": "cf08bdb6f9ce449ca53ccadd18d526ed",
+  "commands_between_images": [
+    {
+      "command_id": "8fb1dce18b064362b1912462ab224049",
+      "before_observation_id": "cf08bdb6f9ce449ca53ccadd18d526ed",
+      "after_observation_id": "da861b4c19a941968f755d1cceaa70b5",
+      "command": {
+        "type": "move",
+        "xyz_mm": [
+          5,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "command_id": "3c4d2e2a89664ced8b176fc659816e7d",
+      "before_observation_id": "da861b4c19a941968f755d1cceaa70b5",
+      "after_observation_id": "51e38a93b28f4df4aa154e31a61b97ba",
+      "command": {
+        "type": "move",
+        "xyz_mm": [
+          5,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "command_id": "42b62e374b1645a4a521d12e3498924d",
+      "before_observation_id": "51e38a93b28f4df4aa154e31a61b97ba",
+      "after_observation_id": "da0f07101060453d9b16f98b35a1113d",
+      "command": {
+        "type": "move",
+        "xyz_mm": [
+          5,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

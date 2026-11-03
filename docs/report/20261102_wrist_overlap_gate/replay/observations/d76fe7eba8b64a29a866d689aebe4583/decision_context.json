@@ -1,0 +1,21 @@
+{
+  "format": "pressb-conversation-v5",
+  "decision_mode": "localized",
+  "observation_id": "d76fe7eba8b64a29a866d689aebe4583",
+  "previous_observation_id": "1374f124af9749a09a6a6e7122f1d649",
+  "stage": "action_request",
+  "execution_policy": "model_decides_after_progress_review",
+  "forward_guard_policy": "none",
+  "localization_format": "pressb-localization-v3",
+  "localization_revision": 1,
+  "progress_monitor_format": "pressb-localized-progress-v3",
+  "view_phase": "model_decides",
+  "hypothesis_review_format": "pressb-hypothesis-review-v1",
+  "review_phase": "not_required",
+  "review_observation_id": null,
+  "compression_generation": 0,
+  "image_count": 7,
+  "compression_status": "not_needed",
+  "input_tokens_exact": null,
+  "input_tokens_estimate": 40599
+}

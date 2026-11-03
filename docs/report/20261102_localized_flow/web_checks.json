@@ -1,0 +1,57 @@
+{
+  "checked_at": "2026-11-02T07:55:53.865593+00:00",
+  "source": "scripts/s1b_agent_dashboard.py",
+  "source_sha256": "9e6531d24069e2f479212c9b3551cd74506d983bee74ba69284074156f67501e",
+  "robot_connected": false,
+  "model_requests": 0,
+  "runtime": "functions.exec V8 JavaScript runtime",
+  "method": "Read current HTML script from the dashboard module, compile all declarations before network poll startup with Function, execute renderPerception and localizationOverlay against a small DOM stub; assert URL binding, SVG numeric attributes, review content and absence of the old HEAD-only gate.",
+  "node_available": false,
+  "result": {
+    "status": "passed",
+    "checks": [
+      "dashboard_script_prefix_parse",
+      "snapshot_url_matches_observation_and_camera",
+      "normalized_svg_geometry",
+      "aspect_scaling",
+      "non_scaling_strokes",
+      "invalid_observation_url_rejected",
+      "localized_and_review_render",
+      "no_legacy_head_gate",
+      "failed_review_metrics_and_error_render_without_assessment"
+    ],
+    "rendered_card_children": 14
+  },
+  "python_checks": {
+    "localized_and_legacy_dashboard_failure_suites": {
+      "passed": 97,
+      "skipped": 2
+    },
+    "legacy_failure_and_dashboard_suite": {
+      "passed": 53
+    },
+    "latest_localized_failure_case_suite": {
+      "passed": 15
+    },
+    "note": "Suite counts overlap; do not sum them into a unique overall total. Node-dependent tests were skipped and rendering was separately exercised in V8.",
+    "localized_completion_and_legacy_failure_suite": {
+      "passed": 101,
+      "elapsed_s": 14.34,
+      "command": ".conda/envs/pressb/bin/python -m pytest -q tests/test_localized_failure_case.py tests/test_failure_case.py tests/test_view_failure_case.py tests/test_progress_failure_case.py"
+    },
+    "localized_conversation_readonly_audit_suite": {
+      "passed": 9,
+      "elapsed_s": 0.59
+    },
+    "latest_localized_dashboard_suite": {
+      "passed": 6,
+      "skipped": 1,
+      "elapsed_s": 0.67
+    }
+  },
+  "limitations": [
+    "DOM stub is not a real browser rendering/screenshot test.",
+    "SVG attributes and resize strategy were checked; physical image alignment accuracy is still a model-evaluation question.",
+    "No robot service or model endpoint was used."
+  ]
+}

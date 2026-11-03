@@ -1,0 +1,89 @@
+{
+  "format": "pressb-localization-v1",
+  "source": "model_not_human",
+  "observation_id": "981630409f1349a2a93a53a23eb19399",
+  "revision": 1,
+  "contact_reference": "white_arrow",
+  "usable_views": [],
+  "head": {
+    "arrow_box": null,
+    "button_box": [
+      0.57,
+      0.25,
+      0.61,
+      0.31
+    ],
+    "button_visibility": "full",
+    "contact_tip": null,
+    "contact_visibility": "not_visible",
+    "note": "Down-call button visible on panel; no white arrow or finger end seen",
+    "image_size": [
+      1280,
+      720
+    ],
+    "derived_relation": {
+      "source": "program_from_model_coordinates",
+      "horizontal": "unknown",
+      "vertical": "unknown",
+      "dx": null,
+      "dy": null,
+      "units": "normalized_image",
+      "tolerance": 0.01,
+      "pixel_delta": null,
+      "error_button_units": null
+    }
+  },
+  "wrist": {
+    "arrow_box": [
+      0.68,
+      0.72,
+      0.82,
+      0.98
+    ],
+    "button_box": [
+      0.21,
+      0.08,
+      0.28,
+      0.22
+    ],
+    "button_visibility": "full",
+    "contact_tip": null,
+    "contact_visibility": "not_visible",
+    "note": "Down-call button visible; white arrow on right gripper but finger end unclear",
+    "image_size": [
+      640,
+      360
+    ],
+    "derived_relation": {
+      "source": "program_from_model_coordinates",
+      "horizontal": "unknown",
+      "vertical": "unknown",
+      "dx": null,
+      "dy": null,
+      "units": "normalized_image",
+      "tolerance": 0.01,
+      "pixel_delta": null,
+      "error_button_units": null
+    }
+  },
+  "images": {
+    "head": {
+      "image_size": [
+        1280,
+        720
+      ],
+      "mime_type": "image/jpeg",
+      "sha256": "0c1cb1b4a12816a44e8692a0298e63538058c7ee7df3dee1359366a12626e55f",
+      "byte_count": 61826
+    },
+    "wrist": {
+      "image_size": [
+        640,
+        360
+      ],
+      "mime_type": "image/jpeg",
+      "sha256": "5e4c2c464af64437bcf10e86f2c25b510f52adef06754ba1af18d83de3b3f731",
+      "byte_count": 22530
+    }
+  }
+}

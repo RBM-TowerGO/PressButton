@@ -1,0 +1,8 @@
+{
+  "elapsed_s": 27.691161022055894,
+  "attempts": 2,
+  "prompt_tokens": 19454,
+  "completion_tokens": 248,
+  "validation_failures": 1,
+  "status": "validated"
+}

@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import io
 import json
@@ -9,8 +10,11 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'src'))
-from pressb.agent_loop.common import atomic_json
+from pressb.agent_loop import conversation as conversation_module
+from pressb.agent_loop.common import atomic_json, SESSION_SCHEMA
+from pressb.agent_loop.conversation import Conversation, image_count
 from pressb.agent_loop.demonstration import Demonstration
+from test_conversation import advance, jpeg, obs, summary_response
 
 
 def recording(root):
@@ -107,3 +111,48 @@ def test_default_reviewed_case_selects_8_9_10():
     assert demo.selection['selected_steps'] == ['000008', '000009', '000010']
     assert [r['command']['xyz_mm'] for r in demo.model_summary['operations']] == [[0,-20,0], [30,0,0], [10,0,0]]
     assert demo.summary['operations'][-1]['operation']['status'] == 'interrupted'
+
+
+@pytest.mark.parametrize('mode', ['direct', 'localized'])
+def test_full_reviewed_case_request_keeps_all_steps_and_missing_retreat(jpeg, mode):
+    from pressb.agent_loop.localized_conversation import LocalizedConversation
+
+    demo = Demonstration(ROOT/'outputs/keyboard_sessions/20261101_182424_352b5047')
+    expected_steps = [f'{step:06d}' for step in range(1, 12)]
+    assert demo.selection['mode'] == 'all'
+    assert demo.selection['selected_steps'] == expected_steps
+    cls = LocalizedConversation if mode == 'localized' else Conversation
+    conversation = cls('press', obs(0), jpeg, jpeg, dict(schema=SESSION_SCHEMA), 'prompt', demo)
+    messages = conversation.body()['messages']
+    assert messages[1]['content'][1:] == demo.content
+    assert image_count(messages[:2]) == 11
+    assert image_count(messages) == 13  # Eleven demonstration collages plus two current views.
+    model_demo = json.loads(messages[1]['content'][1]['text'])
+    assert [row['step'] for row in model_demo['operations']] == expected_steps
+    assert [row['status'] for row in model_demo['operations']] == ['completed']*10 + ['interrupted']
+    retreat = model_demo['operations'][-1]
+    assert retreat['command']['xyz_mm'] == [-100, 0, 0]
+    assert retreat['before']['status'] == 'complete'
+    assert retreat['after']['status'] == 'missing'
+    assert retreat['after']['missing_images'] == ['head', 'right']
+    assert model_demo['session']['recording_complete'] is False
+    assert model_demo['session']['final']['status'] == 'missing'
+    assert model_demo['case_review']['button_activation_verified'] is True
+    assert model_demo['case_review']['withdrawal_verified'] is None
+
+
+def test_compaction_preserves_full_reviewed_case_prefix(jpeg, monkeypatch, tmp_path):
+    demo = Demonstration(ROOT/'outputs/keyboard_sessions/20261101_182424_352b5047')
+    conversation = Conversation('press', obs(0), jpeg, jpeg, dict(schema=SESSION_SCHEMA), 'prompt', demo)
+    fixed_before = copy.deepcopy(conversation.body()['messages'][:2])
+    for n in range(1, 9):
+        advance(conversation, jpeg, n, 'request_observation')
+    monkeypatch.setattr(conversation_module, 'request', lambda *args, **kwargs: summary_response())
+    conversation.compact('fake', tmp_path/'compaction')
+    assert conversation.generation == 1 and conversation.start == 3
+    messages = conversation.body()['messages']
+    assert messages[:2] == fixed_before
+    assert image_count(messages[:2]) == 11
+    model_demo = json.loads(messages[1]['content'][1]['text'])
+    assert [row['step'] for row in model_demo['operations']] == [f'{step:06d}' for step in range(1, 12)]
+    assert len([message for message in messages if message['role'] == 'assistant']) == 5

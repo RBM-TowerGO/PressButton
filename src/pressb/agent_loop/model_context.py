@@ -120,7 +120,7 @@ def failure(summary):
     for source in summary['rounds']:
         row = {k: source.get(k) for k in ('round', 'proposal', 'executed', 'status', 'error', 'decision_stage', 'perception',
                                         'alignment_progress', 'activation', 'withdrawal', 'decision_basis',
-                                        'control_plan', 'progress_summary', 'view_summary') if k in source}
+                                        'control_plan', 'progress_summary', 'view_summary', 'localization_summary') if k in source}
         for phase in ('before', 'after'):
             obs = source.get(phase)
             row[phase + '_observation_id'] = obs['observation_id'] if obs else None

@@ -9,7 +9,11 @@ from .common import SESSION_SCHEMA, atomic_json, sha256
 from .demonstration import image_content
 
 
-DECISION_FORMATS = ('pressb-conversation-v1', 'pressb-conversation-v2', 'pressb-conversation-v3')
+DECISION_FORMATS = ('pressb-conversation-v1', 'pressb-conversation-v2', 'pressb-conversation-v3', 'pressb-conversation-v4',
+                    'pressb-conversation-v5')
+LOCALIZATION_FORMAT = 'pressb-localization-v1'
+MODEL_LOCALIZATION_FORMATS = ('pressb-localization-v2', 'pressb-localization-v3')
+HYPOTHESIS_REVIEW_FORMAT = 'pressb-hypothesis-review-v1'
 PROGRESS_FORMAT = 'pressb-progress-v1'
 PROGRESS_REVIEW_FORMAT = 'pressb-progress-review-v1'
 VIEW_FORMAT = 'pressb-view-acquisition-v1'
@@ -71,7 +75,18 @@ class FailureCase:
             monitored = bool(decision and decision.get('format') == 'pressb-conversation-v1'
                              and decision.get('progress_monitor_format') == PROGRESS_FORMAT)
             view_enabled = bool(decision and decision.get('view_acquisition_format') == VIEW_FORMAT)
-            if decision and decision.get('progress_monitor_format') is not None:
+            model_localized = bool(decision and decision.get('format') == 'pressb-conversation-v5')
+            localized = bool(decision and decision.get('format') in ('pressb-conversation-v4', 'pressb-conversation-v5'))
+            if localized and not model_localized and (decision.get('decision_mode') != 'localized'
+                              or decision.get('progress_monitor_format') not in (None, 'pressb-localized-progress-v1')
+                              or any(decision.get(key) not in (None, LOCALIZATION_FORMAT)
+                                     for key in ('localization_format', 'perception_format'))):
+                raise ValueError('unsupported_failure_localization_format')
+            if model_localized and (decision.get('decision_mode') != 'localized'
+                                    or decision.get('localization_format') not in MODEL_LOCALIZATION_FORMATS
+                                    or decision.get('progress_monitor_format') not in (None, 'pressb-localized-progress-v2', 'pressb-localized-progress-v3')):
+                raise ValueError('unsupported_failure_localization_format')
+            if decision and decision.get('progress_monitor_format') is not None and not localized:
                 if (decision.get('progress_monitor_format') != PROGRESS_FORMAT
                         or decision.get('format') != 'pressb-conversation-v1'
                         or decision.get('decision_mode', 'direct') != 'direct'):
@@ -81,7 +96,7 @@ class FailureCase:
                         or decision.get('decision_mode', 'direct') != 'direct'
                         or decision.get('view_phase') not in VIEW_PHASES):
                     raise ValueError('unsupported_failure_view_format')
-            if body is None and (not decision or decision.get('format') not in INSPECTION_FORMATS) and not monitored and not view_enabled:
+            if body is None and (not decision or decision.get('format') not in INSPECTION_FORMATS) and not monitored and not view_enabled and not localized:
                 raise ValueError('failure_round_missing_action_request')
             contexts = []
             for message in body['messages'] if body else []:
@@ -107,6 +122,13 @@ class FailureCase:
             proposal = self._read(folder/'proposal.json') if (folder/'proposal.json').exists() else None
             row = dict(round=number, proposal=proposal, before=before, after=None,
                        executed=False, status='no_execution_record')
+            if localized:
+                row['decision_stage'] = decision.get('stage')
+                if model_localized:
+                    self._model_localized_records(folder, decision, row, session['session_id'])
+                else:
+                    self._localized_records(folder, decision, row, session['session_id'])
+                    self._localized_evidence_records(folder, decision, row, session['session_id'])
             if monitored:
                 row['decision_stage'] = decision.get('stage')
                 self._progress_records(folder, decision, row, session['session_id'])
@@ -154,11 +176,15 @@ class FailureCase:
                 if proposal or (folder/'execution.json').exists() or (folder/'result.json').exists():
                     raise ValueError('failure_execution_without_action_request')
                 error_path = folder/'error.json'
-                for relative in ('view_acquisition/error.json', 'progress_review/error.json', 'withdrawal/error.json',
+                for relative in ('hypothesis_review/error.json', 'localization_review/error.json', 'localization_review/current/error.json',
+                                 'localization_review/before/error.json', 'localization/error.json',
+                                 'forward_guard/error.json', 'view_acquisition/error.json', 'progress_review/error.json', 'withdrawal/error.json',
                                  'activation/error.json', 'perception/error.json'):
                     if not error_path.exists():
                         error_path = folder/relative
-                stage = ('view_acquisition' if view_enabled and ((folder/'view_acquisition/request.json').exists()
+                stage = (self._localized_failed_stage(folder, decision,
+                             self._read(error_path) if error_path.exists() else None) if localized else
+                         'view_acquisition' if view_enabled and ((folder/'view_acquisition/request.json').exists()
                              or decision.get('stage') == 'view_acquisition'
                              or decision['view_phase'] != 'ready' and not (folder/'progress_review/request.json').exists()) else
                          'progress_review' if monitored else
@@ -200,9 +226,10 @@ class FailureCase:
                 row.update(status='observed', after=self._observation(capture['observation_id'], session['session_id']))
             elif (folder/'result.json').exists():
                 raise ValueError('failure_result_missing_execution_record')
-            elif (folder/'error.json').exists():
-                error = self._read(folder/'error.json')
-                failed_stage = ('view_acquisition' if view_enabled and (
+            elif (folder/'error.json').exists() or (localized and (folder/'forward_guard/error.json').exists()):
+                error = self._read(folder/'error.json' if (folder/'error.json').exists() else folder/'forward_guard/error.json')
+                failed_stage = (self._localized_failed_stage(folder, decision, error) if localized else
+                    'view_acquisition' if view_enabled and (
                     error.get('stage') in ('view_acquisition', 'inspect_view')
                     or (folder/'view_acquisition/error.json').exists()) else
                     'progress_review' if monitored and (
@@ -229,6 +256,453 @@ class FailureCase:
         from .model_context import failure, text
         self.model_summary = failure(self.summary)
         self.content.insert(0, text(self.model_summary))
+
+    @staticmethod
+    def _localized_failed_stage(folder, decision, error=None):
+        """No action request means localization work remains an unexecuted round."""
+        stage = (error or {}).get('stage', decision.get('stage'))
+        if stage in ('localization', 'localization_review', 'hypothesis_review', 'forward_guard',
+                     'activation_verification', 'withdrawal_verification'):
+            return stage
+        if (folder/'forward_guard/error.json').exists():
+            return 'forward_guard'
+        if (folder/'hypothesis_review/request.json').exists() and not (folder/'request.json').exists():
+            return 'hypothesis_review'
+        review = folder/'localization_review'
+        if (review/'assessment.json').exists() or any((review/name/'request.json').exists()
+                                                      for name in ('before', 'current')):
+            return 'localization_review'
+        if not (folder/'request.json').exists() or (folder/'localization/error.json').exists():
+            return 'localization'
+        return 'request'
+
+    def _model_localized_records(self, folder, decision, row, session_id):
+        """Read v5 advisory locations without applying historical visual gates.
+
+        Observation IDs and image hashes bind the archive to the original input.
+        Model visibility and malformed location fields never reject a case: the
+        original response remains archived and display geometry is recomputed.
+        """
+        from . import model_localization as localization
+        from .spatial_localization import image_metadata
+        oid = decision['observation_id']
+        directory = folder/'localization'
+        request_path, assessment_path = directory/'request.json', directory/'assessment.json'
+        stage, pictures = {}, []
+        if request_path.exists():
+            body = self._read(request_path)
+            frames = []
+            for message in body.get('messages', []):
+                for part in message.get('content', []) if isinstance(message.get('content'), list) else []:
+                    if part.get('type') == 'image_url':
+                        pictures.append(part)
+                    elif part.get('type') == 'text':
+                        try:
+                            frame = json.loads(part.get('text', ''))
+                        except (ValueError, TypeError):
+                            continue
+                        if isinstance(frame, dict) and 'frame' in frame:
+                            frames.append(frame)
+            if frames != [dict(frame='CURRENT', observation_id=oid)] or len(pictures) != 2:
+                raise ValueError('failure_localization_request_observation_mismatch')
+        active = display = None
+        if assessment_path.exists():
+            active = self._read(assessment_path)
+            if (not isinstance(active, dict) or active.get('format') not in MODEL_LOCALIZATION_FORMATS
+                    or active.get('source') != 'model_not_human'):
+                raise ValueError('failure_localization_model_provenance_required')
+            if active.get('observation_id') != oid:
+                raise ValueError('failure_localization_observation_mismatch')
+            if not request_path.exists():
+                raise ValueError('failure_localization_assessment_requires_request')
+            self._observation(oid, session_id)
+            sizes, image_records = {}, {}
+            for (view, filename), picture in zip((('head', 'head.jpg'), ('wrist', 'right.jpg')), pictures):
+                image_bytes = self._bytes(self.run/'observations'/oid/filename)
+                with Image.open(io.BytesIO(image_bytes)) as image:
+                    sizes[view] = list(image.size)
+                image_records[view] = image_metadata(picture)
+                artifact = self.observations[oid].get('artifacts', {}).get(filename)
+                if (image_records[view]['sha256'] != sha256(image_bytes)
+                        or image_records[view]['image_size'] != sizes[view]
+                        or artifact and artifact.get('sha256') != sha256(image_bytes)):
+                    raise ValueError('failure_localization_image_mismatch')
+            if active.get('images', image_records) != image_records:
+                raise ValueError('failure_localization_image_mismatch')
+            stage['assessment'] = active
+            current_path = folder/'localization_current.json'
+            if current_path.exists():
+                current = self._read(current_path)
+                if current != active:
+                    raise ValueError('failure_current_localization_version_mismatch')
+            if decision.get('localization_revision', active.get('revision')) != active.get('revision'):
+                raise ValueError('failure_current_localization_version_mismatch')
+            row['localization_current'] = active
+            raw = active.get('raw_locations', {view: active.get(view) for view in ('head', 'wrist')})
+            display = localization.normalize(raw, oid, sizes, revision=active.get('revision', 1),
+                contact_reference=active.get('contact_reference', 'white_arrow'),
+                raw_output=active.get('raw_output'), parse_notes=active.get('parse_notes'),
+                # v2 declared normalized coordinates but had no explicit unit field.
+                # Respect that historical contract; never guess a 1000-scale repair.
+                source_units='normalized_01' if active['format'] == 'pressb-localization-v2' else None)
+        # Response parsing notes are data, never a retry or execution rejection.
+        for path in sorted(directory.glob('response-*.json')):
+            self._read(path)
+        for filename in ('metrics', 'error'):
+            path = directory/(filename+'.json')
+            if path.exists():
+                record = self._read(path)
+                if not isinstance(record, dict) or record.get('observation_id', oid) != oid:
+                    raise ValueError('failure_localization_'+filename+'_observation_mismatch')
+                stage[filename] = record
+        if stage:
+            row['localization'] = stage
+        progress_path = folder/'localized_progress.json'
+        if progress_path.exists():
+            progress = self._read(progress_path)
+            if progress.get('observation_id', progress.get('current_observation_id')) != oid:
+                raise ValueError('failure_localized_progress_observation_mismatch')
+            if progress.get('previous_observation_id') is not None:
+                self._observation(progress['previous_observation_id'], session_id)
+            row['localized_progress'] = progress
+        summary = dict(source='model_localizations_and_program_geometry_not_human_confirmation',
+                       observation_id=oid, decision_stage=decision.get('stage'),
+                       execution_policy=decision.get('execution_policy', 'model_decides'),
+                       forward_guard_policy=decision.get('forward_guard_policy', 'none'))
+        if display:
+            summary.update(revision=display['revision'], coordinate_units=display.get('coordinate_units'),
+                coordinate_conversion=display.get('coordinate_conversion'),
+                views={view: {key: display[view].get(key) for key in ('button_visibility', 'contact_visibility',
+                    'button_box', 'arrow_box', 'contact_tip', 'note', 'derived_relation')} for view in ('head', 'wrist')})
+            if display.get('parse_notes'):
+                summary.update(parse_notes=display['parse_notes'])
+        if row.get('localized_progress'):
+            summary['progress'] = row['localized_progress']
+        self._hypothesis_review_records(folder, decision, row, session_id)
+        if row.get('hypothesis_review'):
+            summary['hypothesis_review'] = {k: row['hypothesis_review'][k] for k in ('trigger', 'assessment')
+                                            if k in row['hypothesis_review']}
+        self._wrist_overlap_records(folder, decision, row, session_id)
+        if row.get('forward_guard'):
+            guard = row['forward_guard']
+            summary['forward_guard'] = {key: guard[key] for key in ('error',) if key in guard}
+            if guard.get('decision'):
+                summary['forward_guard']['decision'] = {key: guard['decision'].get(key) for key in
+                    ('format', 'source', 'policy', 'observation_id', 'assessment_observation_id',
+                     'allowed', 'basis', 'reasons', 'authorized_command')}
+            if guard.get('assessment'):
+                summary['forward_guard']['assessment'] = {key: guard['assessment'].get(key) for key in
+                    ('format', 'source', 'observation_id', 'button_visibility', 'contact_visibility',
+                     'button_box', 'contact_tip', 'tip_inside_button', 'note', 'geometry')}
+        row['localization_summary'] = summary
+
+    def _wrist_overlap_records(self, folder, decision, row, session_id):
+        """Archive current-frame gate evidence; a candidate is never an executed action."""
+        directory = folder/'forward_guard'
+        if decision.get('forward_guard_policy') != 'wrist_tip_overlap' or not directory.exists():
+            return
+        from .spatial_localization import image_metadata
+        oid = decision['observation_id']
+        archive = {}
+        for path in sorted(directory.glob('*.json')):
+            record = self._read(path)
+            if path.stem in ('assessment', 'decision', 'metrics', 'error'):
+                archive[path.stem] = record
+            elif path.stem.startswith('candidate-'):
+                archive.setdefault('candidates', []).append(record)
+        assessment = archive.get('assessment')
+        request_path = directory/'request.json'
+        if request_path.exists():
+            body = self._read(request_path)
+            frames, pictures = [], []
+            for message in body.get('messages', []):
+                for part in message.get('content', []) if isinstance(message.get('content'), list) else []:
+                    if part.get('type') == 'image_url':
+                        pictures.append(part)
+                    elif part.get('type') == 'text':
+                        try:
+                            frame = json.loads(part.get('text', ''))
+                        except (TypeError, ValueError):
+                            continue
+                        if isinstance(frame, dict) and 'frame' in frame:
+                            frames.append(frame)
+            if frames != [dict(frame='CURRENT', observation_id=oid)] or len(pictures) != 1:
+                raise ValueError('failure_wrist_overlap_request_observation_mismatch')
+            self._observation(oid, session_id)
+            image_bytes = self._bytes(self.run/'observations'/oid/'right.jpg')
+            image_record = image_metadata(pictures[0])
+            if image_record['sha256'] != sha256(image_bytes):
+                raise ValueError('failure_wrist_overlap_image_mismatch')
+            if assessment and assessment.get('images') != {'wrist': image_record}:
+                raise ValueError('failure_wrist_overlap_image_mismatch')
+        if assessment:
+            if (assessment.get('format') != 'pressb-wrist-tip-overlap-v1'
+                    or assessment.get('source') != 'model_not_human'):
+                raise ValueError('failure_wrist_overlap_model_provenance_required')
+            if assessment.get('observation_id') != oid:
+                raise ValueError('failure_wrist_overlap_observation_mismatch')
+            if not request_path.exists():
+                raise ValueError('failure_wrist_overlap_assessment_requires_request')
+        for key in ('decision', 'metrics', 'error'):
+            record = archive.get(key)
+            if record and record.get('observation_id', oid) != oid:
+                raise ValueError('failure_wrist_overlap_observation_mismatch')
+        gates = [archive['decision']] if archive.get('decision') else []
+        gates.extend(item['decision'] for item in archive.get('candidates', [])
+                     if isinstance(item, dict) and item.get('decision'))
+        for gate in gates:
+            if gate.get('observation_id') != oid:
+                raise ValueError('failure_wrist_overlap_observation_mismatch')
+            if (gate.get('policy') != 'wrist_tip_overlap'
+                    or gate.get('source') != 'program_rule_on_model_judgment'):
+                raise ValueError('failure_wrist_overlap_decision_provenance_required')
+            if not assessment or gate.get('assessment_observation_id') != oid:
+                raise ValueError('failure_wrist_overlap_decision_requires_current_assessment')
+        if archive:
+            row['forward_guard'] = archive
+
+    def _hypothesis_review_records(self, folder, decision, row, session_id):
+        """Keep conditional read-only reviews, including interruptions before action."""
+        directory = folder/'hypothesis_review'
+        if not directory.exists():
+            return
+        archive = {}
+        for path in sorted(directory.glob('*.json')):
+            record = self._read(path)
+            if path.stem in ('trigger', 'assessment', 'metrics', 'error', 'decision'):
+                archive[path.stem] = record
+        oid = decision['observation_id']
+        trigger = archive.get('trigger') or {}
+        if trigger.get('observation_id', oid) != oid:
+            raise ValueError('failure_hypothesis_review_observation_mismatch')
+        baseline = trigger.get('baseline_observation_id')
+        assessment = archive.get('assessment')
+        if assessment:
+            if (assessment.get('format') != HYPOTHESIS_REVIEW_FORMAT
+                    or assessment.get('source') != 'model_not_human'):
+                raise ValueError('failure_hypothesis_review_model_provenance_required')
+            if (assessment.get('observation_id') != oid
+                    or baseline is not None and assessment.get('previous_observation_id') != baseline):
+                raise ValueError('failure_hypothesis_review_observation_mismatch')
+            baseline = assessment.get('previous_observation_id')
+            if (not baseline or assessment.get('evidence_observation_ids') != [baseline, oid]):
+                raise ValueError('failure_hypothesis_review_evidence_mismatch')
+        if baseline is not None:
+            self._observation(baseline, session_id)
+        if archive:
+            row['hypothesis_review'] = archive
+
+    def _localized_records(self, folder, decision, row, session_id):
+        """Archive explicit per-frame positions and deterministic geometry without inventing motion."""
+        from . import spatial_localization as localization
+        oid = decision['observation_id']
+        versions = {}
+
+        def load_stage(directory, expected_oid, name):
+            request_path = directory/'request.json'
+            assessment_path = directory/'assessment.json'
+            value = {}
+            pictures = []
+            if request_path.exists():
+                body = self._read(request_path)
+                frames, images = [], 0
+                for message in body.get('messages', []):
+                    if not isinstance(message.get('content'), list):
+                        continue
+                    for part in message['content']:
+                        if part.get('type') == 'image_url':
+                            pictures.append(part)
+                            images += 1
+                        if part.get('type') == 'text':
+                            try:
+                                text = json.loads(part.get('text', ''))
+                            except (ValueError, TypeError):
+                                continue
+                            if isinstance(text, dict) and 'frame' in text:
+                                frames.append(text)
+                if frames != [dict(frame='CURRENT', observation_id=expected_oid)] or images != 2:
+                    raise ValueError('failure_localization_request_observation_mismatch')
+            if assessment_path.exists():
+                record = self._read(assessment_path)
+                if (not isinstance(record, dict) or record.get('format') != LOCALIZATION_FORMAT
+                        or record.get('source') != 'model_not_human'):
+                    raise ValueError('failure_localization_model_provenance_required')
+                if record.get('observation_id') != expected_oid:
+                    raise ValueError('failure_localization_observation_mismatch')
+                if not request_path.exists():
+                    raise ValueError('failure_localization_assessment_requires_request')
+                self._observation(expected_oid, session_id)
+                sizes, image_records = {}, {}
+                for (view, filename), picture in zip((('head', 'head.jpg'), ('wrist', 'right.jpg')), pictures):
+                    image_bytes = self._bytes(self.run/'observations'/expected_oid/filename)
+                    with Image.open(io.BytesIO(image_bytes)) as image:
+                        sizes[view] = list(image.size)
+                    image_records[view] = localization.image_metadata(picture)
+                    artifact = self.observations[expected_oid].get('artifacts', {}).get(filename)
+                    if (image_records[view]['sha256'] != sha256(image_bytes)
+                            or image_records[view]['image_size'] != sizes[view]
+                            or artifact and artifact.get('sha256') != sha256(image_bytes)):
+                        raise ValueError('failure_localization_image_mismatch')
+                if record.get('images', image_records) != image_records:
+                    raise ValueError('failure_localization_image_mismatch')
+                try:
+                    raw = dict(observation_id=expected_oid, **{view: {key: record[view][key]
+                        for key in ('button_visibility', 'contact_visibility', 'button_box', 'arrow_box', 'contact_tip', 'note')}
+                        for view in ('head', 'wrist')})
+                    verified = localization.validate_raw(raw, expected_oid, sizes, revision=record['revision'],
+                        contact_reference=record.get('contact_reference', 'white_arrow'))
+                except (ValueError, KeyError, TypeError) as exc:
+                    raise ValueError('failure_localization_invalid_positions') from exc
+                if any(record.get(key) != expected for key, expected in verified.items()):
+                    raise ValueError('failure_localization_derived_relation_mismatch')
+                value['assessment'] = record
+                if expected_oid == oid:
+                    if record['revision'] in versions and record != versions[record['revision']]:
+                        raise ValueError('failure_localization_revision_reused')
+                    versions[record['revision']] = record
+            for filename in ('metrics', 'error'):
+                path = directory/(filename+'.json')
+                if path.exists():
+                    record = self._read(path)
+                    if not isinstance(record, dict) or record.get('observation_id', expected_oid) != expected_oid:
+                        raise ValueError('failure_localization_'+filename+'_observation_mismatch')
+                    value[filename] = record
+            if value:
+                row[name] = value
+            return value
+
+        load_stage(folder/'localization', oid, 'localization')
+        review_root = folder/'localization_review'
+        review_path = review_root/'assessment.json'
+        review = self._read(review_path) if review_path.exists() else None
+        before_path = review_root/'before/assessment.json'
+        before_request = review_root/'before/request.json'
+        previous_oid = (review or {}).get('previous_observation_id')
+        if previous_oid is None and before_path.exists():
+            previous_oid = self._read(before_path).get('observation_id')
+        if previous_oid is None and before_request.exists():
+            # A review may stop before its first response. The explicit frame in
+            # that review request identifies BEFORE; do not choose from action history.
+            body = self._read(before_request)
+            for message in body.get('messages', []):
+                for part in message.get('content', []) if isinstance(message.get('content'), list) else []:
+                    if part.get('type') != 'text':
+                        continue
+                    try:
+                        frame = json.loads(part.get('text', ''))
+                    except (ValueError, TypeError):
+                        continue
+                    if isinstance(frame, dict) and frame.get('frame') == 'CURRENT':
+                        previous_oid = frame.get('observation_id')
+        if previous_oid is not None:
+            earlier_ids = {record[boundary]['observation_id'] for record in self.summary['rounds']
+                           for boundary in ('before', 'after') if record.get(boundary)}
+            if previous_oid == oid or previous_oid not in earlier_ids:
+                raise ValueError('failure_localization_review_observation_mismatch')
+            self._observation(previous_oid, session_id)
+            load_stage(review_root/'before', previous_oid, 'localization_review_before')
+        load_stage(review_root/'current', oid, 'localization_review_current')
+        if review is not None:
+            if (not isinstance(review, dict) or review.get('observation_id') != oid
+                    or review.get('previous_observation_id') != previous_oid):
+                raise ValueError('failure_localization_review_observation_mismatch')
+            if (review.get('format') != 'pressb-localization-review-v1'
+                    or review.get('source') != 'model_relocalization_and_program_comparison'):
+                raise ValueError('failure_localization_review_provenance_required')
+            row['localization_review'] = review
+        active_path = folder/'localization_current.json'
+        active = self._read(active_path) if active_path.exists() else versions.get(max(versions)) if versions else None
+        if active is not None:
+            source = versions.get(active.get('revision'))
+            if (not source or active.get('observation_id') != oid or active.get('source') != 'model_not_human'
+                    or any(active.get(k) != source[k] for k in ('format', 'head', 'wrist', 'contact_reference'))
+                    or not set(active.get('usable_views', [])).issubset(source['usable_views'])
+                    or decision.get('localization_revision', active['revision']) != active['revision']):
+                raise ValueError('failure_current_localization_version_mismatch')
+            row['localization_current'] = active
+        progress_path = folder/'localized_progress.json'
+        if progress_path.exists():
+            progress = self._read(progress_path)
+            current = progress.get('observation_id', progress.get('current_observation_id'))
+            if current != oid:
+                raise ValueError('failure_localized_progress_observation_mismatch')
+            previous = progress.get('previous_observation_id')
+            if previous is not None:
+                self._observation(previous, session_id)
+            row['localized_progress'] = progress
+        summary = dict(source='model_localizations_and_program_geometry_not_human_confirmation',
+                       observation_id=oid, decision_stage=decision.get('stage'))
+        if active:
+            summary.update(revision=active['revision'], usable_views=active['usable_views'],
+                views={view: {key: active[view][key] for key in ('button_visibility', 'contact_visibility',
+                    'button_box', 'contact_tip', 'derived_relation')} for view in ('head', 'wrist')})
+        if review is not None:
+            summary['review'] = {k: review[k] for k in ('source', 'previous_observation_id',
+                'observation_id', 'conflicting_views', 'before_conflicting_views', 'conflicts', 'usable_views') if k in review}
+        if row.get('localized_progress'):
+            summary['progress'] = row['localized_progress']
+        row['localization_summary'] = summary
+
+    def _localized_evidence_records(self, folder, decision, row, session_id):
+        """Completion reviews may cite earlier live frames, not the decision's current image."""
+        from .spatial_localization import image_metadata
+        seen = []
+        for record in self.summary['rounds']+[row]:
+            for boundary in ('before', 'after'):
+                item = record.get(boundary)
+                if item and item['observation_id'] not in seen:
+                    seen.append(item['observation_id'])
+        for name, format_name, field in (
+                ('activation', 'pressb-activation-v1', 'light_on'),
+                ('withdrawal', 'pressb-withdrawal-v1', 'withdrawal')):
+            directory = folder/name
+            request_path, assessment_path = directory/'request.json', directory/'assessment.json'
+            frames, pictures = [], []
+            if request_path.exists():
+                body = self._read(request_path)
+                for message in body.get('messages', []):
+                    if not isinstance(message.get('content'), list):
+                        continue
+                    for part in message['content']:
+                        if part.get('type') == 'image_url':
+                            pictures.append(part)
+                        if part.get('type') == 'text':
+                            try:
+                                value = json.loads(part.get('text', ''))
+                            except (ValueError, TypeError):
+                                continue
+                            if isinstance(value, dict) and 'frame' in value:
+                                frames.append(value)
+                if (len(frames) != 2 or len(pictures) != 4
+                        or [frame.get('frame') for frame in frames] != ['BEFORE', 'CURRENT']):
+                    raise ValueError('failure_localized_evidence_request_mismatch')
+                ids = [frame.get('observation_id') for frame in frames]
+                if (any(oid not in seen for oid in ids) or seen.index(ids[0]) >= seen.index(ids[1])):
+                    raise ValueError('failure_localized_evidence_requires_ordered_live_observations')
+                for oid, pair in zip(ids, (pictures[:2], pictures[2:])):
+                    self._observation(oid, session_id)
+                    for filename, picture in zip(('head.jpg', 'right.jpg'), pair):
+                        data = self._bytes(self.run/'observations'/oid/filename)
+                        if image_metadata(picture)['sha256'] != sha256(data):
+                            raise ValueError('failure_localized_evidence_image_mismatch')
+            if assessment_path.exists():
+                record = self._read(assessment_path)
+                if (not isinstance(record, dict) or record.get('format') != format_name
+                        or record.get('source') != 'model_not_human'
+                        or record.get(field) not in ('yes', 'no', 'unknown')):
+                    raise ValueError('failure_localized_evidence_model_provenance_required')
+                expected = [record.get('previous_observation_id'), record.get('observation_id')]
+                if (not request_path.exists() or expected != ids
+                        or record.get('evidence_observation_ids') != expected):
+                    raise ValueError('failure_localized_evidence_observation_mismatch')
+                row[name] = record
+            for file in ('metrics', 'error'):
+                path = directory/(file+'.json')
+                if path.exists():
+                    row[name+'_'+file] = self._read(path)
+        if (row.get('activation') and row.get('withdrawal')
+                and row['activation']['observation_id'] != row['withdrawal']['previous_observation_id']):
+            raise ValueError('failure_localized_withdrawal_must_follow_reviewed_light')
 
     def _view_records(self, folder, decision, row, session_id):
         """Keep framing and model disagreement separate from executed commands."""

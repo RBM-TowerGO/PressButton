@@ -1,0 +1,314 @@
+{
+  "context_type": "HISTORICAL_DEMONSTRATION_NOT_LIVE",
+  "case_review": {
+    "case_id": "20261101_182424_352b5047",
+    "analysis_version": "2026-11-01.182424.v1",
+    "outcome": "success",
+    "outcome_source": "operator_feedback",
+    "outcome_scope": "button_activation",
+    "button_activation_verified": true,
+    "withdrawal_verified": null,
+    "image_review": "第10步after头部和右腕画面均清楚显示目标按钮亮起，使用张开夹爪的一侧手指按压。",
+    "limitations": [
+      "第11步[-100,0,0] mm后撤在原始记录中为interrupted，after缺失，不能据此证明后撤完成。",
+      "会话final缺失，recording_complete=false；这些原始字段保持不变。",
+      "命令目标位姿不等于实测末端位姿，按压成功不代表完整撤回已验证。"
+    ],
+    "measurement_point": {
+      "point_normalized": [
+        0.6776212832550861,
+        0.7994428969359332
+      ],
+      "center_px": [
+        433,
+        287
+      ],
+      "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+      "persisted": true
+    }
+  },
+  "session": {
+    "recording_complete": false,
+    "final": {
+      "status": "missing",
+      "boundary": {
+        "utc_ns": 1793528876890453476,
+        "monotonic_ns": 197050427878521
+      },
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    }
+  },
+  "operations": [
+    {
+      "step": "000008",
+      "type": "move",
+      "command": {
+        "xyz_mm": [
+          0.0,
+          -20.0,
+          0.0
+        ]
+      },
+      "status": "completed",
+      "start_command_pose": {
+        "xyz_mm": [
+          462.5,
+          -119.9,
+          1198.7
+        ],
+        "quaternion_xyzw": [
+          0.0017,
+          0.0018,
+          0.7076,
+          0.7066
+        ]
+      },
+      "target_command_pose": {
+        "xyz_mm": [
+          462.5,
+          -139.9,
+          1198.7
+        ],
+        "quaternion_xyzw": [
+          0.0017,
+          0.0018,
+          0.7076,
+          0.7066
+        ]
+      },
+      "before": {
+        "status": "complete",
+        "depth": {
+          "median_mm": 161.2,
+          "status": "ok",
+          "valid_pixels": 20,
+          "window_pixels": 25,
+          "center_px": [
+            433,
+            287
+          ],
+          "point_normalized": [
+            0.677621,
+            0.799443
+          ],
+          "revision": 0,
+          "rgb_depth_skew_ms": 0.1
+        },
+        "missing_images": []
+      },
+      "after": {
+        "status": "complete",
+        "depth": {
+          "median_mm": 159.7,
+          "status": "ok",
+          "valid_pixels": 20,
+          "window_pixels": 25,
+          "center_px": [
+            433,
+            287
+          ],
+          "point_normalized": [
+            0.677621,
+            0.799443
+          ],
+          "revision": 0,
+          "rgb_depth_skew_ms": 0.0
+        },
+        "missing_images": []
+      }
+    },
+    {
+      "step": "000009",
+      "type": "move",
+      "command": {
+        "xyz_mm": [
+          30.0,
+          0.0,
+          0.0
+        ]
+      },
+      "status": "completed",
+      "start_command_pose": {
+        "xyz_mm": [
+          462.5,
+          -139.9,
+          1198.7
+        ],
+        "quaternion_xyzw": [
+          0.0017,
+          0.0018,
+          0.7076,
+          0.7066
+        ]
+      },
+      "target_command_pose": {
+        "xyz_mm": [
+          492.5,
+          -139.9,
+          1198.7
+        ],
+        "quaternion_xyzw": [
+          0.0017,
+          0.0018,
+          0.7076,
+          0.7066
+        ]
+      },
+      "before": {
+        "status": "complete",
+        "depth": {
+          "median_mm": 158.9,
+          "status": "ok",
+          "valid_pixels": 20,
+          "window_pixels": 25,
+          "center_px": [
+            433,
+            287
+          ],
+          "point_normalized": [
+            0.677621,
+            0.799443
+          ],
+          "revision": 0,
+          "rgb_depth_skew_ms": 33.4
+        },
+        "missing_images": []
+      },
+      "after": {
+        "status": "complete",
+        "depth": {
+          "median_mm": 131.9,
+          "status": "ok",
+          "valid_pixels": 20,
+          "window_pixels": 25,
+          "center_px": [
+            433,
+            287
+          ],
+          "point_normalized": [
+            0.677621,
+            0.799443
+          ],
+          "revision": 0,
+          "rgb_depth_skew_ms": 0.3
+        },
+        "missing_images": []
+      }
+    },
+    {
+      "step": "000010",
+      "type": "move",
+      "command": {
+        "xyz_mm": [
+          10.0,
+          0.0,
+          0.0
+        ]
+      },
+      "status": "completed",
+      "start_command_pose": {
+        "xyz_mm": [
+          492.5,
+          -139.9,
+          1198.7
+        ],
+        "quaternion_xyzw": [
+          0.0017,
+          0.0018,
+          0.7076,
+          0.7066
+        ]
+      },
+      "target_command_pose": {
+        "xyz_mm": [
+          502.5,
+          -139.9,
+          1198.7
+        ],
+        "quaternion_xyzw": [
+          0.0017,
+          0.0018,
+          0.7076,
+          0.7066
+        ]
+      },
+      "before": {
+        "status": "complete",
+        "depth": {
+          "median_mm": 131.6,
+          "status": "ok",
+          "valid_pixels": 20,
+          "window_pixels": 25,
+          "center_px": [
+            433,
+            287
+          ],
+          "point_normalized": [
+            0.677621,
+            0.799443
+          ],
+          "revision": 0,
+          "rgb_depth_skew_ms": 0.3
+        },
+        "missing_images": []
+      },
+      "after": {
+        "status": "complete",
+        "depth": {
+          "median_mm": 131.3,
+          "status": "ok",
+          "valid_pixels": 20,
+          "window_pixels": 25,
+          "center_px": [
+            433,
+            287
+          ],
+          "point_normalized": [
+            0.677621,
+            0.799443
+          ],
+          "revision": 0,
+          "rgb_depth_skew_ms": 0.3
+        },
+        "missing_images": []
+      }
+    }
+  ],
+  "state_semantics": "All demonstration poses are COMMAND targets, not measured poses; xyz mm, quaternion xyzw.",
+  "reviewed_activation_depth_references": [
+    {
+      "step": "000010",
+      "boundary": "after",
+      "median_mm": 131.3,
+      "status": "ok",
+      "valid_pixels": 20,
+      "window_pixels": 25,
+      "center_px": [
+        433,
+        287
+      ],
+      "point_normalized": [
+        0.677621,
+        0.799443
+      ],
+      "revision": 0,
+      "rgb_depth_skew_ms": 0.3
+    }
+  ],
+  "depth_reference_semantics": "Approximate historical camera-depth only, useful when point/configuration/alignment match. Not fingertip clearance, gripper length, depth-minus offset, activation threshold or a motion limit.",
+  "selection": {
+    "mode": "reviewed_activation_tail",
+    "requested_last_steps": 3,
+    "selected_steps": [
+      "000008",
+      "000009",
+      "000010"
+    ],
+    "activation_step": "000010",
+    "activation_boundary": "after",
+    "model_image_count": 3,
+    "source_operation_count": 11,
+    "analysis_version": "2026-11-01.182424.v1",
+    "limitations": "Selection ends at reviewed activation; interrupted later withdrawal and missing final remain unverified."
+  }
+}

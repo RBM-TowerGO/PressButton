@@ -68,6 +68,24 @@ def test_camera_disconnect_shows_last_saved_images_as_archived(tmp_path, monkeyp
     assert base64.b64decode(result['frames']['head']['jpeg']) == b'head'
 
 
+def test_standalone_read_only_viewer_cannot_stop_existing_run(tmp_path):
+    stop=threading.Event()
+    atomic_json(tmp_path/'launcher.json',dict(phase='running',goal='press'))
+    view=dashboard.Dashboard(tmp_path,'',stop,read_only=True)
+    server,thread=dashboard.serve(view,0)
+    base='http://127.0.0.1:'+str(server.server_port)
+    try:
+        with urlopen(base+'/api/agent') as reply:
+            assert json.load(reply)['read_only'] is True
+        with pytest.raises(HTTPError) as error:
+            urlopen(Request(base+'/api/stop',data=b'{}',headers={'Content-Type':'application/json'}))
+        assert error.value.code==403
+        assert json.loads(error.value.read())['error']=='read_only_dashboard'
+        assert not stop.is_set()
+    finally:
+        server.shutdown();server.server_close();thread.join(2)
+
+
 def test_launcher_waits_for_new_schema_and_handles_stop(monkeypatch):
     calls = iter([ConnectionRefusedError(), dict(schema=SESSION_SCHEMA)])
     def request(*args, **kwargs):
@@ -123,7 +141,7 @@ def test_launcher_cancels_agent_when_service_exits(tmp_path, monkeypatch, failur
                 assert kwargs['stdin'] == subprocess.DEVNULL
                 assert argv[argv.index('--decision-mode')+1] == decision_mode
                 assert argv[argv.index('--prompt')+1] == str(prompt_path.resolve())
-                if decision_mode in ('grounded', 'direct'):
+                if decision_mode == 'direct':
                     assert argv[argv.index('--demo-last-steps')+1] == '3'
                 else:
                     assert '--demo-last-steps' not in argv
@@ -203,7 +221,7 @@ def test_context_budget_argument():
 
 
 def test_separated_compatibility_and_dashboard(tmp_path):
-    assert launcher.parse_args([]).decision_mode=='grounded'
+    assert launcher.parse_args([]).decision_mode=='localized'
     assert launcher.parse_args(['--decision-mode','separated']).decision_mode=='separated'
     assert launcher.parse_args(['--decision-mode','direct']).decision_mode=='direct'
     with pytest.raises(SystemExit):launcher.parse_args(['--decision-mode','invalid'])

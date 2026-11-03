@@ -1,0 +1,19 @@
+{
+  "role": "assistant",
+  "content": "",
+  "refusal": null,
+  "annotations": null,
+  "audio": null,
+  "function_call": null,
+  "tool_calls": [
+    {
+      "id": "chatcmpl-tool-8e2006cc06473c66",
+      "type": "function",
+      "function": {
+        "name": "propose_move",
+        "arguments": "{\"xyz_mm\": [0, 0, 10], \"reason\": \"腕部按钮仍高于带白箭头手指前端且水平接近中心；继续小幅+Z接近level，再评估前进。\", \"progress\": {\"observation_id\": \"a3f00f8a941a419189578fb23707375e\", \"subgoal\": \"align_vertical\", \"view\": \"wrist\", \"button_vertical\": \"above\", \"button_horizontal\": \"center\", \"last_effect\": \"improved\"}}"
+      }
+    }
+  ],
+  "reasoning": null
+}

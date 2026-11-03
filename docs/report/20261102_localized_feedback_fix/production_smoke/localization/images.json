@@ -1,0 +1,24 @@
+{
+  "observation_id": "da0f07101060453d9b16f98b35a1113d",
+  "revision": 1,
+  "images": {
+    "head": {
+      "image_size": [
+        1280,
+        720
+      ],
+      "mime_type": "image/jpeg",
+      "sha256": "9c3435558ae8b0ec3201948eeb25632216de65a273b57f1f4323991be8149aef",
+      "byte_count": 57027
+    },
+    "wrist": {
+      "image_size": [
+        640,
+        360
+      ],
+      "mime_type": "image/jpeg",
+      "sha256": "3cd16b9e0be53c0bb8f3bea6d11f7ae5ac10ee895cd4934d8da5ccc4d217cb41",
+      "byte_count": 21611
+    }
+  }
+}

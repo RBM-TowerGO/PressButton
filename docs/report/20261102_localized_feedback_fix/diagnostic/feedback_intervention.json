@@ -1,0 +1,80 @@
+{
+  "context_type": "DIAGNOSTIC_FEEDBACK_REASSESSMENT",
+  "observation_id": "da0f07101060453d9b16f98b35a1113d",
+  "source": "program_recorded_commands_and_model_location_arithmetic_not_visual_truth",
+  "consecutive_forward_sends": 13,
+  "forward_commanded_mm": 95,
+  "recent_locations": [
+    {
+      "observation_id": "45364845e0ba435e9a922ec1192448a0",
+      "wrist_button_visibility": "partial",
+      "wrist_pixel_delta": null,
+      "wrist_relation": [
+        "unknown",
+        "unknown"
+      ]
+    },
+    {
+      "observation_id": "fff65cd05c174fa197296f47400b5f25",
+      "wrist_button_visibility": "full",
+      "wrist_pixel_delta": [
+        -254.4,
+        -255.6
+      ],
+      "wrist_relation": [
+        "left",
+        "above"
+      ]
+    },
+    {
+      "observation_id": "cf08bdb6f9ce449ca53ccadd18d526ed",
+      "wrist_button_visibility": "partial",
+      "wrist_pixel_delta": [
+        -256.0,
+        -250.2
+      ],
+      "wrist_relation": [
+        "left",
+        "above"
+      ]
+    },
+    {
+      "observation_id": "da861b4c19a941968f755d1cceaa70b5",
+      "wrist_button_visibility": "full",
+      "wrist_pixel_delta": [
+        -267.2,
+        -257.4
+      ],
+      "wrist_relation": [
+        "left",
+        "above"
+      ]
+    },
+    {
+      "observation_id": "51e38a93b28f4df4aa154e31a61b97ba",
+      "wrist_button_visibility": "full",
+      "wrist_pixel_delta": [
+        -252.8,
+        -248.4
+      ],
+      "wrist_relation": [
+        "left",
+        "above"
+      ]
+    },
+    {
+      "observation_id": "da0f07101060453d9b16f98b35a1113d",
+      "wrist_button_visibility": "partial",
+      "wrist_pixel_delta": [
+        -259.2,
+        -250.2
+      ],
+      "wrist_relation": [
+        "left",
+        "above"
+      ]
+    }
+  ],
+  "interpretation": "The visible-part button rectangle remains left/above the marked physical end in the localizer estimates. This is a projection and does not identify a correct robot-axis move. Completed sends alone are not alignment or contact evidence. No accepted light-on or withdrawal evidence is recorded in these preceding action replies.",
+  "instruction": "Reassess the hypothesis that missing forward distance is the only problem. Use both current images and these actual effects. Select one next action. If you continue forward, explain concrete NEW evidence for that hypothesis; otherwise address uncertainty or alignment. Do not invent an image-to-chassis transform. All original tools remain available."
+}

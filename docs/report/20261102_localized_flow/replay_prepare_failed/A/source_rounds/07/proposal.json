@@ -1,0 +1,11 @@
+{
+  "name": "propose_move",
+  "arguments": {
+    "xyz_mm": [
+      0,
+      0,
+      10
+    ],
+    "reason": "腕部按钮仍高于带白箭头手指前端且水平接近中心；继续小幅+Z接近level，再评估前进。"
+  }
+}

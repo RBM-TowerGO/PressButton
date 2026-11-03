@@ -1,0 +1,16 @@
+{
+  "format": "pressb-conversation-v1",
+  "decision_mode": "direct",
+  "observation_id": "981630409f1349a2a93a53a23eb19399",
+  "previous_observation_id": "d3c61eeacec24a2c9c44b7d7210bbc74",
+  "stage": "failed",
+  "perception_format": null,
+  "compression_generation": 0,
+  "progress_monitor_format": "pressb-progress-v1",
+  "view_acquisition_format": "pressb-view-acquisition-v1",
+  "view_phase": "get_view",
+  "image_count": 13,
+  "compression_status": "not_needed",
+  "input_tokens_exact": null,
+  "input_tokens_estimate": 44379
+}

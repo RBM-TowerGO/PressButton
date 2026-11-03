@@ -11,10 +11,10 @@ sys.path.insert(0, str(ROOT/'scripts'))
 import s1b_agent_run as launcher
 
 
-def test_grounded_defaults_use_only_reviewed_success_tail():
-    args = launcher.parse_args([])
+def test_grounded_defaults_use_full_success_recording():
+    args = launcher.parse_args(['--decision-mode', 'grounded'])
     assert args.decision_mode == 'grounded'
-    assert args.demo_last_steps == 3
+    assert args.demo_last_steps is None
     assert args.failure_case is None
     assert Path(args.demo).name == '20261101_182424_352b5047'
     assert Path(args.prompt) == ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
@@ -30,11 +30,11 @@ def test_direct_command_auto_confirms_unless_explicitly_disabled():
 
 def test_one_key_main_forwards_grounded_defaults_without_launching(monkeypatch):
     captured=[]
-    monkeypatch.setattr(sys,'argv',['s1b_agent_run.py'])
+    monkeypatch.setattr(sys,'argv',['s1b_agent_run.py','--decision-mode','grounded'])
     monkeypatch.setattr(launcher,'launch',lambda args:captured.append(args) or 0)
     assert launcher.main()==0
     assert len(captured)==1
-    assert captured[0].decision_mode=='grounded' and captured[0].demo_last_steps==3
+    assert captured[0].decision_mode=='grounded' and captured[0].demo_last_steps is None
     assert captured[0].failure_case is None
 
 
@@ -48,7 +48,7 @@ def test_legacy_modes_keep_case_defaults_and_explicit_overrides(mode):
 
 
 def test_grounded_accepts_explicit_failure_case_and_selection():
-    args = launcher.parse_args(['--failure-case', 'chosen', '--demo-last-steps', '4'])
+    args = launcher.parse_args(['--decision-mode', 'grounded', '--failure-case', 'chosen', '--demo-last-steps', '4'])
     assert args.failure_case == 'chosen' and args.demo_last_steps == 4
     assert launcher.parse_args(['--no-failure-case']).failure_case is None
     with pytest.raises(SystemExit):
@@ -86,13 +86,13 @@ def test_agent_entry_help_lists_grounded_and_tail(entry):
     result=subprocess.run([sys.executable,str(ROOT/'scripts'/entry),'--help'],
                           capture_output=True,text=True,timeout=10)
     assert result.returncode==0
-    assert '--decision-mode {grounded,separated,direct}' in result.stdout
+    assert '--decision-mode {localized,grounded,separated,direct}' in result.stdout
     assert '--demo-last-steps' in result.stdout
     assert '--prompt' in result.stdout
-    assert 'grounded defaults to 3' in result.stdout
+    assert 'default: full demonstration' in ' '.join(result.stdout.split())
 
 
-def test_standalone_main_defaults_archive_three_success_steps_before_network(tmp_path,monkeypatch):
+def test_standalone_main_defaults_archive_full_demo_before_network(tmp_path,monkeypatch):
     import s1b_agent as agent
     def forbidden(*a,**k):
         pytest.fail('preflight must not contact robot or model')
@@ -103,12 +103,14 @@ def test_standalone_main_defaults_archive_three_success_steps_before_network(tmp
     monkeypatch.setattr(agent,'tunnel',halt)
     output=tmp_path/'run'
     monkeypatch.setattr(sys,'argv',['s1b_agent.py','--goal','test','--output',str(output),
+        '--decision-mode','grounded',
         '--demo',str(ROOT/'outputs/keyboard_sessions/20261101_182424_352b5047'),
         '--replay',str(tmp_path/'unused_observation')])
     assert agent.main()==1
     task=json.loads((output/'task.json').read_text())
     assert task['decision_mode']=='grounded' and task['input_format']=='pressb-conversation-v3'
-    assert task['failure_case'] is None and task['initial_image_count']==5
-    assert task['demo_selection']['selected_steps']==['000008','000009','000010']
-    assert task['demo_selection']['model_image_count']==3
+    assert task['failure_case'] is None and task['initial_image_count']==13
+    assert task['demo_selection']['mode']=='all'
+    assert task['demo_selection']['selected_steps']==[f'{step:06d}' for step in range(1,12)]
+    assert task['demo_selection']['model_image_count']==11
     assert json.loads((output/'result.json').read_text())['error']=='offline-preflight-boundary'

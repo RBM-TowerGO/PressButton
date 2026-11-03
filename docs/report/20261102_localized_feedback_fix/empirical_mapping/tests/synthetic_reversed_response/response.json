@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-8e88c770f5552454",
+  "object": "chat.completion",
+  "created": 1793609714,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-9971cc8dcb63964e",
+            "type": "function",
+            "function": {
+              "name": "propose_move",
+              "arguments": "{\"xyz_mm\": [0, 10, 0], \"reason\": \"+Y 20 mm moved dx from -256 to -249.6, so +Y reduces the absolute horizontal error; continue +Y 10 mm.\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 2103,
+    "total_tokens": 2190,
+    "completion_tokens": 87,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-8468feccbe258f1d",
+    "object": "chat.completion",
+    "created": 1793617960,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-8f5b45bd210eafda",
+              "type": "function",
+              "function": {
+                "name": "locate_current_scene",
+                "arguments": "{\"coordinate_units\": \"normalized_1000\", \"head\": {\"button_visibility\": \"not_visible\", \"contact_visibility\": \"not_visible\"}, \"wrist\": {\"arrow_box\": [720, 760, 870, 900], \"button_box\": [390, 410, 460, 480], \"button_visibility\": \"full\", \"contact_tip\": [720, 800], \"contact_visibility\": \"partial\", \"note\": \"tip occluded\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 2603,
+      "total_tokens": 2758,
+      "completion_tokens": 155,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 15.692100585903972
+}

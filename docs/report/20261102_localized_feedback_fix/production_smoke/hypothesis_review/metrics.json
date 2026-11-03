@@ -1,0 +1,21 @@
+{
+  "image_count": 4,
+  "observation_id": "da0f07101060453d9b16f98b35a1113d",
+  "previous_observation_id": "cf08bdb6f9ce449ca53ccadd18d526ed",
+  "tool": "review_motion_hypothesis",
+  "attempts": 1,
+  "validation_failures": 0,
+  "prompt_tokens": 5275,
+  "completion_tokens": 284,
+  "status": "validated",
+  "elapsed_s": 28.79128412809223,
+  "usage": {
+    "prompt_tokens": 5275,
+    "total_tokens": 5559,
+    "completion_tokens": 284,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  }
+}

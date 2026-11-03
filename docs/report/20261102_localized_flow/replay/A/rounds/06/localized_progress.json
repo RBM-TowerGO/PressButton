@@ -1,0 +1,53 @@
+{
+  "format": "pressb-localized-progress-v1",
+  "source": "program_comparison_of_model_coordinates",
+  "previous_observation_id": null,
+  "observation_id": "a3f00f8a941a419189578fb23707375e",
+  "views": {
+    "head": {
+      "comparable": false,
+      "reason": "no_previous_localization",
+      "axes": {},
+      "needs_recheck": false
+    },
+    "wrist": {
+      "comparable": false,
+      "reason": "no_previous_localization",
+      "axes": {},
+      "needs_recheck": false
+    }
+  },
+  "needs_recheck": false,
+  "limitation": "Image estimates only; not physical arrival, contact, activation or a robot direction.",
+  "actual_commands": [],
+  "has_alignment_motion": false,
+  "monitor": {
+    "format": "pressb-progress-v1",
+    "source": "program_execution_events_and_model_judgments",
+    "observation_id": "a3f00f8a941a419189578fb23707375e",
+    "review_required": false,
+    "reasons": [],
+    "streaks": {
+      "X": {
+        "count": 0,
+        "direction": 0,
+        "total_mm": 0.0
+      },
+      "Y": {
+        "count": 0,
+        "direction": 0,
+        "total_mm": 0.0
+      },
+      "Z": {
+        "count": 0,
+        "direction": 0,
+        "total_mm": 0.0
+      }
+    },
+    "since_round": 0,
+    "repeat_limit": 3,
+    "last_command": null,
+    "last_move_round": null,
+    "last_move_before_observation_id": null
+  }
+}

@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
+LOCALIZED_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt_localized.txt'
 sys.path.insert(0, str(ROOT/'src'))
 from pressb.agent_loop.common import atomic_json, request, SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
@@ -76,15 +77,14 @@ def launch(args):
         check_port_available(port)
     if not (Path(args.demo).expanduser()/'session.json').is_file():
         raise ValueError('找不到示范 session.json：'+args.demo)
-    prompt_path = Path(getattr(args, 'prompt', DEFAULT_PROMPT)).expanduser().resolve()
+    decision_mode = getattr(args, 'decision_mode', 'localized')
+    prompt_path = Path(getattr(args, 'prompt', None) or
+                       (LOCALIZED_PROMPT if decision_mode == 'localized' else DEFAULT_PROMPT)).expanduser().resolve()
     try:
         prompt_path.read_text()
     except OSError as exc:
         raise ValueError('无法读取 Agent 提示词：'+str(prompt_path)) from exc
-    decision_mode = getattr(args, 'decision_mode', 'grounded')
     demo_last_steps = getattr(args, 'demo_last_steps', None)
-    if demo_last_steps is None and decision_mode == 'grounded':
-        demo_last_steps = 3
     failure_path = getattr(args, 'failure_case', None)
     if failure_path:
         # Fail before SDK takeover if any required case evidence is missing.
@@ -105,8 +105,15 @@ def launch(args):
     state = dict(phase='starting', goal=args.goal, output=str(directory),
                  decision_mode=decision_mode, demo=str(demo.root), demo_last_steps=demo_last_steps,
                  demo_selection=demo.selection, failure_case=failure_path, prompt=str(prompt_path),
-                 progress_monitor_format='pressb-progress-v1' if decision_mode == 'direct' else None,
+                 execution_policy='yz_alignment_before_forward' if decision_mode == 'localized' else 'legacy_validated',
+                 forward_guard_policy='wrist_tip_overlap' if decision_mode == 'localized' else 'wrist_horizontal',
+                 progress_monitor_format=('pressb-localized-progress-v3' if decision_mode == 'localized' else
+                                          'pressb-progress-v1' if decision_mode == 'direct' else None),
                  view_acquisition_format='pressb-view-acquisition-v1' if decision_mode == 'direct' else None,
+                 localization_format='pressb-localization-v3' if decision_mode == 'localized' else None,
+                 hypothesis_review_format='pressb-hypothesis-review-v1' if decision_mode == 'localized' else None,
+                 forward_guard_format='pressb-wrist-tip-overlap-v1' if decision_mode == 'localized' else None,
+                 input_format='pressb-conversation-v5' if decision_mode == 'localized' else None,
                  auto_confirm=auto_confirm)
     log = (directory/'terminal.log').open('a', buffering=1)
     server = service = agent = None
@@ -144,7 +151,13 @@ def launch(args):
         emit(f'网页：http://127.0.0.1:{server.server_port}\n记录目录：{directory}\n')
         emit(('SDK 控制权接管将自动回复 yes；' if auto_confirm else '请在本终端处理 SDK 接管提示；')
              + '服务就绪后 Agent 将自动运行。\n')
-        if decision_mode == 'grounded':
+        if decision_mode == 'localized':
+            emit(f'定位闭环：成功示范 {len(demo.images)} 张、失败参考 {"启用" if failure_path else "关闭"}；'
+                 '每轮独立双图定位→原始偏差和实际反馈→模型自主决策。thinking 关闭。\n'
+                 '先做Y/Z对齐；每个正X候选检查当前腕图物理指端是否落入按钮框（横纵两轴）。\n'
+                 '未知则拒绝整条候选并重新决策；通过后原XYZ不变，无正X步长上限；负X/Y/Z不受此条件限制。\n'
+                 '每个新观测首次前推及触发无进展复核时，会增加串行模型请求。\n')
+        elif decision_mode == 'grounded':
             emit(f'短闭环：成功示范 {len(demo.images)} 张、失败参考 {"启用" if failure_path else "关闭"}；'
                  '当前双图独立判读后决策，必要时单独验证撤回；thinking 关闭。\n')
         elif decision_mode == 'direct':
@@ -227,14 +240,14 @@ def parse_args(argv=None):
     parser.add_argument('--auto-confirm', action=argparse.BooleanOptionalAction, default=True,
                         help='automatically answer yes to SDK takeover prompts (default: enabled)')
     parser.add_argument('--goal', default='按下电梯外呼向下按钮并撤回')
-    parser.add_argument('--prompt', default=str(DEFAULT_PROMPT), help='Agent system prompt file')
+    parser.add_argument('--prompt', help='Agent system prompt file; default follows decision mode')
     parser.add_argument('--demo', default=str(ROOT/'outputs/keyboard_sessions/20261101_182424_352b5047'))
     parser.add_argument('--demo-last-steps', type=int,
-                        help='completed steps ending at reviewed activation; grounded defaults to 3, other modes use all')
+                        help='optionally select completed steps ending at reviewed activation; default: full demonstration')
     failure_group = parser.add_mutually_exclusive_group()
     failure_group.add_argument('--failure-case',
         default=argparse.SUPPRESS,
-        help='reviewed failure run; grounded omits by default, direct/separated keep the prior default')
+        help='reviewed failure run; localized/grounded omit by default, direct/separated keep the prior default')
     failure_group.add_argument('--no-failure-case', action='store_const', const=None, dest='failure_case',
                                default=argparse.SUPPRESS, help='explicitly omit failure context')
     parser.add_argument('--output', help='new session directory; default outputs/agent_web/<timestamp_id>')
@@ -244,14 +257,14 @@ def parse_args(argv=None):
     parser.add_argument('--thor-host', default='Thor')
     parser.add_argument('--thor-port', type=int, default=18000)
     parser.add_argument('--context-budget-tokens', type=int, default=65536)
-    parser.add_argument('--decision-mode', choices=('grounded', 'separated', 'direct'), default='grounded')
+    parser.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
     parser.add_argument('--max-rounds', type=int, default=20)
     args = parser.parse_args(argv)
+    if args.prompt is None:
+        args.prompt = str(LOCALIZED_PROMPT if args.decision_mode == 'localized' else DEFAULT_PROMPT)
     if not hasattr(args, 'failure_case'):
-        args.failure_case = (None if args.decision_mode == 'grounded' else
+        args.failure_case = (None if args.decision_mode in ('localized', 'grounded') else
                             str(ROOT/'outputs/agent_web/20261101_184824_dcb23038'))
-    if args.demo_last_steps is None and args.decision_mode == 'grounded':
-        args.demo_last_steps = 3
     if args.demo_last_steps is not None and args.demo_last_steps <= 0:
         parser.error('--demo-last-steps must be positive')
     if args.context_budget_tokens <= 0:

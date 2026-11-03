@@ -1,0 +1,21 @@
+{
+  "image_count": 2,
+  "observation_id": "a3f00f8a941a419189578fb23707375e",
+  "previous_observation_id": null,
+  "tool": "locate_current_scene",
+  "attempts": 1,
+  "validation_failures": 0,
+  "prompt_tokens": 2548,
+  "completion_tokens": 226,
+  "status": "validated",
+  "elapsed_s": 22.452691805083305,
+  "usage": {
+    "prompt_tokens": 2548,
+    "total_tokens": 2774,
+    "completion_tokens": 226,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  }
+}

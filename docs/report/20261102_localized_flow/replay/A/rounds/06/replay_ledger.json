@@ -1,0 +1,187 @@
+{
+  "round": 1,
+  "before_observation_id": "a3f00f8a941a419189578fb23707375e",
+  "after_observation_id": "5f8e78be946d4866a65a87e4133d750a",
+  "proposal": {
+    "name": "propose_head",
+    "arguments": {
+      "head_deg": [
+        0,
+        30
+      ],
+      "reason": "Head view lacks button and marker; pitch down to bring elevator panel into head view for cross-check before pressing."
+    }
+  },
+  "result": {
+    "command_id": "4713ac691bd44e068a22c50980095568",
+    "command": {
+      "type": "move",
+      "xyz_mm": [
+        0,
+        0,
+        10
+      ]
+    },
+    "status": "completed",
+    "sends_completed": true,
+    "completion_basis": "command_interpolation",
+    "elapsed_s": 0.94,
+    "observation_id": "5f8e78be946d4866a65a87e4133d750a",
+    "error": null,
+    "replay": {
+      "proposal_executed": false,
+      "recorded_actual_command": {
+        "type": "move",
+        "xyz_mm": [
+          0,
+          0,
+          10
+        ]
+      },
+      "recorded_command_status": "completed",
+      "saved_response_images_not_result_of_new_proposal": true,
+      "proposed_action_was_terminal": false,
+      "note": "MODEL-ONLY REPLAY: completed status and observed next images belong to the recorded_actual_command from the historical run. The new proposal was NOT executed. The next saved frame is supplied for further diagnosis, even after a terminal proposal."
+    }
+  },
+  "localization_summary": {
+    "format": "pressb-localization-v1",
+    "source": "model_not_human",
+    "observation_id": "a3f00f8a941a419189578fb23707375e",
+    "revision": 1,
+    "contact_reference": "white_arrow",
+    "usable_views": [],
+    "head": {
+      "button_visibility": "not_visible",
+      "contact_visibility": "not_visible",
+      "button_box": null,
+      "arrow_box": null,
+      "contact_tip": null,
+      "note": "no button or marker visible in head view",
+      "image_size": [
+        1280,
+        720
+      ],
+      "derived_relation": {
+        "source": "program_from_model_coordinates",
+        "horizontal": "unknown",
+        "vertical": "unknown",
+        "dx": null,
+        "dy": null,
+        "units": "normalized_image",
+        "tolerance": 0.01,
+        "pixel_delta": null,
+        "error_button_units": null
+      }
+    },
+    "wrist": {
+      "button_visibility": "full",
+      "contact_visibility": "partial",
+      "button_box": [
+        0.58,
+        0.16,
+        0.68,
+        0.31
+      ],
+      "arrow_box": [
+        0.74,
+        0.72,
+        0.88,
+        0.92
+      ],
+      "contact_tip": [
+        0.74,
+        0.78
+      ],
+      "note": "down-call button and white arrow marker visible",
+      "image_size": [
+        640,
+        360
+      ],
+      "derived_relation": {
+        "source": "program_from_model_coordinates",
+        "horizontal": "unknown",
+        "vertical": "unknown",
+        "dx": null,
+        "dy": null,
+        "units": "normalized_image",
+        "tolerance": 0.01,
+        "pixel_delta": null,
+        "error_button_units": null
+      }
+    },
+    "images": {
+      "head": {
+        "image_size": [
+          1280,
+          720
+        ],
+        "mime_type": "image/jpeg",
+        "sha256": "0e6aaee3d55b041ba09f1efffd380b49bdbadae3b85540968aa24499f7c0acc8",
+        "byte_count": 54451
+      },
+      "wrist": {
+        "image_size": [
+          640,
+          360
+        ],
+        "mime_type": "image/jpeg",
+        "sha256": "8a64dd0da2849f65e5bd676fe04b2be64b7ad72ac89ce52f6057118348725e43",
+        "byte_count": 24227
+      }
+    }
+  },
+  "localized_progress": {
+    "format": "pressb-localized-progress-v1",
+    "source": "program_comparison_of_model_coordinates",
+    "previous_observation_id": null,
+    "observation_id": "a3f00f8a941a419189578fb23707375e",
+    "views": {
+      "head": {
+        "comparable": false,
+        "reason": "no_previous_localization",
+        "axes": {},
+        "needs_recheck": false
+      },
+      "wrist": {
+        "comparable": false,
+        "reason": "no_previous_localization",
+        "axes": {},
+        "needs_recheck": false
+      }
+    },
+    "needs_recheck": false,
+    "limitation": "Image estimates only; not physical arrival, contact, activation or a robot direction.",
+    "actual_commands": [],
+    "has_alignment_motion": false,
+    "monitor": {
+      "format": "pressb-progress-v1",
+      "source": "program_execution_events_and_model_judgments",
+      "observation_id": "a3f00f8a941a419189578fb23707375e",
+      "review_required": false,
+      "reasons": [],
+      "streaks": {
+        "X": {
+          "count": 0,
+          "direction": 0,
+          "total_mm": 0.0
+        },
+        "Y": {
+          "count": 0,
+          "direction": 0,
+          "total_mm": 0.0
+        },
+        "Z": {
+          "count": 0,
+          "direction": 0,
+          "total_mm": 0.0
+        }
+      },
+      "since_round": 0,
+      "repeat_limit": 3,
+      "last_command": null,
+      "last_move_round": null,
+      "last_move_before_observation_id": null
+    }
+  }
+}

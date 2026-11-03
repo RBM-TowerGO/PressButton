@@ -1,0 +1,19 @@
+{
+  "role": "assistant",
+  "content": "",
+  "refusal": null,
+  "annotations": null,
+  "audio": null,
+  "function_call": null,
+  "tool_calls": [
+    {
+      "id": "chatcmpl-tool-9f0d936e7ec6fa22",
+      "type": "function",
+      "function": {
+        "name": "propose_head",
+        "arguments": "{\"head_deg\": [0, 30], \"reason\": \"Head still shows no button/arrow; pitch down to bring elevator panel into head view for cross-check before pressing.\", \"visual_basis\": {\"observation_id\": \"5f8e78be946d4866a65a87e4133d750a\", \"localization_revision\": 1, \"view\": \"unknown\"}}"
+      }
+    }
+  ],
+  "reasoning": null
+}

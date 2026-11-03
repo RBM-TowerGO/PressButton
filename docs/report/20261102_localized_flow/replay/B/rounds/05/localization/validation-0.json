@@ -1,0 +1,6 @@
+{
+  "attempt": 0,
+  "valid": false,
+  "error_type": "ValueError",
+  "error": "invalid_localization_view_fields:head"
+}

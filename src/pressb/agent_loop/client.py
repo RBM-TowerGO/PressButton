@@ -79,13 +79,19 @@ def is_forward(proposal):
             and proposal['arguments']['xyz_mm'][0] > 0)
 
 
-def require_forward_permission(proposal, obs, decision):
+def require_forward_permission(proposal, obs, decision, policy='wrist_horizontal'):
     """Check the same observation and exact command again immediately before HTTP.
 
     This Agent-side rule does not change the keyboard executor or HTTP schema.
     """
     if not is_forward(proposal):
         return
+    if policy == 'wrist_tip_overlap':
+        from . import wrist_overlap_guard
+        wrist_overlap_guard.validate_permission(proposal, obs, decision)
+        return
+    if policy != 'wrist_horizontal':
+        raise ValueError('invalid_forward_guard_policy:'+str(policy))
     from . import forward_guard as guard
     d = decision if isinstance(decision, dict) else {}
     command = dict(type='move', xyz_mm=proposal['arguments']['xyz_mm'])
@@ -128,7 +134,9 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
     def stage(value):
         path = directory/'decision_context.json'
         meta = json.loads(path.read_text()) if path.exists() else dict(observation_id=obs['observation_id'])
-        meta.update(stage=value, forward_guard_policy='wrist_horizontal')
+        if conversation is not None and hasattr(conversation, 'decision_context'):
+            meta.update(conversation.decision_context(value))
+        meta.update(stage=value, forward_guard_policy=getattr(conversation, 'forward_guard_policy', 'wrist_horizontal'))
         atomic_json(path, meta)
 
     def forward_check(proposal, attempt):
@@ -136,8 +144,15 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
         from . import forward_guard as guard
         if not is_forward(proposal):
             return None
+        if conversation is not None and getattr(conversation, 'forward_guard_policy', None) == 'none':
+            return None
         if conversation is None:
             raise ValueError('positive_X_requires_bound_current_observation')
+        policy = getattr(conversation, 'forward_guard_policy', 'wrist_horizontal')
+        if policy == 'wrist_tip_overlap':
+            from . import wrist_overlap_guard as guard
+        elif policy != 'wrist_horizontal':
+            raise ValueError('invalid_forward_guard_policy:'+str(policy))
         check()
         if guard_assessment is None:
             stage('forward_guard')
@@ -160,14 +175,24 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
             decision['authorized_command'] = dict(type='move', xyz_mm=copy.deepcopy(proposal['arguments']['xyz_mm']))
         atomic_json(directory/'forward_guard'/f'candidate-{attempt}.json', dict(proposal=proposal, decision=decision))
         atomic_json(directory/'forward_guard'/'decision.json', decision)
+        if policy == 'wrist_tip_overlap' and hasattr(conversation, 'attach_forward_check'):
+            conversation.attach_forward_check(guard_assessment, decision)
         stage('action_request')
         if not decision['allowed']:
+            if policy == 'wrist_tip_overlap':
+                raise ValueError('forward_blocked_wrist_tip_not_inside_button_box:'+
+                    json.dumps(decision['basis'], ensure_ascii=False)+
+                    '; This entire command was NOT executed. Align in Y/Z with X=0, improve the view, '
+                    'refresh observations, withdraw with negative X, or report unable. '
+                    'Do not repeat positive X on this same rejected observation. The marked physical finger '
+                    'tip must be inside the CURRENT wrist button face box in BOTH image axes. '
+                    'Unknown does not pass. No gripper closure, depth validity or displacement cap is required.')
             raise ValueError('forward_blocked_button_not_confirmed_between_wrist_fingers:'+
                 json.dumps(decision['basis'], ensure_ascii=False)+
                 '; This command was NOT executed. Choose a new zero/negative-X move, head/gripper adjustment, '
                 'observation, or report unable. Do not repeat positive X on this same observation. '
                 'Only horizontal wrist alignment is required; there is no height or depth threshold.')
-        require_forward_permission(proposal, obs, decision)
+        require_forward_permission(proposal, obs, decision, policy=policy)
         return decision
 
     for attempt in itertools.count():
@@ -224,7 +249,8 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
             if conversation is not None and getattr(conversation,'decision_mode',None)=='grounded':
                 repair += (' Match the CURRENT alignment assessment and actuator effect. Do not invent a substitute execution result. '
                            'Previous invalid response: '+json.dumps(response.get('choices'),ensure_ascii=False))
-            if conversation is not None and getattr(conversation, 'monitor_progress', False):
+            if conversation is not None and (getattr(conversation, 'monitor_progress', False)
+                    or getattr(conversation, 'decision_mode', None) == 'localized'):
                 # A newly triggered review is appended to this observation before
                 # retrying; the rejected candidate never enters accepted history.
                 body = conversation.body()
@@ -246,7 +272,10 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
 
 
 class RobotClient:
-    def __init__(self, base, output, cancel=None):
+    def __init__(self, base, output, cancel=None, forward_guard_policy='wrist_horizontal'):
+        if forward_guard_policy not in ('none', 'wrist_horizontal', 'wrist_tip_overlap'):
+            raise ValueError('invalid_forward_guard_policy')
+        self.forward_guard_policy = forward_guard_policy
         self.base=base;self.output=Path(output);self.cancel=cancel
         self.session=request(base,'/v2/session')
         if self.session.get('schema') != SESSION_SCHEMA:
@@ -299,7 +328,9 @@ class RobotClient:
 
     def execute(self, proposal, obs, forward_check=None):
         self.check_running()
-        require_forward_permission(proposal, obs, forward_check)
+        if getattr(self, 'forward_guard_policy', 'wrist_horizontal') != 'none':
+            require_forward_permission(proposal, obs, forward_check,
+                                       policy=getattr(self, 'forward_guard_policy', 'wrist_horizontal'))
         args=proposal['arguments']
         body=dict(session_id=self.session['session_id'],command_id=uuid.uuid4().hex,
             observation_id=obs['observation_id'],type=proposal['name'].removeprefix('propose_'))

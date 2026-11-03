@@ -1,0 +1,19 @@
+{
+  "role": "assistant",
+  "content": "",
+  "refusal": null,
+  "annotations": null,
+  "audio": null,
+  "function_call": null,
+  "tool_calls": [
+    {
+      "id": "chatcmpl-tool-9ea490f0d478bd54",
+      "type": "function",
+      "function": {
+        "name": "propose_head",
+        "arguments": "{\"head_deg\": [0, 30], \"reason\": \"Head view lacks button and marker; pitch down to bring elevator panel into head view for cross-check before pressing.\", \"visual_basis\": {\"observation_id\": \"a3f00f8a941a419189578fb23707375e\", \"localization_revision\": 1, \"view\": \"unknown\"}}"
+      }
+    }
+  ],
+  "reasoning": null
+}

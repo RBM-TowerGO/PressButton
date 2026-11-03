@@ -1,0 +1,21 @@
+{
+  "image_count": 1,
+  "observation_id": "d76fe7eba8b64a29a866d689aebe4583",
+  "previous_observation_id": null,
+  "tool": "locate_wrist_tip_overlap",
+  "attempts": 1,
+  "validation_failures": 0,
+  "prompt_tokens": 1274,
+  "completion_tokens": 148,
+  "status": "validated",
+  "elapsed_s": 14.342866322025657,
+  "usage": {
+    "prompt_tokens": 1274,
+    "total_tokens": 1422,
+    "completion_tokens": 148,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  }
+}

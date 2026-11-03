@@ -496,13 +496,18 @@ class Conversation:
         self.pending['role'] = 'assistant'
         self.last_usage = response.get('usage') or {}
 
+    def action_arguments(self, arguments, name=None):
+        """Remove conversation-only metadata without changing actuator parameters."""
+        arguments = copy.deepcopy(arguments)
+        if self.monitor_progress:
+            arguments.pop('progress')
+        return arguments
+
     def append_result(self, proposal, result, obs, head, wrist):
         if self.pending is None:
             raise ValueError('model_response_not_accepted')
         call = self.pending['tool_calls'][0]
-        arguments = json.loads(call['function']['arguments'])
-        if self.monitor_progress:
-            arguments.pop('progress')
+        arguments = self.action_arguments(json.loads(call['function']['arguments']), call['function']['name'])
         if call['function']['name'] != proposal['name'] or arguments != proposal['arguments']:
             raise ValueError('tool_result_proposal_mismatch')
         if obs['observation_id'] in self.observations:

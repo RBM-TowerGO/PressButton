@@ -1,0 +1,55 @@
+{
+  "response": {
+    "id": "chatcmpl-9aac2fb0319dd1a5",
+    "object": "chat.completion",
+    "created": 1793605711,
+    "model": "qwen38",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "refusal": null,
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": [
+            {
+              "id": "chatcmpl-tool-99fbfdaa588cc7e9",
+              "type": "function",
+              "function": {
+                "name": "locate_current_scene",
+                "arguments": "{\"observation_id\": \"a3f00f8a941a419189578fb23707375e\", \"head\": {\"button_visibility\": \"not_visible\", \"contact_visibility\": \"not_visible\", \"button_box\": null, \"arrow_box\": null, \"contact_tip\": null, \"note\": \"no button or marker visible in head view\"}, \"wrist\": {\"button_visibility\": \"full\", \"contact_visibility\": \"partial\", \"button_box\": [0.58, 0.16, 0.68, 0.31], \"arrow_box\": [0.74, 0.72, 0.88, 0.92], \"contact_tip\": [0.74, 0.78], \"note\": \"down-call button and white arrow marker visible\"}}"
+              }
+            }
+          ],
+          "reasoning": null
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls",
+        "stop_reason": null,
+        "token_ids": null,
+        "routed_experts": null
+      }
+    ],
+    "service_tier": null,
+    "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+    "usage": {
+      "prompt_tokens": 2548,
+      "total_tokens": 2774,
+      "completion_tokens": 226,
+      "prompt_tokens_details": null,
+      "completion_tokens_details": {
+        "reasoning_tokens": 0
+      }
+    },
+    "prompt_logprobs": null,
+    "prompt_token_ids": null,
+    "prompt_text": null,
+    "kv_transfer_params": null,
+    "ec_transfer_params": null,
+    "metrics": null
+  },
+  "elapsed_s": 22.435548591893166
+}

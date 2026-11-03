@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-b8e99d755e1f5898",
+  "object": "chat.completion",
+  "created": 1793609232,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-8623b4fd0e5c9fd5",
+            "type": "function",
+            "function": {
+              "name": "propose_move",
+              "arguments": "{\"xyz_mm\": [5, 0, 0], \"reason\": \"Button close and visible; advance slightly more to make the white-arrow finger contact the down-call button and trigger the light.\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 61161,
+    "total_tokens": 61233,
+    "completion_tokens": 72,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

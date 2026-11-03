@@ -1,0 +1,87 @@
+{
+  "format": "pressb-localization-v1",
+  "source": "model_not_human",
+  "observation_id": "5f8e78be946d4866a65a87e4133d750a",
+  "revision": 1,
+  "contact_reference": "white_arrow",
+  "usable_views": [],
+  "head": {
+    "button_visibility": "not_visible",
+    "contact_visibility": "not_visible",
+    "button_box": null,
+    "arrow_box": null,
+    "contact_tip": null,
+    "note": "no button or arrow visible in head view",
+    "image_size": [
+      1280,
+      720
+    ],
+    "derived_relation": {
+      "source": "program_from_model_coordinates",
+      "horizontal": "unknown",
+      "vertical": "unknown",
+      "dx": null,
+      "dy": null,
+      "units": "normalized_image",
+      "tolerance": 0.01,
+      "pixel_delta": null,
+      "error_button_units": null
+    }
+  },
+  "wrist": {
+    "button_visibility": "full",
+    "contact_visibility": "partial",
+    "button_box": [
+      0.58,
+      0.21,
+      0.68,
+      0.33
+    ],
+    "arrow_box": [
+      0.72,
+      0.74,
+      0.86,
+      0.92
+    ],
+    "contact_tip": [
+      0.72,
+      0.78
+    ],
+    "note": "down-call button and white arrow on right gripper visible",
+    "image_size": [
+      640,
+      360
+    ],
+    "derived_relation": {
+      "source": "program_from_model_coordinates",
+      "horizontal": "unknown",
+      "vertical": "unknown",
+      "dx": null,
+      "dy": null,
+      "units": "normalized_image",
+      "tolerance": 0.01,
+      "pixel_delta": null,
+      "error_button_units": null
+    }
+  },
+  "images": {
+    "head": {
+      "image_size": [
+        1280,
+        720
+      ],
+      "mime_type": "image/jpeg",
+      "sha256": "f4a42e4e3f597acefc128918e1d48cce7b165d2fa438110b856b9ab568983b63",
+      "byte_count": 54548
+    },
+    "wrist": {
+      "image_size": [
+        640,
+        360
+      ],
+      "mime_type": "image/jpeg",
+      "sha256": "71ee9bbf98d3c0f8f772f3e5da2054169afc6622f5b539be185ba727de145e0e",
+      "byte_count": 23874
+    }
+  }
+}

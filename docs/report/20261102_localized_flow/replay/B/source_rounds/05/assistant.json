@@ -1,0 +1,19 @@
+{
+  "role": "assistant",
+  "content": "",
+  "refusal": null,
+  "annotations": null,
+  "audio": null,
+  "function_call": null,
+  "tool_calls": [
+    {
+      "id": "chatcmpl-tool-88ad131f77c8a951",
+      "type": "function",
+      "function": {
+        "name": "propose_head",
+        "arguments": "{\"head_deg\": [-0.7, 55], \"reason\": \"头部画面已看到按钮和下方手指，但箭头/接触端仍不可辨；继续增加俯仰以把带箭头的手指前端纳入头部画面。\", \"progress\": {\"observation_id\": \"981630409f1349a2a93a53a23eb19399\", \"subgoal\": \"get_view\", \"view\": \"head\", \"button_vertical\": \"unknown\", \"button_horizontal\": \"unknown\", \"last_effect\": \"improved\"}}"
+      }
+    }
+  ],
+  "reasoning": null
+}

@@ -21,6 +21,21 @@ from pressb.agent_loop.common import atomic_json,request,SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
 from pressb.agent_loop.failure_case import FailureCase
 
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
+LOCALIZED_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt_localized.txt'
+
+
+def conversation_class(mode):
+    if mode == 'localized':
+        from pressb.agent_loop.localized_conversation import LocalizedConversation
+        return LocalizedConversation
+    return ShortConversation if mode == 'grounded' else Conversation
+
+
+def default_prompt(mode):
+    return LOCALIZED_PROMPT if mode == 'localized' else DEFAULT_PROMPT
+
 
 @contextmanager
 def tunnel(host, port):
@@ -132,16 +147,14 @@ def run(args):
     output.mkdir(parents=True, exist_ok=False)
     client = None
     active_rd = None
-    decision_mode = getattr(args, 'decision_mode', 'grounded')
-    conversation_type = ShortConversation if decision_mode == 'grounded' else Conversation
+    decision_mode = getattr(args, 'decision_mode', 'localized')
     outcome = dict(status='error', model_reported_done=False, human_verified_success=None,
                    human_verified_retracted=None, completed_motion_commands=0)
     try:
-        prompt = Path(args.prompt).read_text()
+        prompt_path = Path(getattr(args, 'prompt', None) or default_prompt(decision_mode)).expanduser().resolve()
+        prompt = prompt_path.read_text()
         demo = Demonstration(args.demo) if getattr(args, 'demo', None) else None
         tail = getattr(args, 'demo_last_steps', None)
-        if tail is None and decision_mode == 'grounded':
-            tail = 3
         if tail is not None and demo:
             demo.select_activation_tail(tail)
         if demo:
@@ -155,24 +168,39 @@ def run(args):
               + ('后续保留当前双图和短运行记忆。' if decision_mode == 'grounded' else '后续追加。'), flush=True)
         model_base = args.model_base or f'http://127.0.0.1:{args.thor_port}/v1'
         atomic_json(output/'task.json', dict(goal=args.goal, model_base=model_base, prompt=prompt,
+            prompt_path=str(prompt_path),
             demo=str(demo.root) if demo else None, initial_image_count=image_count,
             failure_case=str(failure.root) if failure else None,
-            input_format=('pressb-conversation-v3' if decision_mode == 'grounded' else
+            input_format=('pressb-conversation-v5' if decision_mode == 'localized' else
+                          'pressb-conversation-v3' if decision_mode == 'grounded' else
                           'pressb-conversation-v2' if decision_mode == 'separated' else FORMAT),
             demo_selection=getattr(demo,'selection',None),
-            decision_mode=decision_mode, forward_guard_policy='wrist_horizontal',
-            progress_monitor_format='pressb-progress-v1' if decision_mode == 'direct' else None,
+            decision_mode=decision_mode,
+            execution_policy='yz_alignment_before_forward' if decision_mode == 'localized' else 'legacy_validated',
+            forward_guard_policy='wrist_tip_overlap' if decision_mode == 'localized' else 'wrist_horizontal',
+            progress_monitor_format=('pressb-localized-progress-v3' if decision_mode == 'localized' else
+                                     'pressb-progress-v1' if decision_mode == 'direct' else None),
             view_acquisition_format='pressb-view-acquisition-v1' if decision_mode == 'direct' else None,
             perception_format='pressb-grounding-v2' if decision_mode == 'grounded' else None,
+            localization_format='pressb-localization-v3' if decision_mode == 'localized' else None,
+            hypothesis_review_format='pressb-hypothesis-review-v1' if decision_mode == 'localized' else None,
+            forward_guard_format='pressb-wrist-tip-overlap-v1' if decision_mode == 'localized' else None,
             control_policy_version='pressb-control-plan-v1' if decision_mode == 'grounded' else None,
             context_budget_tokens=getattr(args, 'context_budget_tokens', 65536),
             failure_analysis_version=failure.review['analysis_version'] if failure else None,
             execution='automatic_one_command_at_a_time'))
-        print('决策模式：'+decision_mode+('；当前双图定位按钮/指尖→计算图像偏差与阶段建议→动作决策；撤回后按需核验。thinking关闭。'
+        print('决策模式：'+decision_mode+('；每轮独立双图定位→原始坐标偏差和实际反馈→模型自主决策；'
+              '坐标显式换算为0～1；连续同向且无明确进展时额外只读复核，再重新决策；thinking关闭。'
+              if decision_mode == 'localized' else '；当前双图定位按钮/指尖→计算图像偏差与阶段建议→动作决策；撤回后按需核验。thinking关闭。'
               if decision_mode == 'grounded' else '；每轮先独立判读再选择动作，增加一次串行模型请求。'
               if decision_mode == 'separated' else '；先检查头部取景，再直接决策；异常时复核，判断冲突时恢复取景。thinking关闭。'), flush=True)
-        print('前推限制：正X发送前仅检查当前腕图横向，按钮须位于可辨认的两指之间；'
-              '未知不放行。不检查高度，候选前推增加一次独立腕图请求。', flush=True)
+        if decision_mode == 'localized':
+            print('执行策略：先用Y/Z对齐；每个正X候选都检查当前腕图，箭头所指物理指端须在按钮框内（横纵均满足）。'
+                  '未知不放行，拒绝整条候选后重新决策；无正X步长上限，不裁剪XYZ；负X后撤和Y/Z不受此条件限制。'
+                  '每个新观测首次前推额外请求腕图判读；无进展时仍额外复核原假设。', flush=True)
+        else:
+            print('旧模式前推限制：正X发送前仅检查当前腕图横向，按钮须位于可辨认的两指之间；'
+                  '未知不放行。不检查高度，候选前推增加一次独立腕图请求。', flush=True)
         with tunnel(None if args.model_base else args.thor_host, args.thor_port), StopControl() as control:
             try:
                 if args.replay:
@@ -180,7 +208,7 @@ def run(args):
                     obs = json.loads((folder/'manifest.json').read_text())
                     session = json.loads(Path(args.session).read_text()) if args.session else dict(schema=SESSION_SCHEMA,
                         speed_mm_s=20., head_speed_deg_s=20., control_hz=250.)
-                    conversation = conversation_type(args.goal, obs, (folder/'head.jpg').read_bytes(),
+                    conversation = conversation_class(decision_mode)(args.goal, obs, (folder/'head.jpg').read_bytes(),
                         (folder/'right.jpg').read_bytes(), session, prompt, demo, failure,
                         getattr(args, 'context_budget_tokens', 65536), decision_mode=decision_mode,
                         **(dict(monitor_progress=True, acquire_view=True) if decision_mode == 'direct' else {}))
@@ -191,11 +219,12 @@ def run(args):
                     print(json.dumps(proposal, ensure_ascii=False, indent=2))
                     outcome.update(status='replay_only', proposal=proposal)
                     return
-                client = RobotClient(args.robot_base, output, control.cancel)
+                client = RobotClient(args.robot_base, output, control.cancel,
+                    **({'forward_guard_policy': 'wrist_tip_overlap'} if decision_mode == 'localized' else {}))
                 control.client = client
                 atomic_json(output/'session.json', client.session)
                 obs, folder = control.call(client.observe)
-                conversation = conversation_type(args.goal, obs, (folder/'head.jpg').read_bytes(),
+                conversation = conversation_class(decision_mode)(args.goal, obs, (folder/'head.jpg').read_bytes(),
                     (folder/'right.jpg').read_bytes(), client.session, prompt, demo, failure,
                     getattr(args, 'context_budget_tokens', 65536), decision_mode=decision_mode,
                     **(dict(monitor_progress=True, acquire_view=True) if decision_mode == 'direct' else {}))
@@ -203,7 +232,8 @@ def run(args):
                 for index in range(args.max_rounds):
                     rd = output/'rounds'/f'{index:04d}'
                     active_rd = rd
-                    print(f'第 {index+1} 轮：'+('独立判读画面中' if decision_mode in ('separated','grounded') else '整理动作上下文'), flush=True)
+                    print(f'第 {index+1} 轮：'+('独立定位画面中' if decision_mode == 'localized' else
+                          '独立判读画面中' if decision_mode in ('separated','grounded') else '整理动作上下文'), flush=True)
                     body = control.call(conversation.prepare_decision, model_base, rd, control.cancel)
                     print(f'第 {index+1} 轮：请求 Qwen；{count_images(body["messages"])} 张图，'
                           + ('短运行记忆' if decision_mode == 'grounded' else f'压缩代次 {conversation.generation}')
@@ -263,29 +293,35 @@ def run(args):
         atomic_json(output/'result.json', outcome)
 
 
-def main():
-    root=Path(__file__).resolve().parents[1]
+def parse_args(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--goal',required=True);p.add_argument('--output',required=True)
     p.add_argument('--thor-host',default='Thor');p.add_argument('--thor-port',type=int,default=18000)
     p.add_argument('--model-base',help='existing /v1 URL; disables automatic Thor tunnel')
     p.add_argument('--robot-base',default='http://127.0.0.1:6210')
-    p.add_argument('--prompt',default=str(root/'docs/astribot/planar_control/agent_system_prompt.txt'))
+    p.add_argument('--prompt',help='system prompt file; default follows decision mode')
     p.add_argument('--context-budget-tokens', type=int, default=65536)
-    p.add_argument('--decision-mode', choices=('grounded', 'separated', 'direct'), default='grounded')
+    p.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
     p.add_argument('--max-rounds',type=int,default=20)
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')
-    p.add_argument('--demo-last-steps',type=int,help='last N completed actions through reviewed activation; grounded defaults to 3')
+    p.add_argument('--demo-last-steps',type=int,help='optionally select last N completed actions through reviewed activation; default: full demonstration')
     failure_group = p.add_mutually_exclusive_group()
     failure_group.add_argument('--failure-case', help='reviewed failure run directory (case_review.json and agent/)')
     failure_group.add_argument('--no-failure-case', action='store_const', const=None, dest='failure_case',
                                help='explicitly omit failure context (standalone Agent default)')
     p.add_argument('--replay',help='saved observation directory; never connects to robot')
     p.add_argument('--session',help='keyboard-agent session.json for replay')
-    args=p.parse_args()
+    args=p.parse_args(argv)
+    if args.prompt is None:
+        args.prompt = str(default_prompt(args.decision_mode))
     if args.context_budget_tokens<=0:p.error('--context-budget-tokens must be positive')
     if args.max_rounds<=0:p.error('--max-rounds must be positive')
     if args.demo_last_steps is not None and args.demo_last_steps<=0:p.error('--demo-last-steps must be positive')
+    return args
+
+
+def main():
+    args = parse_args()
     try:run(args)
     except (Exception,KeyboardInterrupt) as exc:
         print('Agent 退出：'+str(exc),file=sys.stderr);return 1

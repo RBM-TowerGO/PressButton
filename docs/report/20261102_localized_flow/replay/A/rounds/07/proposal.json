@@ -1,0 +1,10 @@
+{
+  "name": "propose_head",
+  "arguments": {
+    "head_deg": [
+      0,
+      30
+    ],
+    "reason": "Head still shows no button/arrow; pitch down to bring elevator panel into head view for cross-check before pressing."
+  }
+}

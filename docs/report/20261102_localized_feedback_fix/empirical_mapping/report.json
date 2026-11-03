@@ -1,0 +1,60 @@
+{
+  "model_only": true,
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "limitation": "Assumes exact scalar observations, locally linear response, fixed camera conventions and no cross-axis coupling. These assumptions are not established for the robot. The first numbers come from normalized historical MODEL estimates, not human ground truth; the second pair is an explicitly synthetic sign-reversal control.",
+  "results": [
+    {
+      "name": "recorded_estimate_response",
+      "before_dx_px": -256.0,
+      "after_dx_px": -262.4,
+      "expected_y_mm": -10,
+      "name_returned": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0,
+          -10,
+          0
+        ],
+        "reason": "+Y 20 mm made dx more negative (-256 to -262.4), so +Y increases the error magnitude; therefore -Y reduces the absolute horizontal error."
+      },
+      "correct": true,
+      "usage": {
+        "prompt_tokens": 2102,
+        "total_tokens": 2190,
+        "completion_tokens": 88,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "elapsed_s": 8.580569613724947
+    },
+    {
+      "name": "synthetic_reversed_response",
+      "before_dx_px": -256.0,
+      "after_dx_px": -249.6,
+      "expected_y_mm": 10,
+      "name_returned": "propose_move",
+      "arguments": {
+        "xyz_mm": [
+          0,
+          10,
+          0
+        ],
+        "reason": "+Y 20 mm moved dx from -256 to -249.6, so +Y reduces the absolute horizontal error; continue +Y 10 mm."
+      },
+      "correct": true,
+      "usage": {
+        "prompt_tokens": 2103,
+        "total_tokens": 2190,
+        "completion_tokens": 87,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "elapsed_s": 8.494263630360365
+    }
+  ]
+}
