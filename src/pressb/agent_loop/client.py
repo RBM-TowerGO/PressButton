@@ -39,7 +39,9 @@ for tool in TOOLS:
             'Choose angles from the current head image to see the full panel; keep an already adequate view. '
             'Head movement does not reposition the wrist camera or hand.')
     elif function['name'] == 'propose_gripper':
-        function['description'] = 'c closes, o opens the gripper; an open single-finger press is permitted.'
+        function['description'] = ('c closes, o opens the gripper. With a calibrated merged end, close only after '
+            'the open-gripper wrist view shows the button on the aim pixel and the press-phase range is frozen; '
+            'closing hides the button at that pixel.')
         fields['key']['description'] = 'Keyboard c/o; startup preserves gripper state.'
     elif function['name'] == 'request_observation':
         function['description'] = ('Capture fresh images at the current camera poses, without head or hand movement. '
@@ -77,6 +79,12 @@ def parse_proposal(response, observation, session):
 def is_forward(proposal):
     return (proposal.get('name') == 'propose_move'
             and proposal['arguments']['xyz_mm'][0] > 0)
+
+
+def _press_phase_press():
+    """True once a trusted open-gripper range is frozen and the gripper is closed."""
+    from . import press_phase
+    return press_phase.active() and press_phase.phase() == press_phase.PRESS
 
 
 def require_forward_permission(proposal, obs, decision, policy='wrist_horizontal'):
@@ -154,6 +162,28 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
         elif policy != 'wrist_horizontal':
             raise ValueError('invalid_forward_guard_policy:'+str(policy))
         check()
+        if policy == 'wrist_tip_overlap' and _press_phase_press():
+            # The gripper is closed over the calibrated aim pixel, so the model box is
+            # unreliable there. Live depth at that pixel, capped by the frozen
+            # range, bounds the stroke instead.
+            from . import wrist_overlap_guard as press_guard
+            decision = press_guard.press_gate(obs['observation_id'], proposal['arguments']['xyz_mm'][0])
+            if decision['allowed']:
+                decision['authorized_command'] = dict(type='move',
+                    xyz_mm=copy.deepcopy(proposal['arguments']['xyz_mm']))
+            atomic_json(directory/'forward_guard'/f'candidate-{attempt}.json', dict(proposal=proposal, decision=decision))
+            atomic_json(directory/'forward_guard'/'decision.json', decision)
+            if hasattr(conversation, 'attach_press_check'):
+                conversation.attach_press_check(decision)
+            stage('action_request')
+            if not decision['allowed']:
+                raise ValueError('forward_blocked_press_stroke_exceeds_press_limit:'+
+                    json.dumps(decision['press'], ensure_ascii=False)+
+                    '; This entire command was NOT executed; it was not clipped. Reduce the forward '
+                    'stroke to at most remaining_m, withdraw with negative X, verify the target from '
+                    'the head view, or report unable. remaining_m is the smaller of the live depth '
+                    'at the merged end minus the press target and the frozen open-gripper range.')
+            return decision
         if guard_assessment is None:
             stage('forward_guard')
             try:

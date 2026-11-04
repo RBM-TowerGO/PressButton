@@ -7,6 +7,7 @@ import copy
 from pathlib import Path
 
 from . import calibrated_tip
+from . import press_phase
 from .common import atomic_json
 from .forward_guard import GATE_FORMAT
 from .grounding import _inspect, _observation_parts, _request_body, _tool
@@ -18,6 +19,7 @@ from .view_acquisition import VISIBILITY
 
 FORMAT = 'pressb-wrist-tip-overlap-v1'
 POLICY = 'wrist_tip_overlap'
+PRESS_POLICY = 'merged_end_press'
 SOURCE = 'model_not_human'
 TOOL_NAME = 'locate_wrist_tip_overlap'
 FIELDS = ('button_visible', 'contact_tip_visible', 'tip_inside_button')
@@ -186,6 +188,38 @@ def evaluate(assessment, observation_id, policy=POLICY):
         limitation='CURRENT wrist 2D tip-in-button-box overlap only; not calibrated contact, depth alignment or task success.')
 
 
+def validate_press_permission(proposal, obs, decision):
+    """Press-phase recheck: the stroke must still fit the live and frozen bounds."""
+    oid = obs.get('observation_id') if isinstance(obs, dict) else None
+    d = decision if isinstance(decision, dict) else {}
+    checked = press_gate(oid, proposal['arguments']['xyz_mm'][0])
+    command = dict(type='move', xyz_mm=proposal['arguments']['xyz_mm'])
+    if (d.get('format') != GATE_FORMAT or d.get('policy') != PRESS_POLICY
+            or d.get('source') != press_phase.SOURCE or d.get('allowed') is not True
+            or d.get('observation_id') != oid or d.get('assessment_observation_id') != oid
+            or d.get('authorized_command') != command or checked['allowed'] is not True
+            or d.get('basis') != checked['basis']):
+        raise ValueError('positive_X_requires_press_stroke_within_live_and_frozen_range')
+
+
+def press_gate(observation_id, x_mm):
+    """Press permission from live depth within the frozen range; no model request.
+
+    With the gripper closed the tips cover part of the button around the aim
+    pixel, so asking the model to box it is unreliable. The stroke is bounded by
+    this observation's live depth and capped by the frozen open-gripper range.
+    """
+    value = press_phase.evaluate(x_mm, observation_id)
+    return dict(format=GATE_FORMAT, source=press_phase.SOURCE, observation_id=observation_id,
+                assessment_observation_id=observation_id, policy=PRESS_POLICY,
+                allowed=value['allowed'], reasons=list(value['reasons']),
+                basis=dict(phase=value['phase'], z_b_m=value['z_b_m'], budget_m=value['budget_m'],
+                           consumed_m=value['consumed_m'], remaining_m=value['remaining_m'],
+                           live_m=value['live_m'], live_from=value['live_from'], bound=value['bound']),
+                geometry=None, press=value, localization_format=press_phase.FORMAT,
+                limitation='Live aim-pixel depth capped by the frozen open-gripper range; no button visibility, contact or activation claim.')
+
+
 def validate_permission(proposal, obs, decision):
     """Recheck current binding, exact command and canonical geometry before send.
 
@@ -195,6 +229,9 @@ def validate_permission(proposal, obs, decision):
     if proposal.get('name') != 'propose_move' or proposal['arguments']['xyz_mm'][0] <= 0:
         return
     d = decision if isinstance(decision, dict) else {}
+    if d.get('policy') == PRESS_POLICY:
+        validate_press_permission(proposal, obs, d)
+        return
     oid = obs.get('observation_id') if isinstance(obs, dict) else None
     checked = evaluate(d.get('coordinate_evidence'), oid)
     command = dict(type='move', xyz_mm=proposal['arguments']['xyz_mm'])

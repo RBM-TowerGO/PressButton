@@ -22,7 +22,12 @@ def test_localized_is_default_with_full_demo_and_separate_prompt():
         assert args.context_budget_tokens == 65536
         assert args.max_rounds == 20
         assert Path(args.prompt) == agent.LOCALIZED_PROMPT == launcher.LOCALIZED_PROMPT
-    assert Path(launcher.parse_args([]).demo).name == '20261101_182424_352b5047'
+    # The one-key launcher runs without a demonstration unless one is given.
+    assert launcher.parse_args([]).demo is None
+    assert launcher.parse_args(['--no-demo']).demo is None
+    assert Path(launcher.parse_args(['--demo', 'x/20261101_182424_352b5047']).demo).name == '20261101_182424_352b5047'
+    with pytest.raises(SystemExit):
+        launcher.parse_args(['--demo', 'x', '--no-demo'])
 
 
 @pytest.mark.parametrize('mode', ['localized', 'grounded', 'separated', 'direct'])
@@ -181,7 +186,7 @@ def test_recursive_deployment_includes_localized_modules_without_network(monkeyp
     import s1b_keyboard_direct as keyboard
     import start_s1b_inference as inference
     modules = ['localized_conversation', 'model_localization', 'spatial_localization',
-               'spatial_progress', 'localized_forward_guard', 'wrist_overlap_guard']
+               'spatial_progress', 'press_phase', 'wrist_overlap_guard']
     required = [f'src/pressb/agent_loop/{module}.py' for module in modules]
     required.append('scripts/s1b_keyboard_control.py')
     packaged = {}
@@ -201,3 +206,49 @@ def test_recursive_deployment_includes_localized_modules_without_network(monkeyp
     for name in required:
         assert packaged[name] == (ROOT/name).read_bytes()
         compile(packaged[name], name, 'exec')
+
+
+CALIBRATION = ROOT/'docs/astribot/planar_control/fingertip_calibration/right_wrist_fingertip_point.json'
+
+
+def test_depth_window_is_pointed_at_merged_end_without_saving(monkeypatch):
+    import threading
+    aim = json.loads(CALIBRATION.read_text())['points']['closed']['point_normalized']
+    calls, state = [], dict(point=[0.70, 0.80])
+    def fake(base, route, payload=None, timeout=10):
+        calls.append(route)
+        if route == '/api/selection':
+            state['point'] = payload['point_normalized']
+            return dict(point_normalized=state['point'])
+        assert route == '/api/snapshot'
+        return dict(selection=dict(point_normalized=state['point']), depth=dict(center_px=[343, 248]))
+    monkeypatch.setattr(launcher, 'request', fake)
+    assert launcher.aim_depth_window('http://cam', aim, threading.Event()) == [343, 248]
+    assert calls[0] == '/api/selection' and '/api/selection/save' not in calls
+
+
+def test_depth_window_switch_times_out_instead_of_running_on_wrong_point(monkeypatch):
+    import threading
+    monkeypatch.setattr(launcher, 'request', lambda base, route, payload=None, timeout=10:
+        dict(selection=dict(point_normalized=[0.70, 0.80]), depth=dict(center_px=[450, 286])))
+    with pytest.raises(TimeoutError):
+        launcher.aim_depth_window('http://cam', [0.5368, 0.6908], threading.Event(), timeout=0.3)
+
+
+def test_no_demo_reaches_agent_with_zero_demonstration_images(tmp_path, monkeypatch):
+    monkeypatch.setattr(agent, 'request', lambda *a, **k: pytest.fail('no network'))
+    monkeypatch.setattr(agent, 'RobotClient', lambda *a, **k: pytest.fail('no robot'))
+    monkeypatch.setattr(agent, 'tunnel', lambda *a, **k: (_ for _ in ()).throw(RuntimeError('offline-boundary')))
+    output = tmp_path/'run'
+    args = agent.parse_args(['--goal', 'press', '--output', str(output),
+        '--fingertip-calibration', str(CALIBRATION), '--replay', str(tmp_path/'unused')])
+    from pressb.agent_loop import calibrated_tip, press_phase
+    try:
+        with pytest.raises(RuntimeError, match='offline-boundary'):
+            agent.run(args)
+    finally:
+        # agent.run activates module-level calibration state; do not leak it to other tests.
+        calibrated_tip.deactivate()
+        press_phase.reset()
+    task = json.loads((output/'task.json').read_text())
+    assert task['demo'] is None and task['initial_image_count'] == 2

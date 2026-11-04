@@ -18,6 +18,7 @@ from pressb.agent_loop.conversation import Conversation, image_count as count_im
 from pressb.agent_loop.short_loop import ShortConversation
 from pressb.agent_loop.model_context import FORMAT
 from pressb.agent_loop import calibrated_tip
+from pressb.agent_loop import press_phase
 from pressb.agent_loop.common import atomic_json,request,SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
 from pressb.agent_loop.failure_case import FailureCase
@@ -135,6 +136,24 @@ class StopControl:
             signal.signal(sig, handler)
 
 
+def _report_range(conversation, oid):
+    """Print this observation's freeze decision, made inside prepare_decision."""
+    result = getattr(conversation, 'range_evidence', {}).get(oid)
+    if not result:
+        return
+    if result.get('froze'):
+        print(f'测距已冻结：z_b = {result["median_m"]:.4f} m，'
+              f'行程上限 ≤ {press_phase.describe()["budget_m"]*1000:.1f} mm。', flush=True)
+    elif result.get('role') == 'live':
+        state = press_phase.describe(oid)
+        live = f'{result["median_m"]*1000:.1f} mm' if result['median_m'] is not None else '无'
+        print(f'实时测距：{live}（{"可信" if result["trusted"] else "不可信："+", ".join(result["reasons"])}），'
+              f'目标 {state["target_m"]*1000:.0f} mm，本轮可前推 ≤ {state["remaining_m"]*1000:.1f} mm'
+              f'（{state["bound"]}）。', flush=True)
+    elif not result['trusted'] and press_phase.phase() == press_phase.ALIGN:
+        print('测距未采用：'+', '.join(result['reasons']), flush=True)
+
+
 def run(args):
     if not args.replay:
         try:
@@ -168,15 +187,25 @@ def run(args):
               f'失败案例 {len(failure.images) if failure else 0} 张，当前双视角 2 张；首轮共 {image_count} 张，'
               + ('后续保留当前双图和短运行记忆。' if decision_mode == 'grounded' else '后续追加。'), flush=True)
         calibrated_tip.deactivate()
-        tip_calibration = None
+        press_phase.reset()
+        tip_calibration, press_limits = None, None
         if getattr(args, 'fingertip_calibration', None):
             tip_calibration = calibrated_tip.activate(args.fingertip_calibration, args.fingertip_state)
-            print('指端标定：腕图接触端使用人工标定固定像素（'+tip_calibration['state']+'，'
-                  +str([round(v, 4) for v in tip_calibration['point_normalized']])+'），模型只定位按钮。', flush=True)
+            press_limits = press_phase.configure(
+                overpress_m=args.press_overpress_mm/1000.0,
+                max_travel_m=args.press_max_travel_mm/1000.0)
+            press_phase.set_gripper(args.fingertip_state)
+            print('指端标定：对准与接触点固定为合拢末端像素 '
+                  +str([round(v, 4) for v in tip_calibration['point_normalized']])
+                  +'（夹爪实测状态 '+tip_calibration['gripper_state']+'），模型只定位按钮。', flush=True)
+            print('按压分阶段：张开时在瞄准像素读按钮深度 z_b 并冻结为行程上限；闭合后每轮用实时深度闭环，'
+                  f'前推到读数 {150-args.press_overpress_mm:.0f} mm（150 mm 接触 + {args.press_overpress_mm:.0f} mm 过压），'
+                  '且不超过冻结上限。', flush=True)
         model_base = args.model_base or f'http://127.0.0.1:{args.thor_port}/v1'
         atomic_json(output/'task.json', dict(goal=args.goal, model_base=model_base, prompt=prompt,
             prompt_path=str(prompt_path),
             fingertip_calibration=tip_calibration,
+            press_phase=press_limits,
             demo=str(demo.root) if demo else None, initial_image_count=image_count,
             failure_case=str(failure.root) if failure else None,
             input_format=('pressb-conversation-v5' if decision_mode == 'localized' else
@@ -240,9 +269,13 @@ def run(args):
                 for index in range(args.max_rounds):
                     rd = output/'rounds'/f'{index:04d}'
                     active_rd = rd
+                    if press_phase.active():
+                        atomic_json(rd/'press_phase.json', press_phase.describe())
                     print(f'第 {index+1} 轮：'+('独立定位画面中' if decision_mode == 'localized' else
                           '独立判读画面中' if decision_mode in ('separated','grounded') else '整理动作上下文'), flush=True)
                     body = control.call(conversation.prepare_decision, model_base, rd, control.cancel)
+                    if press_phase.active():
+                        _report_range(conversation, obs['observation_id'])
                     print(f'第 {index+1} 轮：请求 Qwen；{count_images(body["messages"])} 张图，'
                           + ('短运行记忆' if decision_mode == 'grounded' else f'压缩代次 {conversation.generation}')
                           + f'；当前双视角 {folder}', flush=True)
@@ -274,7 +307,14 @@ def run(args):
                     atomic_json(rd/'result.json', result)
                     outcome['completed_motion_commands'] += 1
                     if name == 'propose_gripper':
-                        calibrated_tip.set_state('closed' if proposal['arguments']['key'] == 'c' else 'open')
+                        state_now = 'closed' if proposal['arguments']['key'] == 'c' else 'open'
+                        calibrated_tip.set_state(state_now)
+                        if press_phase.active():
+                            press_phase.set_gripper(state_now)
+                            print('夹爪状态：'+state_now+('；测距预算已冻结' if state_now == 'closed'
+                                  else '；重新开始测距'), flush=True)
+                    if press_phase.active() and name == 'propose_move':
+                        press_phase.record_move(proposal['arguments']['xyz_mm'])
                     conversation.append_result(proposal, result, obs, (folder/'head.jpg').read_bytes(),
                                                (folder/'right.jpg').read_bytes())
                     print('命令发送完成，新观测已保存：'+str(folder), flush=True)
@@ -313,8 +353,10 @@ def parse_args(argv=None):
     p.add_argument('--context-budget-tokens', type=int, default=65536)
     p.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
     p.add_argument('--max-rounds',type=int,default=20)
-    p.add_argument('--fingertip-calibration',help='human-marked fingertip JSON (s1b-fingertip-point-v1); wrist tip becomes a fixed pixel and the model locates only the button')
-    p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start for the calibrated tip; updated after executed c/o')
+    p.add_argument('--fingertip-calibration',help='human-marked fingertip JSON (s1b-fingertip-point-v1); the merged-end closed pixel becomes the fixed alignment and contact point and the model locates only the button')
+    p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start, recorded only so the program knows whether depth at the aim pixel still sees the button; it never changes the aim point')
+    p.add_argument('--press-overpress-mm',type=float,default=5.0,help='push past the 150 mm contact reading by this much; live depth target is 150 minus this (default 5 mm)')
+    p.add_argument('--press-max-travel-mm',type=float,default=85.0,help='hard ceiling on the closed-gripper forward stroke (default 85 mm)')
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')
     p.add_argument('--demo-last-steps',type=int,help='optionally select last N completed actions through reviewed activation; default: full demonstration')
     failure_group = p.add_mutually_exclusive_group()

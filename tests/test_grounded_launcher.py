@@ -16,7 +16,7 @@ def test_grounded_defaults_use_full_success_recording():
     assert args.decision_mode == 'grounded'
     assert args.demo_last_steps is None
     assert args.failure_case is None
-    assert Path(args.demo).name == '20261101_182424_352b5047'
+    assert args.demo is None
     assert Path(args.prompt) == ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
     assert args.auto_confirm is True
 

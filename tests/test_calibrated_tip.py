@@ -39,18 +39,32 @@ def test_active_overrides_wrist_tip_only_and_records_source():
     assert dx == pytest.approx(0.15-info['point_normalized'][0])
 
 
-def test_state_switch_changes_point():
+def test_aim_point_is_merged_end_and_ignores_activated_state():
+    """Closing the gripper moves the finger, not the button, so the aim point is fixed."""
+    closed = calibrated_tip.load(CALIBRATION, 'closed')['points']['closed']
+    for state in ('closed', 'open'):
+        info = calibrated_tip.activate(CALIBRATION, state)
+        assert info['aim_state'] == 'closed'
+        assert info['point_normalized'] == closed
+        assert info['gripper_state'] == state  # recorded, but not used as the aim point
+
+
+def test_state_switch_does_not_move_the_aim_point():
     calibrated_tip.activate(CALIBRATION, 'open')
-    open_pt = calibrated_tip.current_point()
+    before = calibrated_tip.aim_point()
     calibrated_tip.set_state('closed')
-    assert calibrated_tip.current_point() != open_pt
+    assert calibrated_tip.aim_point() == before
+    calibrated_tip.set_state('open')
+    assert calibrated_tip.aim_point() == before
 
 
-def test_bad_state_or_missing_state(tmp_path):
+def test_missing_closed_point_is_rejected(tmp_path):
+    """The merged-end point is required even when the gripper starts open."""
     with pytest.raises(ValueError):calibrated_tip.load(CALIBRATION, 'half')
     data = json.load(open(CALIBRATION));del data['points']['closed']
     f = tmp_path/'c.json';f.write_text(json.dumps(data))
-    with pytest.raises(ValueError):calibrated_tip.load(f, 'closed')
+    for state in ('closed', 'open'):
+        with pytest.raises(ValueError):calibrated_tip.load(f, state)
 
 
 def test_guard_uses_calibrated_tip_and_recomputes_consistently():

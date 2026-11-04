@@ -11,6 +11,8 @@ from . import model_localization as locator
 from . import localized_reassessment as reassess
 from . import wrist_overlap_guard as overlap
 from . import head_view_advice
+from . import press_phase
+from . import calibrated_tip
 from . import wrist_direction_rules as direction_rules
 
 FORMAT = 'pressb-conversation-v5'
@@ -68,6 +70,46 @@ describe the visual evidence. Completion remains a model judgment, not human con
 '''
 
 
+def press_status(state):
+    """Tell the model which stage of align-open → close → press it is in. Advisory text only."""
+    state = state or {}
+    phase, gripper = state.get('phase'), state.get('gripper_state')
+    budget, consumed = state.get('budget_m') or 0.0, state.get('consumed_m') or 0.0
+    remaining = state.get('remaining_m')
+    if remaining is None:
+        remaining = max(0.0, budget-consumed)
+    target = state.get('target_m') or 0.0
+    if phase == press_phase.ALIGN:
+        stage = 'align_open'
+        instruction = ('Keep the gripper OPEN. Align the button face onto the fixed merged-end aim point with Y/Z, '
+                       'and approach with positive X only when the wrist overlap check passes. The range is '
+                       'frozen automatically once a trusted open-gripper depth at the aim pixel lies within '
+                       'the close band; until then do not close.')
+    elif gripper != 'closed':
+        stage = 'close'
+        instruction = ('The open-gripper range is frozen. If the wrist view still shows the button on the aim '
+                       'point, close the gripper now (gripper c). Do not move forward while open.')
+    elif remaining <= 0.0005:
+        stage = 'press_reached'
+        instruction = ('The live depth at the merged end has reached the press target (contact plus overpress) '
+                       'or the frozen range is used up. Do not push further. Judge the target light from the '
+                       'HEAD view, then withdraw with negative X.')
+    else:
+        stage = 'press'
+        instruction = ('The gripper is closed. Press with positive X of at most '
+                       f'{remaining*1000:.1f} mm, keep Y/Z at 0. This limit comes from the live wrist depth at '
+                       f'the merged end down to {target*1000:.0f} mm, capped by the frozen range. Judge the target '
+                       'light from the HEAD view, then withdraw with negative X.')
+    live = state.get('live_m')
+    return dict(format=press_phase.FORMAT, stage=stage, gripper_state=gripper, z_b_m=state.get('z_b_m'),
+                frozen_from=state.get('frozen_from'), budget_mm=round(budget*1000, 1),
+                consumed_mm=round(consumed*1000, 1), remaining_mm=round(remaining*1000, 1),
+                live_depth_mm=round(live*1000, 1) if live is not None else None,
+                target_depth_mm=round(target*1000, 1), bound=state.get('bound'),
+                tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1),
+                instruction=instruction, source='program_rule_on_recorded_depth')
+
+
 def _actual(result):
     result = result or {}
     replay = result.get('replay') or {}
@@ -96,6 +138,11 @@ class LocalizedConversation(Conversation):
         self.hypothesis_reviews, self.review_signals, self.reassessments = {}, {}, {}
         self.review_phase = 'not_required'
         self.forward_checks = {}
+        self.press_checks = {}
+        self.press_status = {}
+        self.range_evidence = {}
+        # Raw manifests (depth, selection) per observation; images live in self.observations.
+        self.manifests = {obs['observation_id']: copy.deepcopy(obs)}
         self.forward_guard_decision = None
         self.direction_hints = {}
         self.head_advice = {}
@@ -202,6 +249,25 @@ class LocalizedConversation(Conversation):
                 self.head_advice[oid] = advice
                 self._context(oid, 'CURRENT_HEAD_VIEW_ADVICE', **advice)
             atomic_json(directory/'head_view_advice.json', self.head_advice[oid])
+            if press_phase.active() and oid not in self.range_evidence:
+                wrist = self.localizations[oid].get('wrist') or {}
+                box, tip = wrist.get('button_box'), wrist.get('contact_tip')
+                aligned = (wrist.get('button_visibility') == 'full' and box is not None and tip is not None
+                           and box[0] <= tip[0] <= box[2] and box[1] <= tip[1] <= box[3])
+                evidence = press_phase.observe(self.manifests.get(oid), calibrated_tip.aim_pixel(),
+                                               calibrated_tip.image_size(), aligned=aligned)
+                evidence['phase_after'] = press_phase.phase()
+                self.range_evidence[oid] = evidence
+            if oid in self.range_evidence:
+                atomic_json(directory/'range_evidence.json', self.range_evidence[oid])
+            if press_phase.active() and oid not in self.press_status:
+                status = press_status(press_phase.describe(oid))
+                status['this_observation_range'] = {k: self.range_evidence[oid].get(k)
+                    for k in ('median_m', 'trusted', 'reasons', 'froze', 'role')}
+                self.press_status[oid] = status
+                self._context(oid, 'CURRENT_PRESS_PHASE', **status)
+            if oid in self.press_status:
+                atomic_json(directory/'press_phase_status.json', self.press_status[oid])
             self.prepare_hypothesis_review(base, directory, cancel)
             self._check(oid, cancel)
             if oid not in self.direction_hints:
@@ -215,6 +281,23 @@ class LocalizedConversation(Conversation):
                 'interrupted' if isinstance(exc, InterruptedError) else 'failed'))
             atomic_json(directory/'error.json', dict(stage='decision_prepare', error_type=type(exc).__name__, error=str(exc)))
             raise
+
+    def attach_press_check(self, decision):
+        """Attach press-phase evidence; unlike the alignment gate this uses no model judgment."""
+        oid = self.current_id
+        self._check(decision.get('observation_id'))
+        if decision.get('policy') != overlap.PRESS_POLICY:
+            raise ValueError('forward_check_policy_mismatch')
+        if oid not in self.press_checks:
+            self._context(oid, 'CURRENT_PRESS_PHASE_CHECK',
+                observation_id=oid,
+                decision={k: copy.deepcopy(v) for k, v in decision.items()
+                          if k not in ('authorized_command',)},
+                instruction='The gripper is closed, so the button is not boxed at the merged end any '
+                    'more. This phase bounds the stroke by live depth at that pixel down to the press '
+                    'target, capped by the frozen pre-close range. Keep positive X within remaining_m; '
+                    'the program does not clip a rejected stroke.')
+        self.press_checks[oid] = copy.deepcopy(decision)
 
     def attach_forward_check(self, assessment, decision):
         """Attach fresh gate evidence without rewriting previous observation messages."""
@@ -330,11 +413,17 @@ class LocalizedConversation(Conversation):
     def append_result(self, proposal, result, obs, head, wrist):
         oid = self.current_id
         super().append_result(proposal, result, obs, head, wrist)
+        self.manifests[obs['observation_id']] = copy.deepcopy(obs)
         ledger = self.turns[-1]['ledger']
         ledger['localization_summary'] = locator.model_view(self.localizations[oid])
         ledger['localized_progress'] = copy.deepcopy(self.localized_progress[oid])
         ledger['wrist_direction_rule'] = copy.deepcopy(self.direction_hints.get(oid))
         ledger['head_view_advice'] = copy.deepcopy(self.head_advice.get(oid))
+        if oid in self.press_status:
+            ledger['press_phase'] = copy.deepcopy(self.press_status[oid])
+        if oid in self.press_checks:
+            ledger['press_check'] = {k: copy.deepcopy(v) for k, v in self.press_checks[oid].items()
+                                     if k != 'authorized_command'}
         if oid in self.hypothesis_reviews:
             ledger['hypothesis_review'] = copy.deepcopy(self.hypothesis_reviews[oid])
             ledger['reassessment'] = copy.deepcopy(self.reassessments.get(oid))
