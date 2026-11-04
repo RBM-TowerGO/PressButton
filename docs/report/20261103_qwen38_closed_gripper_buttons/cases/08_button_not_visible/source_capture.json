@@ -1,0 +1,21 @@
+{
+  "status": "complete",
+  "boundary": {
+    "utc_ns": 1793522604955361316,
+    "monotonic_ns": 190778492785817
+  },
+  "frames": {
+    "right": {
+      "source_ns": 1793522605138266880,
+      "receipt_ns": 190778733834536
+    },
+    "depth": {
+      "source_ns": 1793522605138267904,
+      "receipt_ns": 190778734110342
+    },
+    "head": {
+      "source_ns": 1793522605129933056,
+      "receipt_ns": 190778733652991
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "04_low_right",
+  "format_valid": false,
+  "buttons": [],
+  "usage": {},
+  "attempt_count": 1,
+  "request_image_sha256": "66814e11caf1f7fd69618f831d4152ee36cc9010584a89990dbf44c91d31e8d4",
+  "error_type": "URLError",
+  "error": "<urlopen error [Errno 111] Connection refused>",
+  "elapsed_s": 0.0004165312275290489
+}

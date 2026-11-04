@@ -1,0 +1,208 @@
+{
+  "schema": "pressb-observation-v2",
+  "observation_id": "f1bdc1cdd37740ad8f99bf2ff44604ea",
+  "task_id": "c48d7b56fa504b99aadd541ac6f49cc3",
+  "session_id": "1387b76e07d242f993901479850776db",
+  "captured_monotonic_ns": 92518310843009,
+  "utc_ns": 1793424344773422284,
+  "state": {
+    "pose_m_xyzw": [
+      0.4062693914510958,
+      -0.26573204361215735,
+      1.0551494495877605,
+      0.004596637411930199,
+      0.011147503463410622,
+      0.7128918708514072,
+      0.7011702964080959
+    ],
+    "command_pose_m_xyzw": [
+      0.4066934024833206,
+      -0.26559321707165345,
+      1.0563758903211922,
+      0.0042295512897502895,
+      0.010039638446271584,
+      0.7123269288349853,
+      0.7017632528226834
+    ],
+    "frame_id": "chassis",
+    "reference_point": "sdk_end_effector",
+    "receipt_ns": 92517858611662,
+    "joints": {
+      "astribot_arm_right": {
+        "event": "state",
+        "part": "astribot_arm_right",
+        "receipt_ns": 92517854023008,
+        "header": {
+          "sec": 1793424344,
+          "nanosec": 315048882,
+          "frame_id": ""
+        },
+        "position": [
+          -0.1746444458618164,
+          -0.035957048400878905,
+          1.4182264580078126,
+          1.6916832989501953,
+          0.34940281268310547,
+          0.08241510333251953,
+          -0.13178453302001952
+        ],
+        "mode": 0,
+        "names": [],
+        "velocity": [
+          -4.57763671875e-05,
+          -0.0008087158203125,
+          -0.00061798095703125,
+          4.57763671875e-05,
+          0.00042724609375,
+          0.00042724609375,
+          -0.0001373291015625
+        ],
+        "torque": [
+          -1.0492951070494976,
+          -0.16618594783677113,
+          -0.7610275101209718,
+          0.3163569987175801,
+          -0.312098077149166,
+          -0.1611039178565014,
+          -0.16348827902797486
+        ]
+      },
+      "astribot_torso": {
+        "event": "state",
+        "part": "astribot_torso",
+        "receipt_ns": 92517853531684,
+        "header": {
+          "sec": 1793424344,
+          "nanosec": 315017928,
+          "frame_id": ""
+        },
+        "position": [
+          0.2807113432006836,
+          -0.5490556967163086,
+          0.26713178875732424,
+          0.020535512268066408
+        ],
+        "mode": 0,
+        "names": [],
+        "velocity": [
+          -0.000244140625,
+          -4.57763671875e-05,
+          0.000244140625,
+          -0.000335693359375
+        ],
+        "torque": [
+          0.35335919641980984,
+          4.985356456225704,
+          -0.004325542583489478,
+          0.7972106199527735
+        ]
+      },
+      "astribot_gripper_right": {
+        "event": "state",
+        "part": "astribot_gripper_right",
+        "receipt_ns": 92517854244580,
+        "header": {
+          "sec": 1793424344,
+          "nanosec": 315074781,
+          "frame_id": ""
+        },
+        "position": [
+          97.68773712052592
+        ],
+        "mode": 0,
+        "names": [],
+        "velocity": [
+          -0.42257966085125065
+        ],
+        "torque": [
+          28.314491166008843
+        ]
+      }
+    },
+    "rgb_state_skew_ms": 10.244786
+  },
+  "depth": {
+    "center_px": [
+      336,
+      230
+    ],
+    "center_m": null,
+    "median_m": 0.6811687784691274,
+    "valid_pixels": 10,
+    "window": 5,
+    "window_pixels": 25,
+    "scale_m": 9.999999747e-05,
+    "status": "ok",
+    "serial": "419122271476",
+    "depth_source_ns": 1793424344304804096,
+    "rgb_source_ns": 1793424344304804096,
+    "skew_ms": 0.0
+  },
+  "selection": {
+    "point_normalized": [
+      0.5258215962441315,
+      0.6406685236768802
+    ],
+    "revision": 0,
+    "saved": true,
+    "config_path": "/home/astribot/.config/pressb/right_wrist_depth_point.json",
+    "error": null
+  },
+  "frames": {
+    "right": {
+      "source_ns": 1793424344304804096,
+      "receipt_ns": 92517898699091
+    },
+    "depth": {
+      "source_ns": 1793424344304804096,
+      "receipt_ns": 92517898071548
+    },
+    "head": {
+      "source_ns": 1793424344312865024,
+      "receipt_ns": 92517915445349
+    }
+  },
+  "artifacts": {
+    "head.jpg": {
+      "artifact_id": "93a3768138894cf6899913b802308b98",
+      "url": "/v2/artifacts/93a3768138894cf6899913b802308b98",
+      "bytes": 55642,
+      "sha256": "17d41366ce07ecb4c801de00f33efecb084d3a6a42980c333015a895fc4a474d"
+    },
+    "right.jpg": {
+      "artifact_id": "2fb91d05233c4e30b59e8797f9263130",
+      "url": "/v2/artifacts/2fb91d05233c4e30b59e8797f9263130",
+      "bytes": 20329,
+      "sha256": "6962fcae1802f6187b3bf7238633230e315cd473662ae8c2064c1c67a0d46f9c"
+    },
+    "right_depth_raw.npy": {
+      "artifact_id": "dcf06fe93d9649f499098687d3369f16",
+      "url": "/v2/artifacts/dcf06fe93d9649f499098687d3369f16",
+      "bytes": 460928,
+      "sha256": "e0026d746b4d98a7e44c8699e21654dd30c90032c0a78039b9811532480f52e8"
+    },
+    "depth_metadata.json": {
+      "artifact_id": "ec029d7712c749e8b3f92beaaa72e146",
+      "url": "/v2/artifacts/ec029d7712c749e8b3f92beaaa72e146",
+      "bytes": 887,
+      "sha256": "11e18714a8e184f52ed304a530d9608d9465e1fce6ff327182af5ef5352c8913"
+    },
+    "state.json": {
+      "artifact_id": "52af121c4da146ae87005a8d167ecf7d",
+      "url": "/v2/artifacts/52af121c4da146ae87005a8d167ecf7d",
+      "bytes": 2643,
+      "sha256": "a38f403b6fd8d605a2f40dd8b84d351bf7a64bb5f34705ae24eec1e887f3c3a6"
+    }
+  },
+  "tcp_pose": null,
+  "tcp_surface_gap_mm": null,
+  "apex_capture": {
+    "available": false,
+    "skew_ms": null
+  },
+  "forward_estimate": {
+    "source": "median_m",
+    "depth_mm": 681.1687784691273,
+    "forward_mm": 531.1687784691273
+  }
+}

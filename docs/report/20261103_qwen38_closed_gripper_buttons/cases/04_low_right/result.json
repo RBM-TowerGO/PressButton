@@ -1,0 +1,38 @@
+{
+  "id": "04_low_right",
+  "format_valid": true,
+  "buttons": [
+    {
+      "bbox": [
+        588,
+        630,
+        672,
+        790
+      ],
+      "visibility": "partial",
+      "symbol": "down_arrow",
+      "illumination": "uncertain",
+      "description": "金属面板上可见一个圆形电梯按钮，外圈清晰，中心有向下箭头；下半部分被前方机械结构遮挡，未见明显点亮。",
+      "bbox_px": [
+        376.32,
+        226.8,
+        430.08,
+        284.4
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1087,
+    "total_tokens": 1248,
+    "completion_tokens": 161,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "66814e11caf1f7fd69618f831d4152ee36cc9010584a89990dbf44c91d31e8d4",
+  "status": "detected",
+  "note": "图像中仅识别到一个圆形电梯按钮，带向下箭头，部分被遮挡；其余结构为面板、屏幕或机械部件，不计为按钮。",
+  "elapsed_s": 15.364875350147486
+}

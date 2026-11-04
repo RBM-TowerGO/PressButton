@@ -1,0 +1,38 @@
+{
+  "id": "01_small_upper",
+  "format_valid": true,
+  "buttons": [
+    {
+      "bbox": [
+        462,
+        130,
+        536,
+        240
+      ],
+      "visibility": "full",
+      "symbol": "other",
+      "illumination": "off",
+      "description": "金属面板上可见一个圆形电梯按钮，外圈清晰，中心有非箭头符号，未见明显点亮。",
+      "bbox_px": [
+        295.68,
+        46.8,
+        343.04,
+        86.4
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1087,
+    "total_tokens": 1232,
+    "completion_tokens": 145,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "6962fcae1802f6187b3bf7238633230e315cd473662ae8c2064c1c67a0d46f9c",
+  "status": "detected",
+  "note": "图像中仅识别到1个圆形电梯呼叫按钮；下方黑色结构为机械夹爪，不计入按钮。",
+  "elapsed_s": 13.941511513665318
+}

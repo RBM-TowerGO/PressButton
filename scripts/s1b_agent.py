@@ -17,6 +17,7 @@ from pressb.agent_loop.client import RobotClient,propose
 from pressb.agent_loop.conversation import Conversation, image_count as count_images
 from pressb.agent_loop.short_loop import ShortConversation
 from pressb.agent_loop.model_context import FORMAT
+from pressb.agent_loop import calibrated_tip
 from pressb.agent_loop.common import atomic_json,request,SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
 from pressb.agent_loop.failure_case import FailureCase
@@ -166,9 +167,16 @@ def run(args):
         print(f'上下文：成功/历史示范 {len(demo.images) if demo else 0} 张，'
               f'失败案例 {len(failure.images) if failure else 0} 张，当前双视角 2 张；首轮共 {image_count} 张，'
               + ('后续保留当前双图和短运行记忆。' if decision_mode == 'grounded' else '后续追加。'), flush=True)
+        calibrated_tip.deactivate()
+        tip_calibration = None
+        if getattr(args, 'fingertip_calibration', None):
+            tip_calibration = calibrated_tip.activate(args.fingertip_calibration, args.fingertip_state)
+            print('指端标定：腕图接触端使用人工标定固定像素（'+tip_calibration['state']+'，'
+                  +str([round(v, 4) for v in tip_calibration['point_normalized']])+'），模型只定位按钮。', flush=True)
         model_base = args.model_base or f'http://127.0.0.1:{args.thor_port}/v1'
         atomic_json(output/'task.json', dict(goal=args.goal, model_base=model_base, prompt=prompt,
             prompt_path=str(prompt_path),
+            fingertip_calibration=tip_calibration,
             demo=str(demo.root) if demo else None, initial_image_count=image_count,
             failure_case=str(failure.root) if failure else None,
             input_format=('pressb-conversation-v5' if decision_mode == 'localized' else
@@ -265,6 +273,8 @@ def run(args):
                         forward_check=getattr(conversation, 'forward_guard_decision', None))
                     atomic_json(rd/'result.json', result)
                     outcome['completed_motion_commands'] += 1
+                    if name == 'propose_gripper':
+                        calibrated_tip.set_state('closed' if proposal['arguments']['key'] == 'c' else 'open')
                     conversation.append_result(proposal, result, obs, (folder/'head.jpg').read_bytes(),
                                                (folder/'right.jpg').read_bytes())
                     print('命令发送完成，新观测已保存：'+str(folder), flush=True)
@@ -303,6 +313,8 @@ def parse_args(argv=None):
     p.add_argument('--context-budget-tokens', type=int, default=65536)
     p.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
     p.add_argument('--max-rounds',type=int,default=20)
+    p.add_argument('--fingertip-calibration',help='human-marked fingertip JSON (s1b-fingertip-point-v1); wrist tip becomes a fixed pixel and the model locates only the button')
+    p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start for the calibrated tip; updated after executed c/o')
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')
     p.add_argument('--demo-last-steps',type=int,help='optionally select last N completed actions through reviewed activation; default: full demonstration')
     failure_group = p.add_mutually_exclusive_group()

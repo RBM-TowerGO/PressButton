@@ -1,0 +1,39 @@
+{
+  "id": "08_button_not_visible",
+  "format_valid": true,
+  "end_box": [
+    458,
+    690,
+    585,
+    760
+  ],
+  "end_point": [
+    521,
+    725
+  ],
+  "usage": {
+    "prompt_tokens": 1068,
+    "total_tokens": 1186,
+    "completion_tokens": 118,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "5e2b6fa7a7accc13c5ed9f3b285524c7cfa02b3bfd4e83390bf3fe8124a6d777",
+  "status": "located",
+  "description": "夹爪两指合拢后的最前端可见区域，位于画面下方中央，呈黑色机械指尖/端部结构。",
+  "end_box_px": [
+    293.12,
+    248.4,
+    374.4,
+    273.6
+  ],
+  "end_point_px": [
+    333.44,
+    261.0
+  ],
+  "point_inside_own_box": true,
+  "elapsed_s": 11.255788346752524
+}

@@ -1,0 +1,39 @@
+{
+  "id": "07_top_clipped",
+  "format_valid": true,
+  "end_box": [
+    360,
+    690,
+    860,
+    995
+  ],
+  "end_point": [
+    610,
+    850
+  ],
+  "usage": {
+    "prompt_tokens": 1068,
+    "total_tokens": 1185,
+    "completion_tokens": 117,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "c4194fbed617cbf48637527013ac6a16c231df2130100d433a73c65be7cf717b",
+  "status": "located",
+  "description": "画面下方可见合拢的机械夹爪两指前端，最靠近场景前方的黑色指端区域构成物理末端。",
+  "end_box_px": [
+    230.4,
+    248.4,
+    550.4,
+    358.2
+  ],
+  "end_point_px": [
+    390.4,
+    306.0
+  ],
+  "point_inside_own_box": true,
+  "elapsed_s": 11.211623430252075
+}

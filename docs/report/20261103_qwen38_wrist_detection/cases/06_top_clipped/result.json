@@ -1,0 +1,121 @@
+{
+  "id": "06_top_clipped",
+  "format_valid": true,
+  "detections": [
+    {
+      "class": "panel",
+      "bbox": [
+        570,
+        0,
+        870,
+        490
+      ],
+      "visibility": "full",
+      "description": "右侧的金属电梯面板，表面有反光，顶部可见一个圆形按钮。",
+      "bbox_px": [
+        364.8,
+        0.0,
+        556.8,
+        176.4
+      ]
+    },
+    {
+      "class": "button",
+      "bbox": [
+        670,
+        0,
+        770,
+        50
+      ],
+      "visibility": "partial",
+      "description": "面板顶部的圆形按钮，仅可见下半部分，表面有金属光泽。",
+      "bbox_px": [
+        428.8,
+        0.0,
+        492.8,
+        18.0
+      ]
+    },
+    {
+      "class": "image_left_finger",
+      "bbox": [
+        0,
+        740,
+        330,
+        1000
+      ],
+      "visibility": "full",
+      "description": "图像左下方的黑色机械夹爪，表面有红色标记。",
+      "bbox_px": [
+        0.0,
+        266.4,
+        211.2,
+        360.0
+      ]
+    },
+    {
+      "class": "image_right_finger",
+      "bbox": [
+        720,
+        740,
+        1000,
+        1000
+      ],
+      "visibility": "full",
+      "description": "图像右下方的黑色机械夹爪，表面有白色箭头贴纸。",
+      "bbox_px": [
+        460.8,
+        266.4,
+        640.0,
+        360.0
+      ]
+    },
+    {
+      "class": "red_marker",
+      "bbox": [
+        720,
+        780,
+        760,
+        860
+      ],
+      "visibility": "full",
+      "description": "右侧夹爪上的红色矩形标记。",
+      "bbox_px": [
+        460.8,
+        280.8,
+        486.4,
+        309.6
+      ]
+    },
+    {
+      "class": "white_arrow_sticker",
+      "bbox": [
+        880,
+        820,
+        920,
+        860
+      ],
+      "visibility": "full",
+      "description": "右侧夹爪上的白色箭头贴纸。",
+      "bbox_px": [
+        563.2,
+        295.2,
+        588.8,
+        309.6
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1072,
+    "total_tokens": 1559,
+    "completion_tokens": 487,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "83ccbbe1e4a3af4c9ecf44f097b3cb5e77789b15330926f079b32c92f3caeb16",
+  "scene_summary": "图像显示一个明亮的室内走廊或电梯厅场景，右侧有一个金属面板，底部可见两个黑色机械夹爪，左侧夹爪上有一个红色标记，右侧夹爪上有一个白色箭头贴纸。",
+  "elapsed_s": 45.94794357474893
+}

@@ -1,0 +1,104 @@
+{
+  "id": "03_middle_red_marker",
+  "format_valid": true,
+  "detections": [
+    {
+      "class": "panel",
+      "bbox": [
+        530,
+        0,
+        740,
+        850
+      ],
+      "visibility": "partial",
+      "description": "不锈钢电梯呼叫面板，上方有黑色屏幕区域，中部有圆形按钮，底部被画面边缘截断。",
+      "bbox_px": [
+        339.2,
+        0.0,
+        473.6,
+        306.0
+      ]
+    },
+    {
+      "class": "button",
+      "bbox": [
+        595,
+        395,
+        675,
+        530
+      ],
+      "visibility": "full",
+      "description": "圆形金属电梯按钮，表面有向下箭头符号，是否点亮不确定。",
+      "bbox_px": [
+        380.8,
+        142.2,
+        432.0,
+        190.8
+      ]
+    },
+    {
+      "class": "image_left_finger",
+      "bbox": [
+        0,
+        745,
+        335,
+        1000
+      ],
+      "visibility": "partial",
+      "description": "画面左下方的黑色机械夹爪，仅可见部分结构，被画面边缘截断。",
+      "bbox_px": [
+        0.0,
+        268.2,
+        214.4,
+        360.0
+      ]
+    },
+    {
+      "class": "image_right_finger",
+      "bbox": [
+        735,
+        740,
+        1000,
+        1000
+      ],
+      "visibility": "partial",
+      "description": "画面右下方的黑色机械夹爪，仅可见部分结构，被画面边缘截断。",
+      "bbox_px": [
+        470.4,
+        266.4,
+        640.0,
+        360.0
+      ]
+    },
+    {
+      "class": "red_marker",
+      "bbox": [
+        735,
+        775,
+        755,
+        845
+      ],
+      "visibility": "full",
+      "description": "右侧黑色夹爪边缘上的红色小贴片或标记。",
+      "bbox_px": [
+        470.4,
+        279.0,
+        483.2,
+        304.2
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1072,
+    "total_tokens": 1453,
+    "completion_tokens": 381,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "a597c3519fcb47f6f3dd716d6edb14fa13371b969d733a0c00cea6b29b6cde15",
+  "scene_summary": "图像显示电梯轿厢内部，中央有一块金属电梯呼叫面板，面板上有一个圆形按钮，按钮内有向下箭头符号；画面左右下方各可见黑色机械夹爪的一部分，右侧夹爪上可见红色标记。",
+  "elapsed_s": 35.99216413497925
+}

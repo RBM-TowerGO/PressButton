@@ -1,0 +1,6 @@
+{
+  "valid_detected_and_empty_statuses_accepted": true,
+  "invalid_bbox_and_status_cases_rejected": 9,
+  "unique_byte_identical_originals": 8,
+  "model_requests_in_checks": 0
+}

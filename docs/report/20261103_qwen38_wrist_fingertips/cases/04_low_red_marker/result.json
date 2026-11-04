@@ -1,0 +1,111 @@
+{
+  "id": "04_low_red_marker",
+  "format_valid": true,
+  "detections": [
+    {
+      "class": "panel",
+      "bbox": [
+        528,
+        0,
+        728,
+        1000
+      ],
+      "fingertip": null,
+      "visibility": "full",
+      "description": "中央竖直金属电梯呼梯面板，上部为黑色屏幕区域，下部为拉丝金属面板，含圆形按钮。",
+      "bbox_px": [
+        337.92,
+        0.0,
+        465.92,
+        360.0
+      ],
+      "fingertip_px": null,
+      "fingertip_inside_bbox": null
+    },
+    {
+      "class": "button",
+      "bbox": [
+        588,
+        755,
+        668,
+        865
+      ],
+      "fingertip": null,
+      "visibility": "full",
+      "description": "圆形金属呼梯按钮，表面有向下箭头符号，未明显点亮，状态不确定。",
+      "bbox_px": [
+        376.32,
+        271.8,
+        427.52,
+        311.4
+      ],
+      "fingertip_px": null,
+      "fingertip_inside_bbox": null
+    },
+    {
+      "class": "image_left_finger",
+      "bbox": [
+        0,
+        735,
+        338,
+        1000
+      ],
+      "fingertip": [
+        292,
+        745
+      ],
+      "visibility": "partial",
+      "description": "图像左侧黑色机械夹爪手指，前端圆钝，部分被画面下边缘裁切。",
+      "bbox_px": [
+        0.0,
+        264.6,
+        216.32,
+        360.0
+      ],
+      "fingertip_px": [
+        186.88,
+        268.2
+      ],
+      "fingertip_inside_bbox": true
+    },
+    {
+      "class": "image_right_finger",
+      "bbox": [
+        735,
+        735,
+        1000,
+        1000
+      ],
+      "fingertip": [
+        742,
+        745
+      ],
+      "visibility": "partial",
+      "description": "图像右侧黑色机械夹爪手指，前端圆钝，部分被画面下边缘裁切。",
+      "bbox_px": [
+        470.4,
+        264.6,
+        640.0,
+        360.0
+      ],
+      "fingertip_px": [
+        474.88,
+        268.2
+      ],
+      "fingertip_inside_bbox": true
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1227,
+    "total_tokens": 1604,
+    "completion_tokens": 377,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "b661cd4088f2bc3f2b10481c60c419485839809f598b95e9f70d60d1eb197cee",
+  "scene_summary": "电梯轿厢内视角，中央为金属电梯呼梯面板，面板上有一个圆形向下箭头按钮；左右两侧可见黑色机械夹爪手指，背景为白色墙面与灯带。",
+  "elapsed_s": 35.588822591118515
+}

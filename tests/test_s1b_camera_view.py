@@ -222,3 +222,37 @@ def test_agent_capture_matches_head_history_instead_of_latest_frame():
     bundle=frames.capture()
     assert bundle['frames']['head']['source_ns']==stamp+10_000_000
     assert frames.latest['head']['source_ns']==stamp+200_000_000
+
+
+def test_fingertip_point_save_reload_and_validation(tmp_path):
+    import cv2
+    path=tmp_path/'tip.json'
+    frames=Frames(None,path)
+    ok,jpeg=cv2.imencode('.jpg',np.zeros((360,640,3),np.uint8))
+    frames.latest['right']=dict(data=jpeg.tobytes(),source_ns=1,receipt_ns=1)
+    with pytest.raises(ValueError):frames.select_fingertip('half',[.5,.5])
+    with pytest.raises(ValueError):frames.select_fingertip('closed',[1.5,.5])
+    info=frames.select_fingertip('closed',[0.5,0.75])
+    assert not info['saved']['closed']
+    with pytest.raises(ValueError):frames.save_fingertip('closed',info['revision']+1)
+    saved=frames.save_fingertip('closed',info['revision'])
+    assert saved['saved']['closed']
+    data=json.loads(path.read_text())
+    assert data['points']['closed']['image_size']==[640,360]
+    assert (tmp_path/'tip_closed.jpg').exists()
+    again=Frames(None,path)
+    assert again.fingertip.points['closed']==[0.5,0.75] and again.fingertip.points['open'] is None
+    # saving the other state keeps the first one
+    i2=again.select_fingertip('open',[0.2,0.3]);again.latest['right']=frames.latest['right']
+    again.save_fingertip('open',i2['revision'])
+    assert set(json.loads(path.read_text())['points'])=={'closed','open'}
+    assert 'fingertip' in again.snapshot()
+
+
+def test_web_fingertip_script_is_valid_js(tmp_path):
+    import re,shutil,subprocess
+    from s1b_camera_view import HTML
+    if shutil.which('node') is None:pytest.skip('node missing')
+    js=re.search(r'<script>(.*)</script>',HTML,re.S).group(1)
+    f=tmp_path/'a.js';f.write_text(js)
+    assert subprocess.run(['node','--check',str(f)]).returncode==0

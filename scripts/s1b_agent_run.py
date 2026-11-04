@@ -181,6 +181,9 @@ def launch(args):
                 '--thor-port', str(args.thor_port), '--max-rounds', str(args.max_rounds),
                 '--context-budget-tokens', str(getattr(args, 'context_budget_tokens', 65536)),
                 '--decision-mode', decision_mode]
+            if getattr(args, 'fingertip_calibration', None):
+                agent_argv.extend(['--fingertip-calibration', str(Path(args.fingertip_calibration).expanduser().resolve()),
+                                   '--fingertip-state', args.fingertip_state])
             if demo_last_steps is not None:
                 agent_argv.extend(['--demo-last-steps', str(demo_last_steps)])
             if failure_path:
@@ -259,6 +262,8 @@ def parse_args(argv=None):
     parser.add_argument('--context-budget-tokens', type=int, default=65536)
     parser.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
     parser.add_argument('--max-rounds', type=int, default=20)
+    parser.add_argument('--fingertip-calibration', help='human-marked fingertip JSON; wrist tip becomes a fixed pixel')
+    parser.add_argument('--fingertip-state', choices=('closed', 'open'), default='open')
     args = parser.parse_args(argv)
     if args.prompt is None:
         args.prompt = str(LOCALIZED_PROMPT if args.decision_mode == 'localized' else DEFAULT_PROMPT)

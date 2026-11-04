@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "unique_valid_responses": 8,
+  "byte_identical_originals": 8,
+  "original_http_body_matches_response_json": true,
+  "coordinates_match_raw_model_predictions": true,
+  "script_and_support_match_snapshots": true,
+  "model_boxes": 5,
+  "annotation_labels": "button / button (partial), no numeric prefixes",
+  "format_validity_is_not_recognition_accuracy": true,
+  "independent_single_image_requests": true,
+  "images_without_predicted_boxes": 3
+}

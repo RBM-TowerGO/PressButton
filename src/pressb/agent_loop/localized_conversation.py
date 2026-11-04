@@ -10,6 +10,7 @@ from .model_context import text
 from . import model_localization as locator
 from . import localized_reassessment as reassess
 from . import wrist_overlap_guard as overlap
+from . import head_view_advice
 from . import wrist_direction_rules as direction_rules
 
 FORMAT = 'pressb-conversation-v5'
@@ -97,6 +98,7 @@ class LocalizedConversation(Conversation):
         self.forward_checks = {}
         self.forward_guard_decision = None
         self.direction_hints = {}
+        self.head_advice = {}
 
     def _check(self, oid, cancel=None):
         if cancel is not None and cancel.is_set():
@@ -195,6 +197,11 @@ class LocalizedConversation(Conversation):
                 self.processed_localizations.add(oid)
             atomic_json(directory/'localization_current.json', self.localizations[oid])
             atomic_json(directory/'localized_progress.json', self.localized_progress[oid])
+            if oid not in self.head_advice:
+                advice = head_view_advice.build_advice(self.localizations[oid], self._state(oid))
+                self.head_advice[oid] = advice
+                self._context(oid, 'CURRENT_HEAD_VIEW_ADVICE', **advice)
+            atomic_json(directory/'head_view_advice.json', self.head_advice[oid])
             self.prepare_hypothesis_review(base, directory, cancel)
             self._check(oid, cancel)
             if oid not in self.direction_hints:
@@ -327,6 +334,7 @@ class LocalizedConversation(Conversation):
         ledger['localization_summary'] = locator.model_view(self.localizations[oid])
         ledger['localized_progress'] = copy.deepcopy(self.localized_progress[oid])
         ledger['wrist_direction_rule'] = copy.deepcopy(self.direction_hints.get(oid))
+        ledger['head_view_advice'] = copy.deepcopy(self.head_advice.get(oid))
         if oid in self.hypothesis_reviews:
             ledger['hypothesis_review'] = copy.deepcopy(self.hypothesis_reviews[oid])
             ledger['reassessment'] = copy.deepcopy(self.reassessments.get(oid))

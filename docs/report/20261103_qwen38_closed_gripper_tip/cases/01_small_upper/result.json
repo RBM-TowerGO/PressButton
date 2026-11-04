@@ -1,0 +1,39 @@
+{
+  "id": "01_small_upper",
+  "format_valid": true,
+  "end_box": [
+    370,
+    690,
+    650,
+    990
+  ],
+  "end_point": [
+    510,
+    840
+  ],
+  "usage": {
+    "prompt_tokens": 1068,
+    "total_tokens": 1185,
+    "completion_tokens": 117,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "6962fcae1802f6187b3bf7238633230e315cd473662ae8c2064c1c67a0d46f9c",
+  "status": "located",
+  "description": "画面下方可见合拢的机械夹爪两指前端，黑色指端与连接结构形成最远端区域。",
+  "end_box_px": [
+    236.8,
+    248.4,
+    416.0,
+    356.4
+  ],
+  "end_point_px": [
+    326.4,
+    302.4
+  ],
+  "point_inside_own_box": true,
+  "elapsed_s": 11.478954043705016
+}

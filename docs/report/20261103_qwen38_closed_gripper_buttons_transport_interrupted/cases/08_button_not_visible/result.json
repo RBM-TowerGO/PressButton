@@ -1,0 +1,11 @@
+{
+  "id": "08_button_not_visible",
+  "format_valid": false,
+  "buttons": [],
+  "usage": {},
+  "attempt_count": 1,
+  "request_image_sha256": "5e2b6fa7a7accc13c5ed9f3b285524c7cfa02b3bfd4e83390bf3fe8124a6d777",
+  "error_type": "URLError",
+  "error": "<urlopen error [Errno 111] Connection refused>",
+  "elapsed_s": 0.00035333167761564255
+}

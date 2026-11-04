@@ -1,0 +1,19 @@
+{
+  "originals_byte_identical": 8,
+  "unique_images": 8,
+  "invalid_predictions_rejected": [
+    "('bbox', [30, 20, 10, 40])",
+    "('bbox', [-1, 0, 10, 10])",
+    "('bbox', [0, 0, 1001, 10])",
+    "('bbox', [0, 0, nan, 10])",
+    "('bbox', [False, 0, 10, 10])",
+    "('bbox', [0, 0, 0, 10])",
+    "('fingertip', [nan, 20])",
+    "('fingertip', [1001, 0])",
+    "('fingertip', [True, 0])",
+    "('fingertip', [1, 2, 3])",
+    "('class', 'white_arrow_sticker')",
+    "('class', 'button')"
+  ],
+  "no_model_requests_in_checks": true
+}

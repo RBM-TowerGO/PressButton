@@ -6,6 +6,7 @@ point-in-box containment. This module cannot call a robot or change a command.
 import copy
 from pathlib import Path
 
+from . import calibrated_tip
 from .common import atomic_json
 from .forward_guard import GATE_FORMAT
 from .grounding import _inspect, _observation_parts, _request_body, _tool
@@ -66,7 +67,7 @@ def build_request(goal, current):
     content = [text(dict(target=goal, source=SOURCE, policy=POLICY, contact_reference='white_arrow')),
                text(dict(frame='CURRENT', observation_id=oid)),
                dict(type='text', text='CURRENT RIGHT WRIST original image'), copy.deepcopy(images[1])]
-    return _request_body(PROMPT, content, TOOL)
+    return _request_body(PROMPT+(calibrated_tip.PROMPT_NOTE if calibrated_tip.active() else ''), content, TOOL)
 
 
 def _image_size(value):
@@ -110,7 +111,8 @@ geometric values remain archived evidence with denied permission, never guesses.
     wrist = normalized['wrist']
     box, tip = wrist['button_box'], wrist['contact_tip']
     button_known = data['button_visibility'] == 'full' and box is not None
-    tip_known = data['contact_visibility'] == 'full' and tip is not None
+    tip_known = ((wrist['contact_visibility'] if calibrated_tip.active() else data['contact_visibility']) == 'full'
+                 and tip is not None)
     contained = (box[0] <= tip[0] <= box[2] and box[1] <= tip[1] <= box[3]
                  if button_known and tip_known else None)
     def visible(field, known):
@@ -122,7 +124,9 @@ geometric values remain archived evidence with denied permission, never guesses.
         contact_reference='white_arrow', coordinate_units='normalized_01',
         coordinate_conversion=normalized['coordinate_conversion'], raw_locations=archived,
         parse_notes=normalized['parse_notes'], image_size=size,
-        button_visibility=data['button_visibility'], contact_visibility=data['contact_visibility'],
+        button_visibility=data['button_visibility'],
+        contact_visibility=wrist['contact_visibility'] if calibrated_tip.active() else data['contact_visibility'],
+        tip_source=wrist.get('tip_source'),
         button_box=box, contact_tip=tip, note=data['note'],
         button_visible=visible('button_visibility', button_known),
         contact_tip_visible=visible('contact_visibility', tip_known),

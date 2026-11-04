@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-a5d2f8471e8950d6",
+  "object": "chat.completion",
+  "created": 1793691840,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-a3e03a0b972c5ab9",
+            "type": "function",
+            "function": {
+              "name": "report_detections",
+              "arguments": "{\"scene_summary\": \"电梯轿厢内，右侧金属墙面上有一个圆形电梯按钮，按钮上有向下箭头符号；画面下方左右两侧可见黑色机械夹爪部件。\", \"detections\": [{\"class\": \"button\", \"bbox\": [690, 150, 800, 320], \"visibility\": \"full\", \"description\": \"圆形金属边框电梯按钮，中心有向下箭头符号，表面未明显发光。\"}, {\"class\": \"image_left_finger\", \"bbox\": [0, 735, 340, 998], \"visibility\": \"partial\", \"description\": \"画面左下方的黑色机械夹爪部件，部分被图像边缘裁切。\"}, {\"class\": \"image_right_finger\", \"bbox\": [725, 730, 998, 998], \"visibility\": \"partial\", \"description\": \"画面右下方的黑色机械夹爪部件，部分被图像边缘裁切。\"}]}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 1072,
+    "total_tokens": 1317,
+    "completion_tokens": 245,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

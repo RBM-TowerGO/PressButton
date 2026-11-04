@@ -1,0 +1,38 @@
+{
+  "id": "07_top_clipped",
+  "format_valid": true,
+  "buttons": [
+    {
+      "bbox": [
+        338,
+        0,
+        442,
+        106
+      ],
+      "visibility": "partial",
+      "symbol": "down_arrow",
+      "illumination": "uncertain",
+      "description": "金属面板上可见一个圆形按钮，带有向下箭头符号；按钮上缘被图像上边界截断，因此为部分可见。",
+      "bbox_px": [
+        216.32,
+        0.0,
+        282.88,
+        38.16
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1087,
+    "total_tokens": 1240,
+    "completion_tokens": 153,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "c4194fbed617cbf48637527013ac6a16c231df2130100d433a73c65be7cf717b",
+  "status": "detected",
+  "note": "仅识别到面板上方一个圆形电梯呼叫按钮，带向下箭头；其余结构为机械臂和反光，不计为按钮。",
+  "elapsed_s": 14.610317937564105
+}

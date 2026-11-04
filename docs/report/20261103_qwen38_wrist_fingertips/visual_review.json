@@ -1,0 +1,15 @@
+{
+  "source": "assistant_visual_review_of_originals_and_overlays_after_inference",
+  "not_ground_truth": true,
+  "quantitative_accuracy_computed": false,
+  "reviews": {
+    "01_lit_occluded": "四类检出；按钮被遮挡，本轮正确报 partial。两指尖点在前端附近。",
+    "02_small_white_arrow": "四类检出；按钮框偏上、漏下缘；出画面板误报 full。两指尖点在前端附近。",
+    "03_middle_red_marker": "四类检出；两指尖点贴近圆钝前端的上缘，未稳定定位到末端表面中心。",
+    "04_low_red_marker": "四类检出；面板出画却报 full；按钮框上下略紧；指尖点偏向上缘。",
+    "05_large_unmarked": "漏检清楚可见的面板；检出按钮和双指，按钮框偏上漏下缘；指尖点在前端上部。",
+    "06_top_clipped": "面板、局部按钮和双指均检出，partial判断合理；按钮框略偏左，指尖点在前端上部。",
+    "07_button_absent": "正确只报双指，未虚构按钮或面板；两指尖点在前端附近。",
+    "08_middle_white_arrow": "四类检出；出画面板误报 full，按钮框略偏上；两指尖点贴近前端上缘。"
+  }
+}

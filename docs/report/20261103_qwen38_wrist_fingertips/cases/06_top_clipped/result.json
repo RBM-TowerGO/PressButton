@@ -1,0 +1,111 @@
+{
+  "id": "06_top_clipped",
+  "format_valid": true,
+  "detections": [
+    {
+      "class": "panel",
+      "bbox": [
+        568,
+        0,
+        868,
+        494
+      ],
+      "fingertip": null,
+      "visibility": "partial",
+      "description": "右上方金属电梯面板，表面有横向纹理，顶部被画面边缘截断。",
+      "bbox_px": [
+        363.52,
+        0.0,
+        555.52,
+        177.84
+      ],
+      "fingertip_px": null,
+      "fingertip_inside_bbox": null
+    },
+    {
+      "class": "button",
+      "bbox": [
+        662,
+        0,
+        762,
+        58
+      ],
+      "fingertip": null,
+      "visibility": "partial",
+      "description": "面板顶部的圆形按钮，仅下半部分可见，符号不确定，是否点亮不确定。",
+      "bbox_px": [
+        423.68,
+        0.0,
+        487.68,
+        20.88
+      ],
+      "fingertip_px": null,
+      "fingertip_inside_bbox": null
+    },
+    {
+      "class": "image_left_finger",
+      "bbox": [
+        0,
+        738,
+        338,
+        1000
+      ],
+      "fingertip": [
+        292,
+        762
+      ],
+      "visibility": "partial",
+      "description": "画面左下方的黑色机械夹爪手指，前端圆头可见，部分被画面边缘截断。",
+      "bbox_px": [
+        0.0,
+        265.68,
+        216.32,
+        360.0
+      ],
+      "fingertip_px": [
+        186.88,
+        274.32
+      ],
+      "fingertip_inside_bbox": true
+    },
+    {
+      "class": "image_right_finger",
+      "bbox": [
+        722,
+        738,
+        1000,
+        1000
+      ],
+      "fingertip": [
+        742,
+        762
+      ],
+      "visibility": "partial",
+      "description": "画面右下方的黑色机械夹爪手指，前端圆头可见，部分被画面边缘截断。",
+      "bbox_px": [
+        462.08,
+        265.68,
+        640.0,
+        360.0
+      ],
+      "fingertip_px": [
+        474.88,
+        274.32
+      ],
+      "fingertip_inside_bbox": true
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1227,
+    "total_tokens": 1586,
+    "completion_tokens": 359,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "83ccbbe1e4a3af4c9ecf44f097b3cb5e77789b15330926f079b32c92f3caeb16",
+  "scene_summary": "电梯轿厢内白色墙面与金属面板，画面下方可见两个黑色机械夹爪，右上方有一块金属面板及一个圆形按钮。",
+  "elapsed_s": 33.990089553873986
+}

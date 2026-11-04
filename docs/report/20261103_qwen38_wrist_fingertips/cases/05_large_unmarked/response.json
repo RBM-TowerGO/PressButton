@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-a43b64ade58c4db1",
+  "object": "chat.completion",
+  "created": 1793692218,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-b1be7ea048e6a562",
+            "type": "function",
+            "function": {
+              "name": "report_detections",
+              "arguments": "{\"scene_summary\": \"电梯轿厢内视角，右侧金属墙面上有一个带向下箭头的圆形按钮，底部左右两侧可见黑色机械夹爪手指。\", \"detections\": [{\"class\": \"button\", \"bbox\": [690, 150, 795, 320], \"fingertip\": null, \"visibility\": \"full\", \"description\": \"圆形金属边框按钮，中心为向下箭头符号，表面未明显发光。\"}, {\"class\": \"image_left_finger\", \"bbox\": [0, 730, 340, 1000], \"fingertip\": [290, 760], \"visibility\": \"partial\", \"description\": \"图像左下方的黑色机械夹爪手指，可见部分被画面边缘截断。\"}, {\"class\": \"image_right_finger\", \"bbox\": [720, 730, 1000, 1000], \"fingertip\": [760, 760], \"visibility\": \"partial\", \"description\": \"图像右下方的黑色机械夹爪手指，可见部分被画面边缘截断。\"}]}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 1227,
+    "total_tokens": 1513,
+    "completion_tokens": 286,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

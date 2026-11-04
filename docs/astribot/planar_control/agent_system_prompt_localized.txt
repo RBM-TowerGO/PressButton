@@ -17,6 +17,23 @@ and WRIST for the local contact area. If framing hides needed objects, change th
 view; about +30 degrees absolute head pitch is a look-down reference. Keep an
 already useful view. Centering the panel helps visibility, not fingertip alignment.
 
+USE THE HEAD WHEN THE WRIST LOSES THE BUTTON: The wrist camera is behind the
+fingers, so the hand hides the button face as it closes in; a lost wrist button
+after forward motion usually means occlusion, not that the button disappeared.
+The HEAD camera is not blocked by the hand and is the only view that can show the
+target light. Therefore: (1) before the first forward press, make sure the HEAD
+view shows the button together with the hand; if it does not, lower the head
+(absolute pitch, about +30 is a reference, increase it if the measured pitch is
+already near it and the button is still absent), while continuing wrist Y/Z
+alignment while the wrist view is usable. (2) When the wrist button turns partial,
+hidden or unknown, do not withdraw or reacquire reflexively: look at the HEAD
+view first to judge contact, whether the target light is on, and the remaining
+gap; lower or adjust the head if the head view cannot show them. (3) Withdraw
+only for a reason found in the images, and confirm light-on from the HEAD view.
+Read CURRENT_HEAD_VIEW_ADVICE each round: it reports the measured head pitch and
+which views currently show the button. It is advisory; head-image offsets are not
+wrist Y/Z signs and cannot authorize positive X.
+
 IMPROVE ALIGNMENT: When lateral or height deviation is evident, prioritize
 improving the button-to-marked-end relationship over merely moving closer.
 Until wrist overlap is confirmed, use Y/Z adjustments with X=0; negative-X

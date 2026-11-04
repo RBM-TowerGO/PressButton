@@ -1,0 +1,38 @@
+{
+  "id": "02_large_left",
+  "format_valid": true,
+  "buttons": [
+    {
+      "bbox": [
+        125,
+        420,
+        260,
+        650
+      ],
+      "visibility": "full",
+      "symbol": "down_arrow",
+      "illumination": "uncertain",
+      "description": "左侧金属面板上可见一个圆形电梯按钮，外圈清晰，按钮中心有向下箭头符号；表面有金属反光，无法仅凭外观判断是否点亮。",
+      "bbox_px": [
+        80.0,
+        151.2,
+        166.4,
+        234.0
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1087,
+    "total_tokens": 1246,
+    "completion_tokens": 159,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "67ffbb638111c3ca6d8ed04b0c335f7d6eba96c8f9deeb80383a26e9ae900d0d",
+  "status": "detected",
+  "note": "图像左侧可见一个真实圆形电梯呼叫按钮，包含外圈和向下箭头；右侧模糊区域未见可辨识按钮。",
+  "elapsed_s": 15.185411870013922
+}

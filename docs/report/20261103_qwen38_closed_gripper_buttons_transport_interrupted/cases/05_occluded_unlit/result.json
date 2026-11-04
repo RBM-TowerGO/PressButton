@@ -1,0 +1,11 @@
+{
+  "id": "05_occluded_unlit",
+  "format_valid": false,
+  "buttons": [],
+  "usage": {},
+  "attempt_count": 1,
+  "request_image_sha256": "b793c311d48ade0d7af678a2fdf2322301dd844b6f6509cadb7922a9cead87df",
+  "error_type": "URLError",
+  "error": "<urlopen error [Errno 111] Connection refused>",
+  "elapsed_s": 0.0003518601879477501
+}

@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-940415c41c9b1978",
+  "object": "chat.completion",
+  "created": 1793694338,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-b10f974046d9af27",
+            "type": "function",
+            "function": {
+              "name": "mark_closed_gripper_end",
+              "arguments": "{\"status\": \"located\", \"end_box\": [360, 690, 860, 995], \"end_point\": [610, 850], \"description\": \"画面下方可见合拢的机械夹爪两指前端，最靠近场景前方的黑色指端区域构成物理末端。\"}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 1068,
+    "total_tokens": 1185,
+    "completion_tokens": 117,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

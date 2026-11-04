@@ -1,0 +1,15 @@
+{
+  "source": "assistant_visual_review_after_model_responses_compared_with_preinference_reference",
+  "ground_truth": false,
+  "formal_accuracy_computed": false,
+  "reviews": {
+    "01_small_upper": "检出完整圆按钮；框偏上、下缘略漏。向下箭头误识别为other，并称“非箭头符号”。",
+    "02_large_left": "完整按钮、向下箭头及框均与目视相符；亮灯uncertain是保守判断。",
+    "03_middle_complete": "完整按钮及向下箭头判断合理；框略紧，下方圆环有少量漏覆盖。",
+    "04_low_right": "按钮局部遮挡、向下箭头判断合理；框略偏上。文字称下半部分遮挡偏夸大，实际主要左下缘被挡。",
+    "05_occluded_unlit": "模型称not_visible，未给框；原图能看到部分圆环，为强遮挡按钮漏检。中央箭头确实不可读。",
+    "06_occluded_lit": "模型称not_visible，未给框；原图能看到明亮的部分外环，为强遮挡按钮漏检。中央箭头确实不可读。",
+    "07_top_clipped": "正确检出顶部裁切按钮，partial和向下箭头合理；框左侧稍松。",
+    "08_button_not_visible": "原图没有可辨按钮，模型正确不画框。不能由此断言场景中物理上没有按钮。"
+  }
+}

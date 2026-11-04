@@ -1,0 +1,91 @@
+{
+  "id": "05_large_unmarked",
+  "format_valid": true,
+  "detections": [
+    {
+      "class": "button",
+      "bbox": [
+        690,
+        150,
+        795,
+        320
+      ],
+      "fingertip": null,
+      "visibility": "full",
+      "description": "圆形金属边框按钮，中心为向下箭头符号，表面未明显发光。",
+      "bbox_px": [
+        441.6,
+        54.0,
+        508.8,
+        115.2
+      ],
+      "fingertip_px": null,
+      "fingertip_inside_bbox": null
+    },
+    {
+      "class": "image_left_finger",
+      "bbox": [
+        0,
+        730,
+        340,
+        1000
+      ],
+      "fingertip": [
+        290,
+        760
+      ],
+      "visibility": "partial",
+      "description": "图像左下方的黑色机械夹爪手指，可见部分被画面边缘截断。",
+      "bbox_px": [
+        0.0,
+        262.8,
+        217.6,
+        360.0
+      ],
+      "fingertip_px": [
+        185.6,
+        273.6
+      ],
+      "fingertip_inside_bbox": true
+    },
+    {
+      "class": "image_right_finger",
+      "bbox": [
+        720,
+        730,
+        1000,
+        1000
+      ],
+      "fingertip": [
+        760,
+        760
+      ],
+      "visibility": "partial",
+      "description": "图像右下方的黑色机械夹爪手指，可见部分被画面边缘截断。",
+      "bbox_px": [
+        460.8,
+        262.8,
+        640.0,
+        360.0
+      ],
+      "fingertip_px": [
+        486.4,
+        273.6
+      ],
+      "fingertip_inside_bbox": true
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 1227,
+    "total_tokens": 1513,
+    "completion_tokens": 286,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "attempt_count": 1,
+  "request_image_sha256": "3ed43588fcfdaea2b02ae462884db9b8d4bc11c4578bec55cb69f562dd41eb06",
+  "scene_summary": "电梯轿厢内视角，右侧金属墙面上有一个带向下箭头的圆形按钮，底部左右两侧可见黑色机械夹爪手指。",
+  "elapsed_s": 26.99348789313808
+}

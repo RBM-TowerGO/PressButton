@@ -10,6 +10,7 @@ import math
 import time
 from pathlib import Path
 
+from . import calibrated_tip
 from .common import atomic_json, request
 from .grounding import _image_content, _observation_parts, _request_body
 from .model_context import text
@@ -74,7 +75,8 @@ def build_request(goal, current, contact_reference='white_arrow'):
     contact = CONTACT_TEXT.get(contact_reference, CONTACT_TEXT['white_arrow'])
     content = [text(dict(goal=goal, contact_reference=contact_reference, source=SOURCE))]
     content.extend(_image_content(current, 'CURRENT'))
-    return _request_body(PROMPT.format(contact=contact), content, TOOL)
+    prompt = PROMPT.format(contact=contact)+(calibrated_tip.PROMPT_NOTE if calibrated_tip.active() else '')
+    return _request_body(prompt, content, TOOL)
 
 
 def _json_safe(value):
@@ -206,6 +208,8 @@ def normalize(raw_locations, observation_id, image_sizes, revision=1,
             view[field] = _canonical_coordinates(normalized, length)
             if candidate is not None and view[field] is None:
                 notes.append(name+'.'+field+': invalid unit, finite range or box ordering; geometry unknown, raw value archived')
+        if name == 'wrist':
+            calibrated_tip.apply(view)
         view['derived_relation'] = derive(view, image_sizes[name])
         views[name] = view
     return dict(format=FORMAT, source=SOURCE, observation_id=observation_id, revision=revision,

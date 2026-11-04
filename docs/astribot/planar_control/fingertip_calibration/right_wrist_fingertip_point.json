@@ -1,0 +1,36 @@
+{
+  "schema": "s1b-fingertip-point-v1",
+  "camera": "right_wrist_rgbd",
+  "points": {
+    "closed": {
+      "point_normalized": [
+        0.5367762128325508,
+        0.6908077994428969
+      ],
+      "pixel": [
+        343,
+        248
+      ],
+      "image_size": [
+        640,
+        360
+      ],
+      "saved_at": "2026-11-03T23:01:42+0800"
+    },
+    "open": {
+      "point_normalized": [
+        0.7276995305164319,
+        0.7966573816155988
+      ],
+      "pixel": [
+        465,
+        286
+      ],
+      "image_size": [
+        640,
+        360
+      ],
+      "saved_at": "2026-11-03T23:01:22+0800"
+    }
+  }
+}

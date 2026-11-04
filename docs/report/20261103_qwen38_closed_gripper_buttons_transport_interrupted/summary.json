@@ -1,0 +1,153 @@
+{
+  "status": "complete",
+  "model_identity": {
+    "id": "qwen38",
+    "object": "model",
+    "created": 1793693343,
+    "owned_by": "vllm",
+    "root": "Inferact/Qwen3.8-27B-NVFP4",
+    "parent": null,
+    "max_model_len": 262144,
+    "permission": [
+      {
+        "id": "modelperm-85a138b69579a07d",
+        "object": "model_permission",
+        "created": 1793693343,
+        "allow_create_engine": false,
+        "allow_sampling": true,
+        "allow_logprobs": true,
+        "allow_search_indices": false,
+        "allow_view": true,
+        "allow_fine_tuning": false,
+        "organization": "*",
+        "group": null,
+        "is_blocking": false
+      }
+    ]
+  },
+  "model_base": "http://127.0.0.1:18538/v1",
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "results": [
+    {
+      "id": "01_small_upper",
+      "format_valid": true,
+      "buttons": [
+        {
+          "bbox": [
+            462,
+            130,
+            536,
+            240
+          ],
+          "visibility": "full",
+          "symbol": "other",
+          "illumination": "off",
+          "description": "金属面板上可见一个圆形电梯按钮，外圈清晰，中心有非箭头符号，未见明显点亮。",
+          "bbox_px": [
+            295.68,
+            46.8,
+            343.04,
+            86.4
+          ]
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1232,
+        "completion_tokens": 145,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "6962fcae1802f6187b3bf7238633230e315cd473662ae8c2064c1c67a0d46f9c",
+      "status": "detected",
+      "note": "图像中仅识别到1个圆形电梯呼叫按钮；下方黑色结构为机械夹爪，不计入按钮。",
+      "elapsed_s": 14.141626255121082
+    },
+    {
+      "id": "02_large_left",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "67ffbb638111c3ca6d8ed04b0c335f7d6eba96c8f9deeb80383a26e9ae900d0d",
+      "error_type": "RemoteDisconnected",
+      "error": "Remote end closed connection without response",
+      "elapsed_s": 7.022656299173832
+    },
+    {
+      "id": "03_middle_complete",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "090271e3b36071034b3bc6d1295ec0ae01077a4a215af594944c2f04a45ff054",
+      "error_type": "URLError",
+      "error": "<urlopen error [Errno 111] Connection refused>",
+      "elapsed_s": 0.0003904122859239578
+    },
+    {
+      "id": "04_low_right",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "66814e11caf1f7fd69618f831d4152ee36cc9010584a89990dbf44c91d31e8d4",
+      "error_type": "URLError",
+      "error": "<urlopen error [Errno 111] Connection refused>",
+      "elapsed_s": 0.0004165312275290489
+    },
+    {
+      "id": "05_occluded_unlit",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "b793c311d48ade0d7af678a2fdf2322301dd844b6f6509cadb7922a9cead87df",
+      "error_type": "URLError",
+      "error": "<urlopen error [Errno 111] Connection refused>",
+      "elapsed_s": 0.0003518601879477501
+    },
+    {
+      "id": "06_occluded_lit",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "31404bd17ee33e1cdce5dcc0641c6495bfc322a8eeb4377bddad78fb104fc4bc",
+      "error_type": "URLError",
+      "error": "<urlopen error [Errno 111] Connection refused>",
+      "elapsed_s": 0.00039567239582538605
+    },
+    {
+      "id": "07_top_clipped",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "c4194fbed617cbf48637527013ac6a16c231df2130100d433a73c65be7cf717b",
+      "error_type": "URLError",
+      "error": "<urlopen error [Errno 111] Connection refused>",
+      "elapsed_s": 0.0003887489438056946
+    },
+    {
+      "id": "08_button_not_visible",
+      "format_valid": false,
+      "buttons": [],
+      "usage": {},
+      "attempt_count": 1,
+      "request_image_sha256": "5e2b6fa7a7accc13c5ed9f3b285524c7cfa02b3bfd4e83390bf3fe8124a6d777",
+      "error_type": "URLError",
+      "error": "<urlopen error [Errno 111] Connection refused>",
+      "elapsed_s": 0.00035333167761564255
+    }
+  ],
+  "request_count": 8,
+  "format_valid_count": 1,
+  "summed_request_elapsed_s": 21.16657911101356,
+  "total_prompt_tokens": 1087,
+  "total_completion_tokens": 145
+}

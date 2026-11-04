@@ -1,0 +1,285 @@
+{
+  "status": "complete",
+  "model_identity": {
+    "id": "qwen38",
+    "object": "model",
+    "created": 1793693457,
+    "owned_by": "vllm",
+    "root": "Inferact/Qwen3.8-27B-NVFP4",
+    "parent": null,
+    "max_model_len": 262144,
+    "permission": [
+      {
+        "id": "modelperm-bada6f7f2a7bbaee",
+        "object": "model_permission",
+        "created": 1793693457,
+        "allow_create_engine": false,
+        "allow_sampling": true,
+        "allow_logprobs": true,
+        "allow_search_indices": false,
+        "allow_view": true,
+        "allow_fine_tuning": false,
+        "organization": "*",
+        "group": null,
+        "is_blocking": false
+      }
+    ]
+  },
+  "model_base": "http://127.0.0.1:18538/v1",
+  "robot_connected": false,
+  "robot_commands_sent": 0,
+  "results": [
+    {
+      "id": "01_small_upper",
+      "format_valid": true,
+      "buttons": [
+        {
+          "bbox": [
+            462,
+            130,
+            536,
+            240
+          ],
+          "visibility": "full",
+          "symbol": "other",
+          "illumination": "off",
+          "description": "金属面板上可见一个圆形电梯按钮，外圈清晰，中心有非箭头符号，未见明显点亮。",
+          "bbox_px": [
+            295.68,
+            46.8,
+            343.04,
+            86.4
+          ]
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1232,
+        "completion_tokens": 145,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "6962fcae1802f6187b3bf7238633230e315cd473662ae8c2064c1c67a0d46f9c",
+      "status": "detected",
+      "note": "图像中仅识别到1个圆形电梯呼叫按钮；下方黑色结构为机械夹爪，不计入按钮。",
+      "elapsed_s": 13.941511513665318
+    },
+    {
+      "id": "02_large_left",
+      "format_valid": true,
+      "buttons": [
+        {
+          "bbox": [
+            125,
+            420,
+            260,
+            650
+          ],
+          "visibility": "full",
+          "symbol": "down_arrow",
+          "illumination": "uncertain",
+          "description": "左侧金属面板上可见一个圆形电梯按钮，外圈清晰，按钮中心有向下箭头符号；表面有金属反光，无法仅凭外观判断是否点亮。",
+          "bbox_px": [
+            80.0,
+            151.2,
+            166.4,
+            234.0
+          ]
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1246,
+        "completion_tokens": 159,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "67ffbb638111c3ca6d8ed04b0c335f7d6eba96c8f9deeb80383a26e9ae900d0d",
+      "status": "detected",
+      "note": "图像左侧可见一个真实圆形电梯呼叫按钮，包含外圈和向下箭头；右侧模糊区域未见可辨识按钮。",
+      "elapsed_s": 15.185411870013922
+    },
+    {
+      "id": "03_middle_complete",
+      "format_valid": true,
+      "buttons": [
+        {
+          "bbox": [
+            478,
+            375,
+            562,
+            515
+          ],
+          "visibility": "full",
+          "symbol": "down_arrow",
+          "illumination": "uncertain",
+          "description": "金属面板中央可见圆形按钮，外圈清晰，内部有向下箭头符号；无明显发光迹象。",
+          "bbox_px": [
+            305.92,
+            135.0,
+            359.68,
+            185.4
+          ]
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1240,
+        "completion_tokens": 153,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "090271e3b36071034b3bc6d1295ec0ae01077a4a215af594944c2f04a45ff054",
+      "status": "detected",
+      "note": "图像中仅识别到一个圆形电梯呼叫按钮，位于金属面板中央，符号为向下箭头；其余结构为机械臂与墙面，不计为按钮。",
+      "elapsed_s": 14.681715412065387
+    },
+    {
+      "id": "04_low_right",
+      "format_valid": true,
+      "buttons": [
+        {
+          "bbox": [
+            588,
+            630,
+            672,
+            790
+          ],
+          "visibility": "partial",
+          "symbol": "down_arrow",
+          "illumination": "uncertain",
+          "description": "金属面板上可见一个圆形电梯按钮，外圈清晰，中心有向下箭头；下半部分被前方机械结构遮挡，未见明显点亮。",
+          "bbox_px": [
+            376.32,
+            226.8,
+            430.08,
+            284.4
+          ]
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1248,
+        "completion_tokens": 161,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "66814e11caf1f7fd69618f831d4152ee36cc9010584a89990dbf44c91d31e8d4",
+      "status": "detected",
+      "note": "图像中仅识别到一个圆形电梯按钮，带向下箭头，部分被遮挡；其余结构为面板、屏幕或机械部件，不计为按钮。",
+      "elapsed_s": 15.364875350147486
+    },
+    {
+      "id": "05_occluded_unlit",
+      "format_valid": true,
+      "buttons": [],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1158,
+        "completion_tokens": 71,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "b793c311d48ade0d7af678a2fdf2322301dd844b6f6509cadb7922a9cead87df",
+      "status": "not_visible",
+      "note": "画面中仅可见金属面板、屏幕区域和机械夹爪，未识别到圆形电梯按钮。",
+      "elapsed_s": 6.957453829236329
+    },
+    {
+      "id": "06_occluded_lit",
+      "format_valid": true,
+      "buttons": [],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1158,
+        "completion_tokens": 71,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "31404bd17ee33e1cdce5dcc0641c6495bfc322a8eeb4377bddad78fb104fc4bc",
+      "status": "not_visible",
+      "note": "画面中仅可见金属面板、屏幕区域和机械夹爪，未识别到圆形电梯按钮。",
+      "elapsed_s": 6.951416078954935
+    },
+    {
+      "id": "07_top_clipped",
+      "format_valid": true,
+      "buttons": [
+        {
+          "bbox": [
+            338,
+            0,
+            442,
+            106
+          ],
+          "visibility": "partial",
+          "symbol": "down_arrow",
+          "illumination": "uncertain",
+          "description": "金属面板上可见一个圆形按钮，带有向下箭头符号；按钮上缘被图像上边界截断，因此为部分可见。",
+          "bbox_px": [
+            216.32,
+            0.0,
+            282.88,
+            38.16
+          ]
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1240,
+        "completion_tokens": 153,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "c4194fbed617cbf48637527013ac6a16c231df2130100d433a73c65be7cf717b",
+      "status": "detected",
+      "note": "仅识别到面板上方一个圆形电梯呼叫按钮，带向下箭头；其余结构为机械臂和反光，不计为按钮。",
+      "elapsed_s": 14.610317937564105
+    },
+    {
+      "id": "08_button_not_visible",
+      "format_valid": true,
+      "buttons": [],
+      "usage": {
+        "prompt_tokens": 1087,
+        "total_tokens": 1166,
+        "completion_tokens": 79,
+        "prompt_tokens_details": null,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "attempt_count": 1,
+      "request_image_sha256": "5e2b6fa7a7accc13c5ed9f3b285524c7cfa02b3bfd4e83390bf3fe8124a6d777",
+      "status": "not_visible",
+      "note": "画面中可见电梯面板/屏幕与机械夹爪，但没有可辨识的圆形电梯呼叫按钮；未见按钮外圈或箭头符号。",
+      "elapsed_s": 7.668087544851005
+    }
+  ],
+  "request_count": 8,
+  "format_valid_count": 8,
+  "summed_request_elapsed_s": 95.36078953649849,
+  "total_prompt_tokens": 8696,
+  "total_completion_tokens": 992
+}

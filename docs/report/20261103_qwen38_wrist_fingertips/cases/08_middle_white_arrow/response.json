@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-8e2aa23b7a6f80b2",
+  "object": "chat.completion",
+  "created": 1793692303,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-908339fe2f252f91",
+            "type": "function",
+            "function": {
+              "name": "report_detections",
+              "arguments": "{\"scene_summary\": \"图像显示一个明亮的电梯走廊场景，右侧有一块金属电梯呼叫面板，面板上有一个圆形按钮；画面下方左右两侧各可见一个黑色机械夹爪手指。\", \"detections\": [{\"class\": \"panel\", \"bbox\": [555, 0, 760, 690], \"fingertip\": null, \"visibility\": \"full\", \"description\": \"右侧竖直金属电梯呼叫面板，表面有拉丝金属质感，上方嵌有圆形按钮。\"}, {\"class\": \"button\", \"bbox\": [618, 242, 690, 388], \"fingertip\": null, \"visibility\": \"full\", \"description\": \"面板上的圆形电梯呼叫按钮，带金属边框，中心有向下箭头符号，是否点亮不确定。\"}, {\"class\": \"image_left_finger\", \"bbox\": [0, 735, 338, 1000], \"fingertip\": [318, 745], \"visibility\": \"partial\", \"description\": \"画面左下方的黑色机械夹爪手指，前端朝向场景，部分被画面边缘裁切。\"}, {\"class\": \"image_right_finger\", \"bbox\": [728, 735, 998, 1000], \"fingertip\": [742, 745], \"visibility\": \"partial\", \"description\": \"画面右下方的黑色机械夹爪手指，前端朝向场景，部分被画面边缘裁切。\"}]}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 1227,
+    "total_tokens": 1595,
+    "completion_tokens": 368,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

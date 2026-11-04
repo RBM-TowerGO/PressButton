@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Local camera webpage with a persistent measurement point; no robot commands."""
+import os
+# The viewer shares the robot CPU with the 250 Hz SDK control loop. Unbounded BLAS/OpenMP
+# threads in the depth reprojection starved it (SDK frequency warnings, stale captures).
+for _name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS'):os.environ.setdefault(_name,'1')
+
 import argparse
 import base64
 from collections import deque
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
-import os
 from pathlib import Path
 import signal
 import subprocess
@@ -16,6 +20,8 @@ import tempfile
 
 import cv2
 import numpy as np
+
+cv2.setNumThreads(1)
 
 TOPICS = {'head':'/astribot_camera/head_rgbd/color_compress/compressed',
           'right':'/astribot_camera/right_wrist_rgbd/color_compress/compressed',
@@ -115,8 +121,85 @@ def factory_metadata(source):
     return json.loads(result.stdout)
 
 
+GRIPPER_STATES=('closed','open')
+
+
+class FingertipPoints:
+    """Per-gripper-state fingertip pixel in the right wrist image; persisted atomically."""
+    def __init__(self,path=None):
+        self.path=Path(path).expanduser() if path else None
+        self.points={s:None for s in GRIPPER_STATES}
+        self.saved={s:None for s in GRIPPER_STATES}
+        self.revision=0
+        self.error=None
+        if self.path and self.path.exists():
+            try:
+                data=json.loads(self.path.read_text())
+                if not isinstance(data,dict) or data.get('schema')!='s1b-fingertip-point-v1' or data.get('camera')!='right_wrist_rgbd':
+                    raise ValueError('配置版本或相机不匹配')
+                for s in GRIPPER_STATES:
+                    entry=data['points'].get(s)
+                    if entry is not None:self.points[s]=self.saved[s]=validate_point(entry['point_normalized'])
+            except (ValueError,KeyError,OSError,TypeError,AttributeError) as exc:
+                self.error='未加载指端点配置：'+str(exc)
+
+    def info(self):
+        return dict(points=dict(self.points),revision=self.revision,error=self.error,
+                    saved={s:self.points[s] is not None and self.points[s]==self.saved[s] for s in GRIPPER_STATES},
+                    config_path=str(self.path) if self.path else None)
+
+    def select(self,state,point):
+        if state not in GRIPPER_STATES:raise ValueError('夹爪状态无效')
+        point=validate_point(point)
+        self.points[state]=point;self.revision+=1
+        return self.info()
+
+    def save(self,state,revision,image_jpeg=None):
+        if state not in GRIPPER_STATES:raise ValueError('夹爪状态无效')
+        if type(revision) is not int or revision!=self.revision:raise ValueError('指端点已变更，请刷新后重新保存')
+        if self.path is None:raise ValueError('未配置保存路径')
+        if self.points[state] is None:raise ValueError('该状态尚未标记指端点')
+        self.path.parent.mkdir(parents=True,exist_ok=True)
+        entries={}
+        for s in GRIPPER_STATES:
+            point=self.points[s] if s==state else self.saved[s]
+            if point is None:continue
+            entries[s]=dict(point_normalized=point)
+        size=None
+        if image_jpeg:
+            image=cv2.imdecode(np.frombuffer(image_jpeg,np.uint8),cv2.IMREAD_COLOR)
+            if image is not None:
+                size=[image.shape[1],image.shape[0]]
+                for s,e in entries.items():
+                    if s==state:
+                        e['pixel']=list(point_pixel(e['point_normalized'],*size));e['image_size']=size
+                        e['saved_at']=time.strftime('%Y-%m-%dT%H:%M:%S%z')
+                        reference=self.path.with_name(self.path.stem+'_'+s+'.jpg')
+                        reference.write_bytes(image_jpeg)
+        if state in entries and 'pixel' not in entries[state]:
+            raise ValueError('无有效右腕画面，无法保存指端点')
+        old={}
+        if self.path.exists():
+            try:old=json.loads(self.path.read_text()).get('points',{})
+            except (ValueError,OSError,AttributeError):old={}
+        for s,e in entries.items():
+            if s!=state and s in old:e.update({k:v for k,v in old[s].items() if k!='point_normalized'})
+        data=dict(schema='s1b-fingertip-point-v1',camera='right_wrist_rgbd',points=entries)
+        temporary=None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w',dir=self.path.parent,delete=False) as out:
+                temporary=out.name
+                json.dump(data,out,allow_nan=False,indent=2);out.write('\n');out.flush();os.fsync(out.fileno())
+            os.replace(temporary,self.path)
+        finally:
+            if temporary and os.path.exists(temporary):os.unlink(temporary)
+        self.saved[state]=self.points[state];self.error=None
+        return self.info()
+
+
 class Frames:
-    def __init__(self,config_path=None):
+    def __init__(self,config_path=None,fingertip_path=None):
+        self.fingertip=FingertipPoints(fingertip_path)
         self.lock=threading.Lock()
         self.latest={}
         self.right=deque(maxlen=8)
@@ -177,6 +260,14 @@ class Frames:
             self.config_error=None
             return self.selection()
 
+    def select_fingertip(self,state,point):
+        with self.lock:return self.fingertip.select(state,point)
+
+    def save_fingertip(self,state,revision):
+        with self.lock:
+            latest=self.latest.get('right')
+            return self.fingertip.save(state,revision,latest['data'] if latest else None)
+
     def receive(self,key,message):
         try:
             fmt=message.format.lower()
@@ -236,7 +327,7 @@ class Frames:
                    or 'right' not in frames or frames['right']['stale'])
             if stale or self.measurement_error:
                 result.update(median_m=None,center_m=None,status=self.measurement_error or '深度已过期')
-            return dict(frames=frames,depth=result,error=self.error,activation=self.activation,selection=self.selection())
+            return dict(frames=frames,depth=result,error=self.error,activation=self.activation,selection=self.selection(),fingertip=self.fingertip.info())
 
     def capture(self):
         """Atomic, timestamped export for persisted observations; never substitutes old depth."""
@@ -249,8 +340,10 @@ class Frames:
             # Match the retained head history to the paired wrist exposure,
             # rather than combining delayed wrist processing with latest head.
             selected['head']=min(self.head,key=lambda f:abs(f['source_ns']-self.paired_depth['source_ns']))
+            ages={k:round((now-f['receipt_ns'])/1e6) for k,f in selected.items()}
             if any(not 0 <= now-f['receipt_ns'] <= 1_000_000_000 for f in selected.values()):
-                raise ValueError('stale_capture')
+                raise ValueError('stale_capture:age_ms='+json.dumps(ages)+',latest_age_ms='+json.dumps(
+                    {k:round((now-v['receipt_ns'])/1e6) for k,v in self.latest.items()}))
             if any(abs(time.time_ns()-f['source_ns'])>1_000_000_000 for f in selected.values()):
                 raise ValueError('stale_capture_source')
             if max(f['source_ns'] for f in selected.values())-min(f['source_ns'] for f in selected.values())>80_000_000:
@@ -271,26 +364,41 @@ footer{padding:14px 16px;color:#9cadbf}.depth{margin-top:20px;padding:22px;borde
 </style><header><div><h1>S1B / 实时视觉</h1><small>头部 · 右腕 · 定点测距</small></div><span id="status">连接中…</span></header>
 <div class="grid"><article><h2>头部相机</h2><div class="screen"><canvas id="head"></canvas><span class="empty" id="headEmpty">等待画面</span></div><footer id="headAge">—</footer></article>
 <article><h2>右腕相机 <small>点击或用方向键调整测距点</small></h2><div class="screen"><canvas id="right"></canvas><span class="empty" id="rightEmpty">等待画面</span></div><footer id="rightAge">—</footer></article></div>
+<div class="tools"><b>标记对象：</b><label><input type="radio" name="mode" value="depth" checked> 测距点（青）</label><label><input type="radio" name="mode" value="closed"> 指端点·夹爪闭合（橙）</label><label><input type="radio" name="mode" value="open"> 指端点·夹爪张开（橙）</label></div>
 <div class="tools"><button id="savePoint" class="primary" disabled>保存测距点</button><button id="resetPoint" disabled>恢复画面中心</button><span id="pointState" class="muted">等待右腕画面</span></div>
+<p class="muted" id="fingertipState">指端点：选择“指端点”后点击右腕画面中夹爪物理最前端要接触按钮的位置，再点击“保存”。该点是固定标定值，与夹爪状态一一对应；夹爪或相机被碰动后须重新标记。</p>
 <p class="muted" id="pointKeys">测距点微调：网页获得焦点后，按 ↑ ↓ ← → 移动 1 像素；Shift＋方向键移动 10 像素。调整后点击“保存测距点”。</p>
 <div class="depth"><div><div class="label">选定点周围 5 × 5 区域中值</div><div class="value" id="distance">—</div></div><div><div id="exact">选定像素：—</div><p class="muted" id="detail">等待深度</p></div></div>
 <p class="muted">显示相机光轴方向的深度 Z，不是夹爪到目标的间隙。深度经设备出厂内外参映射到右腕彩色图；空洞和过期数据不作为有效距离。</p>
 <div class="keyboard">键盘仍在终端操作：<kbd>W A S D</kbd> 平移　<kbd>F</kbd> 前伸　<kbd>R</kbd> 返回　<kbd>C</kbd> 闭合　<kbd>O</kbd> 打开　<kbd>空格</kbd> 停止。网页选点只改变测距位置，不控制机械臂。</div>
 <script>
-const $=id=>document.getElementById(id);let generation=0,selection={point_normalized:null,revision:-1},requesting=false,rightReady=false,rightImage=null,previewPoint=undefined,pendingPoint=undefined,actionError='';
+const $=id=>document.getElementById(id);let mode='depth',fingertip={points:{},saved:{},revision:-1,config_path:null,error:null},fingertipPreview={},generation=0,selection={point_normalized:null,revision:-1},requesting=false,rightReady=false,rightImage=null,previewPoint=undefined,pendingPoint=undefined,actionError='';
 function selectedPixel(width,height){const p=previewPoint===undefined?selection.point_normalized:previewPoint;return p?p.map((v,i)=>Math.round(v*([width,height][i]-1))):[Math.floor(width/2),Math.floor(height/2)];}
-function paintRight(){if(!rightImage)return;const c=$('right');c.width=rightImage.width;c.height=rightImage.height;const ctx=c.getContext('2d');ctx.drawImage(rightImage,0,0);const [x,y]=selectedPixel(c.width,c.height);ctx.strokeStyle='#56ffe2';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-15,y);ctx.lineTo(x+15,y);ctx.moveTo(x,y-15);ctx.lineTo(x,y+15);ctx.stroke();ctx.strokeRect(x-2,y-2,5,5);}
-function selectionState(s){if(s.revision<selection.revision)return;selection=s;paintRight();let pos=rightImage?selectedPixel(rightImage.width,rightImage.height).join(', '):'—';$('pointState').textContent=actionError||s.error||('像素 ('+pos+') · '+(previewPoint!==undefined?'正在更新测距点…':s.saved?'已保存，下次启动自动恢复':'未保存'));$('pointState').className=actionError?'bad':'muted';$('savePoint').disabled=requesting||previewPoint!==undefined||!rightReady;$('resetPoint').disabled=!rightReady;}
+function paintRight(){if(!rightImage)return;const c=$('right');c.width=rightImage.width;c.height=rightImage.height;const ctx=c.getContext('2d');ctx.drawImage(rightImage,0,0);const [x,y]=selectedPixel(c.width,c.height);ctx.strokeStyle='#56ffe2';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-15,y);ctx.lineTo(x+15,y);ctx.moveTo(x,y-15);ctx.lineTo(x,y+15);ctx.stroke();ctx.strokeRect(x-2,y-2,5,5);for(const st of ['closed','open']){const p=fingertipPoint(st);if(!p)continue;const fx=Math.round(p[0]*(c.width-1)),fy=Math.round(p[1]*(c.height-1));ctx.strokeStyle=st===mode?'#ff9a2e':'rgba(255,154,46,.45)';ctx.lineWidth=st===mode?3:1.5;ctx.beginPath();ctx.moveTo(fx-18,fy);ctx.lineTo(fx+18,fy);ctx.moveTo(fx,fy-18);ctx.lineTo(fx,fy+18);ctx.stroke();ctx.beginPath();ctx.arc(fx,fy,8,0,6.2832);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.font='14px sans-serif';ctx.fillText(st==='closed'?'指端·闭合':'指端·张开',fx+12,fy-10);}}
+function fingertipPoint(st){return fingertipPreview[st]!==undefined?fingertipPreview[st]:(fingertip.points[st]||null);}
+function activePixel(w,h){if(mode==='depth')return selectedPixel(w,h);const p=fingertipPoint(mode);return p?[Math.round(p[0]*(w-1)),Math.round(p[1]*(h-1))]:[Math.floor(w/2),Math.floor(h/2)];}
+function fingertipStatus(){if(mode==='depth'){$('fingertipState').textContent='指端点：选择“指端点”后点击右腕画面中夹爪物理最前端要接触按钮的位置，再点击“保存”。该点是固定标定值，与夹爪状态一一对应；夹爪或相机被碰动后须重新标记。';return;}const p=fingertipPoint(mode);const px=p&&rightImage?[Math.round(p[0]*(rightImage.width-1)),Math.round(p[1]*(rightImage.height-1))].join(', '):'未标记';$('fingertipState').textContent='指端点（'+(mode==='closed'?'闭合':'张开')+'）：像素 ('+px+') · '+(fingertip.error||(p&&fingertip.saved[mode]?'已保存到 '+fingertip.config_path:'未保存'));}
+function selectionState(s){if(s.revision<selection.revision)return;selection=s;paintRight();let pos=rightImage?selectedPixel(rightImage.width,rightImage.height).join(', '):'—';$('pointState').textContent=actionError||s.error||('像素 ('+pos+') · '+(previewPoint!==undefined?'正在更新测距点…':s.saved?'已保存，下次启动自动恢复':'未保存'));$('pointState').className=actionError?'bad':'muted';$('savePoint').disabled=requesting||previewPoint!==undefined||!rightReady;$('resetPoint').disabled=!rightReady||mode!=='depth';fingertipStatus();}
 function clearDistance(message){$('distance').textContent='—';$('exact').textContent='选定像素：—';$('detail').textContent=message;}
 function draw(key,f,gen){if(!f)return;const im=new Image();im.onload=()=>{if(gen!==generation)return;if(key==='right'){rightImage=im;rightReady=true;paintRight();selectionState(selection);}else{const c=$(key);c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);}$(key+'Empty').style.display='none';};im.src='data:image/jpeg;base64,'+f.jpeg;$(key+'Age').textContent=(f.stale?'画面已过期 · ':'')+'接收距今 '+Math.round(f.age_ms)+' ms';$(key+'Age').className=f.stale?'bad':'';}
 async function pointRequest(path,body){if(requesting)return;requesting=true;++generation;actionError='';selectionState(selection);clearDistance('更新测距点…');try{const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(3000)});const data=await response.json();if(!response.ok)throw Error(data.error||'保存失败');selectionState(data);clearDistance('等待该测距点的新读数');}catch(e){actionError='操作失败：'+e.message+'；请再次选点或保存重试';clearDistance(actionError);}finally{requesting=false;if(pendingPoint===undefined)previewPoint=undefined;selectionState(selection);flushPoint();}}
 function flushPoint(){if(requesting||pendingPoint===undefined)return;const point=pendingPoint;pendingPoint=undefined;pointRequest('/api/selection',{point_normalized:point});}
-function choosePoint(point){previewPoint=point;pendingPoint=point;actionError='';++generation;paintRight();clearDistance('已选择新位置，等待深度更新');selectionState(selection);flushPoint();}
+async function fingertipRequest(path,body){try{const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(3000)});const d=await r.json();if(!r.ok)throw Error(d.error||'失败');fingertip=d;actionError='';}catch(e){actionError='指端点操作失败：'+e.message;}fingertipPreview={};paintRight();selectionState(selection);}
+function chooseFingertip(point){fingertipPreview[mode]=point;paintRight();fingertipStatus();fingertipRequest('/api/fingertip',{state:mode,point_normalized:point});}
+function choosePoint(point){if(mode!=='depth'){if(point)chooseFingertip(point);return;}previewPoint=point;pendingPoint=point;actionError='';++generation;paintRight();clearDistance('已选择新位置，等待深度更新');selectionState(selection);flushPoint();}
 $('right').addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();if(!rightImage){actionError='等待右腕画面加载后再选点';selectionState(selection);return;}const c=$('right'),r=c.getBoundingClientRect(),scale=Math.min(r.width/c.width,r.height/c.height);const x=(event.clientX-r.left-(r.width-c.width*scale)/2)/scale,y=(event.clientY-r.top-(r.height-c.height*scale)/2)/scale;if(x<0||y<0||x>=c.width||y>=c.height){actionError='请点击实际画面区域，而非留黑边';selectionState(selection);return;}choosePoint([Math.floor(x)/Math.max(1,c.width-1),Math.floor(y)/Math.max(1,c.height-1)]);});
-document.addEventListener('keydown',event=>{const offsets={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};const offset=offsets[event.key];if(!offset||event.ctrlKey||event.metaKey||event.altKey||event.isComposing)return;if(event.target instanceof Element && event.target.closest('input,textarea,select,[contenteditable="true"]'))return;event.preventDefault();if(!rightImage){actionError='等待右腕画面加载后再使用方向键';selectionState(selection);return;}const w=rightImage.width,h=rightImage.height,step=event.shiftKey?10:1;let [x,y]=selectedPixel(w,h);x=Math.max(0,Math.min(w-1,x+offset[0]*step));y=Math.max(0,Math.min(h-1,y+offset[1]*step));choosePoint([x/Math.max(1,w-1),y/Math.max(1,h-1)]);});
-$('savePoint').onclick=()=>pointRequest('/api/selection/save',{revision:selection.revision});$('resetPoint').onclick=()=>choosePoint(null);
-async function tick(){const requestedGeneration=generation;try{const response=await fetch('/api/snapshot',{cache:'no-store',signal:AbortSignal.timeout(2000)});if(!response.ok)throw Error('HTTP '+response.status);const s=await response.json();if(requesting||requestedGeneration!==generation||s.selection.revision<selection.revision)return;selectionState(s.selection);const gen=++generation;draw('head',s.frames.head,gen);draw('right',s.frames.right,gen);const d=s.depth,good=d.median_m!==null;$('distance').textContent=good?(d.median_m*1000).toFixed(1)+' mm':'—';$('exact').textContent='选定像素：'+(d.center_m===null?'无有效深度':(d.center_m*1000).toFixed(1)+' mm');$('detail').textContent=good?'有效像素 '+d.valid_pixels+'/'+d.window_pixels+' · 彩色/深度时间差 '+d.skew_ms.toFixed(1)+' ms':(d.status||'等待深度');$('status').textContent=s.error||(!s.frames.head||!s.frames.right?s.activation:good?'实时接收':'画面接收中 · 深度待就绪');$('status').className=good?'':'bad';}catch(e){++generation;rightReady=!!rightImage;selectionState(selection);$('status').textContent='连接中断，画面已停止更新';$('status').className='bad';clearDistance('等待重新连接');for(const key of ['head','right']){$(key+'Age').textContent='连接中断 · 画面已过期';$(key+'Age').className='bad';}}finally{setTimeout(tick,200);}}tick();
+document.addEventListener('keydown',event=>{const offsets={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};const offset=offsets[event.key];if(!offset||event.ctrlKey||event.metaKey||event.altKey||event.isComposing)return;if(event.target instanceof Element && event.target.closest('input,textarea,select,[contenteditable="true"]'))return;event.preventDefault();if(!rightImage){actionError='等待右腕画面加载后再使用方向键';selectionState(selection);return;}const w=rightImage.width,h=rightImage.height,step=event.shiftKey?10:1;let [x,y]=activePixel(w,h);x=Math.max(0,Math.min(w-1,x+offset[0]*step));y=Math.max(0,Math.min(h-1,y+offset[1]*step));choosePoint([x/Math.max(1,w-1),y/Math.max(1,h-1)]);});
+$('savePoint').onclick=()=>{if(mode==='depth')pointRequest('/api/selection/save',{revision:selection.revision});else fingertipRequest('/api/fingertip/save',{state:mode,revision:fingertip.revision});};document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=()=>{mode=r.value;paintRight();selectionState(selection);});$('resetPoint').onclick=()=>choosePoint(null);
+async function tick(){const requestedGeneration=generation;try{const response=await fetch('/api/snapshot',{cache:'no-store',signal:AbortSignal.timeout(2000)});if(!response.ok)throw Error('HTTP '+response.status);const s=await response.json();if(requesting||requestedGeneration!==generation||s.selection.revision<selection.revision)return;if(s.fingertip&&s.fingertip.revision>=fingertip.revision&&!Object.keys(fingertipPreview).length)fingertip=s.fingertip;selectionState(s.selection);const gen=++generation;draw('head',s.frames.head,gen);draw('right',s.frames.right,gen);const d=s.depth,good=d.median_m!==null;$('distance').textContent=good?(d.median_m*1000).toFixed(1)+' mm':'—';$('exact').textContent='选定像素：'+(d.center_m===null?'无有效深度':(d.center_m*1000).toFixed(1)+' mm');$('detail').textContent=good?'有效像素 '+d.valid_pixels+'/'+d.window_pixels+' · 彩色/深度时间差 '+d.skew_ms.toFixed(1)+' ms':(d.status||'等待深度');$('status').textContent=s.error||(!s.frames.head||!s.frames.right?s.activation:good?'实时接收':'画面接收中 · 深度待就绪');$('status').className=good?'':'bad';}catch(e){++generation;rightReady=!!rightImage;selectionState(selection);$('status').textContent='连接中断，画面已停止更新';$('status').className='bad';clearDistance('等待重新连接');for(const key of ['head','right']){$(key+'Age').textContent='连接中断 · 画面已过期';$(key+'Age').className='bad';}}finally{setTimeout(tick,200);}}tick();
 </script></html>'''
+
+
+def health(message):
+    """Append viewer health to a local file so stale-capture causes can be read afterwards."""
+    try:
+        with open(os.path.expanduser('~/.config/pressb/viewer_health.log'),'a') as out:
+            out.write(time.strftime('%H:%M:%S ')+message+'\n')
+    except OSError:pass
 
 
 def serve(frames,port):
@@ -318,6 +426,10 @@ def serve(frames,port):
                     self.reply(200,frames.select_point(data['point_normalized']))
                 elif self.path=='/api/selection/save' and isinstance(data,dict) and set(data)=={'revision'}:
                     self.reply(200,frames.save_point(data['revision']))
+                elif self.path=='/api/fingertip' and isinstance(data,dict) and set(data)=={'state','point_normalized'}:
+                    self.reply(200,frames.select_fingertip(data['state'],data['point_normalized']))
+                elif self.path=='/api/fingertip/save' and isinstance(data,dict) and set(data)=={'state','revision'}:
+                    self.reply(200,frames.save_fingertip(data['state'],data['revision']))
                 else:raise ValueError('请求路径或参数无效')
             except (ValueError,TypeError) as exc:self.reply(400,dict(error=str(exc)))
             except OSError as exc:self.reply(500,dict(error='配置保存失败：'+str(exc)))
@@ -341,13 +453,14 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',type=int,default=8765)
     parser.add_argument('--point-config',default='~/.config/pressb/right_wrist_depth_point.json')
+    parser.add_argument('--fingertip-config',default='~/.config/pressb/right_wrist_fingertip_point.json')
     args=parser.parse_args()
     import rclpy
     from rclpy.qos import qos_profile_sensor_data
     from sensor_msgs.msg import CompressedImage
     from std_srvs.srv import SetBool
     rclpy.init();node=rclpy.create_node('pressb_keyboard_camera_view')
-    frames=Frames(args.point_config);done=threading.Event()
+    frames=Frames(args.point_config,args.fingertip_config);done=threading.Event()
     for sig in (signal.SIGINT,signal.SIGTERM):signal.signal(sig,lambda *a:done.set())
     server,thread=serve(frames,args.port)
     for key,topic in TOPICS.items():
@@ -359,20 +472,36 @@ def main():
         except Exception as exc:frames.measurement_error='深度标定读取失败：'+str(exc)
     meta=threading.Thread(target=metadata,daemon=True);meta.start()
     client=node.create_client(SetBool,'/astribot_camera_control');future=None
-    started=time.monotonic();activation_tried=False;next_update=0
+    started=time.monotonic();activation_tried=False;next_update=0;next_health=0;next_activation=0
     try:
         while not done.is_set():
             rclpy.spin_once(node,timeout_sec=.02)
-            if time.monotonic()-started>2 and not activation_tried:
-                activation_tried=True
-                if not frames.latest and client.service_is_ready():
+            with frames.lock:
+                newest=max((v['receipt_ns'] for v in frames.latest.values()),default=0)
+            silent=(time.monotonic_ns()-newest)/1e9 if newest else time.monotonic()-started
+            # Retry activation (not just once at startup) whenever every stream has been silent
+            # for 5 s, e.g. service not ready at launch or the driver stopped mid-run.
+            if time.monotonic()-started>2 and future is None and silent>(2 if not activation_tried else 5) \
+                    and time.monotonic()>=next_activation:
+                activation_tried=True;next_activation=time.monotonic()+10
+                if client.service_is_ready():
                     request=SetBool.Request();request.data=True;future=client.call_async(request)
-                    frames.activation='正在启动相机'
-                else:frames.activation='等待相机画面（复用现有驱动）'
+                    frames.activation='正在启动相机';health('no camera frames for %.1fs; requesting activation'%silent)
+                else:
+                    frames.activation='等待相机画面（复用现有驱动）';health('camera control service not ready')
             if future is not None and future.done():
                 response=future.result();frames.activation=response.message if response else '相机启动失败';future=None
+                health('activation result: '+frames.activation)
             if time.monotonic()>=next_update:
-                frames.update();next_update=time.monotonic()+.2
+                began=time.monotonic();frames.update();took=time.monotonic()-began
+                next_update=time.monotonic()+.2
+                if took>.5:health('update took %.2fs'%took)
+            if time.monotonic()>=next_health:
+                next_health=time.monotonic()+5
+                with frames.lock:
+                    now=time.monotonic_ns()
+                    health('latest_age_ms='+json.dumps({k:round((now-v['receipt_ns'])/1e6) for k,v in frames.latest.items()})
+                           +' error='+str(frames.measurement_error)+' load='+str(os.getloadavg()[0]))
     finally:
         server.shutdown();server.server_close();thread.join(2)
         node.destroy_node();rclpy.shutdown()

@@ -1,0 +1,13 @@
+{
+  "initial_run": "../20261103_qwen38_closed_gripper_buttons_transport_interrupted",
+  "initial_response_count": 1,
+  "initial_no_response_count": 7,
+  "observed_errors": [
+    "02 RemoteDisconnected",
+    "03-08 local model tunnel port refused connection"
+  ],
+  "root_cause_of_tunnel_exit": "not established",
+  "recovery": "recreate model SSH tunnel with lifecycle tied to evaluation subprocess; rerun whole eight-image batch unchanged",
+  "retention": "all initial attempts preserved; final evaluation uses all responses from the new batch, not best-of-two selection",
+  "image_and_prompt_changes": false
+}

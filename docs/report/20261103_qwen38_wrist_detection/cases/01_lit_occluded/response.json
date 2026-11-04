@@ -1,0 +1,52 @@
+{
+  "id": "chatcmpl-8de0e630799a2ba8",
+  "object": "chat.completion",
+  "created": 1793691706,
+  "model": "qwen38",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [
+          {
+            "id": "chatcmpl-tool-b249165ea29047f0",
+            "type": "function",
+            "function": {
+              "name": "report_detections",
+              "arguments": "{\"scene_summary\": \"图像显示电梯内部场景，右侧有金属面板和发光的圆形按钮，底部可见两个黑色机械夹爪。\", \"detections\": [{\"class\": \"panel\", \"bbox\": [555, 0, 945, 1000], \"visibility\": \"partial\", \"description\": \"右侧金属电梯面板，包含上方黑色屏幕区域和下方金属表面\"}, {\"class\": \"button\", \"bbox\": [675, 700, 800, 970], \"visibility\": \"full\", \"description\": \"圆形电梯按钮，带有白色发光边框和内部白色箭头符号，处于点亮状态\"}, {\"class\": \"image_left_finger\", \"bbox\": [0, 730, 340, 1000], \"visibility\": \"partial\", \"description\": \"左侧黑色机械夹爪，可见部分夹爪结构\"}, {\"class\": \"image_right_finger\", \"bbox\": [720, 750, 1000, 1000], \"visibility\": \"partial\", \"description\": \"右侧黑色机械夹爪，可见部分夹爪结构\"}]}"
+            }
+          }
+        ],
+        "reasoning": null
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls",
+      "stop_reason": null,
+      "token_ids": null,
+      "routed_experts": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": "vllm-0.28.0-8ea1b29c",
+  "usage": {
+    "prompt_tokens": 1072,
+    "total_tokens": 1356,
+    "completion_tokens": 284,
+    "prompt_tokens_details": null,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "prompt_logprobs": null,
+  "prompt_token_ids": null,
+  "prompt_text": null,
+  "kv_transfer_params": null,
+  "ec_transfer_params": null,
+  "metrics": null
+}

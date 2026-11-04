@@ -1,0 +1,11 @@
+{
+  "id": "07_top_clipped",
+  "format_valid": false,
+  "buttons": [],
+  "usage": {},
+  "attempt_count": 1,
+  "request_image_sha256": "c4194fbed617cbf48637527013ac6a16c231df2130100d433a73c65be7cf717b",
+  "error_type": "URLError",
+  "error": "<urlopen error [Errno 111] Connection refused>",
+  "elapsed_s": 0.0003887489438056946
+}
