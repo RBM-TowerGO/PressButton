@@ -12,8 +12,14 @@ because the button must be pushed in, not just touched:
   ALIGN  positive X needs the merged-end pixel inside the current button box
   PRESS  positive X needs both
          live:   x <= z_live - (tip_plane - overpress)     (this observation only)
-         frozen: x <= z_b - (tip_plane - overpress) - net stroke since closing,
+         frozen: x <= z_b - (tip_plane - overpress) - stroke used since the freeze,
                  clamped to a hard maximum
+
+The stroke used is the MEASURED X of this observation minus the measured X at the
+freeze. Under contact the arm stops a few mm short of its command (2026-11-04:
+46 mm commanded, 41.7 mm measured, depth 151 mm), so counting commands would spend
+stroke the hand never travelled. Only without measured poses is the commanded net
+stroke since closing used.
 
 The frozen bound is the ceiling: a live reading can only make the stroke
 shorter, so a depth that stalls or reads the wrong surface never pushes beyond
@@ -58,8 +64,32 @@ def configure(**limits):
     if merged['live_min_m'] >= merged['range_max_m']:
         raise ValueError('invalid_press_live_bounds')
     _state = dict(limits=merged, gripper_state='open', z_b_m=None, frozen_from=None,
-                  consumed_m=0.0, live=None)
+                  consumed_m=0.0, live=None, freeze_x_m=None, measured={})
     return describe()
+
+
+def _measured_x(observation):
+    """Measured chassis X of the end effector in this observation, or None."""
+    pose = ((observation or {}).get('state') or {}).get('pose_m_xyzw')
+    if not isinstance(pose, (list, tuple)) or len(pose) != 7:
+        return None
+    x = pose[0]
+    return float(x) if type(x) in (int, float) and math.isfinite(x) else None
+
+
+def _consumed(observation_id):
+    """Forward stroke used since the freeze, and how it was obtained.
+
+    Measured: this observation's measured X minus the measured X at the freeze.
+    Under contact the arm falls a few mm short of its command, so the commanded sum
+    would spend stroke the hand never travelled. Without both measured poses the
+    commanded net stroke since closing is used instead.
+    """
+    start = _state['freeze_x_m']
+    now = _state['measured'].get(observation_id) if observation_id is not None else None
+    if start is not None and now is not None:
+        return now - start, 'measured_pose'
+    return _state['consumed_m'], 'commanded'
 
 
 def reset():
@@ -83,6 +113,9 @@ def set_gripper(state):
         return
     if state not in ('closed', 'open'):
         raise ValueError('press_gripper_state_must_be_closed_or_open')
+    if state == 'open':
+        # Reopening starts a new attempt: realign and measure a new range.
+        _state.update(z_b_m=None, frozen_from=None, consumed_m=0.0, live=None, freeze_x_m=None)
     _state['gripper_state'] = state
 
 
@@ -139,6 +172,9 @@ def observe(observation, aim_px=None, image_size=None, aligned=None):
     limits = _state['limits']
     median, reasons = _sample_reasons(observation, aim_px, image_size, limits)
     oid = (observation or {}).get('observation_id')
+    measured_x = _measured_x(observation)
+    if oid is not None and measured_x is not None:
+        _state['measured'][oid] = measured_x
     closed_press = _state['gripper_state'] == 'closed' and _state['z_b_m'] is not None
     if closed_press:
         if median is not None and not limits['live_min_m'] <= median <= limits['range_max_m']:
@@ -158,6 +194,8 @@ def observe(observation, aim_px=None, image_size=None, aligned=None):
     elif trusted and _state['gripper_state'] == 'open' and _state['z_b_m'] is None:
         _state['z_b_m'] = float(median)
         _state['frozen_from'] = oid
+        _state['freeze_x_m'] = measured_x
+        _state['consumed_m'] = 0.0
         result['froze'] = True
     return result
 
@@ -204,7 +242,10 @@ def evaluate(x_mm=0.0, observation_id=None):
         value['reasons'].append('no_trusted_open_gripper_range')
         return value
     budget = _budget()
-    frozen_remaining = max(0.0, budget - state['consumed_m'])
+    consumed, consumed_source = _consumed(observation_id)
+    value.update(consumed_m=consumed, consumed_source=consumed_source,
+                 commanded_consumed_m=state['consumed_m'])
+    frozen_remaining = max(0.0, budget - consumed)
     remaining, bound = frozen_remaining, 'frozen_only_no_live_depth'
     live = _live_for(observation_id)
     if live is not None:
@@ -234,7 +275,9 @@ def record_move(xyz_mm):
     """Track net forward X since closing, after a command was actually sent.
 
     Withdrawal returns budget, so pressing again after backing off is measured from
-    the frozen surface, not from the furthest point ever reached.
+    the frozen surface, not from the furthest point ever reached. Withdrawing past
+    the freeze point makes this negative: the surface is then that much further away,
+    so a repeated press can still reach it. Live depth still bounds every stroke.
     """
     if _state is None or _state['gripper_state'] != 'closed':
         return 0.0 if _state is None else _state['consumed_m']
@@ -243,7 +286,7 @@ def record_move(xyz_mm):
     except (TypeError, ValueError, IndexError):
         return _state['consumed_m']
     if math.isfinite(x):
-        _state['consumed_m'] = max(0.0, _state['consumed_m'] + x/1000.0)
+        _state['consumed_m'] = _state['consumed_m'] + x/1000.0
     return _state['consumed_m']
 
 
@@ -259,5 +302,6 @@ def describe(observation_id=None):
         current = evaluate(0.0, observation_id)
         value.update(remaining_m=current['remaining_m'], bound=current['bound'],
                      live_m=current['live_m'], live_from=current['live_from'],
-                     live_remaining_m=current['live_remaining_m'])
+                     live_remaining_m=current['live_remaining_m'],
+                     consumed_m=current['consumed_m'], consumed_source=current['consumed_source'])
     return value

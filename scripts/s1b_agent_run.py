@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
 LOCALIZED_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt_localized.txt'
+END_TO_END_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt_end_to_end.txt'
 sys.path.insert(0, str(ROOT/'src'))
 from pressb.agent_loop.common import atomic_json, request, SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
@@ -98,6 +99,11 @@ def launch(args):
         check_port_available(port)
     if args.demo is not None and not (Path(args.demo).expanduser()/'session.json').is_file():
         raise ValueError('找不到示范 session.json：'+args.demo)
+    if getattr(args, 'model_provider', 'thor') != 'thor':
+        from pressb.agent_loop import model_provider
+        model_provider.configure(args.model_provider, model=getattr(args, 'model_name', None),
+                                 base=getattr(args, 'model_base', None), key_env=getattr(args, 'model_api_key_env', None))
+        model_provider.reset()
     aim_point = None
     if getattr(args, 'fingertip_calibration', None):
         from pressb.agent_loop import calibrated_tip
@@ -105,7 +111,8 @@ def launch(args):
         aim_point = calibrated_tip.load(Path(args.fingertip_calibration).expanduser(), args.fingertip_state)['aim']
     decision_mode = getattr(args, 'decision_mode', 'localized')
     prompt_path = Path(getattr(args, 'prompt', None) or
-                       (LOCALIZED_PROMPT if decision_mode == 'localized' else DEFAULT_PROMPT)).expanduser().resolve()
+                       (END_TO_END_PROMPT if decision_mode == 'end_to_end' else
+                        LOCALIZED_PROMPT if decision_mode == 'localized' else DEFAULT_PROMPT)).expanduser().resolve()
     try:
         prompt_path.read_text()
     except OSError as exc:
@@ -133,15 +140,18 @@ def launch(args):
                  decision_mode=decision_mode, demo=str(demo.root) if demo else None, demo_last_steps=demo_last_steps,
                  demo_selection=demo.selection if demo else None, failure_case=failure_path, prompt=str(prompt_path),
                  depth_aim_point=aim_point,
-                 execution_policy='yz_alignment_before_forward' if decision_mode == 'localized' else 'legacy_validated',
-                 forward_guard_policy='wrist_tip_overlap' if decision_mode == 'localized' else 'wrist_horizontal',
+                 execution_policy=('model_action_executed_as_given' if decision_mode == 'end_to_end' else
+                                   'yz_alignment_before_forward' if decision_mode == 'localized' else 'legacy_validated'),
+                 forward_guard_policy=('none' if decision_mode == 'end_to_end' else
+                                       'wrist_tip_overlap' if decision_mode == 'localized' else 'wrist_horizontal'),
                  progress_monitor_format=('pressb-localized-progress-v3' if decision_mode == 'localized' else
                                           'pressb-progress-v1' if decision_mode == 'direct' else None),
                  view_acquisition_format='pressb-view-acquisition-v1' if decision_mode == 'direct' else None,
                  localization_format='pressb-localization-v3' if decision_mode == 'localized' else None,
                  hypothesis_review_format='pressb-hypothesis-review-v1' if decision_mode == 'localized' else None,
                  forward_guard_format='pressb-wrist-tip-overlap-v1' if decision_mode == 'localized' else None,
-                 input_format='pressb-conversation-v5' if decision_mode == 'localized' else None,
+                 input_format=('pressb-conversation-e2e-v1' if decision_mode == 'end_to_end' else
+                               'pressb-conversation-v5' if decision_mode == 'localized' else None),
                  auto_confirm=auto_confirm)
     log = (directory/'terminal.log').open('a', buffering=1)
     server = service = agent = None
@@ -179,7 +189,10 @@ def launch(args):
         emit(f'网页：http://127.0.0.1:{server.server_port}\n记录目录：{directory}\n')
         emit(('SDK 控制权接管将自动回复 yes；' if auto_confirm else '请在本终端处理 SDK 接管提示；')
              + '服务就绪后 Agent 将自动运行。\n')
-        if decision_mode == 'localized':
+        if decision_mode == 'end_to_end':
+            emit(f'端到端模式：成功示范 {demo_images} 张；每轮一次模型请求，直接看当前双图和记录输出动作；'
+                 '无独立定位、前推检查或复核，命令按原样执行。thinking 关闭。\n')
+        elif decision_mode == 'localized':
             emit(f'定位闭环：成功示范 {demo_images} 张、失败参考 {"启用" if failure_path else "关闭"}；'
                  '每轮独立双图定位→原始偏差和实际反馈→模型自主决策。thinking 关闭。\n'
                  '先做Y/Z对齐；每个正X候选检查当前腕图物理指端是否落入按钮框（横纵两轴）。\n'
@@ -211,12 +224,20 @@ def launch(args):
                 '--prompt', str(prompt_path),
                 '--robot-base', robot_base, '--thor-host', args.thor_host,
                 '--thor-port', str(args.thor_port), '--max-rounds', str(args.max_rounds),
-                '--context-budget-tokens', str(getattr(args, 'context_budget_tokens', 65536)),
+                '--max-press-attempts', str(getattr(args, 'max_press_attempts', 3)),
                 '--decision-mode', decision_mode]
+            if getattr(args, 'context_budget_tokens', None) is not None:
+                agent_argv.extend(['--context-budget-tokens', str(args.context_budget_tokens)])
             if getattr(args, 'fingertip_calibration', None):
                 agent_argv.extend(['--fingertip-calibration', str(Path(args.fingertip_calibration).expanduser().resolve()),
                                    '--fingertip-state', args.fingertip_state,
-                                   '--press-overpress-mm', str(args.press_overpress_mm)])
+                                   '--press-overpress-mm', str(getattr(args, 'press_overpress_mm', 5.0))])
+            agent_argv.extend(['--model-provider', getattr(args, 'model_provider', 'thor')])
+            for flag, value in (('--model-name', getattr(args, 'model_name', None)),
+                                ('--model-base', getattr(args, 'model_base', None)),
+                                ('--model-api-key-env', getattr(args, 'model_api_key_env', None))):
+                if value:
+                    agent_argv.extend([flag, value])
             if demo is not None:
                 agent_argv.extend(['--demo', str(Path(args.demo).expanduser().resolve())])
             if demo_last_steps is not None and demo is not None:
@@ -299,26 +320,39 @@ def parse_args(argv=None):
     parser.add_argument('--web-port', type=int, default=8766)
     parser.add_argument('--thor-host', default='Thor')
     parser.add_argument('--thor-port', type=int, default=18000)
-    parser.add_argument('--context-budget-tokens', type=int, default=65536)
-    parser.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
-    parser.add_argument('--max-rounds', type=int, default=20)
+    parser.add_argument('--context-budget-tokens', type=int, default=None,
+                        help='optional context token limit; default: no limit, no compaction')
+    parser.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct', 'end_to_end'),
+                        default='localized',
+                        help='end_to_end: one model call per round that looks at the images and outputs the action')
+    parser.add_argument('--max-rounds', type=int, default=40)
+    parser.add_argument('--max-press-attempts', type=int, default=3,
+                        help='report_unable is rejected after a missed press until this many press attempts were made')
     parser.add_argument('--fingertip-calibration', help='human-marked fingertip JSON; the merged-end closed pixel becomes the fixed alignment and contact point')
     parser.add_argument('--fingertip-state', choices=('closed', 'open'), default='open',
                         help='gripper state at start; recorded only, never changes the aim point')
+    parser.add_argument('--model-provider', choices=('thor', 'deepseek', 'openai_compatible'), default='thor',
+                        help='thor (local Qwen, default) or an external API; external sends images to that service')
+    parser.add_argument('--model-name', help='override the provider default model name')
+    parser.add_argument('--model-base', help='model /v1 base for openai_compatible (or to override a provider)')
+    parser.add_argument('--model-api-key-env', help='environment variable holding the API key')
     parser.add_argument('--press-overpress-mm', type=float, default=5.0,
                         help='closed-gripper press target is live wrist depth 150 mm minus this (default 5 mm)')
     args = parser.parse_args(argv)
     if args.prompt is None:
-        args.prompt = str(LOCALIZED_PROMPT if args.decision_mode == 'localized' else DEFAULT_PROMPT)
+        args.prompt = str(END_TO_END_PROMPT if args.decision_mode == 'end_to_end' else
+                          LOCALIZED_PROMPT if args.decision_mode == 'localized' else DEFAULT_PROMPT)
     if not hasattr(args, 'failure_case'):
-        args.failure_case = (None if args.decision_mode in ('localized', 'grounded') else
+        args.failure_case = (None if args.decision_mode in ('localized', 'grounded', 'end_to_end') else
                             str(ROOT/'outputs/agent_web/20261101_184824_dcb23038'))
     if args.demo_last_steps is not None and args.demo_last_steps <= 0:
         parser.error('--demo-last-steps must be positive')
-    if args.context_budget_tokens <= 0:
+    if args.context_budget_tokens is not None and args.context_budget_tokens <= 0:
         parser.error('--context-budget-tokens must be positive')
     if args.max_rounds <= 0:
         parser.error('--max-rounds must be positive')
+    if args.max_press_attempts < 0:
+        parser.error('--max-press-attempts must not be negative')
     if not 0 <= args.press_overpress_mm <= 15:
         parser.error('--press-overpress-mm must be between 0 and 15')
     return args

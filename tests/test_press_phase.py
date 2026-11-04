@@ -119,14 +119,52 @@ def test_consumed_stroke_reduces_remaining_and_blocks_overshoot():
     assert not phase.evaluate(1)['allowed']
 
 
-def test_withdrawal_returns_budget_and_never_goes_negative():
+def test_withdrawal_returns_budget_including_beyond_the_freeze_point():
     _open_at(0.200)
     phase.set_gripper('closed')
     phase.record_move([55, 0, 0])
     phase.record_move([-20, 0, 0])
     assert phase.evaluate(20)['allowed'] and not phase.evaluate(21)['allowed']
+    # Withdrawing 100 after a net 35 leaves the surface 65 mm further than at freeze,
+    # so a repeated press may cover the full 55 mm budget plus those 65 mm.
     phase.record_move([-100, 0, 0])
-    assert phase.describe()['consumed_m'] == 0.0
+    assert phase.describe()['consumed_m'] == pytest.approx(-0.065)
+    assert phase.evaluate(120)['allowed'] and not phase.evaluate(121)['allowed']
+
+
+def _posed(z, oid, x):
+    value = _obs(z, oid=oid)
+    value['state'] = dict(pose_m_xyzw=[x, -0.227, 1.2, 0, 0, 0.707, 0.707])
+    return value
+
+
+def test_stroke_is_consumed_by_measured_travel_not_by_command():
+    """2026-11-04 run: 46 mm commanded, 41.8 mm measured under contact, depth 151 mm."""
+    calibrated_tip.activate(CALIBRATION, 'open')
+    phase.configure()
+    aim, size = calibrated_tip.aim_pixel(), calibrated_tip.image_size()
+    assert phase.observe(_posed(0.1914, 'freeze', 0.4069), aim, size, aligned=True)['froze']
+    phase.set_gripper('closed')
+    phase.record_move([46, 0, 0])
+    phase.observe(_posed(0.1510, 'pressed', 0.4487), aim, size)
+    value = phase.evaluate(4, 'pressed')
+    assert value['consumed_source'] == 'measured_pose'
+    assert value['consumed_m'] == pytest.approx(0.0418)
+    assert value['commanded_consumed_m'] == pytest.approx(0.046)
+    # The frozen ceiling no longer cuts the press at 0.4 mm: 46.4 - 41.8 = 4.6 mm remain,
+    # still capped by live depth (151 - 145 = 6 mm).
+    assert value['remaining_m'] == pytest.approx(0.0046) and value['bound'] == 'frozen_ceiling'
+    assert value['allowed'] and not phase.evaluate(5, 'pressed')['allowed']
+    assert phase.describe('pressed')['consumed_source'] == 'measured_pose'
+
+
+def test_without_measured_pose_the_commanded_stroke_is_used():
+    _open_at(0.200)
+    phase.set_gripper('closed')
+    phase.record_move([40, 0, 0])
+    value = phase.evaluate(10, 'no-pose')
+    assert value['consumed_source'] == 'commanded'
+    assert value['remaining_m'] == pytest.approx(0.015)
 
 
 def test_open_gripper_motion_is_not_counted_as_press_stroke():
@@ -177,10 +215,14 @@ def test_negative_x_and_planar_moves_need_no_press_permission():
 def test_opening_resumes_ranging_and_can_freeze_a_new_range():
     _open_at(0.200)
     phase.set_gripper('closed')
+    phase.record_move([55, 0, 0])
     phase.set_gripper('open')
-    assert phase.phase() == phase.PRESS          # the frozen range survives re-opening
-    phase.reset(); _open_at(0.190)
-    assert phase.describe()['z_b_m'] == pytest.approx(0.190)
+    # Reopening starts a new attempt: the old range and stroke no longer apply.
+    assert phase.phase() == phase.ALIGN
+    assert phase.describe()['z_b_m'] is None and phase.describe()['consumed_m'] == 0.0
+    result = _again(0.190)
+    assert result['froze'] and phase.describe()['z_b_m'] == pytest.approx(0.190)
+    assert phase.describe()['budget_m'] == pytest.approx(0.045)
 
 
 def test_inactive_phase_passes_nothing_and_describe_is_none():

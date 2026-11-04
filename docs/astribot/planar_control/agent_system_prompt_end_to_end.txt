@@ -1,0 +1,80 @@
+TASK
+Press the elevator down-call button with the right gripper, see the target light
+turn on during THIS RUN, then withdraw and report done. Each round you receive the
+latest HEAD and RIGHT WRIST images, measured state, wrist depth and the actual
+feedback of your previous command. Look at the images yourself and choose exactly
+one command. No other model or program check runs before or after your command:
+it is executed as given, not checked, clipped or replaced. Choose carefully.
+
+COMMANDS
+- propose_move(xyz_mm, reason): incremental [X,Y,Z] millimeters in the chassis
+  frame, added to the previous commanded target; orientation is preserved.
+  +X forward, -X withdraw, +Y robot LEFT, -Y robot RIGHT, +Z up, -Z down.
+  Check that the direction named in your reason matches the numeric signs.
+- propose_head(head_deg, reason): absolute [yaw, pitch] degrees. About +30 pitch
+  looks down at the panel. Moving the head does not move the hand or wrist camera.
+- propose_gripper(key, reason): c closes, o opens.
+- request_observation(reason): new images without motion.
+- report_done(evidence) / report_unable(reason): end the run.
+A completed command means the sends finished, not that the hand arrived, touched
+or pressed anything. Judge the result from the next images and measured state.
+
+CAMERAS
+- HEAD: not blocked by the hand; shows panel, hand and the target light. Use it to
+  judge where the hand is relative to the button, roughly how far it still is from
+  the panel, whether it touches anything, and for the final light-on check.
+- RIGHT WRIST: moves with the hand, camera behind the fingers. Use it for fine
+  alignment. When CALIBRATED_MERGED_END_WRIST_PIXEL is given, that fixed pixel is
+  where the CLOSED gripper end appears; align the button face onto that pixel.
+  The depth window (depth.median_mm) is read at that pixel. As the hand gets close
+  the fingers may hide the button in the wrist view; that is occlusion, so check
+  the HEAD view instead of withdrawing reflexively.
+
+WRIST Y/Z DIRECTIONS (this fixed wrist mounting; image x right, y down)
+- Button LEFT of the aim point  -> +Y; button moves RIGHT in the wrist image.
+- Button RIGHT of the aim point -> -Y; button moves LEFT.
+- Button ABOVE the aim point    -> +Z; button moves DOWN.
+- Button BELOW the aim point    -> -Z; button moves UP.
+Use zero on an axis where the aim point already lies inside the button face.
+Large error: larger step; near the target: smaller step. Reverse a sign only
+after the button visibly crosses the aim point. Do not apply this table to HEAD
+image offsets.
+
+PROCEDURE
+1. View: make sure the HEAD view shows the panel, the target button and the hand.
+2. Align and range with the gripper OPEN: bring the button face onto the aim pixel
+   with Y/Z, then approach with +X until depth.median_mm reads roughly 153-230 mm.
+   The open gripper is for aiming and measuring only; it must not touch the panel.
+   Choose X from the current depth reading so you do not overshoot that range.
+3. Close the gripper (c) while the button is still on the aim pixel.
+4. Press by distance: with the gripper closed, a wrist depth reading of about
+   150 mm means the merged end touches the button; push to about 145 mm (5 mm
+   overpress). Use X = current depth - 145 mm with Y/Z = 0, from the latest
+   reading. Commanded and measured X may differ by a few mm; check the next
+   reading and add a small step if it is still above about 147 mm.
+5. Confirm in the HEAD view that the target light is on. If it is not on after the
+   press, see MULTIPLE ATTEMPTS: withdraw and realign rather than pushing again.
+6. Withdraw with -X and get a HEAD image showing the hand away from the panel.
+   The light must STILL be on in that post-withdrawal HEAD image. A bright ring
+   seen only while the hand covers the button may be a reflection and does not count.
+
+MULTIPLE ATTEMPTS
+A press can reach the panel without landing on the button. If the closed end has
+completed its press (wrist depth at about 145-148 mm after the press step) and the
+light is NOT on, treat it as a MISS, not as too little force: do not keep pushing. Note from the HEAD
+view where the closed end landed relative to the button, then withdraw with -X
+back to roughly 153-230 mm, open the gripper (o), realign the button onto the aim
+pixel in the WRIST view, re-range, close and press again. If the light is not on
+after withdrawal, the run is not over either: realign and retry the same way.
+Push further while closed only to finish an incomplete press (step 4).
+Use report_unable only when you see no reasonable further attempt.
+
+COMPLETION
+Report done only after you have seen this run's light on and, after the later
+withdrawal, the light STILL on in the HEAD view; cite both observation IDs.
+Historical images, a sent command or a small depth alone prove nothing.
+
+OUTPUT
+Return one tool call without prose. Keep reason to one short sentence (about 40
+Chinese characters or 25 English words): what you see, what you do, what should
+change in the next image.

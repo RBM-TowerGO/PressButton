@@ -99,8 +99,9 @@ ACTIVATION_TOOL = _tool('confirm_activation', 'Read-only check that this target 
 
 def _request_body(prompt, content, tool):
     # Keep this module independent of client.py and its execution-related imports.
-    return dict(model='qwen38', temperature=0, max_tokens=512, stream=False,
-                chat_template_kwargs=dict(enable_thinking=False), tool_choice='required',
+    from . import model_provider
+    return dict(**model_provider.body_fields(), temperature=0, max_tokens=512, stream=False,
+                tool_choice='required',
                 tools=[copy.deepcopy(tool)], messages=[dict(role='system', content=prompt),
                                                       dict(role='user', content=content)])
 

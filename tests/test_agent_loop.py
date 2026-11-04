@@ -68,6 +68,38 @@ def action(service,obs,cid='cmd',**kwargs):
     return dict(session_id=service.session_id,observation_id=obs['observation_id'],command_id=cid,**kwargs)
 
 
+def test_task_polling_never_sees_a_task_while_the_worker_mutates_it(tmp_path):
+    """2026-11-04 run ended on HTTP 503 'dictionary changed size during iteration':
+    the client polls /v2/tasks while the worker updated the task outside the lock."""
+    class BigMotionBackend(FakeBackend):
+        def move(self,kind,data,cancel,phase):
+            super().move(kind,data,cancel,phase)
+            return {f'field_{n}':n for n in range(3000)}
+    service=Service(BigMotionBackend(),FakeCamera(),tmp_path/'robot')
+    errors,done=[],threading.Event()
+    try:
+        obs=observe(service)
+        tid=[None]
+        def poll():
+            while not done.is_set():
+                if tid[0]:
+                    try:service.task(tid[0])
+                    except Exception as exc:errors.append(repr(exc));return
+        pollers=[threading.Thread(target=poll) for _ in range(4)]
+        for p in pollers:p.start()
+        for n in range(40):
+            receipt=service.submit(action(service,obs,f'c{n}',type='move',xyz_mm=[0,0,0]))
+            tid[0]=receipt['task_id']
+            task=wait(service,receipt)
+            assert task['status']=='completed',task
+            obs=service.observations[task['capture']['observation_id']]
+        done.set()
+        for p in pollers:p.join(3)
+    finally:
+        done.set();service.close()
+    assert errors==[]
+
+
 def tool(name,args):
     return dict(choices=[dict(finish_reason='tool_calls',message=dict(content=None,tool_calls=[
         dict(function=dict(name=name,arguments=json.dumps(args)))]))])

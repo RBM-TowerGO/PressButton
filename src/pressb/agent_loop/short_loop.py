@@ -103,10 +103,11 @@ def actual_command(feedback):
 class ShortConversation:
     """One run with persistent factual memory and a freshly rendered bounded input."""
     def __init__(self, goal, obs, head, wrist, session, prompt, demo=None, failure_case=None,
-                 budget=65536, decision_mode='grounded'):
+                 budget=None, decision_mode='grounded'):
         if session.get('schema') != SESSION_SCHEMA:
             raise ValueError('keyboard_session_schema_required')
-        if budget <= 0 or decision_mode != 'grounded':
+        # budget=None: no context limit.
+        if (budget is not None and budget <= 0) or decision_mode != 'grounded':
             raise ValueError('invalid_grounded_configuration')
         self.goal, self.session, self.budget = goal, session, budget
         self.decision_mode, self.format, self.generation = decision_mode, FORMAT, 0
@@ -377,14 +378,15 @@ class ShortConversation:
                 m['content'] = [p for p in m['content'] if p.get('type') != 'image_url']
         bound = len(json.dumps(variable_messages, ensure_ascii=False).encode())
         exact = None
-        if self.estimated_tokens is None or self.estimated_tokens+bound >= self.budget:
+        if self.budget is not None and (self.estimated_tokens is None or self.estimated_tokens+bound >= self.budget):
             exact = tokenize(base, body); check()
             self.estimated_tokens = exact
             if exact > self.budget:
                 raise ValueError('context_budget_exceeded_for_bounded_input')
         meta = dict(self.decision_context('action_request'), image_count=image_count(body['messages']),
                     compression_status='bounded_not_needed', input_tokens_exact=exact,
-                    input_tokens_estimate=self.estimated_tokens+bound if exact is None else exact)
+                    input_tokens_estimate=(exact if exact is not None else
+                                           None if self.estimated_tokens is None else self.estimated_tokens+bound))
         atomic_json(Path(directory)/'decision_context.json', meta)
         atomic_json(Path(directory)/'context_metrics.json', meta)
         return body

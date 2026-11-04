@@ -15,6 +15,11 @@ def image_count(messages):
 
 
 def tokenize(base, body, return_tokens=False):
+    from . import model_provider
+    if not model_provider.supports_tokenize():
+        # Hosted APIs have no /tokenize; budget on a conservative estimate instead.
+        count = model_provider.estimate_tokens(body)
+        return dict(count=count, estimated=True) if return_tokens else count
     payload = {k: body[k] for k in ('model', 'messages', 'tools', 'chat_template_kwargs') if k in body}
     payload['add_generation_prompt'] = True
     result = request(base.rstrip('/').removesuffix('/v1'), '/tokenize', payload, timeout=120)
@@ -29,9 +34,9 @@ def live_message(obs, head, wrist):
 
 def request_body(messages, tools=None, max_tokens=512):
     from .client import TOOLS
-    return dict(model='qwen38', temperature=0, max_tokens=max_tokens, stream=False,
-                chat_template_kwargs=dict(enable_thinking=False), tools=TOOLS if tools is None else tools,
-                tool_choice='required', messages=messages)
+    from . import model_provider
+    return dict(**model_provider.body_fields(), temperature=0, max_tokens=max_tokens, stream=False,
+                tools=TOOLS if tools is None else tools, tool_choice='required', messages=messages)
 
 
 EVIDENCE_FIELDS = ('initial_light', 'light_on', 'withdrawal')
@@ -45,11 +50,12 @@ SUMMARY_TOOL = dict(type='function', function=dict(name='summarize_context',
 
 
 class Conversation:
-    def __init__(self, goal, obs, head, wrist, session, prompt, demo=None, failure_case=None, budget=65536,
+    def __init__(self, goal, obs, head, wrist, session, prompt, demo=None, failure_case=None, budget=None,
                  decision_mode='direct', monitor_progress=False, acquire_view=False):
         if session.get('schema') != SESSION_SCHEMA:
             raise ValueError('keyboard_session_schema_required')
-        if budget <= 0:
+        # budget=None: no context limit; the full history is sent and never compacted.
+        if budget is not None and budget <= 0:
             raise ValueError('positive_context_budget_required')
         if decision_mode not in ('direct', 'separated'):
             raise ValueError('invalid_decision_mode')
@@ -574,6 +580,13 @@ class Conversation:
         atomic_json(directory/'context_metrics.json', meta)
         try:
             exact = None
+            if self.budget is None:
+                # No context limit: no counting, no compaction, no budget exit.
+                meta.update(compression_generation=self.generation, image_count=image_count(body['messages']),
+                            input_tokens_exact=None, input_tokens_estimate=None, stage='action_request')
+                atomic_json(directory/'decision_context.json', meta)
+                atomic_json(directory/'context_metrics.json', meta)
+                return body
             if self.estimated_tokens is None or self.estimated_tokens >= self.budget-4096:
                 exact = tokenize(base, body)
                 check()

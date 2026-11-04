@@ -19,8 +19,8 @@ def test_localized_is_default_with_full_demo_and_separate_prompt():
         assert args.decision_mode == 'localized'
         assert args.demo_last_steps is None
         assert args.failure_case is None
-        assert args.context_budget_tokens == 65536
-        assert args.max_rounds == 20
+        assert args.context_budget_tokens is None
+        assert args.max_rounds == 40
         assert Path(args.prompt) == agent.LOCALIZED_PROMPT == launcher.LOCALIZED_PROMPT
     # The one-key launcher runs without a demonstration unless one is given.
     assert launcher.parse_args([]).demo is None
@@ -137,7 +137,7 @@ def test_saved_observation_uses_localized_prepare_before_action_and_no_robot(tmp
     assert result['status'] == 'replay_only' and result['completed_motion_commands'] == 0
 
 
-@pytest.mark.parametrize('mode', ['localized', 'grounded', 'separated', 'direct'])
+@pytest.mark.parametrize('mode', ['localized', 'grounded', 'separated', 'direct', 'end_to_end'])
 def test_live_entry_selects_client_policy_without_real_network(mode, tmp_path, monkeypatch):
     """The current wrist overlap policy reaches the execution client, not just the log."""
     folder = tmp_path/'observation'; folder.mkdir()
@@ -173,10 +173,12 @@ def test_live_entry_selects_client_policy_without_real_network(mode, tmp_path, m
     output = tmp_path/'run'
     agent.run(agent.parse_args(['--goal', 'press', '--output', str(output),
                                '--decision-mode', mode, '--max-rounds', '1']))
-    assert constructors == [{'forward_guard_policy': 'wrist_tip_overlap'} if mode == 'localized' else {}]
+    policy = {'localized': 'wrist_tip_overlap', 'end_to_end': 'none'}.get(mode)
+    assert constructors == [{'forward_guard_policy': policy} if policy else {}]
     task = json.loads((output/'task.json').read_text())
-    assert task['forward_guard_policy'] == ('wrist_tip_overlap' if mode == 'localized' else 'wrist_horizontal')
-    assert task['execution_policy'] == ('yz_alignment_before_forward' if mode == 'localized' else 'legacy_validated')
+    assert task['forward_guard_policy'] == (policy or 'wrist_horizontal')
+    assert task['execution_policy'] == {'localized': 'yz_alignment_before_forward',
+                                        'end_to_end': 'model_action_executed_as_given'}.get(mode, 'legacy_validated')
     assert json.loads((output/'result.json').read_text())['completed_motion_commands'] == 0
 
 

@@ -100,6 +100,22 @@ def test_budget_tokenize_only_start_and_near_threshold(jpeg, monkeypatch, tmp_pa
     assert meta['observation_id'] == 'live-1' and meta['image_count'] == 4
 
 
+def test_no_budget_never_counts_compacts_or_exits(jpeg, monkeypatch, tmp_path):
+    def forbidden(*a, **k):
+        raise AssertionError('no token counting or compaction without a context limit')
+    monkeypatch.setattr(module, 'tokenize', forbidden)
+    monkeypatch.setattr(module, 'request', forbidden)
+    c = make(jpeg, budget=None)
+    for n in range(1, 30):
+        advance(c, jpeg, n)
+    c.estimated_tokens = 10**7
+    body = c.prepare('fake', tmp_path)
+    assert c.generation == 0 and c.start == 0
+    assert image_count(body['messages']) == 2*30
+    meta = json.loads((tmp_path/'context_metrics.json').read_text())
+    assert meta['compression_status'] == 'not_needed' and meta['stage'] == 'action_request'
+
+
 def test_compaction_retains_ledger_recent_five_and_pinned_images(jpeg, monkeypatch, tmp_path):
     c = make(jpeg, budget=20000)
     for n in range(1, 9):

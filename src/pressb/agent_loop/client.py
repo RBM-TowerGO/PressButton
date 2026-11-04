@@ -250,6 +250,10 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
             proposal=(conversation.parse_response(response,obs,session,directory)
                       if conversation is not None and hasattr(conversation,'parse_response')
                       else parse_proposal(response,obs,session))
+            if conversation is not None and getattr(conversation, 'max_press_attempts', None):
+                # A missed press is not the end of the run while attempts remain.
+                from . import press_retry
+                press_retry.check(conversation.turns, proposal, conversation.max_press_attempts)
             if conversation is not None and hasattr(conversation, 'review_proposal'):
                 conversation.review_proposal(model_base, proposal, directory, cancel)
             permission = forward_check(proposal, attempt)

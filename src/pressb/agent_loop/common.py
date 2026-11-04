@@ -7,6 +7,8 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
+from . import model_provider
+
 
 def json_bytes(value):
     return json.dumps(value, ensure_ascii=False, allow_nan=False, indent=2).encode()
@@ -25,8 +27,10 @@ def atomic_json(path, value):
 
 
 def request(base, route, payload=None, timeout=10, binary=False):
-    req = Request(base.rstrip('/')+route, data=None if payload is None else json_bytes(payload),
-                  headers={'Content-Type': 'application/json'})
+    url = base.rstrip('/')+route
+    # The model API key is attached only for the configured model host.
+    req = Request(url, data=None if payload is None else json_bytes(payload),
+                  headers={'Content-Type': 'application/json', **model_provider.auth_headers(url)})
     try:
         with urlopen(req, timeout=timeout) as response:
             data = response.read()

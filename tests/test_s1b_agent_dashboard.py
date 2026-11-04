@@ -214,7 +214,7 @@ def test_context_metrics_and_compression_status(tmp_path):
 
 
 def test_context_budget_argument():
-    assert launcher.parse_args([]).context_budget_tokens == 65536
+    assert launcher.parse_args([]).context_budget_tokens is None
     assert launcher.parse_args(['--context-budget-tokens','50000']).context_budget_tokens == 50000
     with pytest.raises(SystemExit):
         launcher.parse_args(['--context-budget-tokens','0'])

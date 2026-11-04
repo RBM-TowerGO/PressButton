@@ -20,9 +20,9 @@ def observation(n, head=(0, 25)):
     return value
 
 
-def make(jpeg):
+def make(jpeg, budget=None):
     return loop.ShortConversation('Press the down-call button and withdraw',
-        observation(0), jpeg, jpeg, SESSION, 'Robot coordinate and tool instructions')
+        observation(0), jpeg, jpeg, SESSION, 'Robot coordinate and tool instructions', budget=budget)
 
 
 def coordinates(unknown=False):
@@ -244,7 +244,7 @@ def test_explicit_approach_still_cannot_bypass_wrist_guard(jpeg,tmp_path,monkeyp
 
 @pytest.mark.parametrize('phase',['localization','tokenize','action','forward_guard'])
 def test_stop_during_every_model_boundary_never_commits_action(jpeg,tmp_path,monkeypatch,phase):
-    c=make(jpeg);cancel=threading.Event()
+    c=make(jpeg,65536 if phase=='tokenize' else None);cancel=threading.Event()
     stop_on={'localization':'locate_alignment','forward_guard':'inspect_forward_alignment'}.get(phase)
     calls=model_localizer(monkeypatch,[coordinates()],stop_on=stop_on,cancel=cancel)
     if phase=='tokenize':

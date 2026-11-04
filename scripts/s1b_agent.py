@@ -19,6 +19,7 @@ from pressb.agent_loop.short_loop import ShortConversation
 from pressb.agent_loop.model_context import FORMAT
 from pressb.agent_loop import calibrated_tip
 from pressb.agent_loop import press_phase
+from pressb.agent_loop import model_provider
 from pressb.agent_loop.common import atomic_json,request,SESSION_SCHEMA
 from pressb.agent_loop.demonstration import Demonstration
 from pressb.agent_loop.failure_case import FailureCase
@@ -26,9 +27,14 @@ from pressb.agent_loop.failure_case import FailureCase
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt.txt'
 LOCALIZED_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt_localized.txt'
+END_TO_END_PROMPT = ROOT/'docs/astribot/planar_control/agent_system_prompt_end_to_end.txt'
+DECISION_MODES = ('localized', 'grounded', 'separated', 'direct', 'end_to_end')
 
 
 def conversation_class(mode):
+    if mode == 'end_to_end':
+        from pressb.agent_loop.end_to_end import EndToEndConversation
+        return EndToEndConversation
     if mode == 'localized':
         from pressb.agent_loop.localized_conversation import LocalizedConversation
         return LocalizedConversation
@@ -36,7 +42,15 @@ def conversation_class(mode):
 
 
 def default_prompt(mode):
+    if mode == 'end_to_end':
+        return END_TO_END_PROMPT
     return LOCALIZED_PROMPT if mode == 'localized' else DEFAULT_PROMPT
+
+
+def forward_guard_policy(mode):
+    if mode == 'end_to_end':
+        return 'none'
+    return 'wrist_tip_overlap' if mode == 'localized' else 'wrist_horizontal'
 
 
 @contextmanager
@@ -191,30 +205,44 @@ def run(args):
         tip_calibration, press_limits = None, None
         if getattr(args, 'fingertip_calibration', None):
             tip_calibration = calibrated_tip.activate(args.fingertip_calibration, args.fingertip_state)
-            press_limits = press_phase.configure(
-                overpress_m=args.press_overpress_mm/1000.0,
-                max_travel_m=args.press_max_travel_mm/1000.0)
-            press_phase.set_gripper(args.fingertip_state)
-            print('指端标定：对准与接触点固定为合拢末端像素 '
-                  +str([round(v, 4) for v in tip_calibration['point_normalized']])
-                  +'（夹爪实测状态 '+tip_calibration['gripper_state']+'），模型只定位按钮。', flush=True)
-            print('按压分阶段：张开时在瞄准像素读按钮深度 z_b 并冻结为行程上限；闭合后每轮用实时深度闭环，'
-                  f'前推到读数 {150-args.press_overpress_mm:.0f} mm（150 mm 接触 + {args.press_overpress_mm:.0f} mm 过压），'
-                  '且不超过冻结上限。', flush=True)
-        model_base = args.model_base or f'http://127.0.0.1:{args.thor_port}/v1'
-        atomic_json(output/'task.json', dict(goal=args.goal, model_base=model_base, prompt=prompt,
+            if decision_mode == 'end_to_end':
+                # Only the pixel is given to the model as a reference; no press-phase gate.
+                print('指端标定：合拢末端像素 '+str([round(v, 4) for v in tip_calibration['point_normalized']])
+                      +' 作为参考信息提供给模型，不做按压阶段限制。', flush=True)
+            else:
+                press_limits = press_phase.configure(
+                    overpress_m=args.press_overpress_mm/1000.0,
+                    max_travel_m=args.press_max_travel_mm/1000.0)
+                press_phase.set_gripper(args.fingertip_state)
+                print('指端标定：对准与接触点固定为合拢末端像素 '
+                      +str([round(v, 4) for v in tip_calibration['point_normalized']])
+                      +'（夹爪实测状态 '+tip_calibration['gripper_state']+'），模型只定位按钮。', flush=True)
+                print('按压分阶段：张开时在瞄准像素读按钮深度 z_b 并冻结为行程上限；闭合后每轮用实时深度闭环，'
+                      f'前推到读数 {150-args.press_overpress_mm:.0f} mm（150 mm 接触 + {args.press_overpress_mm:.0f} mm 过压），'
+                      '且不超过冻结上限。', flush=True)
+        provider_name = getattr(args, 'model_provider', 'thor')
+        provider = model_provider.configure(provider_name, model=getattr(args, 'model_name', None),
+                                            base=args.model_base if provider_name != 'thor' else None,
+                                            key_env=getattr(args, 'model_api_key_env', None))
+        external = provider_name != 'thor'
+        model_base = provider['base'] if external else (args.model_base or f'http://127.0.0.1:{args.thor_port}/v1')
+        print(f'模型：{provider["provider"]} / {provider["model"]} @ {model_base}'
+              + ('（外部 API：本次图像与提示词会发送到该服务）' if external else ''), flush=True)
+        atomic_json(output/'task.json', dict(goal=args.goal, model_base=model_base, model_provider=provider, prompt=prompt,
             prompt_path=str(prompt_path),
             fingertip_calibration=tip_calibration,
             press_phase=press_limits,
             demo=str(demo.root) if demo else None, initial_image_count=image_count,
             failure_case=str(failure.root) if failure else None,
-            input_format=('pressb-conversation-v5' if decision_mode == 'localized' else
+            input_format=('pressb-conversation-e2e-v1' if decision_mode == 'end_to_end' else
+                          'pressb-conversation-v5' if decision_mode == 'localized' else
                           'pressb-conversation-v3' if decision_mode == 'grounded' else
                           'pressb-conversation-v2' if decision_mode == 'separated' else FORMAT),
             demo_selection=getattr(demo,'selection',None),
             decision_mode=decision_mode,
-            execution_policy='yz_alignment_before_forward' if decision_mode == 'localized' else 'legacy_validated',
-            forward_guard_policy='wrist_tip_overlap' if decision_mode == 'localized' else 'wrist_horizontal',
+            execution_policy=('model_action_executed_as_given' if decision_mode == 'end_to_end' else
+                              'yz_alignment_before_forward' if decision_mode == 'localized' else 'legacy_validated'),
+            forward_guard_policy=forward_guard_policy(decision_mode),
             progress_monitor_format=('pressb-localized-progress-v3' if decision_mode == 'localized' else
                                      'pressb-progress-v1' if decision_mode == 'direct' else None),
             view_acquisition_format='pressb-view-acquisition-v1' if decision_mode == 'direct' else None,
@@ -223,22 +251,25 @@ def run(args):
             hypothesis_review_format='pressb-hypothesis-review-v1' if decision_mode == 'localized' else None,
             forward_guard_format='pressb-wrist-tip-overlap-v1' if decision_mode == 'localized' else None,
             control_policy_version='pressb-control-plan-v1' if decision_mode == 'grounded' else None,
-            context_budget_tokens=getattr(args, 'context_budget_tokens', 65536),
+            context_budget_tokens=getattr(args, 'context_budget_tokens', None),
             failure_analysis_version=failure.review['analysis_version'] if failure else None,
             execution='automatic_one_command_at_a_time'))
-        print('决策模式：'+decision_mode+('；每轮独立双图定位→原始坐标偏差和实际反馈→模型自主决策；'
+        print('决策模式：'+decision_mode+('；每轮一次模型请求：直接看当前双图和记录输出动作，无独立定位/前推检查/复核。thinking关闭。'
+              if decision_mode == 'end_to_end' else '；每轮独立双图定位→原始坐标偏差和实际反馈→模型自主决策；'
               '坐标显式换算为0～1；连续同向且无明确进展时额外只读复核，再重新决策；thinking关闭。'
               if decision_mode == 'localized' else '；当前双图定位按钮/指尖→计算图像偏差与阶段建议→动作决策；撤回后按需核验。thinking关闭。'
               if decision_mode == 'grounded' else '；每轮先独立判读再选择动作，增加一次串行模型请求。'
               if decision_mode == 'separated' else '；先检查头部取景，再直接决策；异常时复核，判断冲突时恢复取景。thinking关闭。'), flush=True)
-        if decision_mode == 'localized':
+        if decision_mode == 'end_to_end':
+            print('执行策略：模型输出的命令按原样执行，不检查、不裁剪、不替换；程序只校验命令格式。', flush=True)
+        elif decision_mode == 'localized':
             print('执行策略：先用Y/Z对齐；每个正X候选都检查当前腕图，箭头所指物理指端须在按钮框内（横纵均满足）。'
                   '未知不放行，拒绝整条候选后重新决策；无正X步长上限，不裁剪XYZ；负X后撤和Y/Z不受此条件限制。'
                   '每个新观测首次前推额外请求腕图判读；无进展时仍额外复核原假设。', flush=True)
         else:
             print('旧模式前推限制：正X发送前仅检查当前腕图横向，按钮须位于可辨认的两指之间；'
                   '未知不放行。不检查高度，候选前推增加一次独立腕图请求。', flush=True)
-        with tunnel(None if args.model_base else args.thor_host, args.thor_port), StopControl() as control:
+        with tunnel(None if (args.model_base or external) else args.thor_host, args.thor_port), StopControl() as control:
             try:
                 if args.replay:
                     folder = Path(args.replay)
@@ -247,7 +278,7 @@ def run(args):
                         speed_mm_s=20., head_speed_deg_s=20., control_hz=250.)
                     conversation = conversation_class(decision_mode)(args.goal, obs, (folder/'head.jpg').read_bytes(),
                         (folder/'right.jpg').read_bytes(), session, prompt, demo, failure,
-                        getattr(args, 'context_budget_tokens', 65536), decision_mode=decision_mode,
+                        getattr(args, 'context_budget_tokens', None), decision_mode=decision_mode,
                         **(dict(monitor_progress=True, acquire_view=True) if decision_mode == 'direct' else {}))
                     active_rd = output/'replay'
                     body = control.call(conversation.prepare_decision, model_base, active_rd, control.cancel)
@@ -257,26 +288,31 @@ def run(args):
                     outcome.update(status='replay_only', proposal=proposal)
                     return
                 client = RobotClient(args.robot_base, output, control.cancel,
-                    **({'forward_guard_policy': 'wrist_tip_overlap'} if decision_mode == 'localized' else {}))
+                    **({'forward_guard_policy': forward_guard_policy(decision_mode)}
+                       if decision_mode in ('localized', 'end_to_end') else {}))
                 control.client = client
                 atomic_json(output/'session.json', client.session)
                 obs, folder = control.call(client.observe)
                 conversation = conversation_class(decision_mode)(args.goal, obs, (folder/'head.jpg').read_bytes(),
                     (folder/'right.jpg').read_bytes(), client.session, prompt, demo, failure,
-                    getattr(args, 'context_budget_tokens', 65536), decision_mode=decision_mode,
+                    getattr(args, 'context_budget_tokens', None), decision_mode=decision_mode,
                     **(dict(monitor_progress=True, acquire_view=True) if decision_mode == 'direct' else {}))
+                if hasattr(conversation, 'max_press_attempts'):
+                    conversation.max_press_attempts = args.max_press_attempts
+                    print(f'按压未亮灯时不允许提前放弃：最多尝试 {args.max_press_attempts} 次按压后才接受 report_unable。', flush=True)
                 print('自动闭环已启动；q 回车或 Ctrl-C 随时停止。', flush=True)
                 for index in range(args.max_rounds):
                     rd = output/'rounds'/f'{index:04d}'
                     active_rd = rd
                     if press_phase.active():
                         atomic_json(rd/'press_phase.json', press_phase.describe())
-                    print(f'第 {index+1} 轮：'+('独立定位画面中' if decision_mode == 'localized' else
+                    print(f'第 {index+1} 轮：'+('直接决策' if decision_mode == 'end_to_end' else
+                          '独立定位画面中' if decision_mode == 'localized' else
                           '独立判读画面中' if decision_mode in ('separated','grounded') else '整理动作上下文'), flush=True)
                     body = control.call(conversation.prepare_decision, model_base, rd, control.cancel)
                     if press_phase.active():
                         _report_range(conversation, obs['observation_id'])
-                    print(f'第 {index+1} 轮：请求 Qwen；{count_images(body["messages"])} 张图，'
+                    print(f'第 {index+1} 轮：请求 {provider["model"]}；{count_images(body["messages"])} 张图，'
                           + ('短运行记忆' if decision_mode == 'grounded' else f'压缩代次 {conversation.generation}')
                           + f'；当前双视角 {folder}', flush=True)
                     proposal = control.call(propose, model_base, body, obs, client.session, rd,
@@ -348,11 +384,18 @@ def parse_args(argv=None):
     p.add_argument('--goal',required=True);p.add_argument('--output',required=True)
     p.add_argument('--thor-host',default='Thor');p.add_argument('--thor-port',type=int,default=18000)
     p.add_argument('--model-base',help='existing /v1 URL; disables automatic Thor tunnel')
+    p.add_argument('--model-provider',choices=sorted(model_provider.PROVIDERS),default='thor',
+                   help='thor (local Qwen, default), deepseek (deepseek-flash, needs DEEPSEEK_API_KEY) or openai_compatible')
+    p.add_argument('--model-name',help='override the provider default model name')
+    p.add_argument('--model-api-key-env',help='environment variable holding the API key; the key itself is never saved')
     p.add_argument('--robot-base',default='http://127.0.0.1:6210')
     p.add_argument('--prompt',help='system prompt file; default follows decision mode')
-    p.add_argument('--context-budget-tokens', type=int, default=65536)
-    p.add_argument('--decision-mode', choices=('localized', 'grounded', 'separated', 'direct'), default='localized')
-    p.add_argument('--max-rounds',type=int,default=20)
+    p.add_argument('--context-budget-tokens', type=int, default=None, help='optional context token limit; default: no limit, no compaction')
+    p.add_argument('--decision-mode', choices=DECISION_MODES, default='localized',
+                   help='end_to_end: one model call per round that looks at the images and outputs the action')
+    p.add_argument('--max-rounds',type=int,default=40)
+    p.add_argument('--max-press-attempts',type=int,default=3,
+                   help='report_unable is rejected after a missed press until this many press attempts were made')
     p.add_argument('--fingertip-calibration',help='human-marked fingertip JSON (s1b-fingertip-point-v1); the merged-end closed pixel becomes the fixed alignment and contact point and the model locates only the button')
     p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start, recorded only so the program knows whether depth at the aim pixel still sees the button; it never changes the aim point')
     p.add_argument('--press-overpress-mm',type=float,default=5.0,help='push past the 150 mm contact reading by this much; live depth target is 150 minus this (default 5 mm)')
@@ -368,8 +411,9 @@ def parse_args(argv=None):
     args=p.parse_args(argv)
     if args.prompt is None:
         args.prompt = str(default_prompt(args.decision_mode))
-    if args.context_budget_tokens<=0:p.error('--context-budget-tokens must be positive')
+    if args.context_budget_tokens is not None and args.context_budget_tokens<=0:p.error('--context-budget-tokens must be positive')
     if args.max_rounds<=0:p.error('--max-rounds must be positive')
+    if args.max_press_attempts<0:p.error('--max-press-attempts must not be negative')
     if args.demo_last_steps is not None and args.demo_last_steps<=0:p.error('--demo-last-steps must be positive')
     return args
 

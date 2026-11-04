@@ -12,6 +12,7 @@ from . import localized_reassessment as reassess
 from . import wrist_overlap_guard as overlap
 from . import head_view_advice
 from . import press_phase
+from . import press_retry
 from . import calibrated_tip
 from . import wrist_direction_rules as direction_rules
 
@@ -65,8 +66,10 @@ Read CURRENT_WRIST_ALIGNMENT_DIRECTION_RULE for this observation's explicit Y/Z
 signs. If its objects match the current wrist image, choose nonzero magnitudes
 for the indicated nonzero corrections. An all-zero move does not realign or
 request a new image; use request_observation when a fresh image is needed.
-Report done only after seeing this run's button light up and subsequent withdrawal;
-describe the visual evidence. Completion remains a model judgment, not human confirmation.
+Report done only after seeing this run's button light up and subsequent withdrawal,
+with the light STILL on in a HEAD image taken after the withdrawal; describe the
+visual evidence. A press that reaches the contact depth without the light is a
+miss: withdraw, open, realign, re-range, close and press again; do not keep pushing. Completion remains a model judgment, not human confirmation.
 '''
 
 
@@ -79,34 +82,48 @@ def press_status(state):
     if remaining is None:
         remaining = max(0.0, budget-consumed)
     target = state.get('target_m') or 0.0
+    limits = state.get('limits') or {}
+    band = [round(limits[k]*1000, 1) if limits.get(k) is not None else None
+            for k in ('range_min_m', 'range_max_m')]
     if phase == press_phase.ALIGN:
         stage = 'align_open'
-        instruction = ('Keep the gripper OPEN. Align the button face onto the fixed merged-end aim point with Y/Z, '
-                       'and approach with positive X only when the wrist overlap check passes. The range is '
-                       'frozen automatically once a trusted open-gripper depth at the aim pixel lies within '
-                       'the close band; until then do not close.')
+        instruction = ('Order: with the gripper OPEN finish alignment and ranging, then close, then press by '
+                       'distance. Keep the gripper OPEN now. Align the button face onto the fixed merged-end aim '
+                       'point with Y/Z, and approach with positive X only when the wrist overlap check passes. '
+                       f'Size the approach so the next open-gripper depth lands inside the close band '
+                       f'{band[0]}-{band[1]} mm, not at the contact plane; the open gripper must not touch the '
+                       'panel. The range is frozen automatically once a trusted open-gripper depth at the aim '
+                       'pixel lies within that band; until then do not close. Use the HEAD view to estimate the '
+                       'remaining distance and whether the hand is in front of the target button.')
     elif gripper != 'closed':
         stage = 'close'
         instruction = ('The open-gripper range is frozen. If the wrist view still shows the button on the aim '
-                       'point, close the gripper now (gripper c). Do not move forward while open.')
+                       'point, close the gripper now (gripper c), then press by distance. Do not move forward '
+                       'while open.')
     elif remaining <= 0.0005:
         stage = 'press_reached'
         instruction = ('The live depth at the merged end has reached the press target (contact plus overpress) '
                        'or the frozen range is used up. Do not push further. Judge the target light from the '
-                       'HEAD view, then withdraw with negative X.')
+                       'HEAD view, then withdraw with negative X and check the light is still on after withdrawal. '
+                       'If the light is not on, the closed end most likely missed the button: do not push '
+                       'again; withdraw to the close band, open (o), realign onto the aim pixel, re-range, '
+                       'close and press.')
     else:
         stage = 'press'
         instruction = ('The gripper is closed. Press with positive X of at most '
                        f'{remaining*1000:.1f} mm, keep Y/Z at 0. This limit comes from the live wrist depth at '
-                       f'the merged end down to {target*1000:.0f} mm, capped by the frozen range. Judge the target '
-                       'light from the HEAD view, then withdraw with negative X.')
+                       f'the merged end down to {target*1000:.0f} mm, capped by the frozen range. Use the HEAD '
+                       'view to check the closed end is moving onto the target button and to confirm the light, '
+                       'then withdraw with negative X. If an executed press already brought the live depth to '
+                       f'within a few mm of {target*1000:.0f} mm and the light is not on, treat it as a miss: '
+                       'withdraw, open (o), realign, re-range, close and press again instead of pushing.')
     live = state.get('live_m')
     return dict(format=press_phase.FORMAT, stage=stage, gripper_state=gripper, z_b_m=state.get('z_b_m'),
                 frozen_from=state.get('frozen_from'), budget_mm=round(budget*1000, 1),
                 consumed_mm=round(consumed*1000, 1), remaining_mm=round(remaining*1000, 1),
                 live_depth_mm=round(live*1000, 1) if live is not None else None,
                 target_depth_mm=round(target*1000, 1), bound=state.get('bound'),
-                tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1),
+                tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1), close_band_mm=band,
                 instruction=instruction, source='program_rule_on_recorded_depth')
 
 
@@ -121,9 +138,10 @@ def _actual(result):
 class LocalizedConversation(Conversation):
     execution_policy = 'yz_alignment_before_forward'
     forward_guard_policy = overlap.POLICY
+    max_press_attempts = press_retry.DEFAULT_LIMIT
 
     def __init__(self, goal, obs, head, wrist, session, prompt, demo=None,
-                 failure_case=None, budget=65536, decision_mode='localized'):
+                 failure_case=None, budget=None, decision_mode='localized'):
         if decision_mode != 'localized':
             raise ValueError('localized_mode_required')
         super().__init__(goal, obs, head, wrist, session, prompt+'\n'+GUIDANCE,

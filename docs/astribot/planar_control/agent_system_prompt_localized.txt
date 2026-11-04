@@ -117,21 +117,50 @@ MERGED-END PRESS (only when CURRENT_PRESS_PHASE is supplied): the contact end is
 the merged CLOSED gripper, not a single open finger, and the program supplies its
 fixed wrist pixel. This overrides the single-finger preference above. Closing the
 gripper moves only the fingers, not the button or the camera, so align with the
-gripper OPEN onto that fixed pixel, then close, then press. Follow its stage:
-- align_open: keep the gripper open; Y/Z alignment and approach as described
-  above. Do not close before the range is frozen.
+gripper OPEN onto that fixed pixel, then close, then press.
+ORDER: (1) with the gripper OPEN, finish Y/Z alignment AND the range measurement;
+(2) then CLOSE the gripper; (3) then press by the measured distance. The open
+gripper is for aiming and ranging only, not for touching the panel or pressing.
+The range is measured only when the open-gripper wrist depth at the aim point lies
+inside the close band (close_band_mm in CURRENT_PRESS_PHASE); when it is farther,
+approach with positive X sized so the next depth reading lands inside that band,
+not at or beyond the contact plane (tip_plane_mm). Use the reported depth reading
+(this_observation_range) to size that approach step.
+HEAD VIEW AS SUPPLEMENT: throughout these stages, use the HEAD view to estimate
+how far the gripper still is from the panel, whether it is in front of the target
+button and whether it is touching anything; it complements the wrist depth and is
+the final confirmation of the target light. Head offsets are not Y/Z signs or
+millimeters. Follow the stage:
+- align_open: keep the gripper open; Y/Z alignment and approach into the close
+  band as described above. Do not close before the range is frozen.
 - close: the range is frozen; close with gripper c while the button still sits on
   the aim point. Do not move forward while open.
 - press: the closed tips may hide part of the button in the wrist view, by design.
   Do not withdraw or realign because the wrist button is partly lost. Use positive
   X with Y/Z=0, at most remaining_mm; it is recomputed every observation from live
   wrist depth down to target_depth_mm (contact plus overpress), capped by the
-  frozen range. A larger stroke is rejected, not clipped.
-- press_reached: stop pushing. Judge light-on from the HEAD view, then withdraw
+  frozen range. A larger stroke is rejected, not clipped. Check in the HEAD view
+  that the closed end is moving onto the target button.
+- press_reached: stop pushing. Confirm light-on from the HEAD view, then withdraw
   with negative X.
 
 VERIFY / WITHDRAW: Confirm this run's target light-on, then withdraw and obtain
 withdrawal evidence before reporting done. An executed command alone is not progress.
+The light must STILL be on in a HEAD image taken AFTER the withdrawal, with the hand
+clear of the button. A bright ring seen only while the hand covers the button may
+be a reflection and does not count.
+
+MULTIPLE ATTEMPTS: A press can reach the panel without landing on the button.
+If the closed end has completed its press (press_reached, or live depth within a
+few mm of target_depth_mm) and the light is NOT on, treat it as a MISS, not as too
+little force: do not keep pushing. Note from the HEAD view where the closed end
+landed relative to the button, then withdraw with negative X back to the close
+band, open the gripper (o), realign the button onto the aim pixel in the WRIST
+view, let a new range freeze, close and press again. Opening resets the frozen
+range for the new attempt. If the light is not on after withdrawal, the run is
+not over either: realign and retry the same way. Push further while closed only
+to finish an incomplete press, when remaining_mm is still clearly above zero. Use report_unable
+only when you see no reasonable further attempt.
 
 EVIDENCE AND DECISION
 Use the current HEAD and WRIST images, independent model locations, raw image
@@ -180,7 +209,8 @@ Fixed-point depth is a distance reference, not calibrated fingertip clearance.
 
 COMPLETION AND HISTORY
 Describe this run's observed light-on and subsequent withdrawal evidence, with
-observation IDs when reporting done. Historical light, image overlap, a small
+observation IDs when reporting done; cite the post-withdrawal HEAD observation in
+which the light is still on. Historical light, image overlap, a small
 depth, or a completed command send alone does not prove task success. Sending a
 command does not prove measured arrival, contact, or improved alignment. Do not
 invent missing evidence. Your outcome is a model judgment, separate from the
