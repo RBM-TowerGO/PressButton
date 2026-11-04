@@ -305,6 +305,28 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
             raise
 
 
+CAPTURE_RECOVERY_ATTEMPTS = 3
+
+
+class TaskFailed(ValueError):
+    """A robot task ended in a non-completed status; carries the task record."""
+    def __init__(self, task):
+        super().__init__('task_failed:'+str(task.get('error')))
+        self.task = task
+
+
+def capture_only_failure(task):
+    """True when only the photo failed: motion done (or none), service not stopped.
+
+    The service marks such a task 'failed' (not 'interrupted') and waits for a new
+    observation; a real motion failure or a stop sets 'interrupted' and halts it.
+    """
+    motion = task.get('motion') or {}
+    kind = (task.get('request') or {}).get('type')
+    return (task.get('status') == 'failed' and task.get('phase') == 'CAPTURING'
+            and (kind is None or motion.get('action_completed') is True))
+
+
 class RobotClient:
     def __init__(self, base, output, cancel=None, forward_guard_policy='wrist_horizontal'):
         if forward_guard_policy not in ('none', 'wrist_horizontal', 'wrist_tip_overlap'):
@@ -325,7 +347,7 @@ class RobotClient:
             task=request(self.base,'/v2/tasks/'+receipt['task_id'])
             if task['status'] in ('completed','failed','interrupted','rejected'):
                 atomic_json(self.output/'tasks'/(receipt['task_id']+'.json'),task)
-                if task['status']!='completed':raise ValueError('task_failed:'+str(task.get('error')))
+                if task['status']!='completed':raise TaskFailed(task)
                 return task
             time.sleep(.1)
 
@@ -339,9 +361,16 @@ class RobotClient:
                 if attempt:raise
 
     def observe(self):
-        body=dict(session_id=self.session['session_id'],command_id=uuid.uuid4().hex)
-        task=self.wait(self.submit('/v2/observations',body))
-        return self.download(task['capture']['observation_id'])
+        for attempt in range(CAPTURE_RECOVERY_ATTEMPTS):
+            body=dict(session_id=self.session['session_id'],command_id=uuid.uuid4().hex)
+            try:
+                task=self.wait(self.submit('/v2/observations',body))
+            except TaskFailed as exc:
+                # A failed photo leaves the service waiting for a new observation; try again.
+                if not capture_only_failure(exc.task) or attempt == CAPTURE_RECOVERY_ATTEMPTS-1:
+                    raise
+                continue
+            return self.download(task['capture']['observation_id'])
 
     def download(self, oid):
         obs=request(self.base,'/v2/observations/'+oid)
@@ -371,7 +400,21 @@ class RobotClient:
         for key in ('xyz_mm','head_deg','key'):
             if key in args:body[key]=args[key]
         atomic_json(self.output/'commands'/(body['command_id']+'.json'),body)
-        task=self.wait(self.submit('/v2/actions',body))
+        try:
+            task=self.wait(self.submit('/v2/actions',body))
+        except TaskFailed as exc:
+            if not capture_only_failure(exc.task):
+                raise
+            # The motion was executed; only the photo after it failed. Take a new
+            # observation instead of ending the run, and keep the original failure on record.
+            obs_folder=self.observe()
+            task=copy.deepcopy(exc.task)
+            task['capture_recovery']=dict(original_status=task['status'], original_error=task.get('error'),
+                                          recovered_observation_id=obs_folder[0]['observation_id'])
+            task.update(status='completed', capture=dict(status='complete_after_retry',
+                        observation_id=obs_folder[0]['observation_id']))
+            atomic_json(self.output/'tasks'/(task['task_id']+'.json'),task)
+            return task,obs_folder
         return task,self.download(task['capture']['observation_id'])
 
     def stop(self):return request(self.base,'/v2/stop',{})

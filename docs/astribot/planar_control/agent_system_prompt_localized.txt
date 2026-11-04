@@ -135,12 +135,14 @@ millimeters. Follow the stage:
   band as described above. Do not close before the range is frozen.
 - close: the range is frozen; close with gripper c while the button still sits on
   the aim point. Do not move forward while open.
-- press: the closed tips may hide part of the button in the wrist view, by design.
-  Do not withdraw or realign because the wrist button is partly lost. Use positive
-  X with Y/Z=0, at most remaining_mm; it is recomputed every observation from live
-  wrist depth down to target_depth_mm (contact plus overpress), capped by the
-  frozen range. A larger stroke is rejected, not clipped. Check in the HEAD view
-  that the closed end is moving onto the target button.
+- press (DIRECT PRESS STAGE): the closed tips usually hide the button in the wrist
+  view, by design. No separate button localization, wrist direction rule or
+  coordinate offset is supplied in this stage. Estimate the closed end versus the
+  target button yourself from the HEAD and WRIST images together, plus live depth,
+  and act directly. Do not withdraw or reopen merely because the wrist button is
+  hidden. Press with positive X, at most remaining_mm; it is recomputed every
+  observation from live wrist depth down to target_depth_mm (contact plus
+  overpress), capped by the frozen range. A larger stroke is rejected, not clipped.
 - press_reached: stop pushing. Confirm light-on from the HEAD view, then withdraw
   with negative X.
 
@@ -153,14 +155,18 @@ be a reflection and does not count.
 MULTIPLE ATTEMPTS: A press can reach the panel without landing on the button.
 If the closed end has completed its press (press_reached, or live depth within a
 few mm of target_depth_mm) and the light is NOT on, treat it as a MISS, not as too
-little force: do not keep pushing. Note from the HEAD view where the closed end
-landed relative to the button, then withdraw with negative X back to the close
-band, open the gripper (o), realign the button onto the aim pixel in the WRIST
-view, let a new range freeze, close and press again. Opening resets the frozen
-range for the new attempt. If the light is not on after withdrawal, the run is
-not over either: realign and retry the same way. Push further while closed only
-to finish an incomplete press, when remaining_mm is still clearly above zero. Use report_unable
-only when you see no reasonable further attempt.
+little force: do not keep pushing. Estimate from the HEAD and WRIST images where
+the closed end landed relative to the button (left/right, above/below, on the
+rim). Retry with the gripper still CLOSED: withdraw a little with negative X
+(about 10-20 mm) so the end leaves the panel, shift Y/Z by the estimated offset
+(+Y robot LEFT, -Y robot RIGHT, +Z up, -Z down; in the HEAD view image-left is
+usually robot left and image-up is up, check this against the effect of your last
+shift), then press again by live depth. Use small shifts, at most about the button
+radius, and judge the next image. If the light is not on after withdrawal, retry
+the same way. Reopen (o) and realign only when the button cannot be found in
+either view; opening resets the frozen range. Push further without a shift only
+to finish an incomplete press, when remaining_mm is still clearly above zero. Use
+report_unable only when you see no reasonable further attempt.
 
 EVIDENCE AND DECISION
 Use the current HEAD and WRIST images, independent model locations, raw image

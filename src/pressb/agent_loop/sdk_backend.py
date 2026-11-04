@@ -7,6 +7,12 @@ from collections import deque
 
 from .common import number
 
+# Soft settle before a photo: never a gate, only a short best-effort wait.
+SETTLE_TIMEOUT_S = 1.5
+SETTLE_WINDOW_S = 0.15
+SETTLE_POSITION_M = 0.001
+SETTLE_HEAD_DEG = 0.3
+
 
 class SDKBackend:
     def __init__(self, robot, monitor, frequency=250, speed_mm_s=20., head_speed_deg_s=20.):
@@ -65,6 +71,43 @@ class SDKBackend:
             if self.measured is None or time.monotonic_ns()-self.measured['receipt_ns']>300_000_000:
                 raise RuntimeError('state_unavailable')
             return copy.deepcopy(self.measured)
+
+    def wait_settled(self, cancel, timeout_s=SETTLE_TIMEOUT_S):
+        """Best effort: wait until the hand and head stop moving before a photo.
+
+        Settled means every state sample of the last SETTLE_WINDOW_S stays within
+        SETTLE_POSITION_M of each other (end-effector position) and SETTLE_HEAD_DEG
+        (head joints). This never raises and never blocks execution: after timeout_s,
+        a stop, or unreadable state, it returns and the photo is taken anyway; the
+        returned record says which.
+        """
+        started = time.monotonic_ns()
+        deadline = started + int(timeout_s*1e9)
+        reason = 'timeout'
+        while True:
+            now = time.monotonic_ns()
+            try:
+                with self.lock:
+                    rows = [row for row in self.history if row['receipt_ns'] >= now - int(SETTLE_WINDOW_S*1e9)]
+                    first = self.history[0]['receipt_ns'] if self.history else now
+                if now - first >= SETTLE_WINDOW_S*1e9 and len(rows) >= 3:
+                    position = max(math.dist(a['pose_m_xyzw'][:3], b['pose_m_xyzw'][:3])
+                                   for a in rows for b in rows)
+                    head = max((abs(x-y) for a in rows for b in rows
+                                for x, y in zip(a.get('head_deg') or [], b.get('head_deg') or [])), default=0.0)
+                    if position <= SETTLE_POSITION_M and head <= SETTLE_HEAD_DEG:
+                        reason = 'settled'
+                        break
+            except Exception as exc:
+                reason = 'state_unreadable:'+str(exc)
+                break
+            if now >= deadline:
+                break
+            if cancel is not None and cancel.wait(.02):
+                reason = 'stopped'
+                break
+        return dict(settled=reason == 'settled', reason=reason,
+                    waited_ms=round((time.monotonic_ns()-started)/1e6, 1), timeout_ms=timeout_s*1000)
 
     def state_for_capture(self, bundle):
         source=bundle['frames']['right']['source_ns']

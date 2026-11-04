@@ -16,24 +16,37 @@ from urllib.parse import urlsplit
 
 PROVIDERS = {
     # Local vLLM on Thor through the SSH tunnel; exact /tokenize available.
+    # Qwen3 thinking has no effort levels, only on/off.
     'thor': dict(model='qwen38', base=None, key_env=None, tokenize=True, image_tokens=None,
-                 extra=dict(chat_template_kwargs=dict(enable_thinking=False))),
+                 extra=dict(chat_template_kwargs=dict(enable_thinking=False)),
+                 thinking_extra=dict(chat_template_kwargs=dict(enable_thinking=True))),
     # DeepSeek V4.1 Flash: OpenAI-compatible, accepts images in user messages,
     # thinking is ON by default and is switched off here like on Thor.
     # Each image is capped at 1024 tokens by the provider.
     'deepseek': dict(model='deepseek-flash', base='https://api.deepseek.com', key_env='DEEPSEEK_API_KEY',
-                     tokenize=False, image_tokens=1024, extra=dict(thinking=dict(type='disabled'))),
+                     tokenize=False, image_tokens=1024, extra=dict(thinking=dict(type='disabled')),
+                     thinking_extra=dict(thinking=dict(type='enabled'), reasoning_effort='low'),
+                     # Thinking mode rejects tool_choice='required' (HTTP 400, 2026-11-04);
+                     # 'auto' is used then, and the existing parsers still demand one tool call.
+                     thinking_tool_choice='auto'),
     # Any other OpenAI-compatible vision endpoint; model and base must be given.
     'openai_compatible': dict(model=None, base=None, key_env='MODEL_API_KEY', tokenize=False,
-                              image_tokens=1536, extra={}),
+                              image_tokens=1536, extra={}, thinking_extra=dict(reasoning_effort='low')),
 }
 DEFAULT = 'thor'
 _active = None
+# Thinking is off for the whole run until the press starts (the first executed
+# gripper close), then stays on at low effort (``thinking_extra``) until the run
+# ends. Reasoning tokens count against max_tokens, so requests get at least this
+# many while it is on.
+THINKING_MIN_MAX_TOKENS = 4096
+_thinking = False
 
 
 def configure(name=DEFAULT, model=None, base=None, key_env=None):
-    """Select the provider for this process. Returns a key-free description."""
-    global _active
+    """Select the provider for this process; thinking starts off. Returns a key-free description."""
+    global _active, _thinking
+    _thinking = False
     if name not in PROVIDERS:
         raise ValueError('unknown_model_provider:'+str(name))
     value = copy.deepcopy(PROVIDERS[name])
@@ -52,8 +65,25 @@ def configure(name=DEFAULT, model=None, base=None, key_env=None):
 
 
 def reset():
-    global _active
+    global _active, _thinking
     _active = None
+    _thinking = False
+
+
+def enable_thinking():
+    """Switch thinking on (low effort) for every later request of this run; never switched off.
+
+    Returns True only on the call that actually turned it on.
+    """
+    global _thinking
+    if _thinking:
+        return False
+    _thinking = True
+    return True
+
+
+def thinking_enabled():
+    return _thinking
 
 
 def _current():
@@ -63,7 +93,18 @@ def _current():
 def body_fields():
     """Model name plus backend-specific fields for a chat-completions body."""
     current = _current()
-    return dict(model=current['model'], **copy.deepcopy(current['extra']))
+    extra = current['thinking_extra'] if _thinking else current['extra']
+    return dict(model=current['model'], **copy.deepcopy(extra))
+
+
+def tool_choice():
+    """'required' normally; a provider may need another value while thinking is on."""
+    return _current().get('thinking_tool_choice', 'required') if _thinking else 'required'
+
+
+def max_tokens(value):
+    """Completion ceiling for a request; raised while thinking so reasoning cannot crowd out the tool call."""
+    return max(value, THINKING_MIN_MAX_TOKENS) if _thinking else value
 
 
 def base():
@@ -112,4 +153,7 @@ def describe():
     current = _current()
     return dict(provider=current['name'], model=current['model'], base=current.get('base'),
                 key_env=current.get('key_env'), token_count='exact_tokenize' if current['tokenize'] else 'estimated',
-                extra_fields=sorted(current['extra']))
+                extra_fields=sorted(current['extra']),
+                thinking=dict(policy='off_until_first_gripper_close_then_low_until_run_end',
+                              fields=copy.deepcopy(current['thinking_extra']),
+                              min_max_tokens=THINKING_MIN_MAX_TOKENS))

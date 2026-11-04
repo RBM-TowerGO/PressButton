@@ -41,6 +41,14 @@ def test_unable_is_accepted_once_attempts_are_used_or_without_any_press():
     press_retry.check(RUN, dict(name='propose_gripper', arguments=dict(key='o', reason='r')), 3)
 
 
+def test_closed_retry_after_withdrawal_counts_as_a_new_attempt():
+    retry = [turn('propose_move', 'w', xyz_mm=[-15, 0, 0]), turn('propose_move', 's', xyz_mm=[0, -4, 3]),
+             turn('propose_move', 'p2', xyz_mm=[14, 0, 0]), turn('propose_move', 'p2b', xyz_mm=[2, 0, 0])]
+    # Same close, two presses; finishing steps without a withdrawal stay in one attempt.
+    assert press_retry.attempts(RUN[:6]+retry) == ['pressed', 'p2b']
+    press_retry.check(RUN[:6]+retry, UNABLE, 2)
+
+
 def test_failed_or_open_gripper_moves_are_not_attempts():
     failed = turn('propose_move', 'x', xyz_mm=[40, 0, 0])
     failed['ledger']['result']['status'] = 'failed'

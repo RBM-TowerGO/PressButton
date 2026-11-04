@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 from .common import atomic_json, json_bytes, request, sha256, SESSION_SCHEMA
 from s1b_keyboard_control import validate_command
 
+CAPTURE_ATTEMPTS = 5
 
 
 class Camera:
@@ -155,44 +156,71 @@ class Service:
             self.phase=phase;task['phase']=phase
 
     def _run(self, tid, kind, data):
+        # Every change to the task happens under self.lock: HTTP threads deep-copy it
+        # under the same lock while the client polls, and an unlocked update during
+        # that copy raised "dictionary changed size during iteration" (HTTP 503).
         task=self.tasks[tid]
         try:
             if kind!='observe':
-                task['motion'].update(self.backend.move(kind, data, self.cancel,
-                    lambda value: self._phase(task, value)))
-                task['motion']['action_completed'] = True
+                motion=self.backend.move(kind, data, self.cancel, lambda value: self._phase(task, value))
+                with self.lock:
+                    task['motion'].update(motion)
+                    task['motion']['action_completed'] = True
             self._phase(task,'CAPTURING')
-            after=time.monotonic_ns()
-            bundle=self.camera.capture(after,self.cancel)
-            state=(self.backend.state_for_capture(bundle) if hasattr(self.backend,'state_for_capture')
-                   else self.backend.snapshot())
+            # Best effort: let the hand/head come to rest so the photo matches the state.
+            # Not a gate: any failure or timeout here just proceeds to the photo.
+            if hasattr(self.backend,'wait_settled'):
+                try:settle=self.backend.wait_settled(self.cancel)
+                except Exception as exc:settle=dict(settled=False,reason='settle_check_failed:'+str(exc))
+                with self.lock:task['settle']=settle
+            # A frame whose nearest state sample is too far away in time (image_state_skew,
+            # e.g. after an SDK clock jump) is a capture problem, not a motion failure:
+            # take a fresh frame a few times before giving up.
+            for capture_attempt in range(CAPTURE_ATTEMPTS):
+                after=time.monotonic_ns()
+                bundle=self.camera.capture(after,self.cancel)
+                try:
+                    state=(self.backend.state_for_capture(bundle) if hasattr(self.backend,'state_for_capture')
+                           else self.backend.snapshot())
+                    break
+                except RuntimeError as exc:
+                    if 'image_state_skew' not in str(exc) or capture_attempt == CAPTURE_ATTEMPTS-1:
+                        raise
+                    with self.lock:
+                        task.setdefault('capture_retries',[]).append(str(exc))
+                    if self.cancel.wait(.1):raise RuntimeError('stopped')
             if self.cancel.is_set():raise RuntimeError('stopped')
             self._phase(task,'SAVING')
             obs=self._save_observation(bundle,state,tid)
-            task['capture']=dict(status='complete',observation_id=obs['observation_id'])
-            task['storage']=dict(status='committed')
-            task['observation_url']='/v2/observations/'+obs['observation_id']
             with self.lock:
+                task['capture']=dict(status='complete',observation_id=obs['observation_id'])
+                task['storage']=dict(status='committed')
+                task['observation_url']='/v2/observations/'+obs['observation_id']
                 if self.cancel.is_set():raise RuntimeError('stopped')
                 completed=dict(task,status='completed',phase='READY',next_action_allowed=True)
                 atomic_json(self.root/'tasks'/f'{tid}.json',completed)
                 task.update(completed)
                 self.latest=obs['observation_id'];self.phase='READY';self.fault=None
         except Exception as exc:
-            task['error']=self.backend.error or str(exc);task['next_action_allowed']=False
-            if hasattr(self.backend,'diagnostic'):task['execution_diagnostics']=self.backend.diagnostic()
-            try:task['failure_state']=self.backend.snapshot()
-            except Exception as state_error:task['failure_state']=dict(error=str(state_error))
-            failed_motion=kind!='observe' and not task['motion']['action_completed']
+            # Gather slow diagnostics first, then publish them in one locked update.
+            diagnostics=self.backend.diagnostic() if hasattr(self.backend,'diagnostic') else None
+            try:failure_state=self.backend.snapshot()
+            except Exception as state_error:failure_state=dict(error=str(state_error))
+            with self.lock:
+                failed_motion=kind!='observe' and not task['motion']['action_completed']
             if failed_motion or self.backend.error:
                 self.cancel.set()
                 try:self.backend.stop()
                 except Exception:pass
-            task['status']='interrupted' if self.cancel.is_set() else 'failed'
             with self.lock:
+                task['error']=self.backend.error or str(exc);task['next_action_allowed']=False
+                if diagnostics is not None:task['execution_diagnostics']=diagnostics
+                task['failure_state']=failure_state
+                task['status']='interrupted' if self.cancel.is_set() else 'failed'
                 self.phase='FAULT' if self.cancel.is_set() else 'NEEDS_OBSERVATION'
                 self.fault=str(exc)
-            try:atomic_json(self.root/'tasks'/f'{tid}.json',task)
+                snapshot=copy.deepcopy(task)
+            try:atomic_json(self.root/'tasks'/f'{tid}.json',snapshot)
             except OSError:self.cancel.set();self.backend.stop()
 
     def _save_observation(self, bundle, state, tid):

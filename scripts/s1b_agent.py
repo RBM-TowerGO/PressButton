@@ -254,12 +254,12 @@ def run(args):
             context_budget_tokens=getattr(args, 'context_budget_tokens', None),
             failure_analysis_version=failure.review['analysis_version'] if failure else None,
             execution='automatic_one_command_at_a_time'))
-        print('决策模式：'+decision_mode+('；每轮一次模型请求：直接看当前双图和记录输出动作，无独立定位/前推检查/复核。thinking关闭。'
+        print('决策模式：'+decision_mode+('；每轮一次模型请求：直接看当前双图和记录输出动作，无独立定位/前推检查/复核。thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。'
               if decision_mode == 'end_to_end' else '；每轮独立双图定位→原始坐标偏差和实际反馈→模型自主决策；'
-              '坐标显式换算为0～1；连续同向且无明确进展时额外只读复核，再重新决策；thinking关闭。'
-              if decision_mode == 'localized' else '；当前双图定位按钮/指尖→计算图像偏差与阶段建议→动作决策；撤回后按需核验。thinking关闭。'
+              '坐标显式换算为0～1；连续同向且无明确进展时额外只读复核，再重新决策；thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。'
+              if decision_mode == 'localized' else '；当前双图定位按钮/指尖→计算图像偏差与阶段建议→动作决策；撤回后按需核验。thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。'
               if decision_mode == 'grounded' else '；每轮先独立判读再选择动作，增加一次串行模型请求。'
-              if decision_mode == 'separated' else '；先检查头部取景，再直接决策；异常时复核，判断冲突时恢复取景。thinking关闭。'), flush=True)
+              if decision_mode == 'separated' else '；先检查头部取景，再直接决策；异常时复核，判断冲突时恢复取景。thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。'), flush=True)
         if decision_mode == 'end_to_end':
             print('执行策略：模型输出的命令按原样执行，不检查、不裁剪、不替换；程序只校验命令格式。', flush=True)
         elif decision_mode == 'localized':
@@ -345,6 +345,13 @@ def run(args):
                     if name == 'propose_gripper':
                         state_now = 'closed' if proposal['arguments']['key'] == 'c' else 'open'
                         calibrated_tip.set_state(state_now)
+                        # The press starts at the first executed close: from here every model
+                        # request thinks (low effort) until the run ends, even after reopening.
+                        if state_now == 'closed' and model_provider.enable_thinking():
+                            outcome['thinking_enabled_at_round'] = index+1
+                            atomic_json(rd/'thinking.json', dict(enabled=True, round=index+1,
+                                        fields=model_provider.describe()['thinking']['fields']))
+                            print('按压开始：thinking 已开启（低档），保持到本次运行结束。', flush=True)
                         if press_phase.active():
                             press_phase.set_gripper(state_now)
                             print('夹爪状态：'+state_now+('；测距预算已冻结' if state_now == 'closed'

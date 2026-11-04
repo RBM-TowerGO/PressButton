@@ -100,8 +100,8 @@ ACTIVATION_TOOL = _tool('confirm_activation', 'Read-only check that this target 
 def _request_body(prompt, content, tool):
     # Keep this module independent of client.py and its execution-related imports.
     from . import model_provider
-    return dict(**model_provider.body_fields(), temperature=0, max_tokens=512, stream=False,
-                tool_choice='required',
+    return dict(**model_provider.body_fields(), temperature=0, max_tokens=model_provider.max_tokens(512),
+                stream=False, tool_choice=model_provider.tool_choice(),
                 tools=[copy.deepcopy(tool)], messages=[dict(role='system', content=prompt),
                                                       dict(role='user', content=content)])
 

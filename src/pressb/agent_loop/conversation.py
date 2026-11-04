@@ -35,8 +35,8 @@ def live_message(obs, head, wrist):
 def request_body(messages, tools=None, max_tokens=512):
     from .client import TOOLS
     from . import model_provider
-    return dict(**model_provider.body_fields(), temperature=0, max_tokens=max_tokens, stream=False,
-                tools=TOOLS if tools is None else tools, tool_choice='required', messages=messages)
+    return dict(**model_provider.body_fields(), temperature=0, max_tokens=model_provider.max_tokens(max_tokens),
+                stream=False, tools=TOOLS if tools is None else tools, tool_choice=model_provider.tool_choice(), messages=messages)
 
 
 EVIDENCE_FIELDS = ('initial_light', 'light_on', 'withdrawal')

@@ -69,8 +69,25 @@ request a new image; use request_observation when a fresh image is needed.
 Report done only after seeing this run's button light up and subsequent withdrawal,
 with the light STILL on in a HEAD image taken after the withdrawal; describe the
 visual evidence. A press that reaches the contact depth without the light is a
-miss: withdraw, open, realign, re-range, close and press again; do not keep pushing. Completion remains a model judgment, not human confirmation.
+miss: estimate the offset from the HEAD and WRIST images, withdraw a little, shift Y/Z
+with the gripper still closed and press again; do not keep pushing in place.
+Completion remains a model judgment, not human confirmation.
 '''
+
+
+DIRECT_PRESS_INSTRUCTION = (
+    'DIRECT PRESS STAGE. The gripper is closed, so the closed tips usually hide the button in the WRIST '
+    'view. No separate button localization, wrist direction rule or coordinate offset is supplied now, and '
+    'none is needed: estimate the relation between the closed gripper end and the target button yourself '
+    'from the current HEAD and WRIST images together (left/right, above/below, on the rim, on the panel, '
+    'centered), plus live depth. Then act directly. Pressing: positive X within remaining_mm. If a press '
+    'missed (light not on), retry WITHOUT reopening: withdraw a little with negative X (about 10-20 mm, '
+    'so the end leaves the panel), shift Y/Z by the offset you estimated, then press again by live depth. '
+    'Directions: +Y moves the hand to robot LEFT, -Y to robot RIGHT, +Z up, -Z down. In the HEAD view the '
+    'robot looks forward at the panel, so image-left is usually robot left (+Y) and image-up is up (+Z); '
+    'confirm this against the visible effect of your previous Y/Z shift and correct it if the hand moved '
+    'the other way. Use small shifts (a few mm, roughly the button radius at most) and check the next image. '
+    'Reopen (o) and realign only if the button cannot be found in either view.')
 
 
 def press_status(state):
@@ -106,8 +123,9 @@ def press_status(state):
                        'or the frozen range is used up. Do not push further. Judge the target light from the '
                        'HEAD view, then withdraw with negative X and check the light is still on after withdrawal. '
                        'If the light is not on, the closed end most likely missed the button: do not push '
-                       'again; withdraw to the close band, open (o), realign onto the aim pixel, re-range, '
-                       'close and press.')
+                       'again from here. Estimate from the HEAD and WRIST images where the closed end sits '
+                       'relative to the button, withdraw about 10-20 mm, shift Y/Z by that offset with the '
+                       'gripper still closed, then press again by live depth.')
     else:
         stage = 'press'
         instruction = ('The gripper is closed. Press with positive X of at most '
@@ -116,7 +134,8 @@ def press_status(state):
                        'view to check the closed end is moving onto the target button and to confirm the light, '
                        'then withdraw with negative X. If an executed press already brought the live depth to '
                        f'within a few mm of {target*1000:.0f} mm and the light is not on, treat it as a miss: '
-                       'withdraw, open (o), realign, re-range, close and press again instead of pushing.')
+                       'withdraw about 10-20 mm, shift Y/Z by the offset you see in the HEAD and WRIST images, '
+                       'and press again with the gripper still closed instead of pushing.')
     live = state.get('live_m')
     return dict(format=press_phase.FORMAT, stage=stage, gripper_state=gripper, z_b_m=state.get('z_b_m'),
                 frozen_from=state.get('frozen_from'), budget_mm=round(budget*1000, 1),
@@ -164,6 +183,8 @@ class LocalizedConversation(Conversation):
         self.forward_guard_decision = None
         self.direction_hints = {}
         self.head_advice = {}
+        # Observations decided in the closed-gripper press stage without localization.
+        self.direct_press = set()
 
     def _check(self, oid, cancel=None):
         if cancel is not None and cancel.is_set():
@@ -220,6 +241,12 @@ class LocalizedConversation(Conversation):
                                'requires an independent CURRENT wrist check that the marked physical fingertip '
                                'lies inside the button-face box horizontally AND vertically. Unknown does not pass. '
                                'Negative X remains available. No displacement cap, automatic return or clipping.')
+        if self.current_id in self.direct_press:
+            move['description'] = ('Move the hand by chassis-frame XYZ increments, preserving orientation. '
+                                   'DIRECT PRESS STAGE (gripper closed): estimate the closed end versus the button '
+                                   'from the HEAD and WRIST images yourself; +Y robot LEFT, -Y robot RIGHT, +Z up. '
+                                   'Positive X only within the live-depth press limit remaining_mm. Negative X and '
+                                   'Y/Z shifts are free. No automatic return or clipping.')
         return request_body(self.messages(), reassess.extend_tools(tools, self.hypothesis_reviews.get(self.current_id)))
 
     def decision_context(self, stage):
@@ -235,7 +262,47 @@ class LocalizedConversation(Conversation):
                     forward_alignment_phase=('overlap_confirmed' if self.forward_checks.get(self.current_id, {}).get('decision', {}).get('allowed')
                         else 'align_yz'),
                     review_observation_id=(self.current_id if self.current_id in self.hypothesis_reviews else None),
+                    press_stage=('direct_press' if self.current_id in self.direct_press else None),
                     compression_generation=self.generation)
+
+    @staticmethod
+    def _in_direct_press():
+        """Closed gripper over a frozen range: the wrist view mostly hides the button."""
+        return (press_phase.active() and press_phase.phase() == press_phase.PRESS
+                and (press_phase.describe() or {}).get('gripper_state') == 'closed')
+
+    def _prepare_direct_press(self, base, directory, cancel):
+        """One action request on the images; no localization, direction rule or review request.
+
+        Once the gripper is closed for the press, the closed tips cover the button in the
+        wrist view, so a separate button box and coordinate-derived Y/Z rule are not
+        meaningful. The model estimates the closed end versus the button directly from the
+        HEAD and WRIST images. Only program bookkeeping on recorded depth remains: the live
+        depth at the merged-end pixel and the press stroke limit.
+        """
+        oid = self.current_id
+        self.direct_press.add(oid)
+        if oid not in self.processed_localizations:
+            self.processed_localizations.add(oid)
+        if oid not in self.range_evidence:
+            evidence = press_phase.observe(self.manifests.get(oid), calibrated_tip.aim_pixel(),
+                                           calibrated_tip.image_size())
+            evidence['phase_after'] = press_phase.phase()
+            self.range_evidence[oid] = evidence
+        atomic_json(directory/'range_evidence.json', self.range_evidence[oid])
+        if oid not in self.press_status:
+            status = press_status(press_phase.describe(oid))
+            status['this_observation_range'] = {k: self.range_evidence[oid].get(k)
+                for k in ('median_m', 'trusted', 'reasons', 'froze', 'role')}
+            self.press_status[oid] = status
+            self._context(oid, 'CURRENT_PRESS_PHASE', **status)
+            self._context(oid, 'DIRECT_PRESS_STAGE', observation_id=oid, instruction=DIRECT_PRESS_INSTRUCTION)
+        atomic_json(directory/'press_phase_status.json', self.press_status[oid])
+        self.review_signals[oid] = dict(review_required=False, reasons=['direct_press_stage'])
+        self.review_phase = 'not_required'
+        self._check(oid, cancel)
+        atomic_json(directory/'decision_context.json', self.decision_context('action_request'))
+        return self.prepare(base, directory, cancel)
 
     def prepare_decision(self, base, directory, cancel=None):
         directory = Path(directory); directory.mkdir(parents=True, exist_ok=True)
@@ -243,6 +310,8 @@ class LocalizedConversation(Conversation):
         atomic_json(directory/'decision_context.json', self.decision_context('localization'))
         try:
             self._check(oid, cancel)
+            if self._in_direct_press():
+                return self._prepare_direct_press(base, directory, cancel)
             if oid not in self.localizations:
                 current = locator.inspect(base, locator.build_request(self.goal, self.observations[oid]),
                                           oid, directory/'localization', cancel, revision=1)
@@ -346,6 +415,13 @@ class LocalizedConversation(Conversation):
             return
         if oid in self.hypothesis_reviews:
             return
+        if signal['baseline_observation_id'] not in self.localizations or oid not in self.localizations:
+            # The window reaches into the direct press stage, which has no localization to compare.
+            signal.update(review_required=False, reasons=signal['reasons']+['window_spans_direct_press_stage'])
+            self.review_signals[oid] = signal
+            atomic_json(directory/'hypothesis_review'/'trigger.json', signal)
+            self.review_phase = 'not_required'
+            return
         self.review_phase = 'reviewing'
         atomic_json(directory/'decision_context.json', self.decision_context('hypothesis_review'))
         baseline = signal['baseline_observation_id']
@@ -433,8 +509,12 @@ class LocalizedConversation(Conversation):
         super().append_result(proposal, result, obs, head, wrist)
         self.manifests[obs['observation_id']] = copy.deepcopy(obs)
         ledger = self.turns[-1]['ledger']
-        ledger['localization_summary'] = locator.model_view(self.localizations[oid])
-        ledger['localized_progress'] = copy.deepcopy(self.localized_progress[oid])
+        if oid in self.direct_press:
+            ledger['decision_basis'] = 'direct_press_images_no_separate_localization'
+        if oid in self.localizations:
+            ledger['localization_summary'] = locator.model_view(self.localizations[oid])
+        if oid in self.localized_progress:
+            ledger['localized_progress'] = copy.deepcopy(self.localized_progress[oid])
         ledger['wrist_direction_rule'] = copy.deepcopy(self.direction_hints.get(oid))
         ledger['head_view_advice'] = copy.deepcopy(self.head_advice.get(oid))
         if oid in self.press_status:

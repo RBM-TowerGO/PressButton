@@ -44,23 +44,45 @@ def wait_for_service(process, base, stop, timeout=180):
     raise InterruptedError('operator_stopped')
 
 
-def aim_depth_window(camera_base, point, stop, timeout=10):
+def aim_depth_window(camera_base, point, stop, timeout=30, resend_s=2.0):
     """Point the wrist depth window at the merged-end pixel for this run only.
 
     The press phase trusts depth only when it is read at the calibrated aim pixel.
     The selection is not saved, so the robot's stored measuring point is unchanged
-    after the run. Returns the confirmed center pixel; raises before any agent runs.
+    after the run.
+
+    The camera page may still be starting (requests fail, or depth has not produced a
+    first result yet), so the selection is re-sent until confirmed. Outcomes:
+    - point confirmed and a depth center reported: returns the center pixel;
+    - point confirmed but no depth result yet at the timeout: returns None and the run
+      continues; every observation's depth is still checked against the aim pixel;
+    - point never confirmed: raises, because depth would be read at the wrong pixel.
     """
-    request(camera_base, '/api/selection', dict(point_normalized=list(point)), timeout=3)
+    wanted = list(point)
     deadline = time.monotonic()+timeout
+    last_sent, seen, failure = None, None, None
     while not stop.is_set():
-        snapshot = request(camera_base, '/api/snapshot', timeout=2)
-        selected = (snapshot.get('selection') or {}).get('point_normalized')
-        center = (snapshot.get('depth') or {}).get('center_px')
-        if selected == list(point) and center is not None:
-            return center
+        now = time.monotonic()
+        if seen != wanted and (last_sent is None or now-last_sent >= resend_s):
+            last_sent = now
+            try:
+                request(camera_base, '/api/selection', dict(point_normalized=wanted), timeout=3)
+            except (OSError, ValueError) as exc:
+                failure = 'selection_request_failed:'+str(exc)
+        try:
+            snapshot = request(camera_base, '/api/snapshot', timeout=2)
+            seen = (snapshot.get('selection') or {}).get('point_normalized')
+            center = (snapshot.get('depth') or {}).get('center_px')
+            if seen == wanted and center is not None:
+                return center
+            if seen == wanted:
+                failure = 'depth_not_ready:'+str((snapshot.get('depth') or {}).get('status'))
+        except (OSError, ValueError) as exc:
+            failure = 'snapshot_request_failed:'+str(exc)
         if time.monotonic() >= deadline:
-            raise TimeoutError('测距点未切换到合拢末端像素；请检查相机网页。')
+            if seen == wanted:
+                return None
+            raise TimeoutError(f'测距点未切换到合拢末端像素（期望 {wanted}，相机当前 {seen}；{failure}）；请检查相机网页。')
         stop.wait(.2)
     raise InterruptedError('operator_stopped')
 
@@ -191,19 +213,19 @@ def launch(args):
              + '服务就绪后 Agent 将自动运行。\n')
         if decision_mode == 'end_to_end':
             emit(f'端到端模式：成功示范 {demo_images} 张；每轮一次模型请求，直接看当前双图和记录输出动作；'
-                 '无独立定位、前推检查或复核，命令按原样执行。thinking 关闭。\n')
+                 '无独立定位、前推检查或复核，命令按原样执行。thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。\n')
         elif decision_mode == 'localized':
             emit(f'定位闭环：成功示范 {demo_images} 张、失败参考 {"启用" if failure_path else "关闭"}；'
-                 '每轮独立双图定位→原始偏差和实际反馈→模型自主决策。thinking 关闭。\n'
+                 '每轮独立双图定位→原始偏差和实际反馈→模型自主决策。thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。\n'
                  '先做Y/Z对齐；每个正X候选检查当前腕图物理指端是否落入按钮框（横纵两轴）。\n'
                  '未知则拒绝整条候选并重新决策；通过后原XYZ不变，无正X步长上限；负X/Y/Z不受此条件限制。\n'
                  '每个新观测首次前推及触发无进展复核时，会增加串行模型请求。\n')
         elif decision_mode == 'grounded':
             emit(f'短闭环：成功示范 {demo_images} 张、失败参考 {"启用" if failure_path else "关闭"}；'
-                 '当前双图独立判读后决策，必要时单独验证撤回；thinking 关闭。\n')
+                 '当前双图独立判读后决策，必要时单独验证撤回；thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。\n')
         elif decision_mode == 'direct':
             emit('直接模式：先检查头部取景，取景不足时只允许头部调整/重新观察/结束；'
-                 '每轮记录进展，异常时复核，判断冲突时恢复取景。thinking 关闭。\n')
+                 '每轮记录进展，异常时复核，判断冲突时恢复取景。thinking 首次闭合夹爪前关闭，之后低档开启至运行结束。\n')
         try:
             update(phase='waiting_for_service')
             service_argv = [sys.executable, str(ROOT/'scripts/s1b_agent_service.py'), '--host', args.host,
@@ -215,7 +237,10 @@ def launch(args):
             if aim_point is not None:
                 center = aim_depth_window(camera_base, aim_point, stop)
                 update(depth_aim_center_px=center)
-                emit(f'测距点已设为合拢末端像素 {tuple(center)}（仅本次运行，不保存）。\n')
+                if center is None:
+                    emit('测距点已切到合拢末端像素，但深度暂未出结果；继续运行，每轮观测仍会核对测距点（仅本次运行，不保存）。\n')
+                else:
+                    emit(f'测距点已设为合拢末端像素 {tuple(center)}（仅本次运行，不保存）。\n')
             update(phase='running', session_id=session['session_id'])
             # Only SSH/service reads this terminal. q reaches the robot service;
             # its exit immediately cancels the Agent, including a pending model call.

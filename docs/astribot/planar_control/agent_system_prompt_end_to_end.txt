@@ -53,21 +53,27 @@ PROCEDURE
    reading. Commanded and measured X may differ by a few mm; check the next
    reading and add a small step if it is still above about 147 mm.
 5. Confirm in the HEAD view that the target light is on. If it is not on after the
-   press, see MULTIPLE ATTEMPTS: withdraw and realign rather than pushing again.
+   press, see MULTIPLE ATTEMPTS: withdraw a little, shift and press again.
 6. Withdraw with -X and get a HEAD image showing the hand away from the panel.
    The light must STILL be on in that post-withdrawal HEAD image. A bright ring
    seen only while the hand covers the button may be a reflection and does not count.
 
 MULTIPLE ATTEMPTS
-A press can reach the panel without landing on the button. If the closed end has
+A press can reach the panel without landing on the button, and with the gripper
+closed the wrist view usually no longer shows the button. If the closed end has
 completed its press (wrist depth at about 145-148 mm after the press step) and the
-light is NOT on, treat it as a MISS, not as too little force: do not keep pushing. Note from the HEAD
-view where the closed end landed relative to the button, then withdraw with -X
-back to roughly 153-230 mm, open the gripper (o), realign the button onto the aim
-pixel in the WRIST view, re-range, close and press again. If the light is not on
-after withdrawal, the run is not over either: realign and retry the same way.
-Push further while closed only to finish an incomplete press (step 4).
-Use report_unable only when you see no reasonable further attempt.
+light is NOT on, treat it as a MISS, not as too little force: do not keep pushing.
+Estimate directly from the HEAD and WRIST images where the closed end landed
+relative to the button (left/right, above/below, on the rim). Retry with the
+gripper still CLOSED: withdraw about 10-20 mm with -X so the end leaves the
+panel, shift Y/Z by the estimated offset (+Y robot LEFT, -Y robot RIGHT, +Z up,
+-Z down; in the HEAD view image-left is usually robot left and image-up is up,
+check this against the effect of your last shift), then press again by depth.
+Use small shifts, at most about the button radius. If the light is not on after
+withdrawal, retry the same way. Reopen (o) and realign only when the button cannot
+be found in either view. Push further without a shift only to finish an
+incomplete press (step 4). Use report_unable only when you see no reasonable
+further attempt.
 
 COMPLETION
 Report done only after you have seen this run's light on and, after the later

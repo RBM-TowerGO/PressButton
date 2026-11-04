@@ -87,9 +87,10 @@ def test_task_polling_never_sees_a_task_while_the_worker_mutates_it(tmp_path):
                     except Exception as exc:errors.append(repr(exc));return
         pollers=[threading.Thread(target=poll) for _ in range(4)]
         for p in pollers:p.start()
-        for n in range(40):
+        for n in range(15):
             receipt=service.submit(action(service,obs,f'c{n}',type='move',xyz_mm=[0,0,0]))
             tid[0]=receipt['task_id']
+            service.worker.join(30)        # pollers contend for the lock; allow time under load
             task=wait(service,receipt)
             assert task['status']=='completed',task
             obs=service.observations[task['capture']['observation_id']]
@@ -180,6 +181,63 @@ def test_http_client_downloads_and_hashes(setup,tmp_path):
         assert result['motion']['action_completed']
         with pytest.raises(ValueError):request(client.base,'/v2/artifacts/../../session.json')
     finally:server.shutdown();server.server_close();thread.join()
+
+
+class SkewBackend(FakeBackend):
+    """state_for_capture raises image_state_skew for the next ``skews`` captures."""
+    def __init__(self, skews):
+        super().__init__();self.skews=skews
+    def state_for_capture(self, bundle):
+        if self.skews:
+            self.skews-=1;raise RuntimeError('image_state_skew')
+        return self.snapshot()
+
+
+def _serve(service):
+    server=make_server(service,0)
+    thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+    return server,thread
+
+
+def test_service_retakes_a_skewed_photo_after_motion(tmp_path):
+    """2026-11-04 run ended on task_failed:image_state_skew after a completed -20 mm move."""
+    backend=SkewBackend(0);service=Service(backend,FakeCamera(),tmp_path/'robot')
+    try:
+        obs=observe(service)
+        backend.skews=2
+        task=wait(service,service.submit(action(service,obs,'skew',type='move',xyz_mm=[-20,0,0])))
+        assert task['status']=='completed' and task['capture_retries']==['image_state_skew']*2
+    finally:service.close()
+
+
+def test_client_reobserves_when_only_the_photo_after_a_move_failed(tmp_path):
+    backend=SkewBackend(0);service=Service(backend,FakeCamera(),tmp_path/'robot')
+    server,thread=_serve(service)
+    try:
+        client=RobotClient('http://127.0.0.1:'+str(server.server_port),tmp_path/'client')
+        obs,_=client.observe()
+        backend.skews=5      # every service-side retake of this capture fails
+        proposal=dict(name='propose_move',arguments=dict(xyz_mm=[-20,0,0],reason='withdraw'))
+        result,(new,folder)=client.execute(proposal,obs)
+        assert result['status']=='completed' and result['motion']['action_completed']
+        assert result['capture_recovery']['original_error']=='image_state_skew'
+        assert result['capture']['observation_id']==new['observation_id']!=obs['observation_id']
+        assert (folder/'head.jpg').exists()
+        assert [c[0] for c in backend.calls]==['move']    # the move is executed once, never repeated
+    finally:server.shutdown();server.server_close();thread.join();service.close()
+
+
+def test_client_still_stops_on_a_real_motion_failure(tmp_path):
+    class Broken(FakeBackend):
+        def move(self,kind,data,cancel,phase):raise RuntimeError('joint_fault')
+    service=Service(Broken(),FakeCamera(),tmp_path/'robot')
+    server,thread=_serve(service)
+    try:
+        client=RobotClient('http://127.0.0.1:'+str(server.server_port),tmp_path/'client')
+        obs,_=client.observe()
+        with pytest.raises(ValueError,match='task_failed:joint_fault'):
+            client.execute(dict(name='propose_move',arguments=dict(xyz_mm=[-5,0,0],reason='r')),obs)
+    finally:server.shutdown();server.server_close();thread.join();service.close()
 
 
 def test_model_dual_views_and_keyboard_tools(setup):

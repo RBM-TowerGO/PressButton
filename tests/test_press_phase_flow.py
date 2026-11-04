@@ -149,3 +149,63 @@ def test_stale_permission_from_a_previous_observation_is_rejected(jpeg, monkeypa
     with pytest.raises(ValueError, match='live_and_frozen_range'):
         overlap.validate_permission(dict(name='propose_move', arguments=dict(xyz_mm=xyz)),
                                     dict(observation_id='live-1'), old)
+
+
+def _closed_press_setup(jpeg, monkeypatch, tmp_path):
+    """Freeze at 200 mm with the gripper open, then close; returns (conversation, localizer calls)."""
+    calibrated_tip.activate(CALIBRATION, 'open')
+    press_phase.configure()
+    c, calls = make(jpeg, monkeypatch, data=lambda oid: _locations(oid))
+    c.manifests[c.current_id] = _obs(0, 0.200)
+    c.prepare_decision('fake', tmp_path/'0')
+    assert press_phase.phase() == press_phase.PRESS
+    monkeypatch.setattr(client, 'request', lambda *a, **k: action(c, 'propose_gripper', key='c'))
+    proposal = client.propose('fake', c.body(), _obs(0, .2), c.session, tmp_path/'0', conversation=c)
+    _step(c, jpeg, 1, proposal, 0.198)
+    press_phase.set_gripper('closed')
+    return c, calls
+
+
+def test_closed_gripper_press_decides_directly_from_images(jpeg, monkeypatch, tmp_path):
+    c, calls = _closed_press_setup(jpeg, monkeypatch, tmp_path)
+    before = len(calls)
+    body = c.prepare_decision('fake', tmp_path/'1')
+    # No separate button localization, direction rule or progress comparison in this stage.
+    assert len(calls) == before and 'live-1' not in c.localizations
+    assert 'live-1' not in c.direction_hints and 'live-1' in c.direct_press
+    text = json.dumps(body['messages'])
+    assert 'DIRECT_PRESS_STAGE' in text and 'CURRENT_PRESS_PHASE' in text
+    move = next(t for t in body['tools'] if t['function']['name'] == 'propose_move')
+    assert 'DIRECT PRESS STAGE' in move['function']['description']
+    assert json.loads((tmp_path/'1/decision_context.json').read_text())['press_stage'] == 'direct_press'
+    # Live depth still bounds the stroke: 198 - 145 = 53 mm.
+    assert c.press_status['live-1']['remaining_mm'] == pytest.approx(53.0)
+
+    # Press, miss, then retry WITHOUT reopening: withdraw, shift Y/Z, press again.
+    for n, xyz, z in ((2, [50, 0, 0], 0.148), (3, [-15, 0, 0], 0.163), (4, [0, -4, 3], 0.163),
+                      (5, [16, 0, 0], 0.147)):
+        replies = iter([action(c, xyz=xyz)])
+        monkeypatch.setattr(client, 'request', lambda *a, **k: next(replies))
+        proposal = client.propose('fake', c.prepare_decision('fake', tmp_path/str(n)), _obs(n-1, z),
+                                  c.session, tmp_path/str(n), conversation=c)
+        assert proposal['arguments']['xyz_mm'] == xyz
+        if c.forward_guard_decision is not None:
+            client.require_forward_permission(proposal, _obs(n-1, None), c.forward_guard_decision,
+                                              policy='wrist_tip_overlap')
+        _step(c, jpeg, n, proposal, z)
+        press_phase.record_move(xyz)
+    assert len(calls) == before and press_phase.phase() == press_phase.PRESS
+    from pressb.agent_loop import press_retry
+    assert press_retry.attempts(c.turns) == ['live-2', 'live-5']
+
+
+def test_reopening_returns_to_localized_alignment(jpeg, monkeypatch, tmp_path):
+    c, calls = _closed_press_setup(jpeg, monkeypatch, tmp_path)
+    c.prepare_decision('fake', tmp_path/'1')
+    monkeypatch.setattr(client, 'request', lambda *a, **k: action(c, 'propose_gripper', key='o'))
+    proposal = client.propose('fake', c.body(), _obs(1, .198), c.session, tmp_path/'1', conversation=c)
+    _step(c, jpeg, 2, proposal, 0.198)
+    press_phase.set_gripper('open')
+    before = len(calls)
+    c.prepare_decision('fake', tmp_path/'2')
+    assert len(calls) == before+1 and 'live-2' in c.localizations and 'live-2' not in c.direct_press

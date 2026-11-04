@@ -237,6 +237,32 @@ def test_depth_window_switch_times_out_instead_of_running_on_wrong_point(monkeyp
         launcher.aim_depth_window('http://cam', [0.5368, 0.6908], threading.Event(), timeout=0.3)
 
 
+def test_depth_window_survives_a_camera_page_that_is_still_starting(monkeypatch):
+    import threading
+    aim = [0.5368, 0.6908]
+    state = dict(point=[0.70, 0.80], failures=3, snapshots=0)
+    def fake(base, route, payload=None, timeout=10):
+        if route == '/api/selection':
+            if state['failures']:
+                state['failures'] -= 1
+                raise ValueError('HTTP 503: starting')
+            state['point'] = payload['point_normalized']
+            return dict(point_normalized=state['point'])
+        state['snapshots'] += 1
+        return dict(selection=dict(point_normalized=state['point']), depth=dict(center_px=[343, 248]))
+    monkeypatch.setattr(launcher, 'request', fake)
+    assert launcher.aim_depth_window('http://cam', aim, threading.Event(), timeout=5, resend_s=0.01) == [343, 248]
+
+
+def test_depth_window_continues_when_point_is_set_but_depth_not_ready(monkeypatch):
+    import threading
+    aim = [0.5368, 0.6908]
+    monkeypatch.setattr(launcher, 'request', lambda base, route, payload=None, timeout=10:
+        dict(point_normalized=aim) if route == '/api/selection' else
+        dict(selection=dict(point_normalized=aim), depth=dict(median_m=None, status='深度已过期')))
+    assert launcher.aim_depth_window('http://cam', aim, threading.Event(), timeout=0.3) is None
+
+
 def test_no_demo_reaches_agent_with_zero_demonstration_images(tmp_path, monkeypatch):
     monkeypatch.setattr(agent, 'request', lambda *a, **k: pytest.fail('no network'))
     monkeypatch.setattr(agent, 'RobotClient', lambda *a, **k: pytest.fail('no robot'))
