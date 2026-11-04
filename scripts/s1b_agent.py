@@ -353,11 +353,15 @@ def run(args):
                                         fields=model_provider.describe()['thinking']['fields']))
                             print('按压开始：thinking 已开启（低档），保持到本次运行结束。', flush=True)
                         if press_phase.active():
+                            reopened_after_press = state_now == 'open' and press_phase.retry_step() is not None
                             press_phase.set_gripper(state_now)
                             print('夹爪状态：'+state_now+('；测距预算已冻结' if state_now == 'closed'
-                                  else '；重新开始测距'), flush=True)
+                                  else '；按压未触发，已张开，重新定位对准（thinking 保持开启）'
+                                  if reopened_after_press else '；重新开始测距'), flush=True)
                     if press_phase.active() and name == 'propose_move':
                         press_phase.record_move(proposal['arguments']['xyz_mm'])
+                        if press_phase.record_retry(proposal) == press_phase.REOPEN:
+                            print('已后撤 10 mm：灯亮则报告完成，未亮则张开夹爪重新对准后再按。', flush=True)
                     conversation.append_result(proposal, result, obs, (folder/'head.jpg').read_bytes(),
                                                (folder/'right.jpg').read_bytes())
                     print('命令发送完成，新观测已保存：'+str(folder), flush=True)

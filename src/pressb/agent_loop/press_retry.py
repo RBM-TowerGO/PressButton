@@ -57,6 +57,7 @@ def check(turns, proposal, limit=DEFAULT_LIMIT):
         f'{last} (taken right after the deepest press of the last attempt): where did the closed end land '
         'relative to the target button (left/right, above/below, on the rim)? The wrist view usually cannot '
         'show the button during a press, so estimate this directly from both images, not from coordinates. '
-        'Then retry with the gripper still closed: withdraw a little with negative X if the end is still on '
-        'the panel, shift Y/Z by the estimated offset (+Y robot LEFT, -Y robot RIGHT, +Z up, -Z down), and '
-        'press again by live depth. Return the next command now; state the estimated offset in the reason.')
+        'Then retry: if the gripper is still closed after the 10 mm withdrawal, open it (propose_gripper key '
+        'o); the button is then localized again, so realign with the gripper open using that offset '
+        '(+Y robot LEFT, -Y robot RIGHT, +Z up, -Z down), let the range freeze, close and press again. '
+        'Return the next command now; state the estimated offset in the reason.')

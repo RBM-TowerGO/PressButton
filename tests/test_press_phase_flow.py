@@ -118,9 +118,9 @@ def test_align_freeze_close_press_withdraw(jpeg, monkeypatch, tmp_path):
     _step(c, jpeg, 3, proposal, 0.145)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
 
-    # Round 3: target reached -> model is told to stop and verify.
+    # Round 3: target reached -> the fixed withdraw step starts.
     c.prepare_decision('fake', tmp_path/'3')
-    assert c.press_status['live-3']['stage'] == 'press_reached'
+    assert c.press_status['live-3']['stage'] == 'press_reached_withdraw'
     assert press_phase.evaluate(1, 'live-3')['allowed'] is False
     assert overlap_checks == []
 
@@ -181,7 +181,7 @@ def test_closed_gripper_press_decides_directly_from_images(jpeg, monkeypatch, tm
     # Live depth still bounds the stroke: 198 - 145 = 53 mm.
     assert c.press_status['live-1']['remaining_mm'] == pytest.approx(53.0)
 
-    # Press, miss, then retry WITHOUT reopening: withdraw, shift Y/Z, press again.
+    # A press that stops short of the target is not complete: withdraw, shift and press stay free.
     for n, xyz, z in ((2, [50, 0, 0], 0.148), (3, [-15, 0, 0], 0.163), (4, [0, -4, 3], 0.163),
                       (5, [16, 0, 0], 0.147)):
         replies = iter([action(c, xyz=xyz)])
@@ -209,3 +209,62 @@ def test_reopening_returns_to_localized_alignment(jpeg, monkeypatch, tmp_path):
     before = len(calls)
     c.prepare_decision('fake', tmp_path/'2')
     assert len(calls) == before+1 and 'live-2' in c.localizations and 'live-2' not in c.direct_press
+
+
+def _propose(c, monkeypatch, tmp_path, n, z_before, *replies):
+    queue = iter(replies)
+    monkeypatch.setattr(client, 'request', lambda *a, **k: next(queue))
+    return client.propose('fake', c.prepare_decision('fake', tmp_path/str(n)), _obs(n-1, z_before),
+                          c.session, tmp_path/str(n), conversation=c)
+
+
+def test_missed_press_withdraws_10mm_then_reopens_and_realigns(jpeg, monkeypatch, tmp_path):
+    c, calls = _closed_press_setup(jpeg, monkeypatch, tmp_path)
+    # Round 1: press the full 53 mm to the 145 mm target.
+    proposal = _propose(c, monkeypatch, tmp_path, 2, .198, action(c, xyz=[53, 0, 0]))
+    _step(c, jpeg, 2, proposal, 0.145)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    press_phase.record_retry(proposal)
+
+    # Round 2: target reached. Anything except exactly [-10, 0, 0] is rejected and repaired.
+    proposal = _propose(c, monkeypatch, tmp_path, 3, .145,
+                        action(c, xyz=[-20, 0, 0]), action(c, xyz=[-10, 3, 0]),
+                        action(c, 'propose_gripper', key='o'), action(c, xyz=[-10, 0, 0]))
+    assert c.press_status['live-2']['stage'] == 'press_reached_withdraw'
+    assert proposal['arguments']['xyz_mm'] == [-10, 0, 0]
+    errors = [json.loads((tmp_path/'3'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
+    assert all('press_retry_withdraw_required' in e for e in errors)
+    _step(c, jpeg, 3, proposal, 0.155)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    assert press_phase.record_retry(proposal) == press_phase.REOPEN
+
+    # Round 3: withdrawn. Closed re-press, Y/Z shift or re-close is rejected; opening is accepted.
+    proposal = _propose(c, monkeypatch, tmp_path, 4, .155,
+                        action(c, xyz=[10, 0, 0]), action(c, xyz=[0, -4, 0]),
+                        action(c, 'propose_gripper', key='c'), action(c, 'propose_gripper', key='o'))
+    assert c.press_status['live-3']['stage'] == 'withdrawn_check_light'
+    assert proposal == dict(name='propose_gripper', arguments=dict(key='o', reason=proposal['arguments']['reason']))
+    errors = [json.loads((tmp_path/'4'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
+    assert all('press_retry_reopen_required' in e for e in errors)
+    _step(c, jpeg, 4, proposal, 0.155)
+    press_phase.set_gripper('open')
+
+    # Round 4: open again -> fresh localization, alignment stage, sequence cleared; closing starts a new attempt.
+    before = len(calls)
+    c.prepare_decision('fake', tmp_path/'5')
+    assert len(calls) == before+1 and 'live-4' in c.localizations and 'live-4' not in c.direct_press
+    assert press_phase.retry_step() is None and press_phase.describe()['completed_presses'] == 1
+    from pressb.agent_loop import press_retry
+    assert press_retry.attempts(c.turns) == ['live-2']
+
+
+def test_light_on_after_withdrawal_may_report_done():
+    press_phase.configure()
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    assert press_phase.note_press_status(0.0) == press_phase.WITHDRAW
+    with pytest.raises(ValueError, match='withdraw_required'):
+        press_phase.check_retry(dict(name='report_done', arguments={}))
+    press_phase.record_retry(dict(name='propose_move', arguments=dict(xyz_mm=[-10, 0, 0])))
+    press_phase.check_retry(dict(name='report_done', arguments={}))
+    press_phase.check_retry(dict(name='propose_move', arguments=dict(xyz_mm=[-15, 0, 0])))

@@ -64,7 +64,8 @@ def configure(**limits):
     if merged['live_min_m'] >= merged['range_max_m']:
         raise ValueError('invalid_press_live_bounds')
     _state = dict(limits=merged, gripper_state='open', z_b_m=None, frozen_from=None,
-                  consumed_m=0.0, live=None, freeze_x_m=None, measured={})
+                  consumed_m=0.0, live=None, freeze_x_m=None, measured={},
+                  retry_step=None, completed_presses=0)
     return describe()
 
 
@@ -115,8 +116,70 @@ def set_gripper(state):
         raise ValueError('press_gripper_state_must_be_closed_or_open')
     if state == 'open':
         # Reopening starts a new attempt: realign and measure a new range.
-        _state.update(z_b_m=None, frozen_from=None, consumed_m=0.0, live=None, freeze_x_m=None)
+        _state.update(z_b_m=None, frozen_from=None, consumed_m=0.0, live=None, freeze_x_m=None,
+                      retry_step=None)
     _state['gripper_state'] = state
+
+
+# After a completed closed press the next steps are fixed, whatever the light shows:
+#   withdraw  only propose_move xyz_mm = RETRY_WITHDRAW_MM (the end leaves the panel)
+#   reopen    report_done if the light is still on, otherwise open the gripper (o) and
+#             realign from fresh localization, then close and press again. No closed
+#             re-press, Y/Z shift or re-close in between; further -X withdrawal is allowed.
+# Opening clears the step. Program rule on recorded depth and commands only.
+RETRY_WITHDRAW_MM = (-10, 0, 0)
+WITHDRAW, REOPEN = 'withdraw', 'reopen'
+
+
+def retry_step():
+    return _state['retry_step'] if _state else None
+
+
+def note_press_status(remaining_m):
+    """Start the retry sequence once the closed press has reached its target."""
+    if (_state is None or _state['gripper_state'] != 'closed' or _state['z_b_m'] is None
+            or _state['retry_step'] is not None or remaining_m is None or remaining_m > 0.0005):
+        return retry_step()
+    _state['retry_step'] = WITHDRAW
+    _state['completed_presses'] += 1
+    return WITHDRAW
+
+
+def check_retry(proposal):
+    """Raise ValueError (repairable rejection) for an action outside the retry sequence."""
+    step = retry_step()
+    if step is None:
+        return
+    name, args = proposal.get('name'), proposal.get('arguments') or {}
+    if step == WITHDRAW:
+        if name == 'propose_move' and list(args.get('xyz_mm') or []) == list(RETRY_WITHDRAW_MM):
+            return
+        raise ValueError(
+            'press_retry_withdraw_required: the closed press reached its target. The next action must be '
+            f'exactly propose_move xyz_mm={list(RETRY_WITHDRAW_MM)} (withdraw 10 mm, no Y/Z), whether or '
+            'not the light looks on. Return that command now.')
+    if name in ('report_done', 'report_unable', 'request_observation', 'propose_head'):
+        return
+    if name == 'propose_gripper' and args.get('key') == 'o':
+        return
+    xyz = list(args.get('xyz_mm') or [])
+    if name == 'propose_move' and len(xyz) == 3 and xyz[0] < 0 and xyz[1] == 0 and xyz[2] == 0:
+        return
+    raise ValueError(
+        'press_retry_reopen_required: the hand has withdrawn 10 mm after a completed press. If the target '
+        'light is clearly on in the current HEAD image, report_done. Otherwise do NOT press, shift or '
+        'close again with the gripper closed: open the gripper now (propose_gripper key o); the program '
+        'then localizes the button again so you can realign, close and press.')
+
+
+def record_retry(proposal):
+    """Advance the sequence after a command was executed."""
+    if _state is None or _state['retry_step'] != WITHDRAW:
+        return retry_step()
+    if (proposal.get('name') == 'propose_move'
+            and list((proposal.get('arguments') or {}).get('xyz_mm') or []) == list(RETRY_WITHDRAW_MM)):
+        _state['retry_step'] = REOPEN
+    return retry_step()
 
 
 def _selection_px(observation, image_size):
@@ -297,7 +360,8 @@ def describe(observation_id=None):
                  z_b_m=_state['z_b_m'], frozen_from=_state['frozen_from'],
                  budget_m=_budget() if _state['z_b_m'] is not None else 0.0,
                  consumed_m=_state['consumed_m'], limits=copy.deepcopy(_state['limits']),
-                 tip_plane_m=TIP_PLANE_M, target_m=target_m())
+                 tip_plane_m=TIP_PLANE_M, target_m=target_m(), retry_step=_state['retry_step'],
+                 completed_presses=_state['completed_presses'])
     if observation_id is not None and _state['z_b_m'] is not None:
         current = evaluate(0.0, observation_id)
         value.update(remaining_m=current['remaining_m'], bound=current['bound'],

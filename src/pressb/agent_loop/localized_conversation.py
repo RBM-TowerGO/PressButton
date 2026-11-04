@@ -80,14 +80,11 @@ DIRECT_PRESS_INSTRUCTION = (
     'view. No separate button localization, wrist direction rule or coordinate offset is supplied now, and '
     'none is needed: estimate the relation between the closed gripper end and the target button yourself '
     'from the current HEAD and WRIST images together (left/right, above/below, on the rim, on the panel, '
-    'centered), plus live depth. Then act directly. Pressing: positive X within remaining_mm. If a press '
-    'missed (light not on), retry WITHOUT reopening: withdraw a little with negative X (about 10-20 mm, '
-    'so the end leaves the panel), shift Y/Z by the offset you estimated, then press again by live depth. '
-    'Directions: +Y moves the hand to robot LEFT, -Y to robot RIGHT, +Z up, -Z down. In the HEAD view the '
-    'robot looks forward at the panel, so image-left is usually robot left (+Y) and image-up is up (+Z); '
-    'confirm this against the visible effect of your previous Y/Z shift and correct it if the hand moved '
-    'the other way. Use small shifts (a few mm, roughly the button radius at most) and check the next image. '
-    'Reopen (o) and realign only if the button cannot be found in either view.')
+    'centered), plus live depth. Then act directly. Pressing: positive X within remaining_mm. Once a press '
+    'reaches its target the program fixes the next steps: withdraw exactly 10 mm ([-10, 0, 0]); then, if '
+    'the light is not on, open the gripper (o) instead of retrying closed. After opening the button is '
+    'localized again, so realign with the gripper open, let the range freeze, close and press again. '
+    'Directions: +Y moves the hand to robot LEFT, -Y to robot RIGHT, +Z up, -Z down.')
 
 
 def press_status(state):
@@ -117,6 +114,21 @@ def press_status(state):
         instruction = ('The open-gripper range is frozen. If the wrist view still shows the button on the aim '
                        'point, close the gripper now (gripper c), then press by distance. Do not move forward '
                        'while open.')
+    elif state.get('retry_step') == press_phase.WITHDRAW:
+        stage = 'press_reached_withdraw'
+        instruction = ('The closed press has reached its target (live depth at contact plus overpress, or the '
+                       'frozen range used up). Do not push further. The next action is fixed: withdraw exactly '
+                       f'10 mm with propose_move xyz_mm={list(press_phase.RETRY_WITHDRAW_MM)} (no Y/Z), whether or '
+                       'not the light looks on. Any other action is rejected.')
+    elif state.get('retry_step') == press_phase.REOPEN:
+        stage = 'withdrawn_check_light'
+        instruction = ('The hand has withdrawn 10 mm after a completed press. Judge the target light in the '
+                       'current HEAD image. If it is clearly on with the hand clear of the button, report_done '
+                       'citing this observation. If it is not on, the press missed: open the gripper now '
+                       '(propose_gripper key o). Do not press, shift Y/Z or close again with the gripper '
+                       'closed. After opening, the program localizes the button again; realign with the gripper '
+                       'open, let the range freeze, close and press again. A further negative-X withdrawal is '
+                       'allowed if the HEAD view needs more clearance.')
     elif remaining <= 0.0005:
         stage = 'press_reached'
         instruction = ('The live depth at the merged end has reached the press target (contact plus overpress) '
@@ -143,6 +155,7 @@ def press_status(state):
                 live_depth_mm=round(live*1000, 1) if live is not None else None,
                 target_depth_mm=round(target*1000, 1), bound=state.get('bound'),
                 tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1), close_band_mm=band,
+                retry_step=state.get('retry_step'), completed_presses=state.get('completed_presses'),
                 instruction=instruction, source='program_rule_on_recorded_depth')
 
 
@@ -291,6 +304,8 @@ class LocalizedConversation(Conversation):
             self.range_evidence[oid] = evidence
         atomic_json(directory/'range_evidence.json', self.range_evidence[oid])
         if oid not in self.press_status:
+            # A press that reached its target starts the fixed withdraw → reopen sequence.
+            press_phase.note_press_status(press_phase.describe(oid).get('remaining_m'))
             status = press_status(press_phase.describe(oid))
             status['this_observation_range'] = {k: self.range_evidence[oid].get(k)
                 for k in ('median_m', 'trusted', 'reasons', 'froze', 'role')}
@@ -477,6 +492,7 @@ class LocalizedConversation(Conversation):
         if fn['name'].startswith('propose_'):
             validate_command(dict(type=fn['name'].removeprefix('propose_'),
                                   **{k:v for k,v in args.items() if k != 'reason'}))
+        press_phase.check_retry(dict(name=fn['name'], arguments=args))
         if review and fn['name'] not in ('report_done', 'report_unable'):
             atomic_json(Path(directory)/'hypothesis_review'/'decision.json', dict(
                 **raw['reassessment'], source='model_not_human', status='validated_proposal_not_execution',
@@ -501,6 +517,7 @@ class LocalizedConversation(Conversation):
             reassess.validate_reassessment(json.loads(fn['arguments']).get('reassessment'), review)
         if proposal != dict(name=fn['name'], arguments=self.action_arguments(json.loads(fn['arguments']), fn['name'])):
             raise ValueError('accepted_action_mismatch')
+        press_phase.check_retry(proposal)
         require_forward_permission(proposal, {'observation_id': observation_id}, self.forward_guard_decision,
                                    policy=self.forward_guard_policy)
 
