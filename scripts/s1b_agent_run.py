@@ -229,7 +229,9 @@ def launch(args):
         try:
             update(phase='waiting_for_service')
             service_argv = [sys.executable, str(ROOT/'scripts/s1b_agent_service.py'), '--host', args.host,
-                '--port', str(args.robot_port), '--view-port', str(args.camera_port)]
+                '--port', str(args.robot_port), '--view-port', str(args.camera_port),
+                '--speed-mm-s', str(getattr(args, 'speed_mm_s', 20.0)),
+                '--head-speed-deg-s', str(getattr(args, 'head_speed_deg_s', 20.0))]
             if auto_confirm:
                 service_argv.append('--auto-confirm')
             service = spawn(service_argv, sys.stdin)
@@ -256,7 +258,8 @@ def launch(args):
             if getattr(args, 'fingertip_calibration', None):
                 agent_argv.extend(['--fingertip-calibration', str(Path(args.fingertip_calibration).expanduser().resolve()),
                                    '--fingertip-state', args.fingertip_state,
-                                   '--press-overpress-mm', str(getattr(args, 'press_overpress_mm', 5.0))])
+                                   '--press-overpress-mm', str(getattr(args, 'press_overpress_mm', 5.0)),
+                                   '--press-standoff-mm', str(getattr(args, 'press_standoff_mm', 10.0))])
             agent_argv.extend(['--model-provider', getattr(args, 'model_provider', 'thor')])
             for flag, value in (('--model-name', getattr(args, 'model_name', None)),
                                 ('--model-base', getattr(args, 'model_base', None)),
@@ -342,6 +345,10 @@ def parse_args(argv=None):
     parser.add_argument('--output', help='new session directory; default outputs/agent_web/<timestamp_id>')
     parser.add_argument('--robot-port', type=int, default=6210)
     parser.add_argument('--camera-port', type=int, default=8765)
+    parser.add_argument('--speed-mm-s', type=float, default=20.0,
+                        help='peak hand speed of each move in mm/s (min-jerk profile, average ~0.53x; default 20)')
+    parser.add_argument('--head-speed-deg-s', type=float, default=20.0,
+                        help='peak head speed in deg/s (default 20)')
     parser.add_argument('--web-port', type=int, default=8766)
     parser.add_argument('--thor-host', default='Thor')
     parser.add_argument('--thor-port', type=int, default=18000)
@@ -363,6 +370,8 @@ def parse_args(argv=None):
     parser.add_argument('--model-api-key-env', help='environment variable holding the API key')
     parser.add_argument('--press-overpress-mm', type=float, default=5.0,
                         help='closed-gripper press target is live wrist depth 150 mm minus this (default 5 mm)')
+    parser.add_argument('--press-standoff-mm', type=float, default=10.0,
+                        help='first closed forward stroke stops at live wrist depth 150 mm plus this, before the head-view alignment check (default 10 mm)')
     args = parser.parse_args(argv)
     if args.prompt is None:
         args.prompt = str(END_TO_END_PROMPT if args.decision_mode == 'end_to_end' else
@@ -380,6 +389,8 @@ def parse_args(argv=None):
         parser.error('--max-press-attempts must not be negative')
     if not 0 <= args.press_overpress_mm <= 15:
         parser.error('--press-overpress-mm must be between 0 and 15')
+    if not 0 <= args.press_standoff_mm <= 40:
+        parser.error('--press-standoff-mm must be between 0 and 40')
     return args
 
 

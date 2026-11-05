@@ -212,7 +212,8 @@ def run(args):
             else:
                 press_limits = press_phase.configure(
                     overpress_m=args.press_overpress_mm/1000.0,
-                    max_travel_m=args.press_max_travel_mm/1000.0)
+                    max_travel_m=args.press_max_travel_mm/1000.0,
+                    standoff_m=args.press_standoff_mm/1000.0)
                 press_phase.set_gripper(args.fingertip_state)
                 print('指端标定：对准与接触点固定为合拢末端像素 '
                       +str([round(v, 4) for v in tip_calibration['point_normalized']])
@@ -220,6 +221,8 @@ def run(args):
                 print('按压分阶段：张开时在瞄准像素读按钮深度 z_b 并冻结为行程上限；闭合后每轮用实时深度闭环，'
                       f'前推到读数 {150-args.press_overpress_mm:.0f} mm（150 mm 接触 + {args.press_overpress_mm:.0f} mm 过压），'
                       '且不超过冻结上限。', flush=True)
+                print(f'闭合后第一次前推只到读数 {150+args.press_standoff_mm:.0f} mm（接触前预留 '
+                      f'{args.press_standoff_mm:.0f} mm），停在面板前；随后以头部视角为主、结合腕部视角判断对准，Y/Z 微调，再最终按压。', flush=True)
         provider_name = getattr(args, 'model_provider', 'thor')
         provider = model_provider.configure(provider_name, model=getattr(args, 'model_name', None),
                                             base=args.model_base if provider_name != 'thor' else None,
@@ -346,7 +349,8 @@ def run(args):
                         state_now = 'closed' if proposal['arguments']['key'] == 'c' else 'open'
                         calibrated_tip.set_state(state_now)
                         # The press starts at the first executed close: from here every model
-                        # request thinks (low effort) until the run ends, even after reopening.
+                        # request thinks (low effort) until the run ends, even after reopening,
+                        # so the head-view alignment check after every first approach always thinks.
                         if state_now == 'closed' and model_provider.enable_thinking():
                             outcome['thinking_enabled_at_round'] = index+1
                             atomic_json(rd/'thinking.json', dict(enabled=True, round=index+1,
@@ -355,11 +359,24 @@ def run(args):
                         if press_phase.active():
                             reopened_after_press = state_now == 'open' and press_phase.retry_step() is not None
                             press_phase.set_gripper(state_now)
-                            print('夹爪状态：'+state_now+('；测距预算已冻结' if state_now == 'closed'
-                                  else '；按压未触发，已张开，重新定位对准（thinking 保持开启）'
+                            print('夹爪状态：'+state_now+('；测距预算已冻结。先做第一次前推，'
+                                  '之后在最终按压前进入对准检查（头部视角为主，结合腕部）' if state_now == 'closed'
+                                  else '；按压未触发，已张开，重新定位对准（thinking 保持开启，闭合并第一次前推后再做对准检查）'
                                   if reopened_after_press else '；重新开始测距'), flush=True)
                     if press_phase.active() and name == 'propose_move':
+                        # append_result has not run yet, so current_id is still the decision observation.
+                        head = getattr(conversation, 'head_checks', {}).get(conversation.current_id)
+                        checking_before = press_phase.head_alignment_required()
                         press_phase.record_move(proposal['arguments']['xyz_mm'])
+                        if not checking_before and press_phase.head_alignment_required():
+                            print('第一次前推完成（停在接触前预留距离处）：最终按压前进入对准检查（头部视角为主，结合腕部）'
+                                  '（thinking 低档），确认对准前只做 Y/Z 微调，可多轮。', flush=True)
+                        if head is not None:
+                            x = proposal['arguments']['xyz_mm'][0]
+                            print(f'对准判定：{head["verdict"]}（头部：{head["head_view"]}；腕部：{head["wrist_view"]}）→ '
+                                  + ('按压' if x > 0 else
+                                     f'Y/Z 微调第 {press_phase.describe()["head_shifts"]} 轮' if x == 0 else '后撤'),
+                                  flush=True)
                         if press_phase.record_retry(proposal) == press_phase.REOPEN:
                             print('已后撤 10 mm：灯亮则报告完成，未亮则张开夹爪重新对准后再按。', flush=True)
                     conversation.append_result(proposal, result, obs, (folder/'head.jpg').read_bytes(),
@@ -410,6 +427,7 @@ def parse_args(argv=None):
     p.add_argument('--fingertip-calibration',help='human-marked fingertip JSON (s1b-fingertip-point-v1); the merged-end closed pixel becomes the fixed alignment and contact point and the model locates only the button')
     p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start, recorded only so the program knows whether depth at the aim pixel still sees the button; it never changes the aim point')
     p.add_argument('--press-overpress-mm',type=float,default=5.0,help='push past the 150 mm contact reading by this much; live depth target is 150 minus this (default 5 mm)')
+    p.add_argument('--press-standoff-mm',type=float,default=10.0,help='the first closed forward stroke stops this far before the 150 mm contact reading, leaving room for head-view alignment before the final press (default 10 mm)')
     p.add_argument('--press-max-travel-mm',type=float,default=85.0,help='hard ceiling on the closed-gripper forward stroke (default 85 mm)')
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')
     p.add_argument('--demo-last-steps',type=int,help='optionally select last N completed actions through reviewed activation; default: full demonstration')
@@ -425,6 +443,7 @@ def parse_args(argv=None):
     if args.context_budget_tokens is not None and args.context_budget_tokens<=0:p.error('--context-budget-tokens must be positive')
     if args.max_rounds<=0:p.error('--max-rounds must be positive')
     if args.max_press_attempts<0:p.error('--max-press-attempts must not be negative')
+    if args.press_standoff_mm<0:p.error('--press-standoff-mm must not be negative')
     if args.demo_last_steps is not None and args.demo_last_steps<=0:p.error('--demo-last-steps must be positive')
     return args
 

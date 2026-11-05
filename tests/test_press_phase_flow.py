@@ -33,6 +33,12 @@ def _box_on_aim(half=.05):
     return [x-half, y-half, x+half, y+half]
 
 
+HEAD_OK = dict(verdict='aligned', head_view='Closed end is centered in front of the target button.',
+               wrist_view='Button ring visible evenly around the closed tips.')
+HEAD_OFF = dict(verdict='offset', head_view='Closed end sits right of and below the target button.',
+                wrist_view='Button ring visible only on the upper-left of the closed tips.')
+
+
 def _locations(oid, aligned=True):
     box = _box_on_aim() if aligned else [.05, .05, .15, .15]
     wrist = view(button_box=box, contact_visibility='unknown', contact_tip=None, arrow_box=None)
@@ -85,36 +91,42 @@ def test_align_freeze_close_press_withdraw(jpeg, monkeypatch, tmp_path):
     _step(c, jpeg, 1, proposal, 0.172)         # closed: aim pixel still reads the button
     press_phase.set_gripper('closed')
 
-    # Round 1: closed; live 172 mm -> 27 mm to the 145 mm target, under the 55 mm ceiling.
+    # Round 1: closed; first approach: live 172 mm -> 12 mm to the 160 mm standoff stop.
     body = c.prepare_decision('fake', tmp_path/'1')
     assert c.range_evidence['live-1']['role'] == 'live' and c.range_evidence['live-1']['trusted']
     status = c.press_status['live-1']
     assert status['stage'] == 'press' and status['bound'] == 'live'
-    assert status['remaining_mm'] == pytest.approx(27.0) and status['target_depth_mm'] == 145.0
+    assert status['head_alignment_required'] is False   # first approach is free
+    assert status['remaining_mm'] == pytest.approx(12.0) and status['target_depth_mm'] == 145.0
+    assert status['approach'] is True and status['approach_stop_depth_mm'] == 160.0
     assert press_phase.describe()['z_b_m'] == pytest.approx(0.200)
 
     # An overshoot is rejected (not clipped); a stroke within the live bound passes.
-    replies = iter([action(c, xyz=[30, 0, 0]), action(c, xyz=[20, 0, 0])])
+    replies = iter([action(c, xyz=[27, 0, 0]), action(c, xyz=[10, 0, 0])])
     monkeypatch.setattr(client, 'request', lambda *a, **k: next(replies))
     proposal = client.propose('fake', body, _obs(1, None), c.session, tmp_path/'1', conversation=c)
-    assert proposal['arguments']['xyz_mm'] == [20, 0, 0]
+    assert proposal['arguments']['xyz_mm'] == [10, 0, 0]
+    rejected = json.loads((tmp_path/'1'/'validation-0.json').read_text())['error']
+    assert 'approach_stops_at_160mm' in rejected   # the old target-based 27 mm reaches the panel
     assert c.forward_guard_decision['policy'] == overlap.PRESS_POLICY
     assert c.forward_guard_decision['basis']['live_from'] == 'live-1'
     # The same recheck RobotClient.execute runs immediately before HTTP.
     client.require_forward_permission(proposal, _obs(1, None), c.forward_guard_decision,
                                       policy='wrist_tip_overlap')
-    # Arm fell 2 mm short of the command: live depth reads 154 mm, not 152.
-    _step(c, jpeg, 2, proposal, 0.154)
+    # Arm fell 2 mm short of the command: live depth reads 164 mm, not 162.
+    _step(c, jpeg, 2, proposal, 0.164)
     press_phase.record_move(proposal['arguments']['xyz_mm'])   # agent records after sending
 
-    # Round 2: live 154 -> 9 mm left; the frozen ceiling (35 mm) does not bind.
+    # Round 2: approach done; live 164 -> 19 mm to the 145 mm target; frozen ceiling (45 mm) does not bind.
     body = c.prepare_decision('fake', tmp_path/'2')
-    assert c.press_status['live-2']['remaining_mm'] == pytest.approx(9.0)
-    assert press_phase.evaluate(10, 'live-2')['allowed'] is False
-    replies = iter([action(c, xyz=[10, 0, 0]), action(c, xyz=[9, 0, 0])])
+    assert c.press_status['live-2']['remaining_mm'] == pytest.approx(19.0)
+    assert c.press_status['live-2']['stage'] == 'head_align'   # check before the final press
+    assert press_phase.evaluate(20, 'live-2')['allowed'] is False
+    replies = iter([action(c, xyz=[20, 0, 0], head_alignment=HEAD_OK),
+                    action(c, xyz=[19, 0, 0], head_alignment=HEAD_OK)])
     monkeypatch.setattr(client, 'request', lambda *a, **k: next(replies))
     proposal = client.propose('fake', body, _obs(2, None), c.session, tmp_path/'2', conversation=c)
-    assert proposal['arguments']['xyz_mm'] == [9, 0, 0]
+    assert proposal['arguments']['xyz_mm'] == [19, 0, 0]
     _step(c, jpeg, 3, proposal, 0.145)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
 
@@ -178,13 +190,13 @@ def test_closed_gripper_press_decides_directly_from_images(jpeg, monkeypatch, tm
     move = next(t for t in body['tools'] if t['function']['name'] == 'propose_move')
     assert 'DIRECT PRESS STAGE' in move['function']['description']
     assert json.loads((tmp_path/'1/decision_context.json').read_text())['press_stage'] == 'direct_press'
-    # Live depth still bounds the stroke: 198 - 145 = 53 mm.
-    assert c.press_status['live-1']['remaining_mm'] == pytest.approx(53.0)
+    # First approach: live 198 mm down to the 160 mm standoff stop = 38 mm.
+    assert c.press_status['live-1']['remaining_mm'] == pytest.approx(38.0)
 
     # A press that stops short of the target is not complete: withdraw, shift and press stay free.
-    for n, xyz, z in ((2, [50, 0, 0], 0.148), (3, [-15, 0, 0], 0.163), (4, [0, -4, 3], 0.163),
-                      (5, [16, 0, 0], 0.147)):
-        replies = iter([action(c, xyz=xyz)])
+    for n, xyz, z in ((2, [38, 0, 0], 0.160), (3, [-15, 0, 0], 0.175), (4, [0, -4, 3], 0.175),
+                      (5, [25, 0, 0], 0.150)):
+        replies = iter([action(c, xyz=xyz, head_alignment=HEAD_OK if xyz[0] > 0 else HEAD_OFF)])
         monkeypatch.setattr(client, 'request', lambda *a, **k: next(replies))
         proposal = client.propose('fake', c.prepare_decision('fake', tmp_path/str(n)), _obs(n-1, z),
                                   c.session, tmp_path/str(n), conversation=c)
@@ -220,51 +232,165 @@ def _propose(c, monkeypatch, tmp_path, n, z_before, *replies):
 
 def test_missed_press_withdraws_10mm_then_reopens_and_realigns(jpeg, monkeypatch, tmp_path):
     c, calls = _closed_press_setup(jpeg, monkeypatch, tmp_path)
-    # Round 1: press the full 53 mm to the 145 mm target.
-    proposal = _propose(c, monkeypatch, tmp_path, 2, .198, action(c, xyz=[53, 0, 0]))
-    _step(c, jpeg, 2, proposal, 0.145)
+    # Round 1: approach the full 38 mm to the 160 mm standoff stop; not a completed press.
+    proposal = _propose(c, monkeypatch, tmp_path, 2, .198, action(c, xyz=[38, 0, 0]))
+    _step(c, jpeg, 2, proposal, 0.160)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    press_phase.record_retry(proposal)
+    assert press_phase.retry_step() is None
+
+    # Round 2: head check confirmed, final press 15 mm to the 145 mm target.
+    proposal = _propose(c, monkeypatch, tmp_path, 3, .160, action(c, xyz=[15, 0, 0], head_alignment=HEAD_OK))
+    assert c.press_status['live-2']['stage'] == 'head_align'
+    _step(c, jpeg, 3, proposal, 0.145)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
     press_phase.record_retry(proposal)
 
-    # Round 2: target reached. Anything except exactly [-10, 0, 0] is rejected and repaired.
-    proposal = _propose(c, monkeypatch, tmp_path, 3, .145,
+    # Round 3: target reached. Anything except exactly [-10, 0, 0] is rejected and repaired.
+    proposal = _propose(c, monkeypatch, tmp_path, 4, .145,
                         action(c, xyz=[-20, 0, 0]), action(c, xyz=[-10, 3, 0]),
                         action(c, 'propose_gripper', key='o'), action(c, xyz=[-10, 0, 0]))
-    assert c.press_status['live-2']['stage'] == 'press_reached_withdraw'
+    assert c.press_status['live-3']['stage'] == 'press_reached_withdraw'
     assert proposal['arguments']['xyz_mm'] == [-10, 0, 0]
-    errors = [json.loads((tmp_path/'3'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
+    errors = [json.loads((tmp_path/'4'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
     assert all('press_retry_withdraw_required' in e for e in errors)
-    _step(c, jpeg, 3, proposal, 0.155)
+    _step(c, jpeg, 4, proposal, 0.155)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
     assert press_phase.record_retry(proposal) == press_phase.REOPEN
 
-    # Round 3: withdrawn. Closed re-press, Y/Z shift or re-close is rejected; opening is accepted.
-    proposal = _propose(c, monkeypatch, tmp_path, 4, .155,
+    # Round 4: withdrawn. Closed re-press, Y/Z shift or re-close is rejected; opening is accepted.
+    proposal = _propose(c, monkeypatch, tmp_path, 5, .155,
                         action(c, xyz=[10, 0, 0]), action(c, xyz=[0, -4, 0]),
                         action(c, 'propose_gripper', key='c'), action(c, 'propose_gripper', key='o'))
-    assert c.press_status['live-3']['stage'] == 'withdrawn_check_light'
+    assert c.press_status['live-4']['stage'] == 'withdrawn_check_light'
     assert proposal == dict(name='propose_gripper', arguments=dict(key='o', reason=proposal['arguments']['reason']))
-    errors = [json.loads((tmp_path/'4'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
+    errors = [json.loads((tmp_path/'5'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
     assert all('press_retry_reopen_required' in e for e in errors)
-    _step(c, jpeg, 4, proposal, 0.155)
+    _step(c, jpeg, 5, proposal, 0.155)
     press_phase.set_gripper('open')
 
-    # Round 4: open again -> fresh localization, alignment stage, sequence cleared; closing starts a new attempt.
+    # Round 5: open again -> fresh localization, alignment stage, sequence cleared; closing starts a new attempt.
     before = len(calls)
-    c.prepare_decision('fake', tmp_path/'5')
-    assert len(calls) == before+1 and 'live-4' in c.localizations and 'live-4' not in c.direct_press
+    c.prepare_decision('fake', tmp_path/'6')
+    assert len(calls) == before+1 and 'live-5' in c.localizations and 'live-5' not in c.direct_press
     assert press_phase.retry_step() is None and press_phase.describe()['completed_presses'] == 1
     from pressb.agent_loop import press_retry
-    assert press_retry.attempts(c.turns) == ['live-2']
+    assert press_retry.attempts(c.turns) == ['live-3']
 
 
 def test_light_on_after_withdrawal_may_report_done():
     press_phase.configure()
     press_phase.set_gripper('closed')
     press_phase._state['z_b_m'] = .2
+    press_phase.record_move([20, 0, 0])     # approach done
     assert press_phase.note_press_status(0.0) == press_phase.WITHDRAW
     with pytest.raises(ValueError, match='withdraw_required'):
         press_phase.check_retry(dict(name='report_done', arguments={}))
     press_phase.record_retry(dict(name='propose_move', arguments=dict(xyz_mm=[-10, 0, 0])))
     press_phase.check_retry(dict(name='report_done', arguments={}))
     press_phase.check_retry(dict(name='propose_move', arguments=dict(xyz_mm=[-15, 0, 0])))
+
+
+def test_head_alignment_after_first_approach_with_multiple_yz_rounds(jpeg, monkeypatch, tmp_path):
+    c, _ = _closed_press_setup(jpeg, monkeypatch, tmp_path)
+    # Round 1: first approach needs no head verdict but stops at the 160 mm standoff:
+    # 45 mm (it would reach the panel) is rejected, 38 mm passes.
+    proposal = _propose(c, monkeypatch, tmp_path, 2, .198, action(c, xyz=[45, 0, 0]), action(c, xyz=[38, 0, 0]))
+    assert c.press_status['live-1']['stage'] == 'press'
+    assert 'approach_stops_at_160mm' in json.loads((tmp_path/'2'/'validation-0.json').read_text())['error']
+    assert proposal['arguments']['xyz_mm'] == [38, 0, 0] and 'live-1' not in c.head_checks
+    _step(c, jpeg, 2, proposal, .160)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    assert press_phase.head_alignment_required()
+
+    # Round 2: standoff reached, 15 mm left -> head_align. head_alignment is required; pushing needs aligned.
+    proposal = _propose(c, monkeypatch, tmp_path, 3, .160,
+                        action(c, xyz=[15, 0, 0]),                              # no verdict
+                        action(c, xyz=[15, 0, 0], head_alignment=HEAD_OFF),     # final press while offset
+                        action(c, xyz=[15, 0, 2], head_alignment=HEAD_OK),      # final press with Y/Z
+                        action(c, xyz=[0, -3, 2], head_alignment=HEAD_OFF))     # fine-tune: accepted
+    status = c.press_status['live-2']
+    assert status['stage'] == 'head_align' and status['remaining_mm'] == pytest.approx(15.0)
+    move = next(t for t in c.body()['tools'] if t['function']['name'] == 'propose_move')['function']
+    assert 'head_alignment' in move['parameters']['required']
+    errors = [json.loads((tmp_path/'3'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
+    assert 'head_alignment_required' in errors[0]
+    assert 'head_alignment_not_confirmed' in errors[1]
+    assert 'head_aligned_press_must_be_pure_x' in errors[2]
+    assert proposal['arguments']['xyz_mm'] == [0, -3, 2] and 'head_alignment' not in proposal['arguments']
+    _step(c, jpeg, 3, proposal, .160)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    assert c.turns[-1]['ledger']['head_alignment']['verdict'] == 'offset'
+
+    # Round 3: still unclear -> another Y/Z round.
+    proposal = _propose(c, monkeypatch, tmp_path, 4, .160,
+                        action(c, xyz=[0, -2, 0], head_alignment=dict(verdict='unclear', head_view='Partly hidden.', wrist_view='Button hidden.')))
+    _step(c, jpeg, 4, proposal, .160)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    assert press_phase.describe()['head_shifts'] == 2
+
+    # Round 4: aligned -> pure positive X final press within the live limit is accepted.
+    proposal = _propose(c, monkeypatch, tmp_path, 5, .160, action(c, xyz=[15, 0, 0], head_alignment=HEAD_OK))
+    assert c.press_status['live-4']['head_shifts'] == 2 and c.forward_guard_decision['allowed']
+    assert c.head_checks['live-4']['verdict'] == 'aligned'
+    _step(c, jpeg, 5, proposal, .145)
+    press_phase.record_move(proposal['arguments']['xyz_mm'])
+    c.prepare_decision('fake', tmp_path/'6')
+    assert c.press_status['live-5']['stage'] == 'press_reached_withdraw'
+
+
+def test_head_align_advises_reopen_after_many_rounds():
+    press_phase.configure()
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([0, 2, 0])      # before the first approach: not a head round
+    press_phase.record_move([40, 0, 0])
+    for _ in range(press_phase.HEAD_ALIGN_ROUNDS):
+        press_phase.record_move([0, 2, 0])
+    assert press_phase.describe()['head_shifts'] == press_phase.HEAD_ALIGN_ROUNDS
+    from pressb.agent_loop.localized_conversation import press_status
+    status = press_status(press_phase.describe())
+    assert status['stage'] == 'head_align' and 'open the gripper (o)' in status['instruction']
+
+
+def test_retry_after_reopen_repeats_approach_then_head_alignment():
+    press_phase.configure()
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    assert press_phase.check_head_alignment('propose_move', [40, 0, 0], None) is None
+    press_phase.record_move([40, 0, 0])
+    press_phase.record_move([0, 2, 0])
+    assert press_phase.note_press_status(0.0) == press_phase.WITHDRAW
+    # The fixed withdraw/reopen steps need no head verdict.
+    assert not press_phase.head_alignment_required()
+    assert press_phase.check_head_alignment('propose_move', [-10, 0, 0], None) is None
+    press_phase.record_retry(dict(name='propose_move', arguments=dict(xyz_mm=[-10, 0, 0])))
+    press_phase.set_gripper('open')
+    # Realign open, freeze again, close: first approach is free again, then the head check.
+    press_phase._state['z_b_m'] = .19
+    press_phase.set_gripper('closed')
+    state = press_phase.describe()
+    assert not state['head_alignment_required'] and state['head_shifts'] == 0
+    from pressb.agent_loop.localized_conversation import press_status
+    assert press_status(state)['stage'] == 'press'
+    assert press_phase.check_head_alignment('propose_move', [35, 0, 0], None) is None
+    press_phase.record_move([35, 0, 0])
+    assert press_status(press_phase.describe())['stage'] == 'head_align'
+    with pytest.raises(ValueError, match='head_alignment_not_confirmed'):
+        press_phase.check_head_alignment('propose_move', [5, 0, 0], HEAD_OFF)
+
+
+def test_alignment_verdict_needs_both_head_and_wrist_descriptions():
+    press_phase.configure()
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([30, 0, 0])
+    with pytest.raises(ValueError, match='head_alignment_required'):
+        press_phase.check_head_alignment('propose_move', [5, 0, 0],
+                                         dict(verdict='aligned', head_view='Centered.'))
+    with pytest.raises(ValueError, match='head_alignment_required'):
+        press_phase.check_head_alignment('propose_move', [5, 0, 0],
+                                         dict(verdict='aligned', head_view='Centered.', wrist_view=' '))
+    assert press_phase.check_head_alignment('propose_move', [5, 0, 0], HEAD_OK) == HEAD_OK
+    from pressb.agent_loop.localized_conversation import HEAD_ALIGNMENT_SCHEMA
+    assert HEAD_ALIGNMENT_SCHEMA['required'] == ['verdict', 'head_view', 'wrist_view']

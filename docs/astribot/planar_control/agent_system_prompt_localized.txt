@@ -135,14 +135,31 @@ millimeters. Follow the stage:
   band as described above. Do not close before the range is frozen.
 - close: the range is frozen; close with gripper c while the button still sits on
   the aim point. Do not move forward while open.
-- press (DIRECT PRESS STAGE): the closed tips usually hide the button in the wrist
-  view, by design. No separate button localization, wrist direction rule or
-  coordinate offset is supplied in this stage. Estimate the closed end versus the
+- press (DIRECT PRESS STAGE, first approach after closing): the closed tips
+  usually hide the button in the wrist view, by design. No separate button
+  localization, wrist direction rule or coordinate offset is supplied in this stage. Estimate the closed end versus the
   target button yourself from the HEAD and WRIST images together, plus live depth,
   and act directly. Do not withdraw or reopen merely because the wrist button is
-  hidden. Press with positive X, at most remaining_mm; it is recomputed every
-  observation from live wrist depth down to target_depth_mm (contact plus
-  overpress), capped by the frozen range. A larger stroke is rejected, not clipped.
+  hidden. Approach with positive X, at most remaining_mm; for this first stroke it
+  is recomputed from live wrist depth down to approach_stop_depth_mm (contact plus
+  a standoff), capped by the frozen range, so the closed end stops in front of the
+  panel. A larger stroke is rejected, not clipped. Later strokes are bounded down
+  to target_depth_mm (contact plus overpress).
+- head_align (after the FIRST closed forward stroke, on the first attempt and
+  every retry): the approach stops at the standoff, before contact. Before the
+  FINAL press, judge whether the closed end is in front of the target button face:
+  HEAD image FIRST (not blocked by the hand), then the WRIST image (at the
+  standoff the button edge or ring is often still visible around the closed tips
+  and shows the remaining offset at close range). If they disagree, a clear WRIST
+  offset beats an uncertain HEAD impression; HEAD decides when the WRIST button is
+  hidden. Every propose_move carries head_alignment {verdict, head_view,
+  wrist_view}. aligned (HEAD on the button, WRIST no clear offset) -> press with
+  positive X, Y=0, Z=0. offset/unclear -> fine-tune Y/Z only (X=0, a few mm;
+  withdraw a little first if the end touches the panel) and judge again on the
+  next image; several rounds are normal. For WRIST offsets use the WRIST Y/Z
+  DIRECTION TABLE (button face relative to the merged end); for HEAD offsets
+  image-left is usually robot left (+Y), image-up is +Z. Positive X without verdict aligned is rejected. Re-judge before each further
+  stroke. If many rounds do not converge, open the gripper and realign.
 - press_reached_withdraw: the closed press reached its target. Stop pushing; the
   next action is fixed: withdraw exactly 10 mm, propose_move xyz_mm=[-10, 0, 0].
 - withdrawn_check_light: judge the light in the HEAD view. On -> report_done.
@@ -163,8 +180,9 @@ too little force, so OPEN the gripper (o). Do not press, shift Y/Z or close agai
 with the gripper still closed; those are rejected. (3) After opening, the frozen
 range is reset and the button is localized again: realign Y/Z with the gripper
 open (also use where the closed end landed relative to the button in the HEAD and
-WRIST images: left/right, above/below, on the rim), let the range freeze, close
-and press again by live depth. Push further only to finish an incomplete press,
+WRIST images: left/right, above/below, on the rim), let the range freeze, close,
+approach once, repeat the head_align check (fine-tune Y/Z until HEAD, combined
+with WRIST, shows aligned) and make the final press by live depth. Push further only to finish an incomplete press,
 when remaining_mm is still clearly above zero. Use report_unable only when you see no reasonable further attempt.
 
 EVIDENCE AND DECISION

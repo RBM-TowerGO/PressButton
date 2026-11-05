@@ -29,6 +29,11 @@ def _open_at(z, aligned=True, **kw):
     return phase.observe(_obs(z, **kw), calibrated_tip.aim_pixel(), calibrated_tip.image_size(), aligned=aligned)
 
 
+def _approach_done():
+    """Skip the standoff-limited first approach; these tests cover the final-press bounds."""
+    phase._state['pressed_since_close'] = True
+
+
 def _again(z, aligned=True, **kw):
     return phase.observe(_obs(z, **kw), calibrated_tip.aim_pixel(), calibrated_tip.image_size(), aligned=aligned)
 
@@ -95,6 +100,7 @@ def test_forward_requires_closed_gripper():
 def test_stroke_is_bounded_by_frozen_range_and_hard_ceiling():
     _open_at(0.200)
     phase.set_gripper('closed')
+    _approach_done()
     assert phase.evaluate(55)['allowed']
     too_far = phase.evaluate(56)
     assert not too_far['allowed'] and 'stroke_exceeds_press_limit' in too_far['reasons'][0]
@@ -303,6 +309,7 @@ def test_untrusted_live_depth_falls_back_to_the_frozen_bound(kwargs, reason):
 
 def test_live_reading_never_changes_the_frozen_range():
     _closed_at(0.200)
+    _approach_done()
     _again(0.230, oid='o2', aligned=False)
     assert phase.describe()['z_b_m'] == pytest.approx(0.200)
     assert phase.describe('o2')['remaining_m'] == pytest.approx(0.055)
@@ -318,6 +325,7 @@ def test_overpress_is_configurable_and_bounded():
 
 def test_press_gate_binds_live_depth_to_its_observation():
     _closed_at(0.200)
+    _approach_done()
     _again(0.150, oid='o2', aligned=False)
     decision = guard.press_gate('o2', 5)
     assert decision['allowed'] and decision['basis']['bound'] == 'live'
@@ -328,3 +336,41 @@ def test_press_gate_binds_live_depth_to_its_observation():
     with pytest.raises(ValueError):
         guard.validate_permission(dict(name='propose_move', arguments=dict(xyz_mm=xyz)),
                                   dict(observation_id='o3'), decision)
+
+
+def test_first_closed_approach_stops_at_the_standoff():
+    """2026-11-05: the first stroke reached the panel; it must stop at contact + standoff."""
+    _open_at(0.211)
+    phase.set_gripper('closed')
+    _again(0.211, oid='o2', aligned=False)
+    # Live 211 mm, approach stop 150 + 10 = 160 mm -> 51 mm, not the 66 mm to the 145 mm target.
+    value = phase.evaluate(52, 'o2')
+    assert value['approach'] and value['stop_m'] == pytest.approx(0.160)
+    assert value['remaining_m'] == pytest.approx(0.051) and not value['allowed']
+    assert 'approach_stops_at_160mm' in value['reasons'][0]
+    assert phase.evaluate(51, 'o2')['allowed']
+    # Frozen ceiling also ends at the stop: 211 - 160 = 51 mm without live depth.
+    assert phase.evaluate(0, 'none')['remaining_m'] == pytest.approx(0.051)
+    # Reaching the stop is not a completed press.
+    assert phase.note_press_status(0.0) is None
+    phase.record_move([51, 0, 0])
+    assert not phase.in_approach() and phase.head_alignment_required()
+    _again(0.160, oid='o3', aligned=False)
+    # Final press: 160 - 145 = 15 mm.
+    assert phase.evaluate(0, 'o3')['remaining_m'] == pytest.approx(0.015)
+
+
+def test_closing_inside_the_standoff_starts_the_head_check_at_once():
+    _open_at(0.158)
+    phase.set_gripper('closed')
+    _again(0.157, oid='o2', aligned=False)
+    assert phase.in_approach() and phase.evaluate(0, 'o2')['remaining_m'] == 0
+    assert phase.note_approach('o2') and phase.head_alignment_required()
+    assert phase.evaluate(0, 'o2')['remaining_m'] == pytest.approx(0.012)
+
+
+def test_standoff_is_configurable_and_bounded():
+    phase.configure(standoff_m=0.005)
+    assert phase.approach_stop_m() == pytest.approx(0.155)
+    with pytest.raises(ValueError, match='standoff'):
+        phase.configure(standoff_m=0.080)

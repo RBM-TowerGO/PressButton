@@ -39,7 +39,10 @@ ALIGN, PRESS, BLOCKED = 'align', 'press', 'blocked'
 # Measured 2026-11-04: with the gripper closed and the button pressed, the right
 # wrist camera reads 150 mm at the aim pixel. This is the calibrated contact plane.
 TIP_PLANE_M = 0.150
-DEFAULT_LIMITS = dict(overpress_m=0.005, max_travel_m=0.085,
+# standoff_m: the first closed forward stroke (the approach) stops this far before the
+# contact plane, i.e. at a live reading of TIP_PLANE_M + standoff_m, so the head-view
+# alignment check and its Y/Z fine-tuning happen before anything touches the panel.
+DEFAULT_LIMITS = dict(overpress_m=0.005, max_travel_m=0.085, standoff_m=0.010,
                       range_min_m=TIP_PLANE_M + 0.003, range_max_m=TIP_PLANE_M + 0.080,
                       live_min_m=TIP_PLANE_M - 0.020,
                       min_valid_pixels=5, aim_tolerance_px=8)
@@ -63,9 +66,11 @@ def configure(**limits):
         raise ValueError('invalid_press_range_bounds')
     if merged['live_min_m'] >= merged['range_max_m']:
         raise ValueError('invalid_press_live_bounds')
+    if TIP_PLANE_M + merged['standoff_m'] >= merged['range_max_m']:
+        raise ValueError('invalid_press_standoff')
     _state = dict(limits=merged, gripper_state='open', z_b_m=None, frozen_from=None,
                   consumed_m=0.0, live=None, freeze_x_m=None, measured={},
-                  retry_step=None, completed_presses=0)
+                  retry_step=None, completed_presses=0, head_shifts=0, pressed_since_close=False)
     return describe()
 
 
@@ -118,7 +123,89 @@ def set_gripper(state):
         # Reopening starts a new attempt: realign and measure a new range.
         _state.update(z_b_m=None, frozen_from=None, consumed_m=0.0, live=None, freeze_x_m=None,
                       retry_step=None)
+    # Every close (first attempt or a retry after reopening) starts a new approach: the
+    # first forward stroke is free again and the head-view check follows it.
+    _state.update(head_shifts=0, pressed_since_close=False)
     _state['gripper_state'] = state
+
+
+# Closed press in two parts. The FIRST forward stroke after closing is the approach; its
+# limit ends at approach_stop_m() (contact plane + standoff), so it cannot reach the panel.
+# From then until the press reaches its target, the model judges whether the closed end
+# sits on the button, HEAD view first, combined with the WRIST view (the HEAD camera is not
+# blocked by the hand; the wrist view adds close-range detail where the button is still
+# visible around the closed tips). ``pressed_since_close`` marks the approach done:
+#   aligned        positive X allowed (Y/Z must be 0), still within the live-depth limit
+#   offset/unclear only Y/Z fine-tuning (X <= 0); judge again on the next image
+# Several Y/Z rounds are expected. HEAD_ALIGN_ROUNDS is advisory: beyond it the model is
+# told to reopen and realign with localization instead of shifting closed indefinitely.
+# This records the model's declared verdict only; it never inspects images.
+HEAD_VERDICTS = ('aligned', 'offset', 'unclear')
+HEAD_ALIGN_ROUNDS = 6
+
+
+def approach_stop_m():
+    """Live depth reading at which the first closed approach stops: contact plane plus standoff."""
+    limits = _state['limits'] if _state else DEFAULT_LIMITS
+    return TIP_PLANE_M + limits['standoff_m']
+
+
+def in_approach():
+    """Closed over a frozen range and the approach stroke not yet made."""
+    return (_state is not None and _state['gripper_state'] == 'closed' and _state['z_b_m'] is not None
+            and _state['retry_step'] is None and not _state['pressed_since_close'])
+
+
+def note_approach(observation_id):
+    """Finish the approach without a stroke when the hand already sits within the standoff.
+
+    Closing close to the panel leaves no approach room; the head-view check then starts
+    at once instead of blocking every forward stroke. Returns True when it ended the approach.
+    """
+    if not in_approach():
+        return False
+    if evaluate(0.0, observation_id)['remaining_m'] > 0.0005:
+        return False
+    _state['pressed_since_close'] = True
+    return True
+
+
+def head_alignment_required():
+    """After the first closed forward stroke, outside the fixed withdraw → reopen sequence."""
+    return (_state is not None and _state['gripper_state'] == 'closed' and _state['z_b_m'] is not None
+            and _state['retry_step'] is None and _state['pressed_since_close'])
+
+
+def check_head_alignment(name, xyz_mm, head_alignment):
+    """Raise ValueError (repairable) unless a closed-press move carries a valid head verdict.
+
+    Returns the normalized verdict, or None when no check applies.
+    """
+    if name != 'propose_move' or not head_alignment_required():
+        return None
+    check = head_alignment if isinstance(head_alignment, dict) else {}
+    views = {k: check.get(k) for k in ('head_view', 'wrist_view')}
+    if (check.get('verdict') not in HEAD_VERDICTS
+            or any(not isinstance(v, str) or not v.strip() for v in views.values())):
+        raise ValueError(
+            'head_alignment_required: the first closed approach is done; before the final press every '
+            'propose_move needs head_alignment={verdict: aligned|offset|unclear, head_view: what the CURRENT '
+            'HEAD image shows of the closed end versus the target button, wrist_view: what the CURRENT WRIST '
+            'image adds (button edge visible around the closed tips, or hidden)}. Judge HEAD first, then '
+            'combine it with the WRIST view, and return the command.')
+    xyz = list(xyz_mm or [])
+    if len(xyz) == 3 and xyz[0] > 0:
+        if check['verdict'] != 'aligned':
+            raise ValueError(
+                'head_alignment_not_confirmed: positive X needs head_alignment.verdict=aligned for the CURRENT '
+                'HEAD and WRIST images (HEAD first; the WRIST view must not show a clear offset). While the '
+                'closed end is off the button or unclear, fine-tune with Y/Z only (X=0) and judge again on '
+                'the next image, or adjust the head view.')
+        if xyz[1] != 0 or xyz[2] != 0:
+            raise ValueError(
+                'head_aligned_press_must_be_pure_x: the confirmed press is positive X with Y=0 and Z=0. '
+                'Make Y/Z corrections as a separate X=0 move first and confirm alignment on the next image.')
+    return dict(verdict=check['verdict'], **{k: v.strip() for k, v in views.items()})
 
 
 # After a completed closed press the next steps are fixed, whatever the light shows:
@@ -138,7 +225,9 @@ def retry_step():
 def note_press_status(remaining_m):
     """Start the retry sequence once the closed press has reached its target."""
     if (_state is None or _state['gripper_state'] != 'closed' or _state['z_b_m'] is None
-            or _state['retry_step'] is not None or remaining_m is None or remaining_m > 0.0005):
+            or _state['retry_step'] is not None or remaining_m is None or remaining_m > 0.0005
+            or in_approach()):
+        # An approach limit reaching zero means "at the standoff", not "press complete".
         return retry_step()
     _state['retry_step'] = WITHDRAW
     _state['completed_presses'] += 1
@@ -271,9 +360,10 @@ def phase():
     return PRESS
 
 
-def _budget():
+def _budget(stop_m=None):
+    """Frozen stroke from the freeze point down to ``stop_m`` (default: the press target)."""
     limits = _state['limits']
-    raw = _state['z_b_m'] - target_m()
+    raw = _state['z_b_m'] - (target_m() if stop_m is None else stop_m)
     return max(0.0, min(raw, limits['max_travel_m']))
 
 
@@ -304,10 +394,14 @@ def evaluate(x_mm=0.0, observation_id=None):
     if state['z_b_m'] is None:
         value['reasons'].append('no_trusted_open_gripper_range')
         return value
-    budget = _budget()
+    # During the first closed approach every bound ends at the standoff, not the target.
+    approach = in_approach()
+    stop = approach_stop_m() if approach else target_m()
+    budget = _budget(stop)
     consumed, consumed_source = _consumed(observation_id)
     value.update(consumed_m=consumed, consumed_source=consumed_source,
-                 commanded_consumed_m=state['consumed_m'])
+                 commanded_consumed_m=state['consumed_m'], approach=approach, stop_m=stop,
+                 approach_stop_m=approach_stop_m())
     frozen_remaining = max(0.0, budget - consumed)
     remaining, bound = frozen_remaining, 'frozen_only_no_live_depth'
     live = _live_for(observation_id)
@@ -315,7 +409,7 @@ def evaluate(x_mm=0.0, observation_id=None):
         value.update(live_from=live['observation_id'], live_m=live['median_m'],
                      live_reasons=list(live['reasons']))
         if live['trusted']:
-            live_remaining = max(0.0, live['median_m'] - target_m())
+            live_remaining = max(0.0, live['median_m'] - stop)
             value['live_remaining_m'] = live_remaining
             remaining = min(frozen_remaining, live_remaining)
             bound = 'live' if live_remaining <= frozen_remaining else 'frozen_ceiling'
@@ -329,7 +423,8 @@ def evaluate(x_mm=0.0, observation_id=None):
     if requested <= 0:
         value['reasons'].append('not_a_forward_request')
     if requested > remaining + 1e-9:
-        value['reasons'].append('stroke_exceeds_press_limit:%.4fm>%.4fm(%s)' % (requested, remaining, bound))
+        value['reasons'].append('stroke_exceeds_press_limit:%.4fm>%.4fm(%s)' % (requested, remaining, bound)
+                                + (':approach_stops_at_%.0fmm' % (stop*1000) if approach else ''))
     value['allowed'] = not value['reasons']
     return value
 
@@ -345,11 +440,15 @@ def record_move(xyz_mm):
     if _state is None or _state['gripper_state'] != 'closed':
         return 0.0 if _state is None else _state['consumed_m']
     try:
-        x = float(list(xyz_mm)[0])
-    except (TypeError, ValueError, IndexError):
+        x, y, z = (float(v) for v in list(xyz_mm)[:3])
+    except (TypeError, ValueError):
         return _state['consumed_m']
     if math.isfinite(x):
         _state['consumed_m'] = _state['consumed_m'] + x/1000.0
+        if (y or z) and x <= 0 and _state['retry_step'] is None and _state['pressed_since_close']:
+            _state['head_shifts'] += 1    # a fine-tuning round of the head-view check
+        if x > 0:
+            _state['pressed_since_close'] = True
     return _state['consumed_m']
 
 
@@ -361,7 +460,10 @@ def describe(observation_id=None):
                  budget_m=_budget() if _state['z_b_m'] is not None else 0.0,
                  consumed_m=_state['consumed_m'], limits=copy.deepcopy(_state['limits']),
                  tip_plane_m=TIP_PLANE_M, target_m=target_m(), retry_step=_state['retry_step'],
-                 completed_presses=_state['completed_presses'])
+                 completed_presses=_state['completed_presses'], head_shifts=_state['head_shifts'],
+                 pressed_since_close=_state['pressed_since_close'],
+                 head_alignment_required=head_alignment_required(), approach=in_approach(),
+                 approach_stop_m=approach_stop_m())
     if observation_id is not None and _state['z_b_m'] is not None:
         current = evaluate(0.0, observation_id)
         value.update(remaining_m=current['remaining_m'], bound=current['bound'],

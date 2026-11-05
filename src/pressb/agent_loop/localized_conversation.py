@@ -68,9 +68,11 @@ for the indicated nonzero corrections. An all-zero move does not realign or
 request a new image; use request_observation when a fresh image is needed.
 Report done only after seeing this run's button light up and subsequent withdrawal,
 with the light STILL on in a HEAD image taken after the withdrawal; describe the
-visual evidence. A press that reaches the contact depth without the light is a
-miss: estimate the offset from the HEAD and WRIST images, withdraw a little, shift Y/Z
-with the gripper still closed and press again; do not keep pushing in place.
+visual evidence. After the first closed approach (it stops at a standoff), confirm
+alignment HEAD view first, combined with the WRIST view (head_alignment), and
+fine-tune Y/Z over several rounds before the final press.
+A press that reaches the contact depth without the light is a miss: withdraw
+10 mm, open the gripper, realign open, close, check HEAD and WRIST again and press.
 Completion remains a model judgment, not human confirmation.
 '''
 
@@ -80,11 +82,39 @@ DIRECT_PRESS_INSTRUCTION = (
     'view. No separate button localization, wrist direction rule or coordinate offset is supplied now, and '
     'none is needed: estimate the relation between the closed gripper end and the target button yourself '
     'from the current HEAD and WRIST images together (left/right, above/below, on the rim, on the panel, '
-    'centered), plus live depth. Then act directly. Pressing: positive X within remaining_mm. Once a press '
+    'centered), plus live depth. The first forward stroke after closing is the approach; its limit ends '
+    'at approach_stop_depth_mm (contact plus a standoff), so it stops in front of the panel. '
+    'HEAD ALIGNMENT BEFORE THE FINAL PRESS: after that approach, every propose_move '
+    'carries head_alignment = {verdict, head_view, wrist_view}. Judge the HEAD image FIRST (it is not '
+    'blocked by the hand), then combine it with the WRIST image: at the standoff the button edge or ring '
+    'is often still visible around the closed tips, which shows the remaining offset at close range. If '
+    'the two views disagree, trust a clear WRIST offset over an uncertain HEAD impression, and trust HEAD '
+    'when the WRIST button is hidden. verdict=aligned only when HEAD shows the closed end clearly in front '
+    'of the target button face and WRIST shows no clear offset; then press with positive X (Y=0, Z=0) within '
+    'remaining_mm. verdict=offset or unclear: fine-tune with Y/Z only (X=0, a few mm, about the button radius '
+    'at most) and judge again on the next image; several such rounds are normal. Re-judge before each further '
+    'stroke. Use the visible effect of your previous Y/Z shift to confirm the direction. Once a press '
     'reaches its target the program fixes the next steps: withdraw exactly 10 mm ([-10, 0, 0]); then, if '
     'the light is not on, open the gripper (o) instead of retrying closed. After opening the button is '
-    'localized again, so realign with the gripper open, let the range freeze, close and press again. '
-    'Directions: +Y moves the hand to robot LEFT, -Y to robot RIGHT, +Z up, -Z down.')
+    'localized again, so realign with the gripper open, let the range freeze, close, approach once, check '
+    'alignment (HEAD first, with WRIST) again and make the final press. '
+    'Directions: +Y moves the hand to robot LEFT, -Y to robot RIGHT, +Z up, -Z down. In the HEAD view the '
+    'robot looks forward at the panel, so image-left is usually robot left (+Y) and image-up is up (+Z).')
+
+HEAD_ALIGNMENT_SCHEMA = dict(
+    type='object', additionalProperties=False, required=['verdict', 'head_view', 'wrist_view'],
+    properties=dict(
+        verdict=dict(type='string', enum=list(press_phase.HEAD_VERDICTS),
+                     description='Combined judgment, HEAD view first, then the WRIST view. aligned: the HEAD '
+                                 'image shows the closed end clearly in front of the target button face and the '
+                                 'WRIST image does not show a clear offset; press now. offset: visibly off in '
+                                 'either view (say which way). unclear: cannot tell. Only aligned allows positive X.'),
+        head_view=dict(type='string', description='Primary evidence. What the CURRENT HEAD image shows: where the '
+                                                  'closed end sits relative to the target button (left/right, '
+                                                  'above/below, on the rim, centered).'),
+        wrist_view=dict(type='string', description='Supporting evidence. What the CURRENT WRIST image shows around '
+                                                   'the closed tips: which part of the button edge or ring is '
+                                                   'still visible and on which side, or that it is hidden.')))
 
 
 def press_status(state):
@@ -138,16 +168,37 @@ def press_status(state):
                        'again from here. Estimate from the HEAD and WRIST images where the closed end sits '
                        'relative to the button, withdraw about 10-20 mm, shift Y/Z by that offset with the '
                        'gripper still closed, then press again by live depth.')
-    else:
+    elif not state.get('pressed_since_close'):
         stage = 'press'
-        instruction = ('The gripper is closed. Press with positive X of at most '
-                       f'{remaining*1000:.1f} mm, keep Y/Z at 0. This limit comes from the live wrist depth at '
-                       f'the merged end down to {target*1000:.0f} mm, capped by the frozen range. Use the HEAD '
-                       'view to check the closed end is moving onto the target button and to confirm the light, '
-                       'then withdraw with negative X. If an executed press already brought the live depth to '
-                       f'within a few mm of {target*1000:.0f} mm and the light is not on, treat it as a miss: '
-                       'withdraw about 10-20 mm, shift Y/Z by the offset you see in the HEAD and WRIST images, '
-                       'and press again with the gripper still closed instead of pushing.')
+        stop = state.get('approach_stop_m') or 0.0
+        instruction = ('The gripper is closed. First approach: move forward with positive X of at most '
+                       f'{remaining*1000:.1f} mm, keep Y/Z at 0. This approach limit ends at a live wrist depth '
+                       f'of {stop*1000:.0f} mm (contact {(state.get("tip_plane_m") or 0)*1000:.0f} mm plus a '
+                       'standoff), capped by the frozen range, so the closed end stops in front of the panel '
+                       'without touching it. A larger stroke is rejected. After this one stroke the program '
+                       'asks for an alignment check (head_align: HEAD view first, with WRIST) and Y/Z '
+                       'fine-tuning before the '
+                       f'final press to {target*1000:.0f} mm.')
+    else:
+        stage = 'head_align'
+        shifts = state.get('head_shifts') or 0
+        instruction = ('The first closed approach is done and about '
+                       f'{remaining*1000:.1f} mm remain to the press target ({target*1000:.0f} mm live depth). '
+                       'Before the FINAL press, judge whether the closed end is in front of the target button '
+                       'face: CURRENT HEAD image first, then the CURRENT WRIST image (button edge or ring '
+                       'visible around the closed tips shows the remaining offset). Set head_alignment '
+                       '{verdict, head_view, wrist_view} on propose_move. aligned (HEAD clearly on the '
+                       'button, WRIST no clear offset): '
+                       f'press with positive X of at most {remaining*1000:.1f} mm, Y=0, Z=0. offset/unclear: '
+                       'do not push; fine-tune with Y/Z only (X=0, a few mm; withdraw a little with negative X '
+                       'first if the end already touches the panel), then judge again on the next image; '
+                       'repeat until aligned. Adjust the head with propose_head if the HEAD view cannot show '
+                       'the closed end and the button together. Re-judge before every further stroke. '
+                       f'Y/Z fine-tuning rounds so far: {shifts}.')
+        if shifts >= press_phase.HEAD_ALIGN_ROUNDS:
+            instruction += (' Fine-tuning has not converged after several rounds: if HEAD and WRIST still do '
+                            'not show clear alignment, open the gripper (o) so the button is localized again '
+                            'and realign with the gripper open.')
     live = state.get('live_m')
     return dict(format=press_phase.FORMAT, stage=stage, gripper_state=gripper, z_b_m=state.get('z_b_m'),
                 frozen_from=state.get('frozen_from'), budget_mm=round(budget*1000, 1),
@@ -156,6 +207,9 @@ def press_status(state):
                 target_depth_mm=round(target*1000, 1), bound=state.get('bound'),
                 tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1), close_band_mm=band,
                 retry_step=state.get('retry_step'), completed_presses=state.get('completed_presses'),
+                head_shifts=state.get('head_shifts'), head_alignment_required=state.get('head_alignment_required'),
+                approach=state.get('approach'),
+                approach_stop_depth_mm=round(state['approach_stop_m']*1000, 1) if state.get('approach_stop_m') else None,
                 instruction=instruction, source='program_rule_on_recorded_depth')
 
 
@@ -198,6 +252,8 @@ class LocalizedConversation(Conversation):
         self.head_advice = {}
         # Observations decided in the closed-gripper press stage without localization.
         self.direct_press = set()
+        # Accepted model head-view alignment verdicts in the closed press, per observation.
+        self.head_checks = {}
 
     def _check(self, oid, cancel=None):
         if cancel is not None and cancel.is_set():
@@ -258,8 +314,14 @@ class LocalizedConversation(Conversation):
             move['description'] = ('Move the hand by chassis-frame XYZ increments, preserving orientation. '
                                    'DIRECT PRESS STAGE (gripper closed): estimate the closed end versus the button '
                                    'from the HEAD and WRIST images yourself; +Y robot LEFT, -Y robot RIGHT, +Z up. '
-                                   'Positive X only within the live-depth press limit remaining_mm. Negative X and '
-                                   'Y/Z shifts are free. No automatic return or clipping.')
+                                   'Positive X within the live-depth press limit remaining_mm. After the first closed '
+                                   'approach, positive X also needs head_alignment.verdict=aligned (HEAD view '
+                                   'first, combined with WRIST) with Y=0 and Z=0; otherwise fine-tune Y/Z with X=0 and judge again. '
+                                   'No automatic return or clipping.')
+            if press_phase.head_alignment_required():
+                params = move['parameters']
+                params['properties']['head_alignment'] = copy.deepcopy(HEAD_ALIGNMENT_SCHEMA)
+                params['required'].append('head_alignment')
         return request_body(self.messages(), reassess.extend_tools(tools, self.hypothesis_reviews.get(self.current_id)))
 
     def decision_context(self, stage):
@@ -304,6 +366,8 @@ class LocalizedConversation(Conversation):
             self.range_evidence[oid] = evidence
         atomic_json(directory/'range_evidence.json', self.range_evidence[oid])
         if oid not in self.press_status:
+            # Closed already within the standoff: no approach room, start the head check now.
+            press_phase.note_approach(oid)
             # A press that reached its target starts the fixed withdraw → reopen sequence.
             press_phase.note_press_status(press_phase.describe(oid).get('remaining_m'))
             status = press_status(press_phase.describe(oid))
@@ -397,7 +461,8 @@ class LocalizedConversation(Conversation):
                           if k not in ('authorized_command',)},
                 instruction='The gripper is closed, so the button is not boxed at the merged end any '
                     'more. This phase bounds the stroke by live depth at that pixel down to the press '
-                    'target, capped by the frozen pre-close range. Keep positive X within remaining_m; '
+                    'target (during the first approach: down to the standoff stop), capped by the frozen '
+                    'pre-close range. Keep positive X within remaining_m; '
                     'the program does not clip a rejected stroke.')
         self.press_checks[oid] = copy.deepcopy(decision)
 
@@ -493,6 +558,11 @@ class LocalizedConversation(Conversation):
             validate_command(dict(type=fn['name'].removeprefix('propose_'),
                                   **{k:v for k,v in args.items() if k != 'reason'}))
         press_phase.check_retry(dict(name=fn['name'], arguments=args))
+        head = press_phase.check_head_alignment(fn['name'], args.get('xyz_mm'), raw.get('head_alignment'))
+        if head is not None:
+            atomic_json(Path(directory)/'head_alignment.json', dict(
+                observation_id=self.current_id, **head, xyz_mm=args.get('xyz_mm'),
+                source='model_not_human', status='validated_proposal_not_execution'))
         if review and fn['name'] not in ('report_done', 'report_unable'):
             atomic_json(Path(directory)/'hypothesis_review'/'decision.json', dict(
                 **raw['reassessment'], source='model_not_human', status='validated_proposal_not_execution',
@@ -505,6 +575,13 @@ class LocalizedConversation(Conversation):
         if review and fn['name'] not in ('report_done', 'report_unable'):
             self.reassessments[self.current_id] = reassess.validate_reassessment(
                 json.loads(fn['arguments']).get('reassessment'), review)
+        raw = json.loads(fn['arguments'])
+        head = press_phase.check_head_alignment(fn['name'], self.action_arguments(raw, fn['name']).get('xyz_mm')
+                                                if fn['name'] == 'propose_move' else None, raw.get('head_alignment'))
+        if head is not None:
+            self.head_checks[self.current_id] = head
+        else:
+            self.head_checks.pop(self.current_id, None)
         super().accept(response)
 
     def check_execution(self, proposal, observation_id):
@@ -518,6 +595,8 @@ class LocalizedConversation(Conversation):
         if proposal != dict(name=fn['name'], arguments=self.action_arguments(json.loads(fn['arguments']), fn['name'])):
             raise ValueError('accepted_action_mismatch')
         press_phase.check_retry(proposal)
+        press_phase.check_head_alignment(proposal['name'], proposal['arguments'].get('xyz_mm'),
+                                         json.loads(fn['arguments']).get('head_alignment'))
         require_forward_permission(proposal, {'observation_id': observation_id}, self.forward_guard_decision,
                                    policy=self.forward_guard_policy)
 
@@ -536,6 +615,8 @@ class LocalizedConversation(Conversation):
         ledger['head_view_advice'] = copy.deepcopy(self.head_advice.get(oid))
         if oid in self.press_status:
             ledger['press_phase'] = copy.deepcopy(self.press_status[oid])
+        if oid in self.head_checks:
+            ledger['head_alignment'] = dict(copy.deepcopy(self.head_checks[oid]), source='model_not_human')
         if oid in self.press_checks:
             ledger['press_check'] = {k: copy.deepcopy(v) for k, v in self.press_checks[oid].items()
                                      if k != 'authorized_command'}
