@@ -93,10 +93,8 @@ DIRECT_PRESS_INSTRUCTION = (
     'verdict must be unclear and positive X is not allowed: withdraw a little with negative X until the '
     'WRIST view shows the button edge again, or adjust the head angle so the HEAD view sees the button '
     'past the gripper. verdict=aligned only when HEAD shows the closed end clearly in front '
-    'of the target button face and WRIST shows no clear offset; then press with positive X within '
-    'remaining_mm, Y=0 and Z=final_press_z_mm from CURRENT_PRESS_PHASE: the first final press after each '
-    'withdrawal also moves 10 mm DOWN (Z=-10); it does not stack, so further strokes before the next '
-    'withdrawal use Z=0. verdict=offset or unclear: fine-tune with Y/Z only (X=0, a few mm, about the button radius '
+    'of the target button face and WRIST shows no clear offset; then press with positive X (Y=0, Z=0) within '
+    'remaining_mm. verdict=offset or unclear: fine-tune with Y/Z only (X=0, a few mm, about the button radius '
     'at most) and judge again on the next image; several such rounds are normal. Re-judge before each further '
     'stroke. Use the visible effect of your previous Y/Z shift to confirm the direction. Once a press '
     'reaches its target the program fixes the next steps: withdraw exactly 10 mm ([-10, 0, 0]); then, if '
@@ -105,6 +103,14 @@ DIRECT_PRESS_INSTRUCTION = (
     'alignment (HEAD first, with WRIST) again and make the final press. '
     'Directions: +Y moves the hand to robot LEFT, -Y to robot RIGHT, +Z up, -Z down. In the HEAD view the '
     'robot looks forward at the panel, so image-left is usually robot left (+Y) and image-up is up (+Z).')
+
+def _drop_note():
+    """Extra text only when a final-press drop is configured; empty by default."""
+    drop = press_phase.drop_mm()
+    return (f' FINAL-PRESS DROP: the aligned final press also moves {drop} mm DOWN '
+            f'(Z=-{drop}); the fixed withdraw after a completed press rises back {drop} mm, so it does '
+            'not accumulate. Use final_press_z_mm and withdraw_mm from CURRENT_PRESS_PHASE.') if drop else ''
+
 
 HEAD_ALIGNMENT_SCHEMA = dict(
     type='object', additionalProperties=False, required=['verdict', 'head_view', 'wrist_view'],
@@ -144,6 +150,12 @@ def press_status(state):
                        'panel. The range is frozen automatically once a trusted open-gripper depth at the aim '
                        'pixel lies within that band; until then do not close. Use the HEAD view to estimate the '
                        'remaining distance and whether the hand is in front of the target button.')
+        if state.get('realign_required'):
+            instruction += (' RETRY REALIGNMENT: the previous closed press missed. The range will not freeze '
+                            'until you have made at least one open-gripper Y/Z correction, or the aim point '
+                            'sits in the central part of the button face (not merely inside the box). Use '
+                            'where the closed end landed in the HEAD and WRIST images to choose the Y/Z '
+                            'correction; X=0 is fine at this distance.')
     elif gripper != 'closed':
         stage = 'close'
         instruction = ('The open-gripper range is frozen. If the wrist view still shows the button on the aim '
@@ -151,10 +163,12 @@ def press_status(state):
                        'while open.')
     elif state.get('retry_step') == press_phase.WITHDRAW:
         stage = 'press_reached_withdraw'
+        withdraw = state.get('withdraw_mm') or list(press_phase.RETRY_WITHDRAW_MM)
         instruction = ('The closed press has reached its target (live depth at contact plus overpress, or the '
                        'frozen range used up). Do not push further. The next action is fixed: withdraw exactly '
-                       f'10 mm with propose_move xyz_mm={list(press_phase.RETRY_WITHDRAW_MM)} (no Y/Z), whether or '
-                       'not the light looks on. Any other action is rejected.')
+                       f'10 mm with propose_move xyz_mm={withdraw} '
+                       + (f'(also rising {withdraw[2]} mm to undo the final-press drop)' if withdraw[2] else '(no Y/Z)')
+                       + ', whether or not the light looks on. Any other action is rejected.')
     elif state.get('retry_step') == press_phase.REOPEN:
         stage = 'withdrawn_check_light'
         instruction = ('The hand has withdrawn 10 mm after a completed press. Judge the target light in the '
@@ -187,7 +201,7 @@ def press_status(state):
     else:
         stage = 'head_align'
         shifts = state.get('head_shifts') or 0
-        drop = state.get('final_press_z_mm', -press_phase.FINAL_PRESS_DROP_MM)
+        drop = state.get('final_press_z_mm') or 0
         instruction = ('The first closed approach is done and about '
                        f'{remaining*1000:.1f} mm remain to the press target ({target*1000:.0f} mm live depth). '
                        'Before the FINAL press, judge whether the closed end is in front of the target button '
@@ -195,8 +209,9 @@ def press_status(state):
                        'visible around the closed tips shows the remaining offset). Set head_alignment '
                        '{verdict, head_view, wrist_view} on propose_move. aligned (HEAD clearly on the '
                        'button, WRIST no clear offset): '
-                       f'press with positive X of at most {remaining*1000:.1f} mm, Y=0, Z={drop} '
-                       f'({"10 mm extra downward move on this final press; it is not repeated" if drop else "the 10 mm downward move was already made since the last withdrawal"}). offset/unclear: '
+                       f'press with positive X of at most {remaining*1000:.1f} mm, Y=0, Z={drop}'
+                       + (f' (configured {-drop} mm downward move on this final press)' if drop else '')
+                       + '. offset/unclear: '
                        'do not push; fine-tune with Y/Z only (X=0, a few mm; withdraw a little with negative X '
                        'first if the end already touches the panel), then judge again on the next image; '
                        'repeat until aligned. Adjust the head with propose_head if the HEAD view cannot show '
@@ -214,8 +229,10 @@ def press_status(state):
                 target_depth_mm=round(target*1000, 1), bound=state.get('bound'),
                 tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1), close_band_mm=band,
                 retry_step=state.get('retry_step'), completed_presses=state.get('completed_presses'),
+                realign_required=state.get('realign_required'),
+                final_press_z_mm=state.get('final_press_z_mm'), withdraw_mm=state.get('withdraw_mm'),
                 head_shifts=state.get('head_shifts'), head_alignment_required=state.get('head_alignment_required'),
-                final_press_z_mm=state.get('final_press_z_mm'), approach=state.get('approach'),
+                approach=state.get('approach'),
                 approach_stop_depth_mm=round(state['approach_stop_m']*1000, 1) if state.get('approach_stop_m') else None,
                 instruction=instruction, source='program_rule_on_recorded_depth')
 
@@ -325,9 +342,8 @@ class LocalizedConversation(Conversation):
                                    'from the HEAD and WRIST images yourself; +Y robot LEFT, -Y robot RIGHT, +Z up. '
                                    'Positive X within the live-depth press limit remaining_mm. After the first closed '
                                    'approach, positive X also needs head_alignment.verdict=aligned (HEAD view '
-                                   'first, combined with WRIST) with Y=0 and Z=final_press_z_mm (-10 on the first final '
-                                   'press after each withdrawal, then 0); otherwise fine-tune Y/Z with X=0 and judge again. '
-                                   'No automatic return or clipping.')
+                                   'first, combined with WRIST) with Y=0 and Z=0; otherwise fine-tune Y/Z with X=0 and judge again. '
+                                   'No automatic return or clipping.'+_drop_note())
             if press_phase.head_alignment_required():
                 params = move['parameters']
                 params['properties']['head_alignment'] = copy.deepcopy(HEAD_ALIGNMENT_SCHEMA)
@@ -385,7 +401,7 @@ class LocalizedConversation(Conversation):
                 for k in ('median_m', 'trusted', 'reasons', 'froze', 'role')}
             self.press_status[oid] = status
             self._context(oid, 'CURRENT_PRESS_PHASE', **status)
-            self._context(oid, 'DIRECT_PRESS_STAGE', observation_id=oid, instruction=DIRECT_PRESS_INSTRUCTION)
+            self._context(oid, 'DIRECT_PRESS_STAGE', observation_id=oid, instruction=DIRECT_PRESS_INSTRUCTION+_drop_note())
         atomic_json(directory/'press_phase_status.json', self.press_status[oid])
         self.review_signals[oid] = dict(review_required=False, reasons=['direct_press_stage'])
         self.review_phase = 'not_required'
@@ -431,7 +447,8 @@ class LocalizedConversation(Conversation):
                 aligned = (wrist.get('button_visibility') == 'full' and box is not None and tip is not None
                            and box[0] <= tip[0] <= box[2] and box[1] <= tip[1] <= box[3])
                 evidence = press_phase.observe(self.manifests.get(oid), calibrated_tip.aim_pixel(),
-                                               calibrated_tip.image_size(), aligned=aligned)
+                                               calibrated_tip.image_size(), aligned=aligned,
+                                               centered=aligned and press_phase.aim_centered(box, tip))
                 evidence['phase_after'] = press_phase.phase()
                 self.range_evidence[oid] = evidence
             if oid in self.range_evidence:

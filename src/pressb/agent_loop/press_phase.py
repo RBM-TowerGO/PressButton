@@ -42,7 +42,9 @@ TIP_PLANE_M = 0.150
 # standoff_m: the first closed forward stroke (the approach) stops this far before the
 # contact plane, i.e. at a live reading of TIP_PLANE_M + standoff_m, so the head-view
 # alignment check and its Y/Z fine-tuning happen before anything touches the panel.
-DEFAULT_LIMITS = dict(overpress_m=0.005, max_travel_m=0.085, standoff_m=0.010,
+# final_drop_m: optional extra downward move on the aligned final press (0 = off); the
+# fixed withdraw after a completed press rises by the same amount, so it never accumulates.
+DEFAULT_LIMITS = dict(overpress_m=0.005, max_travel_m=0.085, standoff_m=0.010, final_drop_m=0.0,
                       range_min_m=TIP_PLANE_M + 0.003, range_max_m=TIP_PLANE_M + 0.080,
                       live_min_m=TIP_PLANE_M - 0.020,
                       min_valid_pixels=5, aim_tolerance_px=8)
@@ -71,7 +73,7 @@ def configure(**limits):
     _state = dict(limits=merged, gripper_state='open', z_b_m=None, frozen_from=None,
                   consumed_m=0.0, live=None, freeze_x_m=None, measured={},
                   retry_step=None, completed_presses=0, head_shifts=0, pressed_since_close=False,
-                  press_drop_applied=False)
+                  realign_required=False, press_drop_applied=False, withdraw_mm=None)
     return describe()
 
 
@@ -121,12 +123,18 @@ def set_gripper(state):
     if state not in ('closed', 'open'):
         raise ValueError('press_gripper_state_must_be_closed_or_open')
     if state == 'open':
-        # Reopening starts a new attempt: realign and measure a new range.
+        # Reopening starts a new attempt: realign and measure a new range. After a
+        # completed press the hand is still inside the close band, so the range would
+        # freeze on the first frame without any realignment; require one first.
+        if _state['retry_step'] is not None:
+            _state['realign_required'] = True
         _state.update(z_b_m=None, frozen_from=None, consumed_m=0.0, live=None, freeze_x_m=None,
-                      retry_step=None)
+                      retry_step=None, withdraw_mm=None)
     # Every close (first attempt or a retry after reopening) starts a new approach: the
     # first forward stroke is free again and the head-view check follows it.
-    _state.update(head_shifts=0, pressed_since_close=False, press_drop_applied=False)
+    # press_drop_applied is kept: only the fixed withdraw that rises back clears it, so an
+    # unrestored drop is never applied a second time.
+    _state.update(head_shifts=0, pressed_since_close=False)
     _state['gripper_state'] = state
 
 
@@ -143,15 +151,20 @@ def set_gripper(state):
 # This records the model's declared verdict only; it never inspects images.
 HEAD_VERDICTS = ('aligned', 'offset', 'unclear')
 HEAD_ALIGN_ROUNDS = 6
-# The first aligned final press after each withdrawal also moves down this much.
-# It does not stack: later strokes use Z=0 until a negative-X withdrawal or a
-# gripper change, after which the next final press drops again.
-FINAL_PRESS_DROP_MM = 10
+
+
+def drop_mm():
+    """Configured final-press drop in mm (0 = off); an int when whole, for exact command matching."""
+    limits = _state['limits'] if _state else DEFAULT_LIMITS
+    value = round(limits['final_drop_m']*1000, 3)
+    return int(value) if value == int(value) else value
 
 
 def final_press_z_mm():
-    """Z required on the next aligned final press: -FINAL_PRESS_DROP_MM, or 0 once applied."""
-    return 0 if _state is not None and _state['press_drop_applied'] else -FINAL_PRESS_DROP_MM
+    """Z required on the next aligned final press: -drop_mm(), or 0 once applied or when off."""
+    if _state is not None and _state['press_drop_applied']:
+        return 0
+    return -drop_mm() if drop_mm() else 0
 
 
 def approach_stop_m():
@@ -213,16 +226,21 @@ def check_head_alignment(name, xyz_mm, head_alignment):
                 'the next image, or adjust the head view.')
         drop = final_press_z_mm()
         if xyz[1] != 0 or xyz[2] != drop:
+            if not drop_mm():
+                raise ValueError(
+                    'head_aligned_press_must_be_pure_x: the confirmed press is positive X with Y=0 and Z=0. '
+                    'Make Y/Z corrections as a separate X=0 move first and confirm alignment on the next image.')
             raise ValueError(
                 f'head_aligned_press_yz_fixed: the confirmed press is positive X with Y=0 and Z={drop} '
-                f'(the final press moves down {FINAL_PRESS_DROP_MM} mm once after each withdrawal; later '
-                'strokes use Z=0). Make other Y/Z corrections as a separate X=0 move first and confirm '
-                'alignment on the next image.')
+                f'(the final press moves down {drop_mm()} mm once and the fixed withdraw rises back; '
+                'strokes before that withdraw use Z=0). Make other Y/Z corrections as a separate X=0 move '
+                'first and confirm alignment on the next image.')
     return dict(verdict=check['verdict'], **{k: v.strip() for k, v in views.items()})
 
 
 # After a completed closed press the next steps are fixed, whatever the light shows:
-#   withdraw  only propose_move xyz_mm = RETRY_WITHDRAW_MM (the end leaves the panel)
+#   withdraw  only propose_move xyz_mm = retry_withdraw_mm() (the end leaves the panel and,
+#             when a configured final-press drop was applied, rises back by it)
 #   reopen    report_done if the light is still on, otherwise open the gripper (o) and
 #             realign from fresh localization, then close and press again. No closed
 #             re-press, Y/Z shift or re-close in between; further -X withdrawal is allowed.
@@ -238,6 +256,31 @@ def retry_step():
     return _state['retry_step'] if _state else None
 
 
+# Retry realignment: after a completed press and reopening, the range freezes only once
+# an executed open-gripper Y/Z move has been made, or the aim point sits in the central
+# part of the button box (within CENTER_FRACTION of the box size from its center on
+# both axes), instead of anywhere inside the box.
+CENTER_FRACTION = 0.25
+
+
+def aim_centered(box, tip):
+    """Aim point within CENTER_FRACTION of the box size from the box center on both axes."""
+    if box is None or tip is None:
+        return False
+    return all(abs(tip[i]-(box[i]+box[i+2])/2) <= CENTER_FRACTION*(box[i+2]-box[i]) for i in (0, 1))
+
+
+def retry_withdraw_mm():
+    """Fixed withdraw for the current retry: -10 X, plus +Z restoring an applied final-press drop."""
+    if _state is not None and _state.get('withdraw_mm') is not None:
+        return list(_state['withdraw_mm'])
+    return list(RETRY_WITHDRAW_MM)
+
+
+def realign_required():
+    return _state is not None and _state['realign_required']
+
+
 def note_press_status(remaining_m):
     """Start the retry sequence once the closed press has reached its target."""
     if (_state is None or _state['gripper_state'] != 'closed' or _state['z_b_m'] is None
@@ -247,6 +290,9 @@ def note_press_status(remaining_m):
         return retry_step()
     _state['retry_step'] = WITHDRAW
     _state['completed_presses'] += 1
+    # Decided now, so the check and the record agree whatever order moves are recorded in.
+    x, y, z = RETRY_WITHDRAW_MM
+    _state['withdraw_mm'] = [x, y, z+drop_mm() if _state['press_drop_applied'] else z]
     return WITHDRAW
 
 
@@ -257,12 +303,14 @@ def check_retry(proposal):
         return
     name, args = proposal.get('name'), proposal.get('arguments') or {}
     if step == WITHDRAW:
-        if name == 'propose_move' and list(args.get('xyz_mm') or []) == list(RETRY_WITHDRAW_MM):
+        expected = retry_withdraw_mm()
+        if name == 'propose_move' and list(args.get('xyz_mm') or []) == expected:
             return
         raise ValueError(
             'press_retry_withdraw_required: the closed press reached its target. The next action must be '
-            f'exactly propose_move xyz_mm={list(RETRY_WITHDRAW_MM)} (withdraw 10 mm, no Y/Z), whether or '
-            'not the light looks on. Return that command now.')
+            f'exactly propose_move xyz_mm={expected} (withdraw 10 mm'
+            + (f', rising {expected[2]} mm to undo the final-press drop' if expected[2] else ', no Y/Z')
+            + '), whether or not the light looks on. Return that command now.')
     if name in ('report_done', 'report_unable', 'request_observation', 'propose_head'):
         return
     if name == 'propose_gripper' and args.get('key') == 'o':
@@ -282,7 +330,7 @@ def record_retry(proposal):
     if _state is None or _state['retry_step'] != WITHDRAW:
         return retry_step()
     if (proposal.get('name') == 'propose_move'
-            and list((proposal.get('arguments') or {}).get('xyz_mm') or []) == list(RETRY_WITHDRAW_MM)):
+            and list((proposal.get('arguments') or {}).get('xyz_mm') or []) == retry_withdraw_mm()):
         _state['retry_step'] = REOPEN
     return retry_step()
 
@@ -326,7 +374,7 @@ def _sample_reasons(observation, aim_px, image_size, limits):
     return median, reasons
 
 
-def observe(observation, aim_px=None, image_size=None, aligned=None):
+def observe(observation, aim_px=None, image_size=None, aligned=None, centered=None):
     """Record this observation's depth at the merged-end pixel.
 
     Open gripper, no range yet: freeze z_b once trusted and the button box covers
@@ -354,6 +402,8 @@ def observe(observation, aim_px=None, image_size=None, aligned=None):
             # Depth at the aim pixel describes the BUTTON only when the button covers it;
             # otherwise it may be the panel or background and must not set the stroke.
             reasons.append('aim_point_not_inside_current_button_box')
+        if _state['realign_required'] and centered is not True:
+            reasons.append('retry_realign_required')
     trusted = not reasons
     result = dict(observation_id=oid, gripper_state=_state['gripper_state'], median_m=median,
                   trusted=trusted, reasons=reasons, role='live' if closed_press else 'freeze')
@@ -364,6 +414,7 @@ def observe(observation, aim_px=None, image_size=None, aligned=None):
         _state['frozen_from'] = oid
         _state['freeze_x_m'] = measured_x
         _state['consumed_m'] = 0.0
+        _state['realign_required'] = False
         result['froze'] = True
     return result
 
@@ -453,6 +504,13 @@ def record_move(xyz_mm):
     the freeze point makes this negative: the surface is then that much further away,
     so a repeated press can still reach it. Live depth still bounds every stroke.
     """
+    if _state is not None and _state['gripper_state'] == 'open':
+        try:
+            y, z = (float(v) for v in list(xyz_mm)[1:3])
+        except (TypeError, ValueError):
+            y = z = 0.0
+        if y or z:
+            _state['realign_required'] = False    # an executed open-gripper Y/Z alignment
     if _state is None or _state['gripper_state'] != 'closed':
         return 0.0 if _state is None else _state['consumed_m']
     try:
@@ -461,9 +519,11 @@ def record_move(xyz_mm):
         return _state['consumed_m']
     if math.isfinite(x):
         _state['consumed_m'] = _state['consumed_m'] + x/1000.0
-        if x < 0:
-            _state['press_drop_applied'] = False    # recomputed after every withdrawal
-        elif (x > 0 and z == -FINAL_PRESS_DROP_MM and _state['retry_step'] is None
+        if (_state['retry_step'] == WITHDRAW and _state['withdraw_mm'] is not None
+                and [x, y, z] == _state['withdraw_mm']):
+            # The fixed withdraw rose back by the drop, so the next final press drops again.
+            _state['press_drop_applied'] = False
+        elif (drop_mm() and x > 0 and z == -drop_mm() and _state['retry_step'] is None
                 and _state['pressed_since_close']):
             _state['press_drop_applied'] = True
         if (y or z) and x <= 0 and _state['retry_step'] is None and _state['pressed_since_close']:
@@ -483,7 +543,8 @@ def describe(observation_id=None):
                  tip_plane_m=TIP_PLANE_M, target_m=target_m(), retry_step=_state['retry_step'],
                  completed_presses=_state['completed_presses'], head_shifts=_state['head_shifts'],
                  pressed_since_close=_state['pressed_since_close'],
-                 final_press_z_mm=final_press_z_mm(),
+                 realign_required=_state['realign_required'],
+                 final_press_z_mm=final_press_z_mm(), withdraw_mm=retry_withdraw_mm(),
                  head_alignment_required=head_alignment_required(), approach=in_approach(),
                  approach_stop_m=approach_stop_m())
     if observation_id is not None and _state['z_b_m'] is not None:

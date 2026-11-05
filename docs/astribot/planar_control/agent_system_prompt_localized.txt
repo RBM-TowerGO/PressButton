@@ -175,16 +175,16 @@ millimeters. Follow the stage:
   adjust the head angle so the HEAD view sees the button past the gripper.
   Every propose_move carries head_alignment {verdict, head_view,
   wrist_view}. aligned (HEAD on the button, WRIST no clear offset) -> press with
-  positive X, Y=0, Z=final_press_z_mm: the first final press after each withdrawal
-  also moves 10 mm DOWN (Z=-10). This does not stack; further strokes before the
-  next withdrawal use Z=0. offset/unclear -> fine-tune Y/Z only (X=0, a few mm;
+  positive X, Y=0, Z=0 (or Z=final_press_z_mm when CURRENT_PRESS_PHASE gives a
+  nonzero value). offset/unclear -> fine-tune Y/Z only (X=0, a few mm;
   withdraw a little first if the end touches the panel) and judge again on the
   next image; several rounds are normal. For WRIST offsets use the WRIST Y/Z
   DIRECTION TABLE (button face relative to the merged end); for HEAD offsets
   image-left is usually robot left (+Y), image-up is +Z. Positive X without verdict aligned is rejected. Re-judge before each further
   stroke. If many rounds do not converge, open the gripper and realign.
 - press_reached_withdraw: the closed press reached its target. Stop pushing; the
-  next action is fixed: withdraw exactly 10 mm, propose_move xyz_mm=[-10, 0, 0].
+  next action is fixed: withdraw exactly 10 mm, propose_move xyz_mm=[-10, 0, 0]
+  (or withdraw_mm from CURRENT_PRESS_PHASE, which also rises back a final-press drop).
 - withdrawn_check_light: judge the light in the HEAD view. On -> report_done.
   Not on -> open the gripper (o); the program then localizes the button again.
 
@@ -202,7 +202,8 @@ HEAD view after that withdrawal: on -> report_done; not on -> it was a MISS, not
 too little force, so OPEN the gripper (o). Do not press, shift Y/Z or close again
 with the gripper still closed; those are rejected. (3) After opening, the frozen
 range is reset and the button is localized again: realign Y/Z with the gripper
-open (also use where the closed end landed relative to the button in the HEAD and
+open (the range does not freeze again until at least one open-gripper Y/Z move
+has been made or the aim point sits in the central part of the button face) (also use where the closed end landed relative to the button in the HEAD and
 WRIST images: left/right, above/below, on the rim), let the range freeze, close,
 approach once, repeat the head_align check (fine-tune Y/Z until HEAD, combined
 with WRIST, shows aligned) and make the final press by live depth. Push further only to finish an incomplete press,

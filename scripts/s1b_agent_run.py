@@ -259,7 +259,8 @@ def launch(args):
                 agent_argv.extend(['--fingertip-calibration', str(Path(args.fingertip_calibration).expanduser().resolve()),
                                    '--fingertip-state', args.fingertip_state,
                                    '--press-overpress-mm', str(getattr(args, 'press_overpress_mm', 0.0)),
-                                   '--press-standoff-mm', str(getattr(args, 'press_standoff_mm', 10.0))])
+                                   '--press-standoff-mm', str(getattr(args, 'press_standoff_mm', 10.0)),
+                                   '--press-drop-mm', str(getattr(args, 'press_drop_mm', 0.0))])
             agent_argv.extend(['--model-provider', getattr(args, 'model_provider', 'thor')])
             for flag, value in (('--model-name', getattr(args, 'model_name', None)),
                                 ('--model-base', getattr(args, 'model_base', None)),
@@ -372,6 +373,8 @@ def parse_args(argv=None):
                         help='closed-gripper press target is live wrist depth 150 mm minus this (default 0: 150 mm is the final reachable reading)')
     parser.add_argument('--press-standoff-mm', type=float, default=10.0,
                         help='first closed forward stroke stops at live wrist depth 150 mm plus this, before the head-view alignment check (default 10 mm)')
+    parser.add_argument('--press-drop-mm', type=float, default=0.0,
+                        help='extra downward move on the aligned final press; the fixed withdraw rises back by it (default 0: off)')
     args = parser.parse_args(argv)
     if args.prompt is None:
         args.prompt = str(END_TO_END_PROMPT if args.decision_mode == 'end_to_end' else
@@ -391,6 +394,8 @@ def parse_args(argv=None):
         parser.error('--press-overpress-mm must be between 0 and 15')
     if not 0 <= args.press_standoff_mm <= 40:
         parser.error('--press-standoff-mm must be between 0 and 40')
+    if args.press_drop_mm < 0:
+        parser.error('--press-drop-mm must not be negative')
     return args
 
 

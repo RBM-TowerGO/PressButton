@@ -122,11 +122,11 @@ def test_align_freeze_close_press_withdraw(jpeg, monkeypatch, tmp_path):
     assert c.press_status['live-2']['remaining_mm'] == pytest.approx(19.0)
     assert c.press_status['live-2']['stage'] == 'head_align'   # check before the final press
     assert press_phase.evaluate(20, 'live-2')['allowed'] is False
-    replies = iter([action(c, xyz=[20, 0, -10], head_alignment=HEAD_OK),
-                    action(c, xyz=[19, 0, -10], head_alignment=HEAD_OK)])
+    replies = iter([action(c, xyz=[20, 0, 0], head_alignment=HEAD_OK),
+                    action(c, xyz=[19, 0, 0], head_alignment=HEAD_OK)])
     monkeypatch.setattr(client, 'request', lambda *a, **k: next(replies))
     proposal = client.propose('fake', body, _obs(2, None), c.session, tmp_path/'2', conversation=c)
-    assert proposal['arguments']['xyz_mm'] == [19, 0, -10]
+    assert proposal['arguments']['xyz_mm'] == [19, 0, 0]
     _step(c, jpeg, 3, proposal, 0.145)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
 
@@ -195,7 +195,7 @@ def test_closed_gripper_press_decides_directly_from_images(jpeg, monkeypatch, tm
 
     # A press that stops short of the target is not complete: withdraw, shift and press stay free.
     for n, xyz, z in ((2, [38, 0, 0], 0.160), (3, [-15, 0, 0], 0.175), (4, [0, -4, 3], 0.175),
-                      (5, [25, 0, -10], 0.150)):
+                      (5, [25, 0, 0], 0.150)):
         replies = iter([action(c, xyz=xyz, head_alignment=HEAD_OK if xyz[0] > 0 else HEAD_OFF)])
         monkeypatch.setattr(client, 'request', lambda *a, **k: next(replies))
         proposal = client.propose('fake', c.prepare_decision('fake', tmp_path/str(n)), _obs(n-1, z),
@@ -240,7 +240,7 @@ def test_missed_press_withdraws_10mm_then_reopens_and_realigns(jpeg, monkeypatch
     assert press_phase.retry_step() is None
 
     # Round 2: head check confirmed, final press 15 mm to the 145 mm target.
-    proposal = _propose(c, monkeypatch, tmp_path, 3, .160, action(c, xyz=[15, 0, -10], head_alignment=HEAD_OK))
+    proposal = _propose(c, monkeypatch, tmp_path, 3, .160, action(c, xyz=[15, 0, 0], head_alignment=HEAD_OK))
     assert c.press_status['live-2']['stage'] == 'head_align'
     _step(c, jpeg, 3, proposal, 0.145)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
@@ -316,7 +316,7 @@ def test_head_alignment_after_first_approach_with_multiple_yz_rounds(jpeg, monke
     errors = [json.loads((tmp_path/'3'/f'validation-{i}.json').read_text())['error'] for i in range(3)]
     assert 'head_alignment_required' in errors[0]
     assert 'head_alignment_not_confirmed' in errors[1]
-    assert 'head_aligned_press_yz_fixed' in errors[2]
+    assert 'head_aligned_press_must_be_pure_x' in errors[2]
     assert proposal['arguments']['xyz_mm'] == [0, -3, 2] and 'head_alignment' not in proposal['arguments']
     _step(c, jpeg, 3, proposal, .160)
     press_phase.record_move(proposal['arguments']['xyz_mm'])
@@ -329,13 +329,8 @@ def test_head_alignment_after_first_approach_with_multiple_yz_rounds(jpeg, monke
     press_phase.record_move(proposal['arguments']['xyz_mm'])
     assert press_phase.describe()['head_shifts'] == 2
 
-    # Round 4: aligned -> final press with the 10 mm drop; pure X is rejected now.
-    proposal = _propose(c, monkeypatch, tmp_path, 5, .160,
-                        action(c, xyz=[15, 0, 0], head_alignment=HEAD_OK),
-                        action(c, xyz=[15, 0, -10], head_alignment=HEAD_OK))
-    assert c.press_status['live-4']['final_press_z_mm'] == -10
-    assert 'Z=-10' in json.loads((tmp_path/'5'/'validation-0.json').read_text())['error']
-    assert proposal['arguments']['xyz_mm'] == [15, 0, -10]
+    # Round 4: aligned -> pure positive X final press within the live limit is accepted.
+    proposal = _propose(c, monkeypatch, tmp_path, 5, .160, action(c, xyz=[15, 0, 0], head_alignment=HEAD_OK))
     assert c.press_status['live-4']['head_shifts'] == 2 and c.forward_guard_decision['allowed']
     assert c.head_checks['live-4']['verdict'] == 'aligned'
     _step(c, jpeg, 5, proposal, .145)
@@ -396,30 +391,146 @@ def test_alignment_verdict_needs_both_head_and_wrist_descriptions():
     with pytest.raises(ValueError, match='head_alignment_required'):
         press_phase.check_head_alignment('propose_move', [5, 0, 0],
                                          dict(verdict='aligned', head_view='Centered.', wrist_view=' '))
-    assert press_phase.check_head_alignment('propose_move', [5, 0, -10], HEAD_OK) == HEAD_OK
+    assert press_phase.check_head_alignment('propose_move', [5, 0, 0], HEAD_OK) == HEAD_OK
     from pressb.agent_loop.localized_conversation import HEAD_ALIGNMENT_SCHEMA
     assert HEAD_ALIGNMENT_SCHEMA['required'] == ['verdict', 'head_view', 'wrist_view']
 
 
-def test_final_press_drop_does_not_stack_and_resets_after_withdrawal():
+def test_aim_centered_uses_central_part_of_box():
+    box = [.4, .4, .6, .8]                          # center (.5, .6), size .2 x .4
+    assert press_phase.aim_centered(box, [.5, .6])
+    assert press_phase.aim_centered(box, [.54, .69])       # just within CENTER_FRACTION of the size
+    assert not press_phase.aim_centered(box, [.5, .42])    # inside the box, on the upper rim
+    assert not press_phase.aim_centered(box, [.58, .6])
+    assert not press_phase.aim_centered(None, [.5, .6])
+
+
+def _reopen_after_completed_press():
     press_phase.configure()
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([40, 0, 0])
+    press_phase.record_move([10, 0, 0])
+    assert press_phase.note_press_status(0.0) == press_phase.WITHDRAW
+    withdraw = dict(name='propose_move', arguments=dict(xyz_mm=list(press_phase.RETRY_WITHDRAW_MM)))
+    press_phase.record_move(withdraw['arguments']['xyz_mm'])
+    press_phase.record_retry(withdraw)
+    press_phase.set_gripper('open')
+
+
+def test_retry_does_not_freeze_on_rim_until_realigned():
+    calibrated_tip.activate(CALIBRATION, 'open')
+    _reopen_after_completed_press()
+    assert press_phase.realign_required() and press_phase.describe()['realign_required']
+    # Hand still inside the close band and the aim point inside the box, but only on its rim.
+    result = press_phase.observe(_obs(6, .158), calibrated_tip.aim_pixel(), calibrated_tip.image_size(),
+                                 aligned=True, centered=False)
+    assert 'retry_realign_required' in result['reasons'] and press_phase.phase() == press_phase.ALIGN
+    # Pure X approach does not count as realignment; an executed Y/Z move does.
+    press_phase.record_move([5, 0, 0])
+    assert press_phase.realign_required()
+    press_phase.record_move([0, 0, 6])
+    assert not press_phase.realign_required()
+    result = press_phase.observe(_obs(7, .158), calibrated_tip.aim_pixel(), calibrated_tip.image_size(),
+                                 aligned=True, centered=False)
+    assert result.get('froze') and press_phase.phase() == press_phase.PRESS
+
+
+def test_retry_freezes_without_a_move_when_aim_is_centered():
+    calibrated_tip.activate(CALIBRATION, 'open')
+    _reopen_after_completed_press()
+    result = press_phase.observe(_obs(6, .158), calibrated_tip.aim_pixel(), calibrated_tip.image_size(),
+                                 aligned=True, centered=True)
+    assert result.get('froze') and not press_phase.realign_required()
+    # The next reopen after another completed press asks again; a first attempt never does.
+    press_phase.configure()
+    press_phase.set_gripper('open')
+    assert not press_phase.realign_required()
+
+
+def test_conversation_passes_centered_and_tells_model_to_realign(jpeg, monkeypatch, tmp_path):
+    calibrated_tip.activate(CALIBRATION, 'open')
+    x, y = _aim()
+    rim = [x-.05, y-.01, x+.05, y+.09]              # aim point inside, on the upper rim
+    c, _ = make(jpeg, monkeypatch, data=lambda oid: dict(coordinate_units='normalized_01', head=view(),
+                wrist=view(button_box=rim, contact_visibility='unknown', contact_tip=None, arrow_box=None)))
+    _reopen_after_completed_press()
+    c.manifests[c.current_id] = _obs(0, .158)
+    c.prepare_decision('fake', tmp_path/'0')
+    status = c.press_status[c.current_id]
+    assert status['stage'] == 'align_open' and status['realign_required']
+    assert 'retry_realign_required' in status['this_observation_range']['reasons']
+    assert 'RETRY REALIGNMENT' in status['instruction'] and press_phase.phase() == press_phase.ALIGN
+
+
+def test_final_press_drop_is_off_by_default():
+    press_phase.configure()
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([40, 0, 0])
+    assert press_phase.drop_mm() == 0 and press_phase.final_press_z_mm() == 0
+    with pytest.raises(ValueError, match='head_aligned_press_must_be_pure_x'):
+        press_phase.check_head_alignment('propose_move', [5, 0, -10], HEAD_OK)
+    press_phase.record_move([5, 0, 0])
+    assert press_phase.note_press_status(0.0) == press_phase.WITHDRAW
+    assert press_phase.retry_withdraw_mm() == [-10, 0, 0]
+
+
+def test_configured_drop_is_restored_by_the_fixed_withdraw():
+    press_phase.configure(final_drop_m=.010)
     press_phase.set_gripper('closed')
     press_phase._state['z_b_m'] = .2
     press_phase.record_move([40, 0, 0])             # first closed approach
     assert press_phase.final_press_z_mm() == -10
     with pytest.raises(ValueError, match='head_aligned_press_yz_fixed'):
         press_phase.check_head_alignment('propose_move', [5, 0, 0], HEAD_OK)
-    press_phase.check_head_alignment('propose_move', [5, 0, -10], HEAD_OK)
     press_phase.record_move([5, 0, -10])
-    # Applied once: a further stroke before withdrawing is plain X.
+    # Applied once: further strokes, Y/Z fine-tuning or a free withdrawal keep Z=0.
     assert press_phase.final_press_z_mm() == 0
     with pytest.raises(ValueError, match='Z=0'):
         press_phase.check_head_alignment('propose_move', [3, 0, -10], HEAD_OK)
-    press_phase.check_head_alignment('propose_move', [3, 0, 0], HEAD_OK)
-    press_phase.record_move([0, 2, 0])              # Y/Z fine-tune keeps it applied
+    press_phase.record_move([0, 2, 0])
+    press_phase.record_move([-5, 0, 0])
+    press_phase.record_move([5, 0, 0])
     assert press_phase.final_press_z_mm() == 0
-    press_phase.record_move([-5, 0, 0])             # any withdrawal recomputes it
+    # Target reached: the fixed withdraw rises back by the drop.
+    assert press_phase.note_press_status(0.0) == press_phase.WITHDRAW
+    assert press_phase.retry_withdraw_mm() == [-10, 0, 10]
+    with pytest.raises(ValueError, match=r'\[-10, 0, 10\]'):
+        press_phase.check_retry(dict(name='propose_move', arguments=dict(xyz_mm=[-10, 0, 0])))
+    withdraw = dict(name='propose_move', arguments=dict(xyz_mm=[-10, 0, 10]))
+    press_phase.check_retry(withdraw)
+    press_phase.record_move([-10, 0, 10])           # agent records the move before the retry step
+    assert press_phase.record_retry(withdraw) == press_phase.REOPEN
     assert press_phase.final_press_z_mm() == -10
-    press_phase.record_move([5, 0, -10])
-    press_phase.set_gripper('open')                 # reopening starts a new attempt
-    assert press_phase.final_press_z_mm() == -10
+    press_phase.set_gripper('open')
+    press_phase.set_gripper('closed')
+    assert press_phase.final_press_z_mm() == -10 and press_phase.retry_withdraw_mm() == [-10, 0, 0]
+
+
+def test_configured_drop_unrestored_is_not_applied_twice_after_reopening():
+    press_phase.configure(final_drop_m=.010)
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([40, 0, 0])
+    press_phase.record_move([5, 0, -10])            # dropped, target not reached
+    press_phase.record_move([-20, 0, 0])
+    press_phase.set_gripper('open')                 # reopened without the restoring withdraw
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([40, 0, 0])
+    assert press_phase.final_press_z_mm() == 0
+    press_phase.check_head_alignment('propose_move', [5, 0, 0], HEAD_OK)
+
+
+def test_configured_drop_reaches_model_text():
+    from pressb.agent_loop.localized_conversation import press_status, _drop_note
+    press_phase.configure()
+    assert _drop_note() == ''
+    press_phase.configure(final_drop_m=.0075)
+    press_phase.set_gripper('closed')
+    press_phase._state['z_b_m'] = .2
+    press_phase.record_move([40, 0, 0])
+    status = press_status(press_phase.describe())
+    assert status['final_press_z_mm'] == -7.5 and 'Z=-7.5' in status['instruction']
+    assert '7.5 mm DOWN' in _drop_note()

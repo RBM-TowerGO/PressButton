@@ -213,7 +213,8 @@ def run(args):
                 press_limits = press_phase.configure(
                     overpress_m=args.press_overpress_mm/1000.0,
                     max_travel_m=args.press_max_travel_mm/1000.0,
-                    standoff_m=args.press_standoff_mm/1000.0)
+                    standoff_m=args.press_standoff_mm/1000.0,
+                    final_drop_m=args.press_drop_mm/1000.0)
                 press_phase.set_gripper(args.fingertip_state)
                 print('指端标定：对准与接触点固定为合拢末端像素 '
                       +str([round(v, 4) for v in tip_calibration['point_normalized']])
@@ -223,6 +224,9 @@ def run(args):
                       '且不超过冻结上限。', flush=True)
                 print(f'闭合后第一次前推只到读数 {150+args.press_standoff_mm:.0f} mm（接触前预留 '
                       f'{args.press_standoff_mm:.0f} mm），停在面板前；随后以头部视角为主、结合腕部视角判断对准，Y/Z 微调，再最终按压。', flush=True)
+                if args.press_drop_mm:
+                    print(f'最终按压额外向下 {args.press_drop_mm:g} mm；按到位后的固定回撤同时抬回 '
+                          f'{args.press_drop_mm:g} mm，不累积。', flush=True)
         provider_name = getattr(args, 'model_provider', 'thor')
         provider = model_provider.configure(provider_name, model=getattr(args, 'model_name', None),
                                             base=args.model_base if provider_name != 'thor' else None,
@@ -428,6 +432,7 @@ def parse_args(argv=None):
     p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start, recorded only so the program knows whether depth at the aim pixel still sees the button; it never changes the aim point')
     p.add_argument('--press-overpress-mm',type=float,default=0.0,help='push past the 150 mm contact reading by this much; live depth target is 150 minus this (default 0: 150 mm is the final reachable reading)')
     p.add_argument('--press-standoff-mm',type=float,default=10.0,help='the first closed forward stroke stops this far before the 150 mm contact reading, leaving room for head-view alignment before the final press (default 10 mm)')
+    p.add_argument('--press-drop-mm',type=float,default=0.0,help='extra downward move on the aligned final press; the fixed withdraw after a completed press rises back by the same amount, so it never accumulates (default 0: off)')
     p.add_argument('--press-max-travel-mm',type=float,default=85.0,help='hard ceiling on the closed-gripper forward stroke (default 85 mm)')
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')
     p.add_argument('--demo-last-steps',type=int,help='optionally select last N completed actions through reviewed activation; default: full demonstration')
@@ -444,6 +449,7 @@ def parse_args(argv=None):
     if args.max_rounds<=0:p.error('--max-rounds must be positive')
     if args.max_press_attempts<0:p.error('--max-press-attempts must not be negative')
     if args.press_standoff_mm<0:p.error('--press-standoff-mm must not be negative')
+    if args.press_drop_mm<0:p.error('--press-drop-mm must not be negative')
     if args.demo_last_steps is not None and args.demo_last_steps<=0:p.error('--demo-last-steps must be positive')
     return args
 
