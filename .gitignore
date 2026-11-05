@@ -53,3 +53,6 @@ htmlcov/
 *.pem
 *.key
 *.sock
+
+# Locally compiled S1B camera metadata helper.
+/scripts/s1b_depth_metadata.bin
