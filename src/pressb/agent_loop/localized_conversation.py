@@ -112,6 +112,17 @@ def _drop_note():
             'not accumulate. Use final_press_z_mm and withdraw_mm from CURRENT_PRESS_PHASE.') if drop else ''
 
 
+# Press-stage head zoom: crop the CURRENT head image around the last pre-press head
+# button box. Wider than the localization crop so the closed end in front of the
+# button stays in view. Skipped when the head has turned since that box.
+HEAD_PRESS_ZOOM_SCALE = 6.0
+HEAD_PRESS_ZOOM_MAX_HEAD_DELTA_DEG = 1.0
+HEAD_PRESS_ZOOM_TEXT = ('ZOOMED HEAD CROP (program crop of the CURRENT head image, not a new localization): '
+                        'centered on where the button was located before the gripper closed. Use it to judge '
+                        'the closed end versus the target button and the light; the full HEAD image above stays '
+                        'the reference for the whole scene.')
+
+
 HEAD_ALIGNMENT_SCHEMA = dict(
     type='object', additionalProperties=False, required=['verdict', 'head_view', 'wrist_view'],
     properties=dict(
@@ -278,6 +289,8 @@ class LocalizedConversation(Conversation):
         self.head_advice = {}
         # Observations decided in the closed-gripper press stage without localization.
         self.direct_press = set()
+        # Press-stage head zoom: current observation only, never kept in history.
+        self.head_zooms = {}
         # Accepted model head-view alignment verdicts in the closed press, per observation.
         self.head_checks = {}
 
@@ -315,6 +328,10 @@ class LocalizedConversation(Conversation):
             except (ValueError, TypeError):
                 continue
             oid = data.get('observation_id') if isinstance(data, dict) else None
+            zoom = self.head_zooms.get(oid) if oid == self.current_id else None
+            if zoom and zoom.get('status') == 'applied':
+                result.append(dict(role='user', content=[dict(type='text', text=HEAD_PRESS_ZOOM_TEXT),
+                                                         copy.deepcopy(zoom['part'])]))
             if oid in self.localization_messages:
                 contexts = copy.deepcopy(self.localization_messages[oid])
                 if data.get('context_type') == 'EARLIER_OBSERVATION_THIS_RUN_NOT_CURRENT':
@@ -403,11 +420,32 @@ class LocalizedConversation(Conversation):
             self._context(oid, 'CURRENT_PRESS_PHASE', **status)
             self._context(oid, 'DIRECT_PRESS_STAGE', observation_id=oid, instruction=DIRECT_PRESS_INSTRUCTION+_drop_note())
         atomic_json(directory/'press_phase_status.json', self.press_status[oid])
+        if oid not in self.head_zooms:
+            self.head_zooms[oid] = self._head_zoom(oid)
+        atomic_json(directory/'head_zoom.json', {k: v for k, v in self.head_zooms[oid].items() if k != 'part'})
         self.review_signals[oid] = dict(review_required=False, reasons=['direct_press_stage'])
         self.review_phase = 'not_required'
         self._check(oid, cancel)
         atomic_json(directory/'decision_context.json', self.decision_context('action_request'))
         return self.prepare(base, directory, cancel)
+
+    def _head_zoom(self, oid):
+        """Zoomed crop of this head image around the last pre-press head box, or a skip record."""
+        source = next(((loc_id, value) for loc_id, value in reversed(list(self.localizations.items()))
+                       if (value.get('head') or {}).get('button_box') is not None), None)
+        if source is None:
+            return dict(status='skipped_no_prior_head_box')
+        loc_id, value = source
+        box = value['head']['button_box']
+        before, now = self._state(loc_id).get('head_deg'), self._state(oid).get('head_deg')
+        record = dict(source_observation_id=loc_id, head_box=copy.deepcopy(box), scale=HEAD_PRESS_ZOOM_SCALE,
+                      head_deg_at_box=copy.deepcopy(before), head_deg_now=copy.deepcopy(now))
+        if (not before or not now or len(before) != 2 or len(now) != 2
+                or max(abs(a-b) for a, b in zip(before, now)) > HEAD_PRESS_ZOOM_MAX_HEAD_DELTA_DEG):
+            return dict(record, status='skipped_head_moved_since_box')
+        image = locator.image_from_part(self.observations[oid]['content'][2])
+        window = locator.crop_window(box, list(image.size), HEAD_PRESS_ZOOM_SCALE)
+        return dict(record, status='applied', crop_window_px=window, part=locator.crop_image_part(image, window))
 
     def prepare_decision(self, base, directory, cancel=None):
         directory = Path(directory); directory.mkdir(parents=True, exist_ok=True)
@@ -596,10 +634,13 @@ class LocalizedConversation(Conversation):
                                   **{k:v for k,v in args.items() if k != 'reason'}))
         if fn['name'] == 'propose_move' and not any(args['xyz_mm']):
             # 2026-11-05: [0,0,0] "to refresh before advancing" looped for 20+ rounds.
+            # 2026-11-05 run 20261105_174404_1346bdd3: [0,0,0] "to look down" was repaired into +Z
+            # because this text omitted propose_head; the head was never lowered.
             raise ValueError('zero_move_rejected: 零移动不会执行任何动作；要接近就直接提 +X，前推检查会自动进行；'
-                             '要新图就用 request_observation。A zero move does nothing; to approach, propose '
-                             'positive X directly (the forward check runs automatically); for a new image use '
-                             'request_observation.')
+                             '要改变视角（如低头）就用 propose_head；要新图就用 request_observation。'
+                             'A zero move does nothing; to approach, propose positive X directly (the forward '
+                             'check runs automatically); to change the view (e.g. look down) use propose_head; '
+                             'for a new image use request_observation.')
         press_phase.check_retry(dict(name=fn['name'], arguments=args))
         head = press_phase.check_head_alignment(fn['name'], args.get('xyz_mm'), raw.get('head_alignment'))
         if head is not None:

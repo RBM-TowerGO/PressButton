@@ -129,11 +129,12 @@ def test_single_request_retains_model_answer_without_repair(kind, jpeg, tmp_path
         return answer
     monkeypatch.setattr(loc, 'request', request)
     result = loc.inspect('fake', body(jpeg), 'live-0', tmp_path, revision=2)
-    # A readable wrist box gets one zoomed second pass; this reply is unusable
-    # there, so the first-pass answer is kept unchanged.
+    # A readable wrist box gets one zoomed second pass; this reply is unusable there,
+    # so the first-pass answer is kept unchanged. The head is not refined.
     readable = kind in ('wrong_tool', 'length')
     assert len(calls) == (2 if readable else 1) and result['revision'] == 2
     assert result['wrist_refinement']['status'] == ('no_box_kept_first_pass' if readable else 'skipped_no_first_box')
+    assert result['head_refinement']['status'] == 'not_refined_before_press'
     assert result['raw_output'] == [message]
     assert not list(tmp_path.glob('repair*'))
     assert json.loads((tmp_path/'response-0.json').read_text())['response'] == answer
@@ -305,8 +306,12 @@ def test_crop_window_is_square_scaled_and_kept_inside_image():
     assert loc.crop_window([.1, .1, .9, .9], [640, 360]) == [140, 0, 500, 360]
 
 
+def _camera(request_body):
+    return 'head' if 'CURRENT HEAD image' in request_body['messages'][0]['content'] else 'wrist'
+
+
 def test_wrist_refinement_replaces_box_everywhere_and_keeps_first_pass(jpeg, tmp_path, monkeypatch):
-    first = locations(wrist=view(button_box=[.5, .5, .6, .6]))
+    first = locations(wrist=view(button_box=[.5, .5, .6, .6]), head=view(button_box=None))
     replies = iter([reply(first), refine_reply()])
     bodies = []
     monkeypatch.setattr(loc, 'request', lambda *a, **k: bodies.append(a[2]) or next(replies))
@@ -317,21 +322,23 @@ def test_wrist_refinement_replaces_box_everywhere_and_keeps_first_pass(jpeg, tmp
     assert result['raw_locations']['wrist']['button_box'] == pytest.approx(expected)
     assert result['wrist']['derived_relation']['returned_box_center'] == pytest.approx(
         [(expected[0]+expected[2])/2, (expected[1]+expected[3])/2])
-    assert result['head']['button_box'] == first['head']['button_box']
+    assert result['head']['button_box'] is None and len(bodies) == 2
+    assert result['head_refinement']['status'] == 'not_refined_before_press'
     info = result['wrist_refinement']
     assert info['status'] == 'refined' and info['first_box'] == [.5, .5, .6, .6]
     assert info['crop_window_px'] == [256, 102, 448, 294]
     refine = bodies[1]
     assert refine['tools'][0]['function']['name'] == loc.REFINE_TOOL_NAME
     assert image_count(refine['messages']) == 1 and refine['temperature'] == 0
-    assert 'wrist_refinement' not in loc.model_view(result)
+    assert 'RIGHT WRIST' in refine['messages'][0]['content'] and 'covered by the hand' not in refine['messages'][0]['content']
+    assert not {'head_refinement', 'wrist_refinement'} & set(loc.model_view(result))
     assert json.loads((tmp_path/'assessment.json').read_text()) == result
     assert json.loads((tmp_path/'metrics.json').read_text())['wrist_refinement'] == 'refined'
 
 
 @pytest.mark.parametrize('second', ['not_visible', 'no_box', 'error'])
 def test_wrist_refinement_failure_keeps_first_pass_box(second, jpeg, tmp_path, monkeypatch):
-    first = locations(wrist=view(button_box=[.5, .5, .6, .6]))
+    first = locations(wrist=view(button_box=[.5, .5, .6, .6]), head=view(button_box=None))
     def request(*args, **kwargs):
         if args[2]['tools'][0]['function']['name'] == loc.TOOL_NAME:
             return reply(first)
@@ -358,3 +365,22 @@ def test_stop_during_wrist_refinement_still_blocks_result(jpeg, tmp_path, monkey
     with pytest.raises(InterruptedError):
         loc.inspect('fake', body(jpeg), 'live-0', tmp_path, cancel)
     assert not (tmp_path/'assessment.json').exists()
+
+
+def test_head_box_is_not_refined_during_localization(jpeg, tmp_path, monkeypatch):
+    first = locations(head=view(button_box=[.5, .5, .6, .6]), wrist=view(button_box=[.2, .2, .3, .3]))
+    seen = []
+    def request(*args, **kwargs):
+        if args[2]['tools'][0]['function']['name'] == loc.TOOL_NAME:
+            return reply(first)
+        seen.append(_camera(args[2]))
+        return refine_reply()
+    monkeypatch.setattr(loc, 'request', request)
+    result = loc.inspect('fake', body(jpeg), 'live-0', tmp_path)
+    assert seen == ['wrist']
+    assert result['head']['button_box'] == [.5, .5, .6, .6]
+    assert result['raw_locations']['head']['button_box'] == [.5, .5, .6, .6]
+    assert result['head_refinement'] == dict(source='policy', first_box=[.5, .5, .6, .6],
+                                             status='not_refined_before_press')
+    assert result['wrist_refinement']['status'] == 'refined'
+    assert not (tmp_path/'refine_head_request.json').exists()

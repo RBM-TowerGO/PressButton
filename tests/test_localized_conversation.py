@@ -238,7 +238,7 @@ def test_same_motion_window_is_reviewed_once_until_a_new_move(jpeg, monkeypatch,
 def test_all_zero_move_is_rejected_for_repair(jpeg, monkeypatch, tmp_path):
     c,_=make(jpeg,monkeypatch)
     c.prepare_decision('fake',tmp_path/'0')
-    with pytest.raises(ValueError, match='zero_move_rejected.*request_observation'):
+    with pytest.raises(ValueError, match='zero_move_rejected.*propose_head.*request_observation'):
         c.parse_response(action(c,xyz=[0,0,0]),observation(0),c.session,tmp_path/'0')
     assert c.parse_response(action(c,xyz=[0,0,1]),observation(0),c.session,tmp_path/'0')['arguments']['xyz_mm']==[0,0,1]
 

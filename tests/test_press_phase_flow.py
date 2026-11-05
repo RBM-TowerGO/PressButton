@@ -534,3 +534,59 @@ def test_configured_drop_reaches_model_text():
     status = press_status(press_phase.describe())
     assert status['final_press_z_mm'] == -7.5 and 'Z=-7.5' in status['instruction']
     assert '7.5 mm DOWN' in _drop_note()
+
+
+def _head_zoom_messages(c):
+    return [m for m in c.body()['messages'] if m['role'] == 'user' and isinstance(m.get('content'), list)
+            and m['content'] and m['content'][0].get('text', '').startswith('ZOOMED HEAD CROP')]
+
+
+def test_press_stage_gets_head_zoom_around_last_prepress_box(jpeg, monkeypatch, tmp_path):
+    from pressb.agent_loop import localized_conversation as lc
+    head_box = [.45, .45, .5, .52]
+    calibrated_tip.activate(CALIBRATION, 'open')
+    press_phase.configure()
+    c, _ = make(jpeg, monkeypatch, data=lambda oid: dict(coordinate_units='normalized_01', head=view(button_box=head_box),
+                wrist=view(button_box=_box_on_aim(), contact_visibility='unknown', contact_tip=None, arrow_box=None)))
+    c.manifests[c.current_id] = _obs(0, 0.200)
+    c.prepare_decision('fake', tmp_path/'0')
+    # Before the press: no zoom (localization stage), and only the wrist was refined.
+    assert _head_zoom_messages(c) == [] and 'live-0' not in c.head_zooms
+    monkeypatch.setattr(client, 'request', lambda *a, **k: action(c, 'propose_gripper', key='c'))
+    proposal = client.propose('fake', c.body(), _obs(0, .2), c.session, tmp_path/'0', conversation=c)
+    _step(c, jpeg, 1, proposal, 0.198)
+    press_phase.set_gripper('closed')
+    # Same head pose as the localized observation.
+    head = json.loads(c.observations['live-0']['content'][0]['text'])['state']['head_deg']
+    data = json.loads(c.observations['live-1']['content'][0]['text']); data['state']['head_deg'] = list(head)
+    c.observations['live-1']['content'][0]['text'] = json.dumps(data)
+    c.prepare_decision('fake', tmp_path/'1')
+    zoom = c.head_zooms['live-1']
+    assert zoom['status'] == 'applied' and zoom['source_observation_id'] == 'live-0'
+    assert zoom['head_box'] == head_box and zoom['scale'] == lc.HEAD_PRESS_ZOOM_SCALE
+    messages = _head_zoom_messages(c)
+    assert len(messages) == 1 and messages[0]['content'][1]['type'] == 'image_url'
+    saved = json.loads((tmp_path/'1'/'head_zoom.json').read_text())
+    assert saved['status'] == 'applied' and 'part' not in saved
+    # The zoom belongs to the current observation only; after the next step it is not in history.
+    monkeypatch.setattr(client, 'request', lambda *a, **k: action(c, xyz=[38, 0, 0]))
+    proposal = client.propose('fake', c.body(), _obs(1, .198), c.session, tmp_path/'1', conversation=c)
+    _step(c, jpeg, 2, proposal, 0.160)
+    assert c.current_id == 'live-2' and 'live-2' not in c.head_zooms
+    assert _head_zoom_messages(c) == []
+
+
+def test_press_stage_skips_head_zoom_after_head_moved(jpeg, monkeypatch, tmp_path):
+    calibrated_tip.activate(CALIBRATION, 'open')
+    press_phase.configure()
+    c, _ = make(jpeg, monkeypatch, data=lambda oid: dict(coordinate_units='normalized_01', head=view(button_box=[.45, .45, .5, .52]),
+                wrist=view(button_box=_box_on_aim(), contact_visibility='unknown', contact_tip=None, arrow_box=None)))
+    c.manifests[c.current_id] = _obs(0, 0.200)
+    c.prepare_decision('fake', tmp_path/'0')
+    monkeypatch.setattr(client, 'request', lambda *a, **k: action(c, 'propose_gripper', key='c'))
+    proposal = client.propose('fake', c.body(), _obs(0, .2), c.session, tmp_path/'0', conversation=c)
+    _step(c, jpeg, 1, proposal, 0.198)          # observation helper turns the head pitch by 10 degrees
+    press_phase.set_gripper('closed')
+    c.prepare_decision('fake', tmp_path/'1')
+    assert c.head_zooms['live-1']['status'] == 'skipped_head_moved_since_box'
+    assert _head_zoom_messages(c) == []
