@@ -1,1 +1,1 @@
-"""Piper elevator manipulation: planning, simulation, and auditable records."""
+"""S1B elevator button agent: robot control service and model API client."""

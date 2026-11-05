@@ -1,6 +1,0 @@
-{
-  "attempt": 0,
-  "valid": false,
-  "error_type": "ValueError",
-  "error": "invalid_inspect_view_fields"
-}

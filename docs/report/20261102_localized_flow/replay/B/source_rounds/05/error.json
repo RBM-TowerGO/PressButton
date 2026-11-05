@@ -1,5 +1,0 @@
-{
-  "stage": "round",
-  "error_type": "ValueError",
-  "error": "HTTP 503: {\n  \"error\": \"dictionary changed size during iteration\"\n}"
-}

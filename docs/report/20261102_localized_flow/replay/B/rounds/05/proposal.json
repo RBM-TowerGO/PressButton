@@ -1,6 +1,0 @@
-{
-  "name": "request_observation",
-  "arguments": {
-    "reason": "当前两视图均无可见手指前端/箭头接触点，usable_views为空；先刷新图像确认按钮与箭头是否清晰，再决定头部或手部调整。"
-  }
-}

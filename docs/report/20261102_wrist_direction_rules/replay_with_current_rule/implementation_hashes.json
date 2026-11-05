@@ -1,6 +1,0 @@
-{
-  "src/pressb/agent_loop/wrist_direction_rules.py": "ffd65f4ec2c63cabda520d402bb5d45cd6edeb0c523e43cf2fb19f21c8b711f1",
-  "src/pressb/agent_loop/localized_conversation.py": "ae8c36bac0e25a60daa39d398e28b8aec23d810bdaf3a97b0588f479064cb584",
-  "src/pressb/agent_loop/localized_reassessment.py": "9d999d8bd1ad782b39f0bd6bdd59841c18008307fee1a1ca74b852a5640a8e73",
-  "docs/astribot/planar_control/agent_system_prompt_localized.txt": "c22acc67df7c2fafe4c6355d4ab56614cf314437e919037dd2874d12749bf4a1"
-}

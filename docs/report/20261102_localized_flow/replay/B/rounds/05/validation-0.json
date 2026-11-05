@@ -1,9 +1,0 @@
-{
-  "stage": "parse_proposal",
-  "status": "retrying",
-  "attempt": 0,
-  "next_attempt": 1,
-  "observation_id": "981630409f1349a2a93a53a23eb19399",
-  "error_type": "ValueError",
-  "error": "visual_basis_view_not_usable:[]"
-}

@@ -1,9 +1,0 @@
-image,status,button_count,symbol,visibility,illumination,boxes_px,note
-01_small_upper,detected,1,other,full,off,"[[295.68, 46.8, 343.04, 86.4]]",图像中仅识别到1个圆形电梯呼叫按钮；下方黑色结构为机械夹爪，不计入按钮。
-02_large_left,detected,1,down_arrow,full,uncertain,"[[80.0, 151.2, 166.4, 234.0]]",图像左侧可见一个真实圆形电梯呼叫按钮，包含外圈和向下箭头；右侧模糊区域未见可辨识按钮。
-03_middle_complete,detected,1,down_arrow,full,uncertain,"[[305.92, 135.0, 359.68, 185.4]]",图像中仅识别到一个圆形电梯呼叫按钮，位于金属面板中央，符号为向下箭头；其余结构为机械臂与墙面，不计为按钮。
-04_low_right,detected,1,down_arrow,partial,uncertain,"[[376.32, 226.8, 430.08, 284.4]]",图像中仅识别到一个圆形电梯按钮，带向下箭头，部分被遮挡；其余结构为面板、屏幕或机械部件，不计为按钮。
-05_occluded_unlit,not_visible,0,,,,[],画面中仅可见金属面板、屏幕区域和机械夹爪，未识别到圆形电梯按钮。
-06_occluded_lit,not_visible,0,,,,[],画面中仅可见金属面板、屏幕区域和机械夹爪，未识别到圆形电梯按钮。
-07_top_clipped,detected,1,down_arrow,partial,uncertain,"[[216.32, 0.0, 282.88, 38.16]]",仅识别到面板上方一个圆形电梯呼叫按钮，带向下箭头；其余结构为机械臂和反光，不计为按钮。
-08_button_not_visible,not_visible,0,,,,[],画面中可见电梯面板/屏幕与机械夹爪，但没有可辨识的圆形电梯呼叫按钮；未见按钮外圈或箭头符号。

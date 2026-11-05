@@ -1,6 +1,0 @@
-{
-  "error": "demonstration directory already exists when execute-prepared called demo.save twice",
-  "model_requests_sent": 0,
-  "robot_connected": false,
-  "fix": "Do not save already prepared demo again"
-}
