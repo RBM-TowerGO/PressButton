@@ -20,3 +20,7 @@ export ROBOT_TYPE="${ROBOT_TYPE:-S1}"
 export PYTHONPATH="$PRESSB_ROOT/src:$PRESSB_ROOT/scripts:$ASTRIBOT_SDK_ROOT:$ASTRIBOT_SDK_ROOT/third_party/astribot_ros_middleware_py:${PYTHONPATH:-}"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}:$ASTRIBOT_SDK_ROOT/astribot_sdk/core/common/robotics_library_py:$ASTRIBOT_SDK_ROOT/astribot_sdk/core/common/whole_body_control/third_party:$ASTRIBOT_SDK_ROOT/third_party/drake/lib:$ASTRIBOT_SDK_ROOT/third_party/third_pkg"
 export PRESSB_ROOT
+# Model API keys (e.g. DEEPSEEK_API_KEY) from the git-ignored .env, if present.
+if [[ -f "$PRESSB_ROOT/.env" ]]; then
+    set -a; source "$PRESSB_ROOT/.env"; set +a
+fi
