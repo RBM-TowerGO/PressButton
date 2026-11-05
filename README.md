@@ -50,6 +50,20 @@ API key 只从环境变量读取，只附加到发往模型地址的请求，不
 
 网页：<http://127.0.0.1:8766>。每次运行记录在 `outputs/agent_web/<时间_ID>/`。
 
+## 在 S1B 上直接运行
+
+仓库位于 `/home/astribot/TowerGO/manipulation`，使用 Conda 环境 `towergo`：
+
+```bash
+cd /home/astribot/TowerGO/manipulation
+source scripts/activate_s1b.sh        # towergo + ROS Domain 25 + Astribot SDK
+export DEEPSEEK_API_KEY=...
+python scripts/s1b_agent_run.py --host '' --model-provider deepseek \
+  --fingertip-calibration docs/astribot/planar_control/fingertip_calibration/right_wrist_fingertip_point.json
+```
+
+`--host ''` 让机器人服务在本机启动，不再 SSH 打包。不要用 `/home/astribot/TowerGO/activate.sh`：它切到离线隔离的 Domain 125，连不上真机。S1B 上没有 `Thor` 主机别名，用 Thor 需先在 `~/.ssh/config` 配好，否则用外部 API。网页端口 8766/8765 只监听本机，从工作站查看需 `ssh -L 8766:127.0.0.1:8766 -L 8765:127.0.0.1:8765 S1B`。
+
 ## 其他入口
 
 | 用途 | 命令 |
