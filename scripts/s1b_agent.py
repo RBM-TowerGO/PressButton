@@ -426,7 +426,7 @@ def parse_args(argv=None):
                    help='report_unable is rejected after a missed press until this many press attempts were made')
     p.add_argument('--fingertip-calibration',help='human-marked fingertip JSON (s1b-fingertip-point-v1); the merged-end closed pixel becomes the fixed alignment and contact point and the model locates only the button')
     p.add_argument('--fingertip-state',choices=('closed','open'),default='open',help='gripper state at start, recorded only so the program knows whether depth at the aim pixel still sees the button; it never changes the aim point')
-    p.add_argument('--press-overpress-mm',type=float,default=5.0,help='push past the 150 mm contact reading by this much; live depth target is 150 minus this (default 5 mm)')
+    p.add_argument('--press-overpress-mm',type=float,default=0.0,help='push past the 150 mm contact reading by this much; live depth target is 150 minus this (default 0: 150 mm is the final reachable reading)')
     p.add_argument('--press-standoff-mm',type=float,default=10.0,help='the first closed forward stroke stops this far before the 150 mm contact reading, leaving room for head-view alignment before the final press (default 10 mm)')
     p.add_argument('--press-max-travel-mm',type=float,default=85.0,help='hard ceiling on the closed-gripper forward stroke (default 85 mm)')
     p.add_argument('--demo',help='original keyboard session directory with operations and before/after images')

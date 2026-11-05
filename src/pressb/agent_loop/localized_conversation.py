@@ -89,9 +89,14 @@ DIRECT_PRESS_INSTRUCTION = (
     'blocked by the hand), then combine it with the WRIST image: at the standoff the button edge or ring '
     'is often still visible around the closed tips, which shows the remaining offset at close range. If '
     'the two views disagree, trust a clear WRIST offset over an uncertain HEAD impression, and trust HEAD '
-    'when the WRIST button is hidden. verdict=aligned only when HEAD shows the closed end clearly in front '
-    'of the target button face and WRIST shows no clear offset; then press with positive X (Y=0, Z=0) within '
-    'remaining_mm. verdict=offset or unclear: fine-tune with Y/Z only (X=0, a few mm, about the button radius '
+    'when the WRIST button is hidden. If the button is visible in NEITHER the HEAD nor the WRIST image, '
+    'verdict must be unclear and positive X is not allowed: withdraw a little with negative X until the '
+    'WRIST view shows the button edge again, or adjust the head angle so the HEAD view sees the button '
+    'past the gripper. verdict=aligned only when HEAD shows the closed end clearly in front '
+    'of the target button face and WRIST shows no clear offset; then press with positive X within '
+    'remaining_mm, Y=0 and Z=final_press_z_mm from CURRENT_PRESS_PHASE: the first final press after each '
+    'withdrawal also moves 10 mm DOWN (Z=-10); it does not stack, so further strokes before the next '
+    'withdrawal use Z=0. verdict=offset or unclear: fine-tune with Y/Z only (X=0, a few mm, about the button radius '
     'at most) and judge again on the next image; several such rounds are normal. Re-judge before each further '
     'stroke. Use the visible effect of your previous Y/Z shift to confirm the direction. Once a press '
     'reaches its target the program fixes the next steps: withdraw exactly 10 mm ([-10, 0, 0]); then, if '
@@ -159,7 +164,7 @@ def press_status(state):
                        'closed. After opening, the program localizes the button again; realign with the gripper '
                        'open, let the range freeze, close and press again. A further negative-X withdrawal is '
                        'allowed if the HEAD view needs more clearance.')
-    elif remaining <= 0.0005:
+    elif remaining <= press_phase.REACHED_TOLERANCE_M:
         stage = 'press_reached'
         instruction = ('The live depth at the merged end has reached the press target (contact plus overpress) '
                        'or the frozen range is used up. Do not push further. Judge the target light from the '
@@ -182,6 +187,7 @@ def press_status(state):
     else:
         stage = 'head_align'
         shifts = state.get('head_shifts') or 0
+        drop = state.get('final_press_z_mm', -press_phase.FINAL_PRESS_DROP_MM)
         instruction = ('The first closed approach is done and about '
                        f'{remaining*1000:.1f} mm remain to the press target ({target*1000:.0f} mm live depth). '
                        'Before the FINAL press, judge whether the closed end is in front of the target button '
@@ -189,7 +195,8 @@ def press_status(state):
                        'visible around the closed tips shows the remaining offset). Set head_alignment '
                        '{verdict, head_view, wrist_view} on propose_move. aligned (HEAD clearly on the '
                        'button, WRIST no clear offset): '
-                       f'press with positive X of at most {remaining*1000:.1f} mm, Y=0, Z=0. offset/unclear: '
+                       f'press with positive X of at most {remaining*1000:.1f} mm, Y=0, Z={drop} '
+                       f'({"10 mm extra downward move on this final press; it is not repeated" if drop else "the 10 mm downward move was already made since the last withdrawal"}). offset/unclear: '
                        'do not push; fine-tune with Y/Z only (X=0, a few mm; withdraw a little with negative X '
                        'first if the end already touches the panel), then judge again on the next image; '
                        'repeat until aligned. Adjust the head with propose_head if the HEAD view cannot show '
@@ -208,7 +215,7 @@ def press_status(state):
                 tip_plane_mm=round((state.get('tip_plane_m') or 0)*1000, 1), close_band_mm=band,
                 retry_step=state.get('retry_step'), completed_presses=state.get('completed_presses'),
                 head_shifts=state.get('head_shifts'), head_alignment_required=state.get('head_alignment_required'),
-                approach=state.get('approach'),
+                final_press_z_mm=state.get('final_press_z_mm'), approach=state.get('approach'),
                 approach_stop_depth_mm=round(state['approach_stop_m']*1000, 1) if state.get('approach_stop_m') else None,
                 instruction=instruction, source='program_rule_on_recorded_depth')
 
@@ -240,6 +247,8 @@ class LocalizedConversation(Conversation):
         self.localizations, self.localization_messages, self.localized_progress = {}, {}, {}
         self.processed_localizations = set()
         self.hypothesis_reviews, self.review_signals, self.reassessments = {}, {}, {}
+        # Motion windows already reviewed, keyed by axis, sign and their latest command.
+        self.reviewed_windows = set()
         self.review_phase = 'not_required'
         self.forward_checks = {}
         self.press_checks = {}
@@ -316,7 +325,8 @@ class LocalizedConversation(Conversation):
                                    'from the HEAD and WRIST images yourself; +Y robot LEFT, -Y robot RIGHT, +Z up. '
                                    'Positive X within the live-depth press limit remaining_mm. After the first closed '
                                    'approach, positive X also needs head_alignment.verdict=aligned (HEAD view '
-                                   'first, combined with WRIST) with Y=0 and Z=0; otherwise fine-tune Y/Z with X=0 and judge again. '
+                                   'first, combined with WRIST) with Y=0 and Z=final_press_z_mm (-10 on the first final '
+                                   'press after each withdrawal, then 0); otherwise fine-tune Y/Z with X=0 and judge again. '
                                    'No automatic return or clipping.')
             if press_phase.head_alignment_required():
                 params = move['parameters']
@@ -495,6 +505,15 @@ class LocalizedConversation(Conversation):
             return
         if oid in self.hypothesis_reviews:
             return
+        # The same motion window is reviewed once: rounds without a new actual move
+        # (observation-only, head, gripper) do not repeat the review on old commands.
+        window_key = tuple((w['axis'], w['sign'], w['commands'][-1]['command_id']) for w in signal['windows'])
+        if window_key in self.reviewed_windows:
+            signal.update(review_required=False, reasons=signal['reasons']+['window_already_reviewed'])
+            self.review_signals[oid] = signal
+            atomic_json(directory/'hypothesis_review'/'trigger.json', signal)
+            self.review_phase = 'not_required'
+            return
         if signal['baseline_observation_id'] not in self.localizations or oid not in self.localizations:
             # The window reaches into the direct press stage, which has no localization to compare.
             signal.update(review_required=False, reasons=signal['reasons']+['window_spans_direct_press_stage'])
@@ -513,6 +532,7 @@ class LocalizedConversation(Conversation):
                 or review.get('evidence_observation_ids') != [baseline, oid]):
             raise ValueError('hypothesis_review_observation_mismatch')
         self.hypothesis_reviews[oid] = copy.deepcopy(review)
+        self.reviewed_windows.add(window_key)
         self._context(oid, 'MOTION_HYPOTHESIS_REVIEW', assessment=review, trigger=signal,
             instruction='Reassess the cause, not merely the reason wording. Include reassessment with current '
             'evidence, expected_visual_change and if_no_change. Apply the task-specific wrist direction table; '
@@ -557,6 +577,12 @@ class LocalizedConversation(Conversation):
         if fn['name'].startswith('propose_'):
             validate_command(dict(type=fn['name'].removeprefix('propose_'),
                                   **{k:v for k,v in args.items() if k != 'reason'}))
+        if fn['name'] == 'propose_move' and not any(args['xyz_mm']):
+            # 2026-11-05: [0,0,0] "to refresh before advancing" looped for 20+ rounds.
+            raise ValueError('zero_move_rejected: 零移动不会执行任何动作；要接近就直接提 +X，前推检查会自动进行；'
+                             '要新图就用 request_observation。A zero move does nothing; to approach, propose '
+                             'positive X directly (the forward check runs automatically); for a new image use '
+                             'request_observation.')
         press_phase.check_retry(dict(name=fn['name'], arguments=args))
         head = press_phase.check_head_alignment(fn['name'], args.get('xyz_mm'), raw.get('head_alignment'))
         if head is not None:

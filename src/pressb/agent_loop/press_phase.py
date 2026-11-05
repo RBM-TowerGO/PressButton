@@ -70,7 +70,8 @@ def configure(**limits):
         raise ValueError('invalid_press_standoff')
     _state = dict(limits=merged, gripper_state='open', z_b_m=None, frozen_from=None,
                   consumed_m=0.0, live=None, freeze_x_m=None, measured={},
-                  retry_step=None, completed_presses=0, head_shifts=0, pressed_since_close=False)
+                  retry_step=None, completed_presses=0, head_shifts=0, pressed_since_close=False,
+                  press_drop_applied=False)
     return describe()
 
 
@@ -125,7 +126,7 @@ def set_gripper(state):
                       retry_step=None)
     # Every close (first attempt or a retry after reopening) starts a new approach: the
     # first forward stroke is free again and the head-view check follows it.
-    _state.update(head_shifts=0, pressed_since_close=False)
+    _state.update(head_shifts=0, pressed_since_close=False, press_drop_applied=False)
     _state['gripper_state'] = state
 
 
@@ -135,13 +136,22 @@ def set_gripper(state):
 # sits on the button, HEAD view first, combined with the WRIST view (the HEAD camera is not
 # blocked by the hand; the wrist view adds close-range detail where the button is still
 # visible around the closed tips). ``pressed_since_close`` marks the approach done:
-#   aligned        positive X allowed (Y/Z must be 0), still within the live-depth limit
+#   aligned        positive X allowed (Y=0, Z=final_press_z_mm()), still within the live-depth limit
 #   offset/unclear only Y/Z fine-tuning (X <= 0); judge again on the next image
 # Several Y/Z rounds are expected. HEAD_ALIGN_ROUNDS is advisory: beyond it the model is
 # told to reopen and realign with localization instead of shifting closed indefinitely.
 # This records the model's declared verdict only; it never inspects images.
 HEAD_VERDICTS = ('aligned', 'offset', 'unclear')
 HEAD_ALIGN_ROUNDS = 6
+# The first aligned final press after each withdrawal also moves down this much.
+# It does not stack: later strokes use Z=0 until a negative-X withdrawal or a
+# gripper change, after which the next final press drops again.
+FINAL_PRESS_DROP_MM = 10
+
+
+def final_press_z_mm():
+    """Z required on the next aligned final press: -FINAL_PRESS_DROP_MM, or 0 once applied."""
+    return 0 if _state is not None and _state['press_drop_applied'] else -FINAL_PRESS_DROP_MM
 
 
 def approach_stop_m():
@@ -201,10 +211,13 @@ def check_head_alignment(name, xyz_mm, head_alignment):
                 'HEAD and WRIST images (HEAD first; the WRIST view must not show a clear offset). While the '
                 'closed end is off the button or unclear, fine-tune with Y/Z only (X=0) and judge again on '
                 'the next image, or adjust the head view.')
-        if xyz[1] != 0 or xyz[2] != 0:
+        drop = final_press_z_mm()
+        if xyz[1] != 0 or xyz[2] != drop:
             raise ValueError(
-                'head_aligned_press_must_be_pure_x: the confirmed press is positive X with Y=0 and Z=0. '
-                'Make Y/Z corrections as a separate X=0 move first and confirm alignment on the next image.')
+                f'head_aligned_press_yz_fixed: the confirmed press is positive X with Y=0 and Z={drop} '
+                f'(the final press moves down {FINAL_PRESS_DROP_MM} mm once after each withdrawal; later '
+                'strokes use Z=0). Make other Y/Z corrections as a separate X=0 move first and confirm '
+                'alignment on the next image.')
     return dict(verdict=check['verdict'], **{k: v.strip() for k, v in views.items()})
 
 
@@ -216,6 +229,9 @@ def check_head_alignment(name, xyz_mm, head_alignment):
 # Opening clears the step. Program rule on recorded depth and commands only.
 RETRY_WITHDRAW_MM = (-10, 0, 0)
 WITHDRAW, REOPEN = 'withdraw', 'reopen'
+# 150 mm is the final reachable reading; under contact the live depth stops at
+# 150.2-151.6 mm (2026-11-05), so remaining within this counts as reached.
+REACHED_TOLERANCE_M = 0.002
 
 
 def retry_step():
@@ -225,7 +241,7 @@ def retry_step():
 def note_press_status(remaining_m):
     """Start the retry sequence once the closed press has reached its target."""
     if (_state is None or _state['gripper_state'] != 'closed' or _state['z_b_m'] is None
-            or _state['retry_step'] is not None or remaining_m is None or remaining_m > 0.0005
+            or _state['retry_step'] is not None or remaining_m is None or remaining_m > REACHED_TOLERANCE_M
             or in_approach()):
         # An approach limit reaching zero means "at the standoff", not "press complete".
         return retry_step()
@@ -445,6 +461,11 @@ def record_move(xyz_mm):
         return _state['consumed_m']
     if math.isfinite(x):
         _state['consumed_m'] = _state['consumed_m'] + x/1000.0
+        if x < 0:
+            _state['press_drop_applied'] = False    # recomputed after every withdrawal
+        elif (x > 0 and z == -FINAL_PRESS_DROP_MM and _state['retry_step'] is None
+                and _state['pressed_since_close']):
+            _state['press_drop_applied'] = True
         if (y or z) and x <= 0 and _state['retry_step'] is None and _state['pressed_since_close']:
             _state['head_shifts'] += 1    # a fine-tuning round of the head-view check
         if x > 0:
@@ -462,6 +483,7 @@ def describe(observation_id=None):
                  tip_plane_m=TIP_PLANE_M, target_m=target_m(), retry_step=_state['retry_step'],
                  completed_presses=_state['completed_presses'], head_shifts=_state['head_shifts'],
                  pressed_since_close=_state['pressed_since_close'],
+                 final_press_z_mm=final_press_z_mm(),
                  head_alignment_required=head_alignment_required(), approach=in_approach(),
                  approach_stop_m=approach_stop_m())
     if observation_id is not None and _state['z_b_m'] is not None:

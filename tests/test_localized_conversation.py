@@ -157,13 +157,16 @@ def test_encoded_xyz_and_old_basis_do_not_request_model_repair(jpeg, monkeypatch
 
 def test_positive_X_reaches_existing_HTTP_path_only_with_current_overlap_no_cap(jpeg, monkeypatch, tmp_path):
     from test_forward_guard_execution import robot
-    c,_=make(jpeg,monkeypatch,locations(head={},wrist={}))
+    # The gate reads this round's main localization wrist box: tip [.4,.4] inside [.3,.3,.6,.6].
+    c,_=make(jpeg,monkeypatch,locations(wrist=view(button_box=[.3,.3,.6,.6],contact_tip=[.4,.4])))
     body=c.prepare_decision('fake',tmp_path/'decision')
     xyz=[7.123456,-2.7182818,1.4142135];r=action(c,xyz=xyz)
     monkeypatch.setattr(client,'request',lambda *a,**k:r)
-    monkeypatch.setattr(overlap,'inspect',lambda base,body,oid,directory,cancel=None:overlapping(oid))
+    monkeypatch.setattr(overlap,'inspect',lambda *a,**k:pytest.fail('no separate forward-check request'))
     p=client.propose('fake',body,observation(0),c.session,tmp_path/'decision',conversation=c)
     assert c.forward_guard_decision['allowed'] is True
+    assert (json.loads((tmp_path/'decision/forward_guard/assessment.json').read_text())['localization_source']
+            == 'main_localization_same_observation')
     assert (tmp_path/'decision/forward_guard/decision.json').exists()
     c.check_execution(p,'live-0')
     executor,submitted=robot(tmp_path/'robot',monkeypatch)
@@ -174,6 +177,18 @@ def test_positive_X_reaches_existing_HTTP_path_only_with_current_overlap_no_cap(
     executor.cancel.set()
     with pytest.raises(InterruptedError):executor.execute(p,observation(0))
     assert len(submitted)==1
+
+
+def test_forward_gate_rejects_tip_outside_the_main_localization_box(jpeg, monkeypatch, tmp_path):
+    c,_=make(jpeg,monkeypatch,locations(wrist=view(button_box=[.3,.3,.6,.6],contact_tip=[.7,.4])))
+    body=c.prepare_decision('fake',tmp_path/'decision')
+    replies=iter([action(c,xyz=[20,0,0]),action(c,xyz=[0,5,0])])
+    monkeypatch.setattr(client,'request',lambda *a,**k:next(replies))
+    monkeypatch.setattr(overlap,'inspect',lambda *a,**k:pytest.fail('no separate forward-check request'))
+    p=client.propose('fake',body,observation(0),c.session,tmp_path/'decision',conversation=c)
+    assert p['arguments']['xyz_mm']==[0,5,0]
+    rejected=json.loads((tmp_path/'decision/validation-0.json').read_text())
+    assert 'forward_blocked_wrist_tip_not_inside_button_box' in rejected['error']
 
 
 def test_repetition_with_unknown_geometry_triggers_review_not_motion_replacement(jpeg, monkeypatch, tmp_path):
@@ -194,6 +209,38 @@ def test_repetition_with_unknown_geometry_triggers_review_not_motion_replacement
     assert not list(tmp_path.rglob('localization_review'))
     assert set(c.hypothesis_reviews) == {'live-3', 'live-5'}
     assert all(t['ledger']['result']['command']['xyz_mm'] == [0,20,0] for t in c.turns)
+
+
+def test_same_motion_window_is_reviewed_once_until_a_new_move(jpeg, monkeypatch, tmp_path):
+    """2026-11-05: [0,0,0] rounds re-reviewed the same +Y streak every round."""
+    def data(oid):
+        n=int(oid.split('-')[1]);w=.04 if n%2 else .2
+        return locations(head=view(button_box=[.1,.1,.1+w,.4]),
+                         wrist=view(button_visibility='partial',contact_visibility='unknown',
+                                    button_box=[.1,.1,.1+w,.4]))
+    c,_=make(jpeg,monkeypatch,data)
+    for n in range(3):
+        c.prepare_decision('fake',tmp_path/str(n))
+        advance(c,jpeg,n+1,tmp_path/str(n),xyz=[0,3,0])
+    c.prepare_decision('fake',tmp_path/'3')
+    assert set(c.hypothesis_reviews) == {'live-3'}
+    advance(c,jpeg,4,tmp_path/'3',name='request_observation')
+    c.prepare_decision('fake',tmp_path/'4')
+    # No new actual move: the same window is not reviewed again.
+    assert set(c.hypothesis_reviews) == {'live-3'}
+    assert 'window_already_reviewed' in c.review_signals['live-4']['reasons']
+    advance(c,jpeg,5,tmp_path/'4',xyz=[0,3,0])
+    c.prepare_decision('fake',tmp_path/'5')
+    # A new move extends the streak: a fresh review.
+    assert set(c.hypothesis_reviews) == {'live-3', 'live-5'}
+
+
+def test_all_zero_move_is_rejected_for_repair(jpeg, monkeypatch, tmp_path):
+    c,_=make(jpeg,monkeypatch)
+    c.prepare_decision('fake',tmp_path/'0')
+    with pytest.raises(ValueError, match='zero_move_rejected.*request_observation'):
+        c.parse_response(action(c,xyz=[0,0,0]),observation(0),c.session,tmp_path/'0')
+    assert c.parse_response(action(c,xyz=[0,0,1]),observation(0),c.session,tmp_path/'0')['arguments']['xyz_mm']==[0,0,1]
 
 
 def test_stopped_or_stale_response_still_cannot_execute(jpeg, monkeypatch, tmp_path):

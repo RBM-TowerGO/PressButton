@@ -187,10 +187,16 @@ def propose(model_base, body, obs, session, directory, timeout=120, cancel=None,
         if guard_assessment is None:
             stage('forward_guard')
             try:
-                current = conversation.observations[obs['observation_id']]
-                guard_body = guard.build_request(conversation.goal, current)
-                guard_assessment = guard.inspect(model_base, guard_body, obs['observation_id'],
-                                                 directory/'forward_guard', cancel)
+                localization = getattr(conversation, 'localizations', {}).get(obs['observation_id'])
+                if policy == 'wrist_tip_overlap' and localization is not None:
+                    # Same box as this round's main localization; no separate request.
+                    guard_assessment = guard.from_localization(localization, obs['observation_id'])
+                    atomic_json(directory/'forward_guard'/'assessment.json', guard_assessment)
+                else:
+                    current = conversation.observations[obs['observation_id']]
+                    guard_body = guard.build_request(conversation.goal, current)
+                    guard_assessment = guard.inspect(model_base, guard_body, obs['observation_id'],
+                                                     directory/'forward_guard', cancel)
                 check()
             except Exception as exc:
                 stage('interrupted' if isinstance(exc, InterruptedError) else 'failed')

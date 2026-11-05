@@ -258,7 +258,7 @@ def launch(args):
             if getattr(args, 'fingertip_calibration', None):
                 agent_argv.extend(['--fingertip-calibration', str(Path(args.fingertip_calibration).expanduser().resolve()),
                                    '--fingertip-state', args.fingertip_state,
-                                   '--press-overpress-mm', str(getattr(args, 'press_overpress_mm', 5.0)),
+                                   '--press-overpress-mm', str(getattr(args, 'press_overpress_mm', 0.0)),
                                    '--press-standoff-mm', str(getattr(args, 'press_standoff_mm', 10.0))])
             agent_argv.extend(['--model-provider', getattr(args, 'model_provider', 'thor')])
             for flag, value in (('--model-name', getattr(args, 'model_name', None)),
@@ -368,8 +368,8 @@ def parse_args(argv=None):
     parser.add_argument('--model-name', help='override the provider default model name')
     parser.add_argument('--model-base', help='model /v1 base for openai_compatible (or to override a provider)')
     parser.add_argument('--model-api-key-env', help='environment variable holding the API key')
-    parser.add_argument('--press-overpress-mm', type=float, default=5.0,
-                        help='closed-gripper press target is live wrist depth 150 mm minus this (default 5 mm)')
+    parser.add_argument('--press-overpress-mm', type=float, default=0.0,
+                        help='closed-gripper press target is live wrist depth 150 mm minus this (default 0: 150 mm is the final reachable reading)')
     parser.add_argument('--press-standoff-mm', type=float, default=10.0,
                         help='first closed forward stroke stops at live wrist depth 150 mm plus this, before the head-view alignment check (default 10 mm)')
     args = parser.parse_args(argv)

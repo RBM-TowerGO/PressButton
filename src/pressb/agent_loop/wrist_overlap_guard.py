@@ -143,6 +143,30 @@ def validate(response, observation_id, image_size=None):
     return validate_raw(parse_call(response, TOOL_NAME, PROPERTIES), observation_id, image_size)
 
 
+def from_localization(localization, observation_id):
+    """Overlap assessment from this round's main localization wrist box; no model request.
+
+    2026-11-05: a separate check request often boxed the button tighter than the
+    main localization, rejected a tip the main box contained, and the model then
+    stopped proposing positive X for the rest of the run. Using the same box keeps
+    the gate and the decision context consistent. The program check is unchanged.
+    """
+    value = localization if isinstance(localization, dict) else {}
+    if value.get('observation_id') != observation_id:
+        raise ValueError('localization_observation_mismatch')
+    raw = value.get('raw_locations') or {}
+    wrist = raw.get('wrist') or {}
+    data = dict(coordinate_units=raw.get('coordinate_units'),
+                button_visibility=wrist.get('button_visibility', 'unknown'),
+                button_box=copy.deepcopy(wrist.get('button_box')),
+                contact_visibility=wrist.get('contact_visibility', 'unknown'),
+                contact_tip=copy.deepcopy(wrist.get('contact_tip')),
+                note='From the main localization of this observation; no separate check request.')
+    result = validate_raw(data, observation_id, (value.get('wrist') or {}).get('image_size'))
+    result['localization_source'] = 'main_localization_same_observation'
+    return result
+
+
 def inspect(base, body, observation_id, directory, cancel=None):
     """Read the independent current wrist image, with stoppable format repairs."""
     _, images = request_evidence(body, observation_id, expected_images=1)

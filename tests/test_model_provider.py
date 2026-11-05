@@ -136,22 +136,14 @@ def test_launcher_rejects_missing_key_before_robot_start(monkeypatch, tmp_path):
     assert not (tmp_path/'run').exists()
 
 
-def test_thinking_starts_off_and_switches_on_low_for_the_rest_of_the_run(monkeypatch):
+def test_deepseek_thinking_stays_off_after_gripper_close(monkeypatch):
     monkeypatch.setenv('DEEPSEEK_API_KEY', 'test-key')
     provider.configure('deepseek')
+    assert provider.enable_thinking() is False  # the first gripper close does not turn it on
     assert not provider.thinking_enabled()
-    assert request_body([])['thinking'] == dict(type='disabled')
-    assert provider.enable_thinking() is True
-    assert provider.enable_thinking() is False  # already on; stays on
     for body in (request_body([]), grounding._request_body('p', [], dict(type='function'))):
-        assert body['thinking'] == dict(type='enabled') and body['reasoning_effort'] == 'low'
-        assert body['max_tokens'] == provider.THINKING_MIN_MAX_TOKENS
-        # DeepSeek thinking mode rejects 'required' and named tool_choice with HTTP 400.
-        assert body['tool_choice'] == 'auto'
-    assert request_body([], max_tokens=8192)['max_tokens'] == 8192
-    provider.configure('deepseek')  # a new run starts with thinking off again
-    assert request_body([])['thinking'] == dict(type='disabled') and request_body([])['max_tokens'] == 512
-    assert request_body([])['tool_choice'] == 'required'
+        assert body['thinking'] == dict(type='disabled') and 'reasoning_effort' not in body
+        assert body['max_tokens'] == 512 and body['tool_choice'] == 'required'
 
 
 def test_thor_thinking_uses_chat_template_switch():

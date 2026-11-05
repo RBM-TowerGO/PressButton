@@ -256,3 +256,54 @@ def test_web_fingertip_script_is_valid_js(tmp_path):
     js=re.search(r'<script>(.*)</script>',HTML,re.S).group(1)
     f=tmp_path/'a.js';f.write_text(js)
     assert subprocess.run(['node','--check',str(f)]).returncode==0
+
+
+class _Future:
+    def __init__(self, result=None): self.ready, self.value = False, result
+    def done(self): return self.ready
+    def result(self): return self.value
+
+
+def _restart(running, clock):
+    from s1b_camera_view import CameraRestart
+    calls = []
+    def call(on):
+        calls.append(on); f = _Future(SimpleNamespace(message='Camera is now ON' if on else 'Camera is now OFF'))
+        calls_futures.append(f); return f
+    calls_futures = []
+    return CameraRestart(call, running=lambda: running[0], timeout_s=40, clock=lambda: clock[0]), calls, calls_futures
+
+
+def test_camera_restart_stops_old_processes_before_starting():
+    running, clock = [True], [0.]
+    r, calls, futures = _restart(running, clock)
+    assert r.begin() == '正在停止旧相机进程' and calls == [False] and r.busy()
+    assert r.step() is None                      # stop request not answered yet
+    futures[0].ready = True
+    assert r.step() == '等待旧相机进程退出'
+    clock[0] = 15.
+    assert r.step() is None and calls == [False]  # old main/sub still alive: no start yet
+    running[0] = False
+    assert r.step() == '正在启动相机' and calls == [False, True]
+    assert r.step() is None
+    futures[1].ready = True
+    assert r.step() == 'Camera is now ON' and not r.busy()
+
+
+def test_camera_restart_starts_anyway_after_stop_timeout():
+    running, clock = [True], [0.]
+    r, calls, futures = _restart(running, clock)
+    r.begin(); futures[0].ready = True; r.step()
+    clock[0] = 41.
+    assert '仍尝试启动' in r.step() and calls == [False, True]
+
+
+def test_camera_process_check_does_not_match_itself(monkeypatch):
+    import subprocess as sp
+    import s1b_camera_view as view
+    seen = []
+    monkeypatch.setattr(view.subprocess, 'run', lambda argv, **k: seen.append(argv) or SimpleNamespace(returncode=1))
+    assert view.camera_processes_running() is False
+    pattern = seen[0][2]
+    assert pattern == '[a]stribot_camera_main|[a]stribot_camera_sub'
+    assert 'astribot_camera_main' not in pattern and 'astribot_camera_sub' not in pattern

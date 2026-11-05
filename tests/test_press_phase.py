@@ -360,6 +360,18 @@ def test_first_closed_approach_stops_at_the_standoff():
     assert phase.evaluate(0, 'o3')['remaining_m'] == pytest.approx(0.015)
 
 
+def test_contact_reading_near_150mm_counts_as_reached_without_overpress():
+    """2026-11-05: with no overpress, contact stalls at 150.2-151.6 mm; that is the press target."""
+    calibrated_tip.activate(CALIBRATION, 'open')
+    phase.configure(overpress_m=0.0)
+    _again(0.211)
+    phase.set_gripper('closed')
+    phase.record_move([51, 0, 0])
+    assert phase.target_m() == pytest.approx(0.150)
+    assert phase.note_press_status(0.0025) is None      # 152.5 mm: not yet
+    assert phase.note_press_status(0.0016) == phase.WITHDRAW  # 151.6 mm: reached
+
+
 def test_closing_inside_the_standoff_starts_the_head_check_at_once():
     _open_at(0.158)
     phase.set_gripper('closed')

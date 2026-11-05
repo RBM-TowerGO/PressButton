@@ -23,12 +23,12 @@ PROVIDERS = {
     # DeepSeek V4.1 Flash: OpenAI-compatible, accepts images in user messages,
     # thinking is ON by default and is switched off here like on Thor.
     # Each image is capped at 1024 tokens by the provider.
+    # thinking_extra=None keeps thinking off for the whole run: a 2026-11-05 replay
+    # put the head button box on the gripper base with thinking on
+    # (docs/report/20261105_deepseek_thinking_head_localization).
     'deepseek': dict(model='deepseek-flash', base='https://api.deepseek.com', key_env='DEEPSEEK_API_KEY',
                      tokenize=False, image_tokens=1024, extra=dict(thinking=dict(type='disabled')),
-                     thinking_extra=dict(thinking=dict(type='enabled'), reasoning_effort='low'),
-                     # Thinking mode rejects tool_choice='required' (HTTP 400, 2026-11-04);
-                     # 'auto' is used then, and the existing parsers still demand one tool call.
-                     thinking_tool_choice='auto'),
+                     thinking_extra=None),
     # Any other OpenAI-compatible vision endpoint; model and base must be given.
     'openai_compatible': dict(model=None, base=None, key_env='MODEL_API_KEY', tokenize=False,
                               image_tokens=1536, extra={}, thinking_extra=dict(reasoning_effort='low')),
@@ -76,7 +76,8 @@ def enable_thinking():
     Returns True only on the call that actually turned it on.
     """
     global _thinking
-    if _thinking:
+    # A provider without thinking_extra stays off for the whole run.
+    if _thinking or _current().get('thinking_extra') is None:
         return False
     _thinking = True
     return True

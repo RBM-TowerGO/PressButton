@@ -111,6 +111,9 @@ After it passes, choose XYZ from the evidence without an X step cap. Every new
 observation requires a fresh check before another positive-X command. If overlap
 is lost, return to Y/Z alignment or improve the view. A rejected command has not
 executed and is not clipped; do not repeat positive X on that same rejected image.
+You never request or wait for this check: the program runs it automatically when
+you propose positive X, and again on every new observation. After a rejection,
+you may propose positive X again on a later observation.
 Seeing the button or failing to trigger it does not prove only distance remains.
 
 MERGED-END PRESS (only when CURRENT_PRESS_PHASE is supplied): the contact end is
@@ -118,6 +121,20 @@ the merged CLOSED gripper, not a single open finger, and the program supplies it
 fixed wrist pixel. This overrides the single-finger preference above. Closing the
 gripper moves only the fingers, not the button or the camera, so align with the
 gripper OPEN onto that fixed pixel, then close, then press.
+Outside the close band, once the aim point is inside the button face box, approach
+with positive X directly; do not chase the exact center first. Inside the close
+band, before ranging and closing: if the aim point sits on the button's edge or
+upper rim, fine-tune Y/Z toward the middle of the button face, then range and close.
+The button box jitters by a few percent between frames; correct only an offset
+clearly larger than that jitter, and do not reverse a small step just because the
+box moved slightly.
+The wrist camera is mounted ABOVE the gripper, so it views the contact point from
+above and there is a parallax between the image and the actual contact path. The
+aim pixel is calibrated at contact depth (about 150 mm); when the hand is farther
+from the panel, a button shown on the aim pixel lies slightly BELOW the path the
+closed end will travel, so the press tends to land high. Account for this
+viewpoint difference when aligning, especially in Z, and use the HEAD view to
+check the real height of the closed end relative to the button.
 ORDER: (1) with the gripper OPEN, finish Y/Z alignment AND the range measurement;
 (2) then CLOSE the gripper; (3) then press by the measured distance. The open
 gripper is for aiming and ranging only, not for touching the panel or pressing.
@@ -152,9 +169,15 @@ millimeters. Follow the stage:
   standoff the button edge or ring is often still visible around the closed tips
   and shows the remaining offset at close range). If they disagree, a clear WRIST
   offset beats an uncertain HEAD impression; HEAD decides when the WRIST button is
-  hidden. Every propose_move carries head_alignment {verdict, head_view,
+  hidden. If the button is visible in NEITHER the HEAD nor the WRIST image, the
+  verdict must be unclear and positive X is not allowed. Then either withdraw a
+  little with negative X until the WRIST view shows the button edge again, or
+  adjust the head angle so the HEAD view sees the button past the gripper.
+  Every propose_move carries head_alignment {verdict, head_view,
   wrist_view}. aligned (HEAD on the button, WRIST no clear offset) -> press with
-  positive X, Y=0, Z=0. offset/unclear -> fine-tune Y/Z only (X=0, a few mm;
+  positive X, Y=0, Z=final_press_z_mm: the first final press after each withdrawal
+  also moves 10 mm DOWN (Z=-10). This does not stack; further strokes before the
+  next withdrawal use Z=0. offset/unclear -> fine-tune Y/Z only (X=0, a few mm;
   withdraw a little first if the end touches the panel) and judge again on the
   next image; several rounds are normal. For WRIST offsets use the WRIST Y/Z
   DIRECTION TABLE (button face relative to the merged end); for HEAD offsets

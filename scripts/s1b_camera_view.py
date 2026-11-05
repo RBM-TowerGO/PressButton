@@ -449,6 +449,52 @@ def serve(frames,port):
     return server,thread
 
 
+CAMERA_PROCESSES=('astribot_camera_main','astribot_camera_sub')
+CAMERA_STOP_TIMEOUT_S=40
+
+
+def camera_processes_running():
+    """True while any vendor camera main/sub process exists on this host."""
+    # '[a]stribot...' keeps pgrep from matching its own command line.
+    pattern='|'.join('[%s]%s'%(name[0],name[1:]) for name in CAMERA_PROCESSES)
+    return subprocess.run(['pgrep','-f',pattern],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
+
+
+class CameraRestart:
+    """Restart the vendor camera as stop → wait for exit → start.
+
+    The vendor start path (SetBool true) only checks camera_main: after main crashes it
+    starts a new main AND a new sub while the old sub keeps its shared memory, so
+    orphan subs pile up until /dev/shm is full. SetBool false runs the vendor stop
+    script for the old main and sub first; true is sent only once both have exited.
+    """
+    def __init__(self,call,running=camera_processes_running,timeout_s=CAMERA_STOP_TIMEOUT_S,clock=time.monotonic):
+        self.call,self.running,self.timeout_s,self.clock=call,running,timeout_s,clock
+        self.phase='idle';self.future=None;self.since=None;self.message=None
+
+    def busy(self):
+        return self.phase!='idle'
+
+    def begin(self):
+        self.phase,self.future,self.since='stopping',self.call(False),self.clock()
+        return '正在停止旧相机进程'
+
+    def step(self):
+        """Advance; returns a status message when it changes, else None."""
+        if self.phase=='stopping' and self.future.done():
+            self.phase,self.future='waiting',None
+            return '等待旧相机进程退出'
+        if self.phase=='waiting':
+            gone=not self.running()
+            if gone or self.clock()-self.since>self.timeout_s:
+                self.phase,self.future='starting',self.call(True)
+                return '正在启动相机' if gone else '旧相机进程未在%ds内退出，仍尝试启动'%self.timeout_s
+        if self.phase=='starting' and self.future.done():
+            response=self.future.result();self.phase,self.future='idle',None
+            return response.message if response else '相机启动失败'
+        return None
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',type=int,default=8765)
@@ -471,7 +517,10 @@ def main():
             frames.measurement_error=None
         except Exception as exc:frames.measurement_error='深度标定读取失败：'+str(exc)
     meta=threading.Thread(target=metadata,daemon=True);meta.start()
-    client=node.create_client(SetBool,'/astribot_camera_control');future=None
+    client=node.create_client(SetBool,'/astribot_camera_control')
+    def camera_control(on):
+        request=SetBool.Request();request.data=on;return client.call_async(request)
+    restart=CameraRestart(camera_control)
     started=time.monotonic();activation_tried=False;next_update=0;next_health=0;next_activation=0
     try:
         while not done.is_set():
@@ -481,17 +530,21 @@ def main():
             silent=(time.monotonic_ns()-newest)/1e9 if newest else time.monotonic()-started
             # Retry activation (not just once at startup) whenever every stream has been silent
             # for 5 s, e.g. service not ready at launch or the driver stopped mid-run.
-            if time.monotonic()-started>2 and future is None and silent>(2 if not activation_tried else 5) \
+            # Each restart stops the old main/sub first (see CameraRestart).
+            if time.monotonic()-started>2 and not restart.busy() and silent>(2 if not activation_tried else 5) \
                     and time.monotonic()>=next_activation:
                 activation_tried=True;next_activation=time.monotonic()+10
                 if client.service_is_ready():
-                    request=SetBool.Request();request.data=True;future=client.call_async(request)
-                    frames.activation='正在启动相机';health('no camera frames for %.1fs; requesting activation'%silent)
+                    frames.activation=restart.begin()
+                    health('no camera frames for %.1fs; stopping old camera before restart'%silent)
                 else:
                     frames.activation='等待相机画面（复用现有驱动）';health('camera control service not ready')
-            if future is not None and future.done():
-                response=future.result();frames.activation=response.message if response else '相机启动失败';future=None
-                health('activation result: '+frames.activation)
+            if restart.busy():
+                message=restart.step()
+                if message is not None:
+                    frames.activation=message;health('camera restart: '+message)
+                    if not restart.busy():
+                        next_activation=time.monotonic()+10   # measured from the end of the restart
             if time.monotonic()>=next_update:
                 began=time.monotonic();frames.update();took=time.monotonic()-began
                 next_update=time.monotonic()+.2
