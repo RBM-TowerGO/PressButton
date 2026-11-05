@@ -12,6 +12,24 @@ SETTLE_TIMEOUT_S = 1.5
 SETTLE_WINDOW_S = 0.15
 SETTLE_POSITION_M = 0.001
 SETTLE_HEAD_DEG = 0.3
+# Gripper (state units 0 open … ~97.6 closed; command 0 / 100). A gripper command
+# completes at its first send, before the fingers move (2026-11-04 runs: photos at
+# 5.5, 23.4, 49.8, 58.5 while closing, 96.1 / 64.6 while opening). Before the photo
+# the fingers must have left the start or reached the target, then stay still. A
+# full stroke plus start latency needs more than the arm timeout.
+GRIPPER_SETTLE_TIMEOUT_S = 3.0
+GRIPPER_SETTLE_SPAN = 0.5
+GRIPPER_MIN_TRAVEL = 5.0
+GRIPPER_TARGET_TOLERANCE = 3.0
+GRIPPER_PART = 'astribot_gripper_right'
+
+
+def _gripper_position(row):
+    try:
+        value = row['joints'][GRIPPER_PART]['position'][0]
+    except (KeyError, IndexError, TypeError):
+        return None
+    return float(value) if type(value) in (int, float) and math.isfinite(value) else None
 
 
 class SDKBackend:
@@ -25,6 +43,7 @@ class SDKBackend:
         self.measured = None
         self.history = deque(maxlen=6000)
         self.sampling_error = None
+        self.gripper_expect = None  # set by a gripper command, consumed by the next wait_settled
         try:
             self.measured = self._read()
             self.history.append(copy.deepcopy(self.measured))
@@ -81,9 +100,13 @@ class SDKBackend:
         a stop, or unreadable state, it returns and the photo is taken anyway; the
         returned record says which.
         """
+        expect, self.gripper_expect = getattr(self, 'gripper_expect', None), None
+        if expect is not None:
+            timeout_s = max(timeout_s, GRIPPER_SETTLE_TIMEOUT_S)
         started = time.monotonic_ns()
         deadline = started + int(timeout_s*1e9)
         reason = 'timeout'
+        gripper = None
         while True:
             now = time.monotonic_ns()
             try:
@@ -95,7 +118,11 @@ class SDKBackend:
                                    for a in rows for b in rows)
                     head = max((abs(x-y) for a in rows for b in rows
                                 for x, y in zip(a.get('head_deg') or [], b.get('head_deg') or [])), default=0.0)
-                    if position <= SETTLE_POSITION_M and head <= SETTLE_HEAD_DEG:
+                    gripper_ok = True
+                    if expect is not None:
+                        gripper = self._gripper_check(expect, [r for r in rows if r['receipt_ns'] >= expect['began_ns']])
+                        gripper_ok = gripper['done']
+                    if position <= SETTLE_POSITION_M and head <= SETTLE_HEAD_DEG and gripper_ok:
                         reason = 'settled'
                         break
             except Exception as exc:
@@ -106,8 +133,25 @@ class SDKBackend:
             if cancel is not None and cancel.wait(.02):
                 reason = 'stopped'
                 break
-        return dict(settled=reason == 'settled', reason=reason,
-                    waited_ms=round((time.monotonic_ns()-started)/1e6, 1), timeout_ms=timeout_s*1000)
+        result = dict(settled=reason == 'settled', reason=reason,
+                      waited_ms=round((time.monotonic_ns()-started)/1e6, 1), timeout_ms=timeout_s*1000)
+        if expect is not None:
+            result['gripper'] = dict(expect, **(gripper or {}))
+        return result
+
+    @staticmethod
+    def _gripper_check(expect, rows):
+        """Fingers have left the start (or are at the target) and stay still over the window."""
+        values = [v for v in (_gripper_position(r) for r in rows) if v is not None]
+        if len(values) < 3:
+            return dict(done=False, position=values[-1] if values else None, why='too_few_gripper_samples')
+        last, span = values[-1], max(values)-min(values)
+        start, target = expect.get('start'), expect['target']
+        moved = start is not None and abs(last-start) >= GRIPPER_MIN_TRAVEL
+        at_target = abs(last-target) <= GRIPPER_TARGET_TOLERANCE
+        done = span <= GRIPPER_SETTLE_SPAN and (moved or at_target)
+        why = ('settled' if done else 'still_moving' if span > GRIPPER_SETTLE_SPAN else 'not_started')
+        return dict(done=done, position=last, span=round(span, 3), why=why)
 
     def state_for_capture(self, bundle):
         source=bundle['frames']['right']['source_ns']
@@ -127,6 +171,13 @@ class SDKBackend:
         if cancel.is_set():
             raise RuntimeError('stopped')
         phase('MOVING')
+        if kind == 'gripper':
+            from s1b_keyboard_control import GRIPPER_KEYS
+            with self.lock:
+                start = _gripper_position(self.measured) if self.measured else None
+            # The next photo waits for these fingers; the command itself returns at first send.
+            self.gripper_expect = dict(key=data[field], target=float(GRIPPER_KEYS[data[field]]),
+                                       start=start, began_ns=time.monotonic_ns())
         task = self.controller.start(prepared)
         self.controller.wait(task, cancel)
         began = task['started']['monotonic_ns']
